@@ -25,7 +25,7 @@ function Navbar() {
           </Link>
 
           <p className="hidden text-sm text-slate-500 sm:block">
-            Tìm kiếm album của bạn ABC
+            Tìm kiếm album của bạn
           </p>
         </div>
 
