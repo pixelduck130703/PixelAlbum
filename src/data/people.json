@@ -1,0 +1,35 @@
+[
+  {
+    "id": 1,
+    "name": "Nguyễn Tuấn Hùng",
+    "birthday": "2004-02-04",
+    "gender": "Nam",
+    "class": "CNTT K63",
+    "phone": "0123456789",
+    "address": "Hưng Yên",
+    "avatar": "https://i.pravatar.cc/150?img=1",
+    "album": "https://drive.google.com/"
+  },
+  {
+    "id": 2,
+    "name": "Nguyễn Hoàng Long",
+    "birthday": "2004-02-20",
+    "gender": "Nam",
+    "class": "CNTT K63",
+    "phone": "0987654321",
+    "address": "Hưng Yên",
+    "avatar": "https://i.pravatar.cc/150?img=2",
+    "album": "https://facebook.com/"
+  },
+  {
+    "id": 3,
+    "name": "Nguyễn Ngọc Anh",
+    "birthday": "2004-02-18",
+    "gender": "Nữ",
+    "class": "CNTT K64",
+    "phone": "0999999999",
+    "address": "Hưng Yên",
+    "avatar": "https://i.pravatar.cc/150?img=3",
+    "album": "https://youtube.com/"
+  }
+]
