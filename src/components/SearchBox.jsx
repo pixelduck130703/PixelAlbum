@@ -7,16 +7,29 @@ function SearchBox({
   onClear,
 }) {
   const handleBirthdayChange = (event) => {
-    if (name.trim()) return;
+  if (name.trim()) return;
 
-    setBirthday(event.target.value);
-  };
+  // Chỉ giữ lại các chữ số
+  let value = event.target.value.replace(/\D/g, "");
+
+  // Giới hạn tối đa 8 số (ddmmyyyy)
+  value = value.substring(0, 8);
+
+  // Tự thêm dấu /
+  if (value.length > 4) {
+    value = `${value.substring(0, 2)}/${value.substring(2, 4)}/${value.substring(4)}`;
+  } else if (value.length > 2) {
+    value = `${value.substring(0, 2)}/${value.substring(2)}`;
+  }
+
+  setBirthday(value);
+};
 
   const handleNameChange = (event) => {
-    if (birthday) return;
+  if (birthday) return;
 
-    setName(event.target.value);
-  };
+  setName(event.target.value);
+};
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -34,7 +47,7 @@ function SearchBox({
           Tìm kiếm theo ngày sinh hoặc họ tên (chỉ tìm kiếm theo một trong hai)
         </p>
 
-        <p className="mt-3 text-xl font-bold text-red-500">
+         <p className="mt-3 text-xl font-bold text-red-500">
           Ưu tiên tìm bằng ngày sinh, nếu không có kết quả hãy tìm theo họ và tên
         </p>
 
@@ -43,67 +56,68 @@ function SearchBox({
       <form onSubmit={handleSubmit} className="mt-8 space-y-5">
         {/* Tìm theo ngày sinh */}
         <div>
-          <label
-            htmlFor="birthday-search"
-            className="mb-2 block text-sm font-semibold text-slate-700"
-          >
-            Tìm theo ngày sinh theo định dạng Ngày/Tháng/Năm (khuyến khích)
-          </label>
+  <label
+    htmlFor="birthday-search"
+    className="mb-2 block text-sm font-semibold text-slate-700"
+  >
+    Tìm theo ngày sinh theo định dạng Ngày/Tháng/Năm (khuyến khích)
+  </label>
 
-          <input
-            id="birthday-search"
-            type="date"
-            value={birthday}
-            onChange={handleBirthdayChange}
-            disabled={Boolean(name.trim())}
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
-          />
+  <input
+  id="birthday-search"
+  type="text"
+  value={birthday}
+  onChange={handleBirthdayChange}
+  disabled={Boolean(name.trim())}
+  placeholder="Ví dụ: 04/02/2004"
+  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+/>
 
-          {birthday && (
-            <p className="mt-2 text-xs text-blue-600">
-              Đã chọn ngày sinh. Tìm kiếm theo tên đang được khóa.
-            </p>
-          )}
-        </div>
+  {birthday && (
+    <p className="mt-2 text-xs text-blue-600">
+      Đã chọn ngày sinh. Tìm kiếm theo tên đang được khóa.
+    </p>
+  )}
+</div>
 
-        <div className="flex items-center gap-4">
-          <div className="h-px flex-1 bg-slate-200" />
+<div className="flex items-center gap-4">
+  <div className="h-px flex-1 bg-slate-200" />
 
-          <span className="text-sm font-medium text-slate-400">
-            HOẶC
-          </span>
+  <span className="text-sm font-medium text-slate-400">
+    HOẶC
+  </span>
 
-          <div className="h-px flex-1 bg-slate-200" />
-        </div>
+  <div className="h-px flex-1 bg-slate-200" />
+</div>
 
-        <div>
-          <label
-            htmlFor="name-search"
-            className="mb-2 block text-sm font-semibold text-slate-700"
-          >
-            Tìm theo họ và tên
-          </label>
+<div>
+  <label
+    htmlFor="name-search"
+    className="mb-2 block text-sm font-semibold text-slate-700"
+  >
+    Tìm theo họ và tên
+  </label>
 
-          <input
-            id="name-search"
-            type="text"
-            value={name}
-            onChange={handleNameChange}
-            disabled={Boolean(birthday)}
-            placeholder={
-              birthday
-                ? "Xóa ngày sinh để tìm theo tên"
-                : "Ví dụ: Nguyễn Tuấn Hùng"
-            }
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
-          />
+  <input
+    id="name-search"
+    type="text"
+    value={name}
+    onChange={handleNameChange}
+    disabled={Boolean(birthday)}
+    placeholder={
+      birthday
+        ? "Xóa ngày sinh để tìm theo tên"
+        : "Ví dụ: Nguyễn Tuấn Hùng"
+    }
+    className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+  />
 
-          {name.trim() && (
-            <p className="mt-2 text-xs text-blue-600">
-              Đã nhập họ tên. Tìm kiếm theo ngày sinh đang được khóa.
-            </p>
-          )}
-        </div>
+  {name.trim() && (
+    <p className="mt-2 text-xs text-blue-600">
+      Đã nhập họ tên. Tìm kiếm theo ngày sinh đang được khóa.
+    </p>
+  )}
+</div>
 
         <div className="flex flex-col gap-3 sm:flex-row">
           <button

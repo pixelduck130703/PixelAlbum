@@ -138,6 +138,25 @@ function Home() {
     hasSearched,
   ]);
 
+  const convertBirthdayToDatabaseFormat = (value) => {
+  if (!value) return "";
+
+  const normalized = value.trim().replace(/-/g, "/");
+  const parts = normalized.split("/");
+
+  if (parts.length !== 3) {
+    return value.trim();
+  }
+
+  const [day, month, year] = parts;
+
+  if (!day || !month || !year) {
+    return value.trim();
+  }
+
+  return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+};
+
   const handleSearch = () => {
     if (!birthdayInput && !nameInput.trim()) {
       alert("Vui lòng nhập họ tên hoặc chọn ngày sinh.");
@@ -146,7 +165,9 @@ function Home() {
 
     if (birthdayInput) {
       // Ngày sinh luôn được ưu tiên.
-      setSearchBirthday(birthdayInput);
+      setSearchBirthday(
+  convertBirthdayToDatabaseFormat(birthdayInput)
+);
       setSearchName("");
     } else {
       setSearchBirthday("");
