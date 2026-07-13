@@ -42,7 +42,7 @@ function DonateCard() {
                     <img
                         src="/images/donate-qr.png"
                         alt="Mã QR ủng hộ"
-                        className="h-67 w-52 rounded-2xl bg-white object-contain p-2 shadow-sm"
+                        className="h-79 w-52 rounded-2xl bg-white object-contain p-2 shadow-sm"
                     />
                 </div>
 
