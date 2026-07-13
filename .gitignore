@@ -1,20 +1,60 @@
-# Ignore node_modules directories
+# ===========================
+# Dependencies
+# ===========================
+node_modules/
 **/node_modules/
 
-# Ignore dist directories
+# ===========================
+# Build
+# ===========================
+dist/
+build/
 **/dist/
 **/build/
 
-# Ignore log files
-*/.log
+# ===========================
+# Environment Variables
+# ===========================
+.env
+.env.*
+!.env.example
 
-# Ignore .DS_Store on macOS
+# ===========================
+# SQLite Database
+# (Không đẩy database local lên GitHub)
+# ===========================
+*.db
+*.sqlite
+*.sqlite3
+
+# ===========================
+# PostgreSQL Dump
+# ===========================
+*.dump
+*.sql
+
+# ===========================
+# Logs
+# ===========================
+*.log
+logs/
+
+# ===========================
+# IDE
+# ===========================
+.vscode/
+.idea/
+
+# ===========================
+# OS
+# ===========================
 .DS_Store
+Thumbs.db
 
-# Optional: Ignore package manager lock files
-# npm
-package-lock.json
-
+# ===========================
+# Package Lock
+# (Giữ package-lock.json nếu làm việc nhóm)
+# ===========================
 # yarn
 yarn.lock
 
@@ -23,10 +63,3 @@ pnpm-lock.yaml
 
 # bun
 bun.lockb
-
-# Environment variables (sensitive info)
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
