@@ -1,18 +1,47 @@
-const { Pool } = require("pg");
+const { Pool, types } = require("pg");
+
+/*
+ * Giữ cột PostgreSQL DATE ở dạng chuỗi YYYY-MM-DD.
+ * Tránh bị chuyển thành:
+ * 2004-07-08T17:00:00.000Z
+ */
+types.setTypeParser(1082, (value) => value);
 
 if (!process.env.DATABASE_URL) {
   throw new Error(
-    "Thiếu DATABASE_URL trong file server/.env"
+    "Thiếu DATABASE_URL trong file server/.env hoặc Environment Variables"
   );
 }
 
+const isLocalDatabase =
+  process.env.DATABASE_URL.includes("localhost") ||
+  process.env.DATABASE_URL.includes("127.0.0.1");
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+
+  /*
+   * PostgreSQL Docker trên máy không cần SSL.
+   * Neon khi deploy online cần SSL.
+   */
+  ssl: isLocalDatabase
+    ? false
+    : {
+        rejectUnauthorized: false,
+      },
+
+  max: 10,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000,
+});
+
+pool.on("connect", () => {
+  console.log("✅ Đã kết nối PostgreSQL");
 });
 
 pool.on("error", (error) => {
   console.error(
-    "Lỗi PostgreSQL ngoài dự kiến:",
+    "❌ Lỗi PostgreSQL ngoài dự kiến:",
     error
   );
 });
@@ -37,12 +66,19 @@ async function initializeDatabase() {
     )
   `);
 
-  console.log(
-    "✅ PostgreSQL Docker đã kết nối và bảng people đã sẵn sàng"
+  console.log("✅ Bảng people đã sẵn sàng");
+}
+
+async function testDatabaseConnection() {
+  const result = await pool.query(
+    "SELECT NOW() AS current_time"
   );
+
+  return result.rows[0];
 }
 
 module.exports = {
   pool,
   initializeDatabase,
+  testDatabaseConnection,
 };

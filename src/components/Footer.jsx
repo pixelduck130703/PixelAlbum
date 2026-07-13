@@ -21,6 +21,9 @@ import {
   SiGoogle,
   SiLeica,
   SiGithub,
+  SiDocker,
+  SiVercel,
+  SiPostgresql,
 } from "react-icons/si";
 import { FcGoogle } from "react-icons/fc";
 
@@ -67,11 +70,6 @@ function Footer() {
             </div>
           </div>
 
-          {/* Desktop */}
-          <div className="hidden md:flex items-center text-8xl font-light text-slate-400">
-            |
-          </div>
-
           {/* Dịch vụ lưu trữ */}
           <div>
             <h3 className="mb-4 text-center text-lg font-bold text-slate-700">
@@ -84,6 +82,9 @@ function Footer() {
               <Item icon={<SiGoogledrive className="text-green-600" />} text="Drive" />
               <Item icon={<SiCloudinary className="text-blue-500" />} text="Cloudinary" />
               <Item icon={<SiGithub className="text-black" />} text="Github" />
+              <Item icon={<SiDocker className="text-blue-500" />} text="Docker" />
+              <Item icon={<SiPostgresql className="text-blue-700" />} text="PostgreSQL" />
+              <Item icon={<SiVercel className="text-black" />} text="Vercel" />
             </div>
           </div>
 
@@ -108,8 +109,6 @@ function Footer() {
           <Item icon={<FaNodeJs className="text-green-600" />} text="Node.js" />
 
           <Item icon={<SiExpress />} text="Express" />
-
-          <Item icon={<SiSqlite className="text-blue-700" />} text="SQLite" />
 
           <Item
             icon={<SiJsonwebtokens className="text-pink-500" />}
