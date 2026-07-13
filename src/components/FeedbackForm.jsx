@@ -34,7 +34,7 @@ function FeedbackForm() {
     const receiverEmail = "nguyentuanhung04022004@gmail.com";
 
     const emailSubject =
-      form.subject.trim() || "Kiến nghị từ Birthday Search";
+      form.subject.trim() || "Kiến nghị từ Memories Web";
 
     const emailBody = [
       `Họ tên: ${form.name.trim()}`,
