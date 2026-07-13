@@ -20,16 +20,19 @@ const app = express();
 
 const allowedOrigins = [
   "http://localhost:5173",
+  "https://pixel-album.vercel.app",
   process.env.FRONTEND_URL,
 ].filter(Boolean);
 
 app.use(
   cors({
     origin(origin, callback) {
-      // Cho phép Postman, mobile app hoặc request không có origin
+      // Cho phép Postman hoặc request không có Origin
       if (!origin || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
+
+      console.error("CORS chặn origin:", origin);
 
       return callback(
         new Error("Nguồn truy cập không được CORS cho phép.")
