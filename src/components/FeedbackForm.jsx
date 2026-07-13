@@ -142,8 +142,12 @@ function FeedbackForm() {
               name="message"
               value={form.message}
               onChange={handleChange}
-              rows={6}
-              placeholder="Nhập nội dung bạn muốn gửi"
+              rows={8}
+              placeholder={`Nhập nội dung bạn muốn gửi
+- Bạn muốn cập nhật thông tin
+- Bạn muốn gợi ý tính năng mới
+- Bạn muốn thay đổi ảnh đại diện
+- Bạn muốn thêm câu hỏi bảo mật để chỉ mình bạn mới có thể truy cập`}
               className="w-full resize-none rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
             />
           </div>
