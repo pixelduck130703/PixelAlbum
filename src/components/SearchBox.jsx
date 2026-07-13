@@ -44,7 +44,7 @@ function SearchBox({
         </h1>
 
         <p className="mt-3 text-slate-500">
-          Tìm kiếm theo ngày sinh hoặc họ tên (chỉ tìm kiếm theo một trong hai)
+          Tìm kiếm theo ngày sinh hoặc họ tên <span className="font-bold text-red-500">(chỉ tìm kiếm theo một trong hai)</span>
         </p>
 
          <p className="mt-3 text-xl font-bold text-red-500">
