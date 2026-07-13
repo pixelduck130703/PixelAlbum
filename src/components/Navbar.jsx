@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
+import memoriesImage from "../images/Memories.png";
 
 function Navbar() {
   const [currentTime, setCurrentTime] = useState(new Date());

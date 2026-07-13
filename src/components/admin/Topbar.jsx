@@ -14,7 +14,7 @@ function Topbar() {
       <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
         <Link to="/admin" className="block">
           <img
-            src="/src/images/Memories.png"
+            src="/images/Memories.png"
             alt="Memories"
             className="h-6 w-auto object-contain"
           />
