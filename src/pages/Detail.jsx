@@ -160,7 +160,7 @@ function Detail() {
       return "🎂 Hôm nay là sinh nhật!";
     }
 
-    return `🎉 Còn ${days} ngày nữa đến sinh nhật`;
+    return `🎉${days} ngày nữa đến sinh nhật`;
   }, [person]);
 
   const deathAnniversaryCountdown = useMemo(() => {
@@ -262,7 +262,7 @@ function Detail() {
 
       const lunarDateText =
         `${String(lunarDay).padStart(2, "0")}/` +
-        `${String(lunarMonthText).padStart(2, "0")} ÂL` +
+        `${String(lunarMonthText).padStart(2, "0")} Âm lịch` +
         `${isLeapMonth ? " (tháng nhuận)" : ""}`;
 
       const solarDateText =
@@ -280,7 +280,7 @@ function Detail() {
       }
 
       return {
-        message: `🕯️Còn ${days} ngày nữa đến ngày giỗ (${lunarDateText})`,
+        message: `🕯️${days} ngày nữa đến ngày giỗ (${lunarDateText})`,
         lunarDate: lunarDateText,
         solarDate: solarDateText,
         days,
@@ -596,7 +596,7 @@ function Detail() {
                     icon="🕯️"
                   />
                   <InfoItem
-                    label="Đã mất"
+                    label="Đã yên nghỉ"
                     value={timeSinceDeath || "Chưa cập nhật"}
                     icon="⏳"
                   />

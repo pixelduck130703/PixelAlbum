@@ -25,77 +25,77 @@ function Dashboard() {
   const [showTodayModal, setShowTodayModal] = useState(false);
   const [todayPeople, setTodayPeople] = useState([]);
 
-const handleShowTodayBirthday = async () => {
-  try {
-    const response = await api.get("/people");
+  const handleShowTodayBirthday = async () => {
+    try {
+      const response = await api.get("/people");
 
-    const today = new Date();
+      const today = new Date();
 
-    const month = String(
-      today.getMonth() + 1
-    ).padStart(2, "0");
+      const month = String(
+        today.getMonth() + 1
+      ).padStart(2, "0");
 
-    const day = String(
-      today.getDate()
-    ).padStart(2, "0");
+      const day = String(
+        today.getDate()
+      ).padStart(2, "0");
 
-    const list = response.data.filter((person) => {
-      if (!person.birthday || person.deathDate) {
-        return false;
-      }
+      const list = response.data.filter((person) => {
+        if (!person.birthday || person.deathDate) {
+          return false;
+        }
 
-      return (
-        person.birthday.substring(5) ===
-        `${month}-${day}`
+        return (
+          person.birthday.substring(5) ===
+          `${month}-${day}`
+        );
+      });
+
+      setTodayPeople(list);
+      setShowTodayModal(true);
+    } catch (error) {
+      console.error(
+        "Lỗi lấy sinh nhật hôm nay:",
+        error
       );
-    });
 
-    setTodayPeople(list);
-    setShowTodayModal(true);
-  } catch (error) {
-    console.error(
-      "Lỗi lấy sinh nhật hôm nay:",
-      error
-    );
-
-    toast.error(
-      "Không thể tải danh sách sinh nhật hôm nay."
-    );
-  }
-};
-
-const handleShowMonthBirthday = async () => {
-  try {
-    const response = await api.get("/people");
-
-    const currentMonth = String(
-      new Date().getMonth() + 1
-    ).padStart(2, "0");
-
-    const list = response.data.filter((person) => {
-      if (!person.birthday || person.deathDate) {
-        return false;
-      }
-
-      return (
-        person.birthday.substring(5, 7) ===
-        currentMonth
+      toast.error(
+        "Không thể tải danh sách sinh nhật hôm nay."
       );
-    });
+    }
+  };
 
-    setMonthPeople(list);
-    setShowMonthModal(true);
-  } catch (error) {
-    console.error(
-      "Lỗi lấy sinh nhật tháng này:",
-      error
-    );
+  const handleShowMonthBirthday = async () => {
+    try {
+      const response = await api.get("/people");
 
-    toast.error(
-      "Không thể tải danh sách sinh nhật tháng này."
-    );
-  }
-};
+      const currentMonth = String(
+        new Date().getMonth() + 1
+      ).padStart(2, "0");
+
+      const list = response.data.filter((person) => {
+        if (!person.birthday || person.deathDate) {
+          return false;
+        }
+
+        return (
+          person.birthday.substring(5, 7) ===
+          currentMonth
+        );
+      });
+
+      setMonthPeople(list);
+      setShowMonthModal(true);
+    } catch (error) {
+      console.error(
+        "Lỗi lấy sinh nhật tháng này:",
+        error
+      );
+
+      toast.error(
+        "Không thể tải danh sách sinh nhật tháng này."
+      );
+    }
+  };
 
   const loadDashboard = async () => {
     try {
@@ -151,101 +151,100 @@ const handleShowMonthBirthday = async () => {
   }, [people, keyword]);
 
   const handleAdd = () => {
-  setEditingPerson(null);
-  setFormOpen(true);
-};
+    setEditingPerson(null);
+    setFormOpen(true);
+  };
 
   const handleEdit = (person) => {
-  setEditingPerson(person);
-  setFormOpen(true);
-};
+    setEditingPerson(person);
+    setFormOpen(true);
+  };
 
-const formatDate = (date) => {
-  if (!date) return "Chưa cập nhật";
+  const formatDate = (date) => {
+    if (!date) return "Chưa cập nhật";
 
-  const [year, month, day] = date.split("-");
+    const [year, month, day] = date.split("-");
 
-  return `${day}/${month}/${year}`;
-};
+    return `${day}/${month}/${year}`;
+  };
 
-const handleCloseForm = () => {
-  if (submitting) return;
-
-  setFormOpen(false);
-  setEditingPerson(null);
-};
-
-const handleSubmitForm = async (formData) => {
-  try {
-    setSubmitting(true);
-
-    if (editingPerson) {
-      await api.put(`/people/${editingPerson.id}`, formData);
-      toast.success("Cập nhật người thành công!");
-    } else {
-      await api.post("/people", formData);
-      toast.success("Thêm người thành công!");
-    }
+  const handleCloseForm = () => {
+    if (submitting) return;
 
     setFormOpen(false);
     setEditingPerson(null);
+  };
 
-    await Promise.all([
-      loadPeople(),
-      loadDashboard(),
-    ]);
-  } catch (error) {
-    console.error("Lỗi lưu dữ liệu:", error);
+  const handleSubmitForm = async (formData) => {
+    try {
+      setSubmitting(true);
 
-    const message =
-      error.response?.data?.message ||
-      error.response?.data?.error ||
-      "Không thể lưu dữ liệu.";
+      if (editingPerson) {
+        await api.put(`/people/${editingPerson.id}`, formData);
+        toast.success("Cập nhật người thành công!");
+      } else {
+        await api.post("/people", formData);
+        toast.success("Thêm người thành công!");
+      }
 
-    toast.error(message);
-  } finally {
-    setSubmitting(false);
-  }
-};
+      setFormOpen(false);
+      setEditingPerson(null);
+
+      await Promise.all([
+        loadPeople(),
+        loadDashboard(),
+      ]);
+    } catch (error) {
+      console.error("Lỗi lưu dữ liệu:", error);
+
+      const message =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        "Không thể lưu dữ liệu.";
+
+      toast.error(message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const handleDelete = async (id) => {
-  const person = people.find((item) => item.id === id);
+    const person = people.find((item) => item.id === id);
 
-  const confirmed = window.confirm(
-    `Bạn có chắc muốn xóa ${
-      person?.name || "người này"
-    } khỏi hệ thống không?`
-  );
-
-  if (!confirmed) {
-    return;
-  }
-
-  try {
-    await api.delete(`/people/${id}`);
-
-    setPeople((currentPeople) =>
-      currentPeople.filter((item) => item.id !== id)
+    const confirmed = window.confirm(
+      `Bạn có chắc muốn xóa ${person?.name || "người này"
+      } khỏi hệ thống không?`
     );
 
-    await loadDashboard();
+    if (!confirmed) {
+      return;
+    }
 
-    toast.success("Xóa người thành công!");
-  } catch (error) {
-    console.error("Lỗi xóa người:", error);
+    try {
+      await api.delete(`/people/${id}`);
 
-    const message =
-      error.response?.data?.message ||
-      error.response?.data?.error ||
-      "Không thể xóa dữ liệu.";
+      setPeople((currentPeople) =>
+        currentPeople.filter((item) => item.id !== id)
+      );
 
-    toast.error(message);
-  }
-};
+      await loadDashboard();
+
+      toast.success("Xóa người thành công!");
+    } catch (error) {
+      console.error("Lỗi xóa người:", error);
+
+      const message =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        "Không thể xóa dữ liệu.";
+
+      toast.error(message);
+    }
+  };
 
   return (
     <Layout>
-      
+
 
       {/* Thẻ thống kê */}
       <div className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-4">
@@ -278,7 +277,7 @@ const handleSubmitForm = async (formData) => {
         </div>
 
         <button onClick={handleShowMonthBirthday}
-            className="w-full rounded-2xl bg-white p-4 sm:p-6 shadow-sm transition hover:scale-[1.02] hover:shadow-lg">
+          className="w-full rounded-2xl bg-white p-4 sm:p-6 shadow-sm transition hover:scale-[1.02] hover:shadow-lg">
           <p className="text-left text-sm font-medium text-slate-500">
             Sinh nhật tháng này
           </p>
@@ -290,10 +289,10 @@ const handleSubmitForm = async (formData) => {
 
             <span className="text-2xl sm:text-3xl">📅</span>
           </div>
-        </button> 
+        </button>
 
         <button onClick={handleShowTodayBirthday}
-           className="w-full rounded-2xl bg-white p-4 sm:p-6 shadow-sm transition hover:scale-[1.02] hover:shadow-lg">
+          className="w-full rounded-2xl bg-white p-4 sm:p-6 shadow-sm transition hover:scale-[1.02] hover:shadow-lg">
           <p className="text-left text-sm font-medium text-slate-500">
             Sinh nhật hôm nay
           </p>
@@ -310,7 +309,7 @@ const handleSubmitForm = async (formData) => {
 
       {/* Khối quản lý người */}
       <div className="mt-8 sm:mt-10">
-          <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-2xl font-bold text-slate-800">
               Danh sách album
@@ -318,12 +317,12 @@ const handleSubmitForm = async (formData) => {
           </div>
 
           <button
-  type="button"
-  onClick={handleAdd}
-  className="w-full rounded-xl bg-blue-500 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 sm:w-auto"
->
-  + Thêm người
-</button>
+            type="button"
+            onClick={handleAdd}
+            className="w-full rounded-xl bg-blue-500 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 sm:w-auto"
+          >
+            + Thêm người
+          </button>
         </div>
 
         {/* Ô tìm kiếm */}
@@ -385,161 +384,161 @@ const handleSubmitForm = async (formData) => {
       </div>
 
       <PersonForm
-  open={formOpen}
-  person={editingPerson}
-  submitting={submitting}
-  onClose={handleCloseForm}
-  onSubmit={handleSubmitForm}
-/>
-{showTodayModal && (
-  <div
-    className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4"
-    onClick={() => setShowTodayModal(false)}
-  >
-    <div
-      className="max-h-[88vh] w-full overflow-hidden rounded-t-3xl bg-white p-5 shadow-2xl sm:max-w-2xl sm:rounded-3xl sm:p-6"
-      onClick={(event) => event.stopPropagation()}
-    >
-      <div className="mb-5 flex items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-slate-800 sm:text-2xl">
-            🎂 Sinh nhật hôm nay
-          </h2>
-
-          <p className="mt-1 text-sm text-slate-500">
-            Có {todayPeople.length} người
-          </p>
-        </div>
-
-        <button
-          type="button"
+        open={formOpen}
+        person={editingPerson}
+        submitting={submitting}
+        onClose={handleCloseForm}
+        onSubmit={handleSubmitForm}
+      />
+      {showTodayModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4"
           onClick={() => setShowTodayModal(false)}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xl text-slate-600 hover:bg-slate-200"
-          aria-label="Đóng"
         >
-          ✕
-        </button>
-      </div>
-
-      {todayPeople.length === 0 ? (
-        <div className="rounded-2xl bg-slate-100 p-8 text-center text-slate-500">
-          Hôm nay không có ai sinh nhật.
-        </div>
-      ) : (
-        <div className="max-h-[65vh] space-y-3 overflow-y-auto pr-1">
-          {todayPeople.map((person) => (
-            <a
-              key={person.id}
-              href={`/person/${person.id}`}
-              className="flex items-center gap-3 rounded-2xl border border-slate-200 p-3 transition hover:border-blue-300 hover:bg-blue-50 sm:gap-4 sm:p-4"
-            >
-              <img
-                src={
-                  person.avatar ||
-                  "https://placehold.co/100x100?text=Avatar"
-                }
-                alt={person.name}
-                className="h-12 w-12 shrink-0 rounded-full object-cover sm:h-14 sm:w-14"
-                onError={(event) => {
-                  event.currentTarget.src =
-                    "https://placehold.co/100x100?text=Avatar";
-                }}
-              />
-
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-bold text-slate-800">
-                  {person.name}
-                </p>
+          <div
+            className="max-h-[88vh] w-full overflow-hidden rounded-t-3xl bg-white p-5 shadow-2xl sm:max-w-2xl sm:rounded-3xl sm:p-6"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-slate-800 sm:text-2xl">
+                  🎂 Sinh nhật hôm nay
+                </h2>
 
                 <p className="mt-1 text-sm text-slate-500">
-                  {formatDate(person.birthday)}
+                  Có {todayPeople.length} người
                 </p>
               </div>
 
-              <span className="shrink-0 text-slate-400">→</span>
-            </a>
-          ))}
+              <button
+                type="button"
+                onClick={() => setShowTodayModal(false)}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xl text-slate-600 hover:bg-slate-200"
+                aria-label="Đóng"
+              >
+                ✕
+              </button>
+            </div>
+
+            {todayPeople.length === 0 ? (
+              <div className="rounded-2xl bg-slate-100 p-8 text-center text-slate-500">
+                Hôm nay không có ai sinh nhật.
+              </div>
+            ) : (
+              <div className="max-h-[65vh] space-y-3 overflow-y-auto pr-1">
+                {todayPeople.map((person) => (
+                  <a
+                    key={person.id}
+                    href={`/person/${person.id}`}
+                    className="flex items-center gap-3 rounded-2xl border border-slate-200 p-3 transition hover:border-blue-300 hover:bg-blue-50 sm:gap-4 sm:p-4"
+                  >
+                    <img
+                      src={
+                        person.avatar ||
+                        "https://placehold.co/100x100?text=Avatar"
+                      }
+                      alt={person.name}
+                      className="h-12 w-12 shrink-0 rounded-full object-cover sm:h-14 sm:w-14"
+                      onError={(event) => {
+                        event.currentTarget.src =
+                          "https://placehold.co/100x100?text=Avatar";
+                      }}
+                    />
+
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-bold text-slate-800">
+                        {person.name}
+                      </p>
+
+                      <p className="mt-1 text-sm text-slate-500">
+                        {formatDate(person.birthday)}
+                      </p>
+                    </div>
+
+                    <span className="shrink-0 text-slate-400">→</span>
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
-    </div>
-  </div>
-)}
 
-{showMonthModal && (
-  <div
-    className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4"
-    onClick={() => setShowMonthModal(false)}
-  >
-    <div
-      className="max-h-[88vh] w-full overflow-hidden rounded-t-3xl bg-white p-5 shadow-2xl sm:max-w-2xl sm:rounded-3xl sm:p-6"
-      onClick={(event) => event.stopPropagation()}
-    >
-      <div className="mb-5 flex items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-slate-800 sm:text-2xl">
-            📅 Sinh nhật tháng này
-          </h2>
-
-          <p className="mt-1 text-sm text-slate-500">
-            Có {monthPeople.length} người
-          </p>
-        </div>
-
-        <button
-          type="button"
+      {showMonthModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4"
           onClick={() => setShowMonthModal(false)}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xl text-slate-600 hover:bg-slate-200"
-          aria-label="Đóng"
         >
-          ✕
-        </button>
-      </div>
-
-      {monthPeople.length === 0 ? (
-        <div className="rounded-2xl bg-slate-100 p-8 text-center text-slate-500">
-          Không có ai sinh trong tháng này.
-        </div>
-      ) : (
-        <div className="max-h-[65vh] space-y-3 overflow-y-auto pr-1">
-          {monthPeople.map((person) => (
-            <a
-              key={person.id}
-              href={`/person/${person.id}`}
-              className="flex items-center gap-3 rounded-2xl border border-slate-200 p-3 transition hover:border-blue-300 hover:bg-blue-50 sm:gap-4 sm:p-4"
-            >
-              <img
-                src={
-                  person.avatar ||
-                  "https://placehold.co/100x100?text=Avatar"
-                }
-                alt={person.name}
-                className="h-12 w-12 shrink-0 rounded-full object-cover sm:h-14 sm:w-14"
-                onError={(event) => {
-                  event.currentTarget.src =
-                    "https://placehold.co/100x100?text=Avatar";
-                }}
-              />
-
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-bold text-slate-800">
-                  {person.name}
-                </p>
+          <div
+            className="max-h-[88vh] w-full overflow-hidden rounded-t-3xl bg-white p-5 shadow-2xl sm:max-w-2xl sm:rounded-3xl sm:p-6"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-slate-800 sm:text-2xl">
+                  📅 Sinh nhật tháng này
+                </h2>
 
                 <p className="mt-1 text-sm text-slate-500">
-                  {formatDate(person.birthday)}
+                  Có {monthPeople.length} người
                 </p>
               </div>
 
-              <span className="shrink-0 text-slate-400">→</span>
-            </a>
-          ))}
+              <button
+                type="button"
+                onClick={() => setShowMonthModal(false)}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xl text-slate-600 hover:bg-slate-200"
+                aria-label="Đóng"
+              >
+                ✕
+              </button>
+            </div>
+
+            {monthPeople.length === 0 ? (
+              <div className="rounded-2xl bg-slate-100 p-8 text-center text-slate-500">
+                Không có ai sinh trong tháng này.
+              </div>
+            ) : (
+              <div className="max-h-[65vh] space-y-3 overflow-y-auto pr-1">
+                {monthPeople.map((person) => (
+                  <a
+                    key={person.id}
+                    href={`/person/${person.id}`}
+                    className="flex items-center gap-3 rounded-2xl border border-slate-200 p-3 transition hover:border-blue-300 hover:bg-blue-50 sm:gap-4 sm:p-4"
+                  >
+                    <img
+                      src={
+                        person.avatar ||
+                        "https://placehold.co/100x100?text=Avatar"
+                      }
+                      alt={person.name}
+                      className="h-12 w-12 shrink-0 rounded-full object-cover sm:h-14 sm:w-14"
+                      onError={(event) => {
+                        event.currentTarget.src =
+                          "https://placehold.co/100x100?text=Avatar";
+                      }}
+                    />
+
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-bold text-slate-800">
+                        {person.name}
+                      </p>
+
+                      <p className="mt-1 text-sm text-slate-500">
+                        {formatDate(person.birthday)}
+                      </p>
+                    </div>
+
+                    <span className="shrink-0 text-slate-400">→</span>
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
-    </div>
-  </div>
-)}
     </Layout>
-    
+
   );
 }
 

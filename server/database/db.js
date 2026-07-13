@@ -1,75 +1,48 @@
-const sqlite3 = require("sqlite3").verbose();
-const path = require("path");
+const { Pool } = require("pg");
 
-const databasePath = path.join(__dirname, "people.db");
+if (!process.env.DATABASE_URL) {
+  throw new Error(
+    "Thiếu DATABASE_URL trong file server/.env"
+  );
+}
 
-const db = new sqlite3.Database(databasePath, (error) => {
-  if (error) {
-    console.error("Lỗi kết nối SQLite:", error.message);
-    return;
-  }
-
-  console.log("✅ Connected to SQLite");
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
 });
 
-db.serialize(() => {
-  db.run(`
+pool.on("error", (error) => {
+  console.error(
+    "Lỗi PostgreSQL ngoài dự kiến:",
+    error
+  );
+});
+
+async function initializeDatabase() {
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS people (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       name TEXT NOT NULL,
-      birthday TEXT NOT NULL,
-      deathDate TEXT,
+      birthday DATE,
+      "deathDate" DATE,
       gender TEXT,
       class TEXT,
       phone TEXT,
       address TEXT,
       avatar TEXT,
       album TEXT,
-      securityQuestion TEXT,
-      securityAnswer TEXT
+      "securityQuestion" TEXT,
+      "securityAnswer" TEXT,
+      "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
 
-  db.all("PRAGMA table_info(people)", [], (error, columns) => {
-    if (error) {
-      console.error("Lỗi kiểm tra cấu trúc bảng:", error.message);
-      return;
-    }
+  console.log(
+    "✅ PostgreSQL Docker đã kết nối và bảng people đã sẵn sàng"
+  );
+}
 
-    const migrations = [
-      {
-        name: "deathDate",
-        sql: "ALTER TABLE people ADD COLUMN deathDate TEXT",
-      },
-      {
-        name: "securityQuestion",
-        sql: "ALTER TABLE people ADD COLUMN securityQuestion TEXT",
-      },
-      {
-        name: "securityAnswer",
-        sql: "ALTER TABLE people ADD COLUMN securityAnswer TEXT",
-      },
-    ];
-
-    migrations.forEach((migration) => {
-      const exists = columns.some(
-        (column) => column.name === migration.name
-      );
-
-      if (!exists) {
-        db.run(migration.sql, (migrationError) => {
-          if (migrationError) {
-            console.error(
-              `Lỗi thêm cột ${migration.name}:`,
-              migrationError.message
-            );
-          } else {
-            console.log(`✅ Đã thêm cột ${migration.name}`);
-          }
-        });
-      }
-    });
-  });
-});
-
-module.exports = db;
+module.exports = {
+  pool,
+  initializeDatabase,
+};

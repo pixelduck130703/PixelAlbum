@@ -1,0 +1,29 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: birthday-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: birthday_admin
+      POSTGRES_PASSWORD: 230851
+      POSTGRES_DB: birthday_db
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - birthday_postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U birthday_admin -d birthday_db"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  birthday_postgres_data:

@@ -45,7 +45,7 @@ function Footer() {
               <Item
                 icon={
                   <img
-                    src="src/images/Tamron.png"
+                    src="/images/Tamron.png"
                     alt="Tamron"
                     className="h-9 w-9 object-contain"
                   />
@@ -57,7 +57,7 @@ function Footer() {
               <Item
                 icon={
                   <img
-                    src="src/images/Vsmart.webp"
+                    src="/images/Vsmart.webp"
                     alt="Vsmart"
                     className="h-9 w-9 object-contain"
                   />
