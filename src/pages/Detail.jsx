@@ -62,6 +62,27 @@ function Detail() {
     return calculatedAge;
   }, [person]);
 
+  const daysLived = useMemo(() => {
+    if (!person?.birthday) {
+      return "";
+    }
+
+    const birthday = new Date(
+      String(person.birthday).slice(0, 10)
+    );
+
+    const today = person?.deathDate
+      ? new Date(String(person.deathDate).slice(0, 10))
+      : new Date();
+
+    birthday.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+
+    const diff = today.getTime() - birthday.getTime();
+
+    return Math.floor(diff / (1000 * 60 * 60 * 24));
+  }, [person]);
+
   const timeSinceDeath = useMemo(() => {
     if (!person?.deathDate) {
       return "";
@@ -275,6 +296,54 @@ function Detail() {
 
     const [year, month, day] = birthday.split("-");
     return `${day}/${month}/${year}`;
+  };
+
+  const getCanChi = (birthday) => {
+    if (!birthday) return "";
+
+    try {
+      const [year, month, day] = String(birthday)
+        .slice(0, 10)
+        .split("-")
+        .map(Number);
+
+      const solar = Solar.fromYmd(year, month, day);
+      const lunar = solar.getLunar();
+
+      const ganMap = {
+        甲: "Giáp",
+        乙: "Ất",
+        丙: "Bính",
+        丁: "Đinh",
+        戊: "Mậu",
+        己: "Kỷ",
+        庚: "Canh",
+        辛: "Tân",
+        壬: "Nhâm",
+        癸: "Quý",
+      };
+
+      const chiMap = {
+        子: "Tý",
+        丑: "Sửu",
+        寅: "Dần",
+        卯: "Mão",
+        辰: "Thìn",
+        巳: "Tỵ",
+        午: "Ngọ",
+        未: "Mùi",
+        申: "Thân",
+        酉: "Dậu",
+        戌: "Tuất",
+        亥: "Hợi",
+      };
+
+      const ganZhi = lunar.getYearInGanZhi();
+
+      return `${ganMap[ganZhi[0]]} ${chiMap[ganZhi[1]]}`;
+    } catch {
+      return "";
+    }
   };
 
   const handleOpenAlbum = () => {
@@ -532,16 +601,16 @@ function Detail() {
                     icon="⏳"
                   />
                   <InfoItem
-                  label="Giới tính"
-                  value={person.gender || "Chưa cập nhật"}
-                  icon="👤"
-                />
+                    label="Giới tính"
+                    value={person.gender || "Chưa cập nhật"}
+                    icon="👤"
+                  />
 
-                <InfoItem
-                  label="Quê quán"
-                  value={person.address || "Chưa cập nhật"}
-                  icon="📍"
-                />
+                  <InfoItem
+                    label="Quê quán"
+                    value={person.address || "Chưa cập nhật"}
+                    icon="📍"
+                  />
                 </div>
               </>
             ) : (
@@ -551,16 +620,20 @@ function Detail() {
                   label="Ngày sinh"
                   value={
                     person.birthday
-                      ? formatBirthday(person.birthday)
+                      ? `${formatBirthday(person.birthday)} (${getCanChi(person.birthday)})`
                       : "Chưa cập nhật"
                   }
                   icon="🎁"
                 />
 
                 <InfoItem
-                  label="Trạng thái"
-                  value="Còn sống"
-                  icon="💚"
+                  label="Đã sống"
+                  value={
+                    daysLived
+                      ? `${daysLived.toLocaleString("vi-VN")} ngày`
+                      : "Chưa cập nhật"
+                  }
+                  icon="🌎"
                 />
 
                 <InfoItem

@@ -69,7 +69,7 @@ function SearchBox({
   value={birthday}
   onChange={handleBirthdayChange}
   disabled={Boolean(name.trim())}
-  placeholder="Ví dụ: 04/02/2004"
+  placeholder="Nhập ngày tháng năm sinh (DD/MM/YYYY)"
   className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
 />
 
@@ -95,7 +95,7 @@ function SearchBox({
     htmlFor="name-search"
     className="mb-2 block text-sm font-semibold text-slate-700"
   >
-    Tìm theo họ và tên
+    Tìm theo họ và tên, địa điểm
   </label>
 
   <input
@@ -107,7 +107,7 @@ function SearchBox({
     placeholder={
       birthday
         ? "Xóa ngày sinh để tìm theo tên"
-        : "Ví dụ: Nguyễn Tuấn Hùng"
+        : "Ví dụ: Nguyễn Tuấn Hùng hoặc Hà Giang"
     }
     className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
   />
