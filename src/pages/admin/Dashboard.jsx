@@ -72,16 +72,37 @@ function Dashboard() {
         new Date().getMonth() + 1
       ).padStart(2, "0");
 
-      const list = response.data.filter((person) => {
-        if (!person.birthday || person.deathDate) {
-          return false;
-        }
+      const list = response.data
+        .filter((person) => {
+          if (!person.birthday || person.deathDate) {
+            return false;
+          }
 
-        return (
-          person.birthday.substring(5, 7) ===
-          currentMonth
-        );
-      });
+          return (
+            String(person.birthday).slice(5, 7) ===
+            currentMonth
+          );
+        })
+        .sort((a, b) => {
+          const birthdayA = String(a.birthday).slice(0, 10);
+          const birthdayB = String(b.birthday).slice(0, 10);
+
+          const [yearA, monthA, dayA] = birthdayA
+            .split("-")
+            .map(Number);
+
+          const [yearB, monthB, dayB] = birthdayB
+            .split("-")
+            .map(Number);
+
+          // Ưu tiên sắp xếp theo ngày trong tháng
+          if (dayA !== dayB) {
+            return dayA - dayB;
+          }
+
+          // Nếu cùng ngày thì người sinh năm trước đứng trước
+          return yearA - yearB;
+        });
 
       setMonthPeople(list);
       setShowMonthModal(true);
