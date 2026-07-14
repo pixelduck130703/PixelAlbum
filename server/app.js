@@ -764,6 +764,50 @@ app.use((error, req, res, next) => {
 });
 
 /* ==========================
+   Kết quả bóng đá
+========================== */
+
+app.get("/api/football/live", async (req, res) => {
+  try {
+    if (!process.env.FOOTBALL_API_KEY) {
+      return res.status(500).json({
+        success: false,
+        message: "Thiếu FOOTBALL_API_KEY.",
+      });
+    }
+
+    const response = await fetch(
+      "https://v3.football.api-sports.io/fixtures?live=all",
+      {
+        headers: {
+          "x-apisports-key": process.env.FOOTBALL_API_KEY,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `Football API trả về lỗi ${response.status}`
+      );
+    }
+
+    const data = await response.json();
+
+    res.json({
+      success: true,
+      matches: data.response || [],
+    });
+  } catch (error) {
+    console.error("Lỗi lấy kết quả bóng đá:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Không thể tải kết quả bóng đá.",
+    });
+  }
+});
+
+/* ==========================
    Khởi động server
 ========================== */
 

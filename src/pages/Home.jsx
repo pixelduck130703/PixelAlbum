@@ -9,6 +9,8 @@ import AboutMe from "../components/AboutMe";
 import FeedbackForm from "../components/FeedbackForm";
 import DonateCard from "../components/DonateCard";
 import { Solar } from "lunar-javascript";
+import FIFAWC from "../components/FIFAWC";
+import FootballScores from "../components/FootballScores";
 
 const today = new Date();
 
@@ -579,6 +581,8 @@ function Home() {
 
           <DonateCard />
         </div>
+        <FootballScores />
+        <FIFAWC />
       </main>
 
       <Footer />
