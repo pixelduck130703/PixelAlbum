@@ -26,6 +26,7 @@ import {
   SiVercel,
   SiPostgresql,
   SiNeon,
+  SiDji,
 } from "react-icons/si";
 import { FcGoogle } from "react-icons/fc";
 
@@ -148,6 +149,14 @@ function Footer() {
                   }
                   text="Vsmart"
                 />
+              </a>
+              
+              <a
+                href="https://www.djivietnam.com.vn"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Item icon={<SiDji className="text-black-700" />} text="DJI" />
               </a>
             </div>
           </div>
