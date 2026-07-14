@@ -24,6 +24,7 @@ import {
   SiDocker,
   SiVercel,
   SiPostgresql,
+  SiNeon,
 } from "react-icons/si";
 import { FcGoogle } from "react-icons/fc";
 
@@ -40,33 +41,96 @@ function Footer() {
             </h3>
 
             <div className="flex flex-wrap justify-center gap-8 text-4xl">
-              <Item icon={<FaApple className="text-gray-800" />} text="Apple" />
-              <Item icon={<SiSamsung className="text-blue-600" />} text="Samsung" />
-              <Item icon={<SiXiaomi className="text-orange-500" />} text="Xiaomi" />
-              <Item icon={<SiLeica className="text-red-500" />} text="Leica" />
-              <Item icon={<SiSony className="text-black" />} text="Sony" />
-              <Item
-                icon={
-                  <img
-                    src="/images/Tamron.png"
-                    alt="Tamron"
-                    className="h-9 w-9 object-contain"
-                  />
-                }
-                text="Tamron"
-              />
-              <Item icon={<SiOppo className="text-green-700" />} text="Oppo" />
-              <Item icon={<SiVivo className="text-blue-500" />} text="vivo" />
-              <Item
-                icon={
-                  <img
-                    src="/images/Vsmart.webp"
-                    alt="Vsmart"
-                    className="h-9 w-9 object-contain"
-                  />
-                }
-                text="Vsmart"
-              />
+              <a
+                href="https://www.apple.com"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Item
+                  icon={<FaApple className="text-gray-800" />}
+                  text="Apple"
+                />
+              </a>
+              <a
+                href="https://www.samsung.com"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Item icon={<SiSamsung className="text-blue-600" />} text="Samsung" />
+              </a>
+
+              <a
+                href="https://www.mi.com"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Item icon={<SiXiaomi className="text-orange-500" />} text="Xiaomi" />
+              </a>
+
+              <a
+                href="https://leicavietnam.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Item icon={<SiLeica className="text-red-500" />} text="Leica" />
+              </a>
+
+              <a
+                href="https://www.sony.com.vn"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Item icon={<SiSony className="text-black" />} text="Sony" />
+              </a>
+
+              <a
+                href="https://www.tamron.com"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Item
+                  icon={
+                    <img
+                      src="/images/Tamron.png"
+                      alt="Tamron"
+                      className="h-9 w-9 object-contain"
+                    />
+                  }
+                  text="Tamron"
+                />
+              </a>
+
+              <a
+                href="https://www.oppo.com"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Item icon={<SiOppo className="text-green-700" />} text="Oppo" />
+              </a>
+
+              <a
+                href="https://www.vivo.com"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Item icon={<SiVivo className="text-blue-500" />} text="Vivo" />
+              </a>
+              <a
+                href="https://vingroup.net"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Item
+                  icon={
+                    <img
+                      src="/images/Vsmart.webp"
+                      alt="Vsmart"
+                      className="h-9 w-9 object-contain"
+                    />
+                  }
+                  text="Vsmart"
+                />
+              </a>
             </div>
           </div>
 
@@ -77,14 +141,81 @@ function Footer() {
             </h3>
 
             <div className="flex flex-wrap justify-center gap-8 text-4xl">
-              <Item icon={<FcGoogle className="text-4xl" />} text="Google" />
-              <Item icon={<SiGooglephotos className="text-red-600" />} text="Photos" />
-              <Item icon={<SiGoogledrive className="text-green-600" />} text="Drive" />
-              <Item icon={<SiCloudinary className="text-blue-500" />} text="Cloudinary" />
-              <Item icon={<SiGithub className="text-black" />} text="Github" />
-              <Item icon={<SiDocker className="text-blue-500" />} text="Docker" />
-              <Item icon={<SiPostgresql className="text-blue-700" />} text="PostgreSQL" />
-              <Item icon={<SiVercel className="text-black" />} text="Vercel" />
+              <a
+                href="https://www.google.com"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Item icon={<FcGoogle className="text-4xl" />} text="Google" />
+              </a>
+
+              <a
+                href="https://photos.google.com"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Item
+                  icon={<SiGooglephotos className="text-red-600" />}
+                  text="Photos"
+                />
+              </a>
+
+              <a
+                href="https://cloudinary.com"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Item
+                  icon={<SiCloudinary className="text-blue-500" />}
+                  text="Cloudinary"
+                />
+              </a>
+
+              <a
+                href="https://github.com"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Item icon={<SiGithub className="text-black" />} text="Github" />
+              </a>
+
+              <a
+                href="https://vercel.com"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Item icon={<SiVercel className="text-black" />} text="Vercel" />
+              </a>
+
+              <a
+                href="https://www.docker.com"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Item icon={<SiDocker className="text-blue-500" />} text="Docker" />
+              </a>
+
+              <a
+                href="https://www.postgresql.org"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Item
+                  icon={<SiPostgresql className="text-blue-700" />}
+                  text="PostgreSQL"
+                />
+              </a>
+
+              <a
+                href="hhttps://neon.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Item
+                  icon={<SiNeon className="text-green-400" />}
+                  text="Neon"
+                />
+              </a>
             </div>
           </div>
 

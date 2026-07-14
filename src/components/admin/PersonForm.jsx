@@ -52,13 +52,34 @@ function PersonForm({
   }
 
   const handleChange = (event) => {
-    const { name, value } = event.target;
+  const { name, value } = event.target;
 
-    setForm((currentForm) => ({
-      ...currentForm,
-      [name]: value,
+  if (name === "birthday" || name === "deathDate") {
+    let date = value.replace(/\D/g, "");
+
+    if (date.length > 2) {
+      date = date.slice(0, 2) + "/" + date.slice(2);
+    }
+
+    if (date.length > 5) {
+      date = date.slice(0, 5) + "/" + date.slice(5);
+    }
+
+    date = date.slice(0, 10);
+
+    setForm((current) => ({
+      ...current,
+      [name]: date,   // ✅ Quan trọng là phải dùng [name]
     }));
-  };
+
+    return;
+  }
+
+  setForm((current) => ({
+    ...current,
+    [name]: value,
+  }));
+};
 
   const handleAvatarUpload = async (event) => {
     const file = event.target.files?.[0];
@@ -108,6 +129,30 @@ function PersonForm({
     }));
   };
 
+  const convertToDatabaseDate = (value) => {
+    if (!value) return "";
+
+    // Nếu dữ liệu đã là YYYY-MM-DD thì giữ nguyên
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      return value;
+    }
+
+    // Chuyển DD/MM/YYYY thành YYYY-MM-DD
+    const parts = value.trim().split("/");
+
+    if (parts.length !== 3) {
+      return "";
+    }
+
+    const [day, month, year] = parts;
+
+    if (!day || !month || !year) {
+      return "";
+    }
+
+    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+  };
+
   const handleSubmit = (event) => {
     event.preventDefault();
 
@@ -116,20 +161,41 @@ function PersonForm({
       return;
     }
 
+    const birthdayForDatabase =
+      convertToDatabaseDate(form.birthday);
+
+    const deathDateForDatabase =
+      convertToDatabaseDate(form.deathDate);
+
+    if (form.birthday && !birthdayForDatabase) {
+      alert("Ngày sinh phải đúng định dạng DD/MM/YYYY.");
+      return;
+    }
+
+    if (form.deathDate && !deathDateForDatabase) {
+      alert("Ngày mất phải đúng định dạng DD/MM/YYYY.");
+      return;
+    }
+
     if (
-      form.birthday &&
-      form.deathDate &&
-      form.deathDate < form.birthday
+      birthdayForDatabase &&
+      deathDateForDatabase &&
+      deathDateForDatabase < birthdayForDatabase
     ) {
       alert("Ngày mất không thể trước ngày sinh.");
       return;
     }
 
-    const hasSecurityQuestion = form.securityQuestion.trim() !== "";
+    const hasSecurityQuestion =
+      form.securityQuestion.trim() !== "";
+
     const isCreatingNewQuestion =
       !person?.securityQuestion && hasSecurityQuestion;
 
-    if (isCreatingNewQuestion && !form.securityAnswer.trim()) {
+    if (
+      isCreatingNewQuestion &&
+      !form.securityAnswer.trim()
+    ) {
       alert("Vui lòng nhập câu trả lời xác thực.");
       return;
     }
@@ -141,14 +207,31 @@ function PersonForm({
 
     onSubmit({
       ...form,
+      birthday: birthdayForDatabase || null,
+      deathDate: deathDateForDatabase || null,
       name: form.name.trim(),
       phone: form.phone.trim(),
       address: form.address.trim(),
       class: form.class.trim(),
       album: form.album.trim(),
-      securityQuestion: form.securityQuestion.trim(),
-      securityAnswer: form.securityAnswer.trim(),
+      securityQuestion:
+        form.securityQuestion.trim(),
+      securityAnswer:
+        form.securityAnswer.trim(),
     });
+  };
+
+  const convertToDisplayDate = (value) => {
+    if (!value) return "";
+
+    const normalized = String(value).slice(0, 10);
+    const [year, month, day] = normalized.split("-");
+
+    if (!year || !month || !day) {
+      return value;
+    }
+
+    return `${day}/${month}/${year}`;
   };
 
   const handleBackdropClick = (event) => {
@@ -216,36 +299,39 @@ function PersonForm({
 
               <input
                 id="birthday"
-                type="date"
+                type="text"
                 name="birthday"
                 value={form.birthday}
                 onChange={handleChange}
+                placeholder="DD/MM/YYYY"
+                maxLength={10}
                 className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
               />
             </div>
 
             <div>
-              <label
-                htmlFor="deathDate"
-                className="mb-2 block text-sm font-semibold text-slate-700"
-              >
-                Ngày mất
-              </label>
+  <label
+    htmlFor="deathDate"
+    className="mb-2 block text-sm font-semibold text-slate-700"
+  >
+    Ngày mất
+  </label>
 
-              <input
-                id="deathDate"
-                type="date"
-                name="deathDate"
-                value={form.deathDate}
-                min={form.birthday || undefined}
-                onChange={handleChange}
-                className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-              />
+  <input
+    id="deathDate"
+    type="text"
+    name="deathDate"
+    value={form.deathDate}
+    onChange={handleChange}
+    placeholder="DD/MM/YYYY"
+    maxLength={10}
+    className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+  />
 
-              <p className="mt-2 text-xs text-slate-500">
-                Để trống nếu người này còn sống.
-              </p>
-            </div>
+  <p className="mt-2 text-xs text-slate-500">
+    Để trống nếu người này còn sống. Định dạng: DD/MM/YYYY
+  </p>
+</div>
 
             <div>
               <label
