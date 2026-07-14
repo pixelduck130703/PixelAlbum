@@ -48,11 +48,11 @@ function SearchBox({
         </p>
 
         <p className="mt-3 text-xl font-bold text-red-500">
-          Ưu tiên tìm bằng ngày sinh, nếu không có kết quả hãy tìm theo họ và tên
+          Ưu tiên tìm bằng ngày sinh, nếu không có hãy tìm theo họ và tên
         </p>
 
         <p className="mt-3 text-xl font-bold text-red-500">
-          Cơ sở dữ liệu có thể mất 1 phút để khởi động, mình dùng đồ FREE mà :))
+          Dữ liệu có thể mất 1 phút để khởi động, mình dùng đồ FREE mà :))
         </p>
 
       </div>
