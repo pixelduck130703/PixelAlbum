@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import {
   FaReact,
   FaNodeJs,
@@ -37,7 +38,7 @@ function Footer() {
           {/* Thiết bị */}
           <div>
             <h3 className="mb-4 text-center text-lg font-bold text-slate-700">
-              Đồng hành cùng
+              Đồng hành cùng tôi
             </h3>
 
             <div className="flex flex-wrap justify-center gap-8 text-4xl">
@@ -81,6 +82,23 @@ function Footer() {
                 rel="noopener noreferrer"
               >
                 <Item icon={<SiSony className="text-black" />} text="Sony" />
+              </a>
+
+              <a
+                href="https://alphauniverse.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Item
+                  icon={
+                    <img
+                      src="/images/SonyAlpha.webp"
+                      alt="Alpha"
+                      className="h-9 w-9 object-contain"
+                    />
+                  }
+                  text="Alpha"
+                />
               </a>
 
               <a
@@ -141,21 +159,20 @@ function Footer() {
             </h3>
 
             <div className="flex flex-wrap justify-center gap-8 text-4xl">
-              <a
-                href="https://www.google.com"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Item icon={<FcGoogle className="text-4xl" />} text="Google" />
-              </a>
 
               <a
-                href="https://photos.google.com"
+                href="https://photos.google.com/"
                 target="_blank"
                 rel="noopener noreferrer"
               >
                 <Item
-                  icon={<SiGooglephotos className="text-red-600" />}
+                  icon={
+                    <img
+                      src="/images/Photos.webp"
+                      alt="Photos"
+                      className="h-9 w-9 object-contain"
+                    />
+                  }
                   text="Photos"
                 />
               </a>
@@ -230,8 +247,6 @@ function Footer() {
 
           <Item icon={<FaReact className="text-sky-500" />} text="React" />
 
-          <Item icon={<SiVite className="text-violet-500" />} text="Vite" />
-
           <Item
             icon={<SiTailwindcss className="text-cyan-500" />}
             text="Tailwind"
@@ -248,9 +263,27 @@ function Footer() {
         </div>
 
         <div className="mt-10 border-t pt-6 text-center text-gray-500">
-          © 2026 <span className="font-semibold">ALBUM ẢNH</span>
-          <br />
-          Copyright © by Nguyễn Tuấn Hùng (Pixel)
+          <div className="flex justify-center">
+            <Link to="/" className="inline-block">
+              <img
+                src="/images/Memories.png"
+                alt="memories"
+                className="h-6 w-auto object-contain"
+              />
+            </Link>
+          </div>
+
+          <p className="mt-2 text-sm leading-6">
+            <span>
+              Copyright © {new Date().getFullYear()} by Nguyễn Tuấn Hùng (Pixel)
+            </span>
+
+            <span className="hidden sm:inline"> | </span>
+
+            <span className="block sm:inline">
+              Special thanks to Mai Văn Định
+            </span>
+          </p>
         </div>
 
       </div>

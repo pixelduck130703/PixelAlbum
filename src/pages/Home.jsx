@@ -70,26 +70,54 @@ function Home() {
 
 
   useEffect(() => {
+    let retryTimer;
+    let cancelled = false;
+
     const loadPeople = async () => {
       try {
         setLoading(true);
         setError("");
 
-        const response = await api.get("/people");
+        const response = await api.get("/people", {
+          timeout: 90000,
+        });
+
+        if (cancelled) return;
+
         setPeople(response.data);
+        setLoading(false);
+
+        // Thành công thì không gọi lại nữa
+        if (retryTimer) {
+          clearTimeout(retryTimer);
+        }
       } catch (requestError) {
+        if (cancelled) return;
+
         console.error("Lỗi tải dữ liệu:", requestError);
 
         setError(
-          requestError.response?.data?.message ||
-          "Không thể tải dữ liệu từ server."
+          "Máy chủ đang khởi động. Website sẽ tự thử lại sau 5 giây."
         );
-      } finally {
-        setLoading(false);
+
+        setLoading(true);
+
+        // Thất bại thì thử lại sau 5 giây
+        retryTimer = setTimeout(() => {
+          loadPeople();
+        }, 5000);
       }
     };
 
     loadPeople();
+
+    return () => {
+      cancelled = true;
+
+      if (retryTimer) {
+        clearTimeout(retryTimer);
+      }
+    };
   }, []);
 
   const normalizeText = (value) => {
@@ -139,23 +167,23 @@ function Home() {
   ]);
 
   const convertBirthdayToDatabaseFormat = (value) => {
-  if (!value) return "";
+    if (!value) return "";
 
-  const normalized = value.trim().replace(/-/g, "/");
-  const parts = normalized.split("/");
+    const normalized = value.trim().replace(/-/g, "/");
+    const parts = normalized.split("/");
 
-  if (parts.length !== 3) {
-    return value.trim();
-  }
+    if (parts.length !== 3) {
+      return value.trim();
+    }
 
-  const [day, month, year] = parts;
+    const [day, month, year] = parts;
 
-  if (!day || !month || !year) {
-    return value.trim();
-  }
+    if (!day || !month || !year) {
+      return value.trim();
+    }
 
-  return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
-};
+    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+  };
 
   const handleSearch = () => {
     if (!birthdayInput && !nameInput.trim()) {
@@ -166,8 +194,8 @@ function Home() {
     if (birthdayInput) {
       // Ngày sinh luôn được ưu tiên.
       setSearchBirthday(
-  convertBirthdayToDatabaseFormat(birthdayInput)
-);
+        convertBirthdayToDatabaseFormat(birthdayInput)
+      );
       setSearchName("");
     } else {
       setSearchBirthday("");
@@ -467,8 +495,14 @@ function Home() {
         <div className="mt-8">
           {loading && (
             <div className="rounded-2xl bg-white p-8 text-center shadow-sm">
-              <p className="font-semibold text-slate-700">
+              <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-500" />
+
+              <p className="mt-4 text-lg font-semibold text-slate-700">
                 Đang tải dữ liệu...
+              </p>
+
+              <p className="mt-2 text-sm text-slate-500">
+                Máy chủ đang khởi động. Website sẽ tự thử lại sau mỗi 5 giây.
               </p>
             </div>
           )}

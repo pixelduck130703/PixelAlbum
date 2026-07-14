@@ -442,36 +442,52 @@ function Detail() {
 
 
         <div className="overflow-hidden rounded-3xl bg-white shadow-xl">
-          <div className="bg-gradient-to-r from-red-400 to-indigo-400 px-6 py-10 text-center text-white">
-            <img
-              src={
-                person.avatar ||
-                "https://placehold.co/300x300?text=Avatar"
-              }
-              alt={person.name}
-              className="mx-auto h-36 w-36 rounded-full border-4 border-white object-cover shadow-lg sm:h-44 sm:w-44"
-              onError={(event) => {
-                event.currentTarget.src =
-                  "https://placehold.co/300x300?text=Avatar";
+          <div className="relative overflow-hidden px-6 py-10 text-center text-white">
+            {/* Ảnh nền mờ */}
+            <div
+              className="absolute inset-0 bg-cover bg-center scale-110 blur-sm brightness-120"
+              style={{
+                backgroundImage: `url(${person.avatar ||
+                  "https://placehold.co/300x300?text=Avatar"
+                  })`,
               }}
             />
 
-            <h1 className="mt-5 text-3xl font-bold sm:text-4xl">
-              {person.name}
-            </h1>
+            {/* Lớp phủ màu tối */}
+            <div className="absolute inset-0 bg-black/40" />
 
-            <div className="mt-3 flex flex-wrap justify-center gap-2">
-              {age !== null && (
-                <span className="rounded-full bg-white/20 px-4 py-2 text-sm font-semibold">
-                  {age} tuổi
-                </span>
-              )}
+            {/* Nội dung */}
+            <div className="relative z-10">
+              <img
+                src={
+                  person.avatar ||
+                  "https://placehold.co/300x300?text=Avatar"
+                }
+                alt={person.name}
+                className="mx-auto h-36 w-36 rounded-full border-4 border-white object-cover shadow-2xl sm:h-44 sm:w-44"
+                onError={(event) => {
+                  event.currentTarget.src =
+                    "https://placehold.co/300x300?text=Avatar";
+                }}
+              />
 
-              {person.class && (
-                <span className="rounded-full bg-white/20 px-4 py-2 text-sm font-semibold">
-                  {person.class}
-                </span>
-              )}
+              <h1 className="mt-5 text-3xl font-bold drop-shadow-lg sm:text-4xl">
+                {person.name}
+              </h1>
+
+              <div className="mt-3 flex flex-wrap justify-center gap-2">
+                {age !== null && (
+                  <span className="rounded-full bg-white/20 px-4 py-2 text-sm font-semibold backdrop-blur-md">
+                    🎂 {age} tuổi
+                  </span>
+                )}
+
+                {person.class && (
+                  <span className="rounded-full bg-white/20 px-4 py-2 text-sm font-semibold backdrop-blur-md">
+                    🎓 {person.class}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 

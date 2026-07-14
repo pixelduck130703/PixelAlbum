@@ -339,7 +339,7 @@ function Dashboard() {
             type="text"
             value={keyword}
             onChange={(event) => setKeyword(event.target.value)}
-            placeholder="Nhập tên, ngày sinh, hoặc địa chỉ"
+            placeholder="Nhập tên, ngày sinh, hoặc địa điểm"
             className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
           />
         </div>
