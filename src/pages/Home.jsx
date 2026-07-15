@@ -353,55 +353,55 @@ function Home() {
             <div className="mt-7 grid grid-cols-1 gap-4">
               {todayBirthdayPeople.map((person) => (
                 <div
-  key={person.id}
-  className="relative overflow-hidden rounded-3xl border border-pink-200 bg-gradient-to-r from-pink-50 via-white to-yellow-50 p-4 shadow-xl ring-2 ring-pink-100 transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:ring-pink-300 sm:p-5"
->
-  <div className="relative z-10 flex items-center gap-4">
-    {/* Avatar */}
-    <div className="relative shrink-0">
-      <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-pink-400 via-yellow-300 to-purple-400 opacity-70 blur-sm" />
+                  key={person.id}
+                  className="relative overflow-hidden rounded-3xl border border-pink-200 bg-gradient-to-r from-pink-50 via-white to-yellow-50 p-4 shadow-xl ring-2 ring-pink-100 transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:ring-pink-300 sm:p-5"
+                >
+                  <div className="relative z-10 flex items-center gap-4">
+                    {/* Avatar */}
+                    <div className="relative shrink-0">
+                      <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-pink-400 via-yellow-300 to-purple-400 opacity-70 blur-sm" />
 
-      <img
-        src={
-          person.avatar ||
-          "https://placehold.co/100x100?text=Avatar"
-        }
-        alt={person.name}
-        className="relative h-16 w-16 rounded-full border-4 border-white object-cover shadow-lg sm:h-20 sm:w-20"
-        onError={(event) => {
-          event.currentTarget.src =
-            "https://placehold.co/100x100?text=Avatar";
-        }}
-      />
+                      <img
+                        src={
+                          person.avatar ||
+                          "https://placehold.co/100x100?text=Avatar"
+                        }
+                        alt={person.name}
+                        className="relative h-16 w-16 rounded-full border-4 border-white object-cover shadow-lg sm:h-20 sm:w-20"
+                        onError={(event) => {
+                          event.currentTarget.src =
+                            "https://placehold.co/100x100?text=Avatar";
+                        }}
+                      />
 
-      <span className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-white text-lg shadow">
-        🎂
-      </span>
-    </div>
+                      <span className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-white text-lg shadow">
+                        🎂
+                      </span>
+                    </div>
 
-    {/* Thông tin */}
-    <div className="min-w-0 flex-1 px-1 text-center sm:px-0 sm:text-left">
-      <p className="text-xs font-semibold uppercase tracking-wider text-pink-500">
-        Happy Birthday
-      </p>
+                    {/* Thông tin */}
+                    <div className="min-w-0 flex-1 px-1 text-center sm:px-0 sm:text-left">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-pink-500">
+                        Happy Birthday
+                      </p>
 
-      <h3 className="mt-1 break-words text-lg font-bold leading-tight text-slate-800 sm:text-2xl">
-        {person.name}
-      </h3>
-    </div>
+                      <h3 className="mt-1 break-words text-lg font-bold leading-tight text-slate-800 sm:text-2xl">
+                        {person.name}
+                      </h3>
+                    </div>
 
-    {/* Icon quà - chỉ hiển thị trên tablet và desktop */}
-<div className="hidden shrink-0 text-center sm:block">
-  <div className="animate-bounce text-6xl">
-    🎁🎉
-  </div>
+                    {/* Icon quà - chỉ hiển thị trên tablet và desktop */}
+                    <div className="hidden shrink-0 text-center sm:block">
+                      <div className="animate-bounce text-6xl">
+                        🎁🎉
+                      </div>
 
-  <p className="mt-2 text-xs font-semibold text-pink-500">
-    Sinh nhật vui vẻ
-  </p>
-</div>
-  </div>
-</div>
+                      <p className="mt-2 text-xs font-semibold text-pink-500">
+                        Sinh nhật vui vẻ
+                      </p>
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
             <p className="mt-6 text-center font-semibold italic text-pink-600">
@@ -586,6 +586,7 @@ function Home() {
           <DonateCard />
         </div>
         {/*<FootballScores />*/}
+        
         <FIFAWC />
       </main>
 
