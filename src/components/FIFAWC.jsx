@@ -127,7 +127,7 @@ function FIFAWC() {
                 {/* VS */}
                 <div className="rounded-2xl bg-slate-900 px-5 py-3 shadow-lg">
                   <p className="text-2xl font-black text-white sm:text-4xl">
-                    VS
+                    1 - 2
                   </p>
                 </div>
 
