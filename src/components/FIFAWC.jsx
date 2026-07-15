@@ -56,14 +56,16 @@ function FIFAWC() {
                   </p>
                 </div>
 
-                {/* VS */}
+                {/* Tỷ số */}
                 <div className="text-center">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-900 text-xl font-black text-white shadow-lg sm:h-20 sm:w-20 sm:text-2xl">
-                    VS
+                  <div className="rounded-2xl bg-slate-900 px-6 py-3 shadow-lg">
+                    <p className="text-3xl font-black text-white sm:text-4xl">
+                      0 - 2
+                    </p>
                   </div>
 
-                  <p className="mt-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                    Bán kết
+                  <p className="mt-2 rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700 inline-block">
+                    Đã kết thúc
                   </p>
                 </div>
 
