@@ -113,11 +113,10 @@ function FIFAWC() {
                 </div>
 
                 {/* VS */}
-                <div className="text-center">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-900 text-xl font-black text-white shadow-lg sm:h-20 sm:w-20 sm:text-2xl">
+                <div className="rounded-2xl bg-slate-900 px-5 py-3 shadow-lg">
+                  <p className="text-2xl font-black text-white sm:text-4xl">
                     VS
-                  </div>
-
+                  </p>
                 </div>
 
                 {/* Argentina */}
