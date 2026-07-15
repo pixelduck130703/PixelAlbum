@@ -50,10 +50,6 @@ function FIFAWC() {
                       className="h-16 w-16 rounded-full object-cover sm:h-20 sm:w-20"
                     />
                   </div>
-
-                  <p className="mt-3 text-base font-bold text-slate-800 sm:text-lg">
-                    Pháp
-                  </p>
                 </div>
 
                 {/* Tỷ số */}
@@ -63,10 +59,6 @@ function FIFAWC() {
                       0 - 2
                     </p>
                   </div>
-
-                  <p className="mt-2 rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700 inline-block">
-                    Đã kết thúc
-                  </p>
                 </div>
 
                 {/* Tây Ban Nha */}
@@ -78,10 +70,6 @@ function FIFAWC() {
                       className="h-16 w-16 rounded-full object-cover sm:h-20 sm:w-20"
                     />
                   </div>
-
-                  <p className="mt-3 text-base font-bold text-slate-800 sm:text-lg">
-                    Tây Ban Nha
-                  </p>
                 </div>
               </div>
 
@@ -127,9 +115,6 @@ function FIFAWC() {
                     />
                   </div>
 
-                  <p className="mt-3 text-base font-bold text-slate-800 sm:text-lg">
-                    Anh
-                  </p>
                 </div>
 
                 {/* VS */}
@@ -138,9 +123,6 @@ function FIFAWC() {
                     VS
                   </div>
 
-                  <p className="mt-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                    Bán kết
-                  </p>
                 </div>
 
                 {/* Argentina */}
@@ -153,9 +135,6 @@ function FIFAWC() {
                     />
                   </div>
 
-                  <p className="mt-3 text-base font-bold text-slate-800 sm:text-lg">
-                    Argentina
-                  </p>
                 </div>
               </div>
 

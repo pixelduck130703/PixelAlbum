@@ -8,28 +8,34 @@ function AboutMe() {
   return (
     <section className="rounded-3xl bg-white p-6 shadow-xl sm:p-8 lg:sticky lg:top-6">
       <div className="flex flex-col items-center text-center">
-        <div className="flex items-center justify-center gap-6">
-          <img
-            src="/images/WC2026.webp"
-            alt="FIFA World Cup 2026"
-            className="h-20 w-20 rounded-xl bg-white p-2 object-contain"
-          />
+        <div className="grid grid-cols-3 items-center">
+          <div className="flex justify-center">
+            <img
+              src="/images/WC2026.webp"
+              alt="FIFA World Cup 2026"
+              className="h-20 w-20 rounded-xl bg-white p-2 object-contain"
+            />
+          </div>
 
-          <img
-            src="https://res.cloudinary.com/n19bl86u/image/upload/v1783766747/IMG_20260430_114141_ygsqw1.jpg"
-            alt="Nguyễn Tuấn Hùng"
-            className="h-28 w-28 rounded-full border-4 border-blue-500 object-cover shadow-lg"
-            onError={(event) => {
-              event.currentTarget.src =
-                "https://placehold.co/300x300?text=Avatar";
-            }}
-          />
+          <div className="flex justify-center">
+            <img
+              src="https://res.cloudinary.com/n19bl86u/image/upload/v1783766747/IMG_20260430_114141_ygsqw1.jpg"
+              alt="Nguyễn Tuấn Hùng"
+              className="h-28 w-28 rounded-full border-4 border-blue-500 object-cover shadow-lg"
+              onError={(event) => {
+                event.currentTarget.src =
+                  "https://placehold.co/300x300?text=Avatar";
+              }}
+            />
+          </div>
 
-          <img
-            src="/images/ARG.png"
-            alt="Argentina"
-            className="h-20 w-20 rounded-xl bg-white p-2 object-contain"
-          />
+          <div className="flex justify-center">
+            <img
+              src="/images/ARG.png"
+              alt="Argentina"
+              className="h-20 w-20 rounded-xl bg-white p-2 object-contain"
+            />
+          </div>
         </div>
 
         <h2 className="mt-5 text-2xl font-bold text-slate-800">

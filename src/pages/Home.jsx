@@ -378,11 +378,11 @@ function Home() {
                     </div>
 
                     <div className="min-w-0 flex-1 text-center sm:text-left">
-                      <p className="text-sm font-semibold uppercase tracking-wider text-pink-500">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-pink-500">
                         Happy Birthday
                       </p>
 
-                      <h3 className="mt-1 truncate text-xl font-bold text-slate-800 sm:text-2xl">
+                      <h3 className="mt-1 truncate text-lg font-bold text-slate-800 sm:text-2xl">
                         {person.name}
                       </h3>
                     </div>
@@ -581,7 +581,7 @@ function Home() {
 
           <DonateCard />
         </div>
-        <FootballScores />
+        {/*<FootballScores />*/}
         <FIFAWC />
       </main>
 
