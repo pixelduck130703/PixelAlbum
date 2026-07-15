@@ -2,18 +2,30 @@ function FIFAWC() {
   return (
     <section className="mt-10 overflow-hidden rounded-3xl bg-white shadow-xl">
       {/* Header */}
-      <div className="bg-gradient-to-r from-red-600 via-red-500 to-yellow-500 p-6 text-white">
-        <div className="flex items-center gap-4">
+      <div
+        className="relative overflow-hidden rounded-3xl bg-cover bg-center p-6 text-white"
+        style={{
+          backgroundImage: "url('/images/wc-bg.jpg')",
+        }}
+      >
+        {/* Lớp phủ để chữ dễ đọc */}
+        <div className="absolute inset-0 bg-black/30"></div>
+
+        <div className="relative z-10 flex items-center gap-4">
           <img
             src="/images/WC2026.webp"
             alt="FIFA World Cup 2026"
-            className="h-20 w-20 rounded-xl bg-white p-2 object-contain"
+            className="h-25 w-20 rounded-xl bg-white p-2 object-contain"
           />
 
           <div>
-            <h2 className="text-2xl font-bold">
+            <h2 className="text-2xl font-bold drop-shadow-lg">
               FIFA World Cup 2026
             </h2>
+
+            <p className="mt-1 text-white/90 drop-shadow">
+              United States • Canada • Mexico
+            </p>
           </div>
         </div>
       </div>

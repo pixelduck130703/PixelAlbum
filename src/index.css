@@ -3,3 +3,40 @@
 body{
     background:#f5f7fb;
 }
+.wc-bg{
+    background:
+      radial-gradient(circle at center,
+      #ff0000 0%,
+      #ff0000 8%,
+      #ff7a00 10%,
+      #ffe600 16%,
+      #7fff00 22%,
+      #00d4ff 28%,
+      #304ffe 34%,
+      #6a00ff 40%,
+      #ff006e 46%,
+      #ff0000 52%,
+      transparent 53%);
+    background-size:200% 200%;
+    animation:wcMove 10s linear infinite;
+    filter:saturate(1.2);
+}
+
+@keyframes wcMove{
+
+0%{
+transform:scale(1.2) rotate(0deg);
+background-position:0% 50%;
+}
+
+50%{
+transform:scale(1.35) rotate(180deg);
+background-position:100% 50%;
+}
+
+100%{
+transform:scale(1.2) rotate(360deg);
+background-position:0% 50%;
+}
+
+}
