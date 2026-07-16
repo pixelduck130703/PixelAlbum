@@ -42,7 +42,7 @@ function FIFAWC() {
                 </p>
 
                 <h3 className="mt-1 text-lg font-bold text-slate-800">
-                  Tranh 3-4
+                  Bán kết 1
                 </h3>
               </div>
 
