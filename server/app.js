@@ -373,49 +373,45 @@ app.post(
    Dashboard
 ========================== */
 
-app.get(
-  "/api/dashboard",
-  verifyAdminToken,
-  async (req, res) => {
-    try {
-      const result = await pool.query(`
-        SELECT
-          COUNT(*)::int AS "totalPeople",
+app.get("/api/dashboard", verifyAdminToken, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        COUNT(*)::INTEGER AS "totalPeople",
 
-          COUNT(*) FILTER (
-            WHERE birthday IS NOT NULL
-              AND EXTRACT(MONTH FROM birthday) =
-                  EXTRACT(MONTH FROM CURRENT_DATE)
-          )::int AS "thisMonth",
+        COUNT(*) FILTER (
+          WHERE birthday IS NOT NULL
+          AND "deathDate" IS NULL
+          AND EXTRACT(MONTH FROM birthday) =
+              EXTRACT(MONTH FROM CURRENT_DATE)
+        )::INTEGER AS "thisMonth",
 
-          COUNT(*) FILTER (
-            WHERE birthday IS NOT NULL
-              AND EXTRACT(MONTH FROM birthday) =
-                  EXTRACT(MONTH FROM CURRENT_DATE)
-              AND EXTRACT(DAY FROM birthday) =
-                  EXTRACT(DAY FROM CURRENT_DATE)
-          )::int AS today,
+        COUNT(*) FILTER (
+          WHERE album IS NOT NULL
+          AND TRIM(album) <> ''
+        )::INTEGER AS album,
 
-          COUNT(*) FILTER (
-            WHERE album IS NOT NULL
-              AND TRIM(album) <> ''
-          )::int AS album
+        COUNT(*) FILTER (
+          WHERE birthday IS NOT NULL
+          AND "deathDate" IS NULL
+          AND EXTRACT(MONTH FROM birthday) =
+              EXTRACT(MONTH FROM CURRENT_DATE)
+          AND EXTRACT(DAY FROM birthday) =
+              EXTRACT(DAY FROM CURRENT_DATE)
+        )::INTEGER AS today
+      FROM people
+    `);
 
-        FROM people
-      `);
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error("Lỗi lấy thống kê dashboard:", error);
 
-      res.json(result.rows[0]);
-    } catch (error) {
-      console.error("Lỗi lấy dashboard:", error);
-
-      res.status(500).json({
-        success: false,
-        message: "Không thể tải thống kê.",
-        error: error.message,
-      });
-    }
+    res.status(500).json({
+      message: "Không thể lấy thống kê dashboard.",
+      error: error.message,
+    });
   }
-);
+});
 
 /* ==========================
    Cập nhật người

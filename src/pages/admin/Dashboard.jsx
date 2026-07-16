@@ -119,13 +119,22 @@ function Dashboard() {
   };
 
   const loadDashboard = async () => {
-    try {
-      const response = await api.get("/dashboard");
-      setStats(response.data);
-    } catch (error) {
-      console.error("Lỗi lấy thống kê:", error);
+  try {
+    const response = await api.get("/dashboard");
+    setStats(response.data);
+  } catch (error) {
+    console.error(
+      "Lỗi lấy thống kê:",
+      error.response?.data || error
+    );
+
+    if (error.response?.status === 401) {
+      toast.error(
+        "Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại."
+      );
     }
-  };
+  }
+};
 
   const loadPeople = async () => {
     try {
