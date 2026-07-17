@@ -119,22 +119,22 @@ function Dashboard() {
   };
 
   const loadDashboard = async () => {
-  try {
-    const response = await api.get("/dashboard");
-    setStats(response.data);
-  } catch (error) {
-    console.error(
-      "Lỗi lấy thống kê:",
-      error.response?.data || error
-    );
-
-    if (error.response?.status === 401) {
-      toast.error(
-        "Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại."
+    try {
+      const response = await api.get("/dashboard");
+      setStats(response.data);
+    } catch (error) {
+      console.error(
+        "Lỗi lấy thống kê:",
+        error.response?.data || error
       );
+
+      if (error.response?.status === 401) {
+        toast.error(
+          "Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại."
+        );
+      }
     }
-  }
-};
+  };
 
   const loadPeople = async () => {
     try {
@@ -179,6 +179,51 @@ function Dashboard() {
       );
     });
   }, [people, keyword]);
+
+  const [showBirthdayMonthModal, setShowBirthdayMonthModal] =
+    useState(false);
+
+  const [selectedBirthdayMonth, setSelectedBirthdayMonth] =
+    useState(String(new Date().getMonth() + 1));
+
+  const [birthdayMonthPeople, setBirthdayMonthPeople] =
+    useState([]);
+
+  const handleShowBirthdayByMonth = () => {
+    const month = String(selectedBirthdayMonth).padStart(2, "0");
+
+    const list = people
+      .filter((person) => {
+        if (!person.birthday || person.deathDate) {
+          return false;
+        }
+
+        const birthday = String(person.birthday).slice(0, 10);
+
+        return birthday.slice(5, 7) === month;
+      })
+      .sort((a, b) => {
+        const birthdayA = String(a.birthday).slice(0, 10);
+        const birthdayB = String(b.birthday).slice(0, 10);
+
+        const [yearA, , dayA] = birthdayA
+          .split("-")
+          .map(Number);
+
+        const [yearB, , dayB] = birthdayB
+          .split("-")
+          .map(Number);
+
+        if (dayA !== dayB) {
+          return dayA - dayB;
+        }
+
+        return yearA - yearB;
+      });
+
+    setBirthdayMonthPeople(list);
+    setShowBirthdayMonthModal(true);
+  };
 
   const handleAdd = () => {
     setEditingPerson(null);
@@ -346,13 +391,23 @@ function Dashboard() {
             </h2>
           </div>
 
-          <button
-            type="button"
-            onClick={handleAdd}
-            className="w-full rounded-xl bg-blue-500 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 sm:w-auto"
-          >
-            + Thêm người
-          </button>
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+            <button
+              type="button"
+              onClick={handleShowBirthdayByMonth}
+              className="w-full rounded-xl bg-pink-400 px-5 py-3 font-semibold text-white transition hover:bg-pink-600 sm:w-auto"
+            >
+              📅 Sinh nhật theo tháng
+            </button>
+
+            <button
+              type="button"
+              onClick={handleAdd}
+              className="w-full rounded-xl bg-blue-500 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 sm:w-auto"
+            >
+              + Thêm người
+            </button>
+          </div>
         </div>
 
         {/* Ô tìm kiếm */}
@@ -369,7 +424,7 @@ function Dashboard() {
             type="text"
             value={keyword}
             onChange={(event) => setKeyword(event.target.value)}
-            placeholder="Nhập tên, ngày sinh, hoặc địa điểm"
+            placeholder="Nhập tên, quê quán hoặc địa điểm"
             className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
           />
         </div>
@@ -551,6 +606,139 @@ function Dashboard() {
 
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-bold text-slate-800">
+                        {person.name}
+                      </p>
+
+                      <p className="mt-1 text-sm text-slate-500">
+                        {formatDate(person.birthday)}
+                      </p>
+                    </div>
+
+                    <span className="shrink-0 text-slate-400">→</span>
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      {showBirthdayMonthModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-4"
+          onClick={() => setShowBirthdayMonthModal(false)}
+        >
+          <div
+            className="max-h-[90vh] w-full overflow-hidden rounded-t-3xl bg-white p-5 shadow-2xl sm:max-w-2xl sm:rounded-3xl sm:p-6"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-slate-800 sm:text-2xl">
+                  📅 Sinh nhật theo tháng
+                </h2>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  Có {birthdayMonthPeople.length} người trong tháng{" "}
+                  {selectedBirthdayMonth}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowBirthdayMonthModal(false)}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xl text-slate-600 transition hover:bg-slate-200"
+                aria-label="Đóng"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="mb-5">
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
+                Chọn tháng
+              </label>
+
+              <select
+                value={selectedBirthdayMonth}
+                onChange={(event) => {
+                  const selectedMonth = event.target.value;
+
+                  setSelectedBirthdayMonth(selectedMonth);
+
+                  const month = String(selectedMonth).padStart(2, "0");
+
+                  const list = people
+                    .filter((person) => {
+                      if (!person.birthday || person.deathDate) {
+                        return false;
+                      }
+
+                      return (
+                        String(person.birthday).slice(5, 7) === month
+                      );
+                    })
+                    .sort((a, b) => {
+                      const birthdayA = String(a.birthday).slice(0, 10);
+                      const birthdayB = String(b.birthday).slice(0, 10);
+
+                      const [yearA, , dayA] = birthdayA
+                        .split("-")
+                        .map(Number);
+
+                      const [yearB, , dayB] = birthdayB
+                        .split("-")
+                        .map(Number);
+
+                      if (dayA !== dayB) {
+                        return dayA - dayB;
+                      }
+
+                      return yearA - yearB;
+                    });
+
+                  setBirthdayMonthPeople(list);
+                }}
+                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-pink-500 focus:ring-4 focus:ring-pink-100"
+              >
+                {Array.from({ length: 12 }, (_, index) => {
+                  const month = index + 1;
+
+                  return (
+                    <option key={month} value={month}>
+                      Tháng {month}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+
+            {birthdayMonthPeople.length === 0 ? (
+              <div className="rounded-2xl bg-slate-100 p-8 text-center text-slate-500">
+                Không có ai sinh trong tháng này.
+              </div>
+            ) : (
+              <div className="max-h-[60vh] space-y-3 overflow-y-auto pr-1">
+                {birthdayMonthPeople.map((person) => (
+                  <a
+                    key={person.id}
+                    href={`/person/${person.id}`}
+                    className="flex items-center gap-3 rounded-2xl border border-slate-200 p-3 transition hover:border-pink-300 hover:bg-pink-50 sm:gap-4 sm:p-4"
+                  >
+                    <img
+                      src={
+                        person.avatar ||
+                        "https://placehold.co/100x100?text=Avatar"
+                      }
+                      alt={person.name}
+                      className="h-12 w-12 shrink-0 rounded-full object-cover sm:h-14 sm:w-14"
+                      onError={(event) => {
+                        event.currentTarget.src =
+                          "https://placehold.co/100x100?text=Avatar";
+                      }}
+                    />
+
+                    <div className="min-w-0 flex-1">
+                      <p className="break-words font-bold text-slate-800">
                         {person.name}
                       </p>
 
