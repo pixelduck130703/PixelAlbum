@@ -384,7 +384,7 @@ function Dashboard() {
 
       {/* Khối quản lý người */}
       <div className="mt-8 sm:mt-10">
-        <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-5 flex flex-col-reverse gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-2xl font-bold text-slate-800">
               Danh sách album
@@ -669,7 +669,7 @@ function Dashboard() {
 
                   const list = people
                     .filter((person) => {
-                      if (!person.birthday || person.deathDate) {
+                      if (!person.birthday) {
                         return false;
                       }
 

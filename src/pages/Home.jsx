@@ -50,6 +50,18 @@ const earthlyBranches = {
   "亥": "Hợi",
 };
 
+const lunarMonth = Math.abs(lunarToday.getMonth());
+
+let monthText;
+
+if (lunarMonth === 1) {
+  monthText = "Giêng";
+} else if (lunarMonth === 12) {
+  monthText = "Chạp";
+} else {
+  monthText = String(lunarMonth).padStart(2, "0");
+}
+
 const yearGanZhi = lunarToday.getYearInGanZhi();
 const yearGan = heavenlyStems[yearGanZhi[0]];
 const yearZhi = earthlyBranches[yearGanZhi[1]];
@@ -319,6 +331,7 @@ function Home() {
     <div className="flex min-h-screen flex-col bg-slate-100">
       <Navbar />
 
+      {/* Ngày tháng đầu trang */}
       <div className="mx-auto mt-6 flex w-full max-w-7xl flex-col gap-4 px-4 sm:flex-row sm:items-stretch sm:px-6">
         {/* Ngày dương lịch */}
         <div className="flex flex-1 items-center justify-center rounded-2xl border border-blue-200 bg-gradient-to-r from-blue-50 to-white p-4 text-center shadow-sm">
@@ -334,9 +347,9 @@ function Home() {
         <div className="flex flex-1 items-center justify-center rounded-2xl border border-amber-100 bg-gradient-to-r from-amber-50 to-white p-4 text-center shadow-sm">
           <p className="text-base font-bold text-slate-800 sm:text-xl">
             {weekdays[today.getDay()]},{" "}
-            Ngày {String(lunarToday.getDay()).padStart(2, "0")} {" "}
-            Tháng {String(Math.abs(lunarToday.getMonth())).padStart(2, "0")} Năm{" "}
-            {yearGan} {yearZhi}
+            Ngày {String(lunarToday.getDay()).padStart(2, "0")}{" "}
+            Tháng {monthText}{" "}
+            Năm {yearGan} {yearZhi}
           </p>
         </div>
       </div>
@@ -586,7 +599,7 @@ function Home() {
           <DonateCard />
         </div>
         {/*<FootballScores />*/}
-        
+
         {/*<FIFAWC /> */}
       </main>
 

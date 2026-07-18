@@ -280,7 +280,7 @@ function Detail() {
       }
 
       return {
-        message: `🕯️${days} ngày nữa đến ngày giỗ (${lunarDateText})`,
+        message: `🕯️${days} ngày nữa đến ngày giỗ`,
         lunarDate: lunarDateText,
         solarDate: solarDateText,
         days,
@@ -345,6 +345,67 @@ function Detail() {
       return "";
     }
   };
+
+  const formatLunarDate = (date) => {
+  if (!date) return "Chưa cập nhật";
+
+  try {
+    const normalizedDate = String(date).slice(0, 10);
+    const [year, month, day] = normalizedDate.split("-").map(Number);
+
+    const solar = Solar.fromYmd(year, month, day);
+    const lunar = solar.getLunar();
+
+    const lunarDay = lunar.getDay();
+    const lunarMonth = Math.abs(lunar.getMonth());
+    const lunarYear = lunar.getYear();
+
+    let monthText;
+    if (lunarMonth === 1) {
+      monthText = "Giêng";
+    } else if (lunarMonth === 12) {
+      monthText = "Chạp";
+    } else {
+      monthText = lunarMonth;
+    }
+
+    const can = [
+      "Canh",
+      "Tân",
+      "Nhâm",
+      "Quý",
+      "Giáp",
+      "Ất",
+      "Bính",
+      "Đinh",
+      "Mậu",
+      "Kỷ",
+    ];
+
+    const chi = [
+      "Thân",
+      "Dậu",
+      "Tuất",
+      "Hợi",
+      "Tý",
+      "Sửu",
+      "Dần",
+      "Mão",
+      "Thìn",
+      "Tỵ",
+      "Ngọ",
+      "Mùi",
+    ];
+
+    const yearCanChi = `${can[lunarYear % 10]} ${chi[lunarYear % 12]}`;
+
+    return `${String(lunarDay).padStart(2, "0")}/${monthText}${
+      lunar.getMonth() < 0 ? " (nhuận)" : ""
+    }/${yearCanChi}`;
+  } catch (error) {
+    return "Không xác định";
+  }
+};
 
   const handleOpenAlbum = () => {
     if (!person.hasAlbum && !person.album) {
@@ -598,7 +659,13 @@ function Detail() {
 
                   <InfoItem
                     label="Ngày mất"
-                    value={formatBirthday(person.deathDate)}
+                    value={
+                      person.deathDate
+                        ? `${formatBirthday(person.deathDate)} (${formatLunarDate(
+                          person.deathDate
+                        )})`
+                        : "Chưa cập nhật"
+                    }
                     icon="🎗️"
                   />
 
