@@ -2,7 +2,9 @@ function TodayEvents({
     todayBirthdayPeople = [],
     todayDeathPeople = [],
     todayHolidays = [],
-    formatDate = (date) => date || "",
+    formatDate,
+    yearGan,
+    yearZhi,
 }) {
     const safeBirthdayPeople = Array.isArray(todayBirthdayPeople)
         ? todayBirthdayPeople
@@ -16,6 +18,13 @@ function TodayEvents({
         ? todayHolidays
         : [];
 
+    const getHolidayTitle = (holiday) => {
+        if (holiday.title === "Tất Niên") {
+            return `Tất Niên năm ${yearGan} ${yearZhi}`;
+        }
+
+        return holiday.title;
+    };
     return (
         <>
             {/* Ngày lễ Việt Nam */}
@@ -38,8 +47,8 @@ function TodayEvents({
                                         {holiday.isImage ? (
                                             <img
                                                 src={holiday.icon}
-                                                alt={holiday.title}
-                                                className="h-8 w-8 object-contain"
+                                                alt={getHolidayTitle(holiday)}
+                                                className="h-12 w-12 object-contain"
                                             />
                                         ) : (
                                             <span className="text-3xl">{holiday.icon}</span>
@@ -50,8 +59,8 @@ function TodayEvents({
                                         <div className="flex flex-wrap items-center gap-2">
                                             <span
                                                 className={`rounded-full px-3 py-1 text-xs font-bold ${holiday.type === "lunar"
-                                                        ? "bg-amber-100 text-amber-700"
-                                                        : "bg-red-100 text-red-600"
+                                                    ? "bg-amber-100 text-amber-700"
+                                                    : "bg-red-100 text-red-600"
                                                     }`}
                                             >
                                                 {holiday.type === "lunar"

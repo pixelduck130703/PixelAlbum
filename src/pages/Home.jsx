@@ -57,8 +57,8 @@ if (lunarMonth === 1) {
 }
 
 const yearGanZhi = lunarToday.getYearInGanZhi();
-const yearGan = heavenlyStems[yearGanZhi[0]];
-const yearZhi = earthlyBranches[yearGanZhi[1]];
+const yearGan = heavenlyStems[lunarToday.getYearGan()];
+const yearZhi = earthlyBranches[lunarToday.getYearZhi()];
 
 const weekdays = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
 
@@ -337,11 +337,13 @@ function Home() {
 
         {/* Sự kiện hôm nay */}
         <TodayEvents
-  todayBirthdayPeople={todayBirthdayPeople}
-  todayDeathPeople={todayDeathPeople}
-  todayHolidays={todayHolidays}
-  formatDate={formatDate}
-/>
+          todayBirthdayPeople={todayBirthdayPeople}
+          todayDeathPeople={todayDeathPeople}
+          todayHolidays={todayHolidays}
+          formatDate={formatDate}
+          yearGan={yearGan}
+          yearZhi={yearZhi}
+        />
 
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
           {/* Bên trái: Tìm kiếm */}
