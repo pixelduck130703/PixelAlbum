@@ -187,7 +187,7 @@ function FIFAWC() {
                 <div className="text-center">
                   <div className="rounded-2xl bg-slate-900 px-5 py-3 shadow-lg">
                     <p className="text-2xl font-black text-white sm:text-4xl">
-                      VS
+                      4 - 6
                     </p>
                   </div>
 
@@ -247,7 +247,7 @@ function FIFAWC() {
                 {/* VS */}
                 <div className="rounded-2xl bg-slate-900 px-5 py-3 shadow-lg">
                   <p className="text-2xl font-black text-white sm:text-4xl">
-                    VS
+                    1 - 0
                   </p>
                 </div>
 
@@ -270,6 +270,9 @@ function FIFAWC() {
           </div>
         </div>
       </div>
+      <h2 className="mb-5 text-2xl text-center font-bold drop-shadow-lg">
+        CHÚC MỪNG ĐT TÂY BAN NHA VÔ ĐỊCH FIFA WORLD CUP 2026
+      </h2>
     </section>
   );
 }

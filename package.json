@@ -13,6 +13,8 @@
     "@tailwindcss/vite": "^4.3.2",
     "axios": "^1.18.1",
     "bcryptjs": "^3.0.3",
+    "canvas-confetti": "^1.9.4",
+    "fireworks-js": "^2.10.8",
     "lunar-javascript": "^1.7.7",
     "react": "^19.2.7",
     "react-data-table-component": "^8.5.2",

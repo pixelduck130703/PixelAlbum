@@ -387,7 +387,7 @@ function Home() {
         </div>
         {/*<FootballScores />*/}
 
-        {/*<FIFAWC /> */}
+        <FIFAWC />
       </main>
 
       <Footer />

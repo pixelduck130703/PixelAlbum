@@ -1,3 +1,6 @@
+import { useEffect } from "react";
+import confetti from "canvas-confetti";
+
 function TodayEvents({
     todayBirthdayPeople = [],
     todayDeathPeople = [],
@@ -18,9 +21,56 @@ function TodayEvents({
         ? todayHolidays
         : [];
 
+    useEffect(() => {
+        const shouldCelebrate =
+            safeBirthdayPeople.length > 0 ||
+            safeHolidays.length > 0;
+
+        if (!shouldCelebrate) return;
+
+        const duration = 2000;
+        const end = Date.now() + duration;
+
+        const interval = setInterval(() => {
+            if (Date.now() > end) {
+                clearInterval(interval);
+                return;
+            }
+
+            // Bắn từ góc trái
+            confetti({
+                particleCount: 35,
+                angle: 60,
+                spread: 60,
+                startVelocity: 65,
+                origin: {
+                    x: 0,
+                    y: 1,
+                },
+            });
+
+            // Bắn từ góc phải
+            confetti({
+                particleCount: 35,
+                angle: 120,
+                spread: 60,
+                startVelocity: 65,
+                origin: {
+                    x: 1,
+                    y: 1,
+                },
+            });
+        }, 450);
+
+        return () => clearInterval(interval);
+    }, [
+        safeBirthdayPeople.length,
+        safeHolidays.length,
+    ]);
+
     const getHolidayTitle = (holiday) => {
         if (holiday.title === "Tất Niên") {
-            return `Tất Niên năm ${yearGan} ${yearZhi}`;
+            return `Tất Niên Năm ${yearGan} ${yearZhi}`;
         }
 
         return holiday.title;
@@ -43,15 +93,17 @@ function TodayEvents({
                                 className="relative overflow-hidden rounded-3xl border border-red-200 bg-gradient-to-r from-red-50 via-white to-yellow-50 p-5 shadow-md ring-2 ring-red-100 transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:ring-red-300 sm:p-6"
                             >
                                 <div className="relative z-10 flex items-center gap-4">
-                                    <div className="flex-shrink-0">
+                                    <div className="relative shrink-0">
                                         {holiday.isImage ? (
                                             <img
                                                 src={holiday.icon}
                                                 alt={getHolidayTitle(holiday)}
-                                                className="h-12 w-12 object-contain"
+                                                className="h-16 w-16 rounded-full border-4 border-white object-cover shadow-lg transition duration-300 hover:scale-105 sm:h-20 sm:w-20"
                                             />
                                         ) : (
-                                            <span className="text-3xl">{holiday.icon}</span>
+                                            <div className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-white bg-white text-4xl shadow-lg transition duration-300 hover:scale-105 sm:h-20 sm:w-20 sm:text-5xl">
+                                                {holiday.icon}
+                                            </div>
                                         )}
                                     </div>
 
@@ -63,12 +115,6 @@ function TodayEvents({
                                                     : "bg-red-100 text-red-600"
                                                     }`}
                                             >
-                                                {holiday.type === "lunar"
-                                                    ? "Âm lịch"
-                                                    : "Dương lịch"}
-                                            </span>
-
-                                            <span className="text-sm font-semibold text-slate-500">
                                                 {holiday.dateText}
                                             </span>
                                         </div>
@@ -150,10 +196,6 @@ function TodayEvents({
                             </div>
                         ))}
                     </div>
-
-                    <p className="mt-6 text-center font-semibold italic text-pink-600">
-                        ❤️ Chúc bạn có ngày sinh nhật thật ý nghĩa!
-                    </p>
                 </div>
             )}
 
@@ -225,10 +267,6 @@ function TodayEvents({
                             </div>
                         ))}
                     </div>
-
-                    <p className="mt-6 text-center font-semibold italic text-amber-700">
-                        🌿 Thành kính tưởng nhớ và tri ân.
-                    </p>
                 </div>
             )}
         </>
