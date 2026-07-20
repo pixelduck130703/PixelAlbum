@@ -710,6 +710,94 @@ app.post("/api/admin/login", (req, res) => {
 /* ==========================
    Xác thực album
 ========================== */
+app.post(
+  "/api/people/public/:publicId/verify-album",
+  async (req, res) => {
+    try {
+      const answer = normalizeSecurityAnswer(
+        req.body.answer
+      );
+
+      const result = await pool.query(
+        `
+          SELECT
+            album,
+            "securityQuestion",
+            "securityAnswer"
+          FROM people
+          WHERE "publicId" = $1
+        `,
+        [req.params.publicId]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Không tìm thấy người.",
+        });
+      }
+
+      const person = result.rows[0];
+
+      if (!person.album) {
+        return res.status(404).json({
+          success: false,
+          message: "Người này chưa có album.",
+        });
+      }
+
+      if (!person.securityQuestion) {
+        return res.json({
+          success: true,
+          album: person.album,
+        });
+      }
+
+      if (!answer) {
+        return res.status(400).json({
+          success: false,
+          message: "Vui lòng nhập câu trả lời.",
+        });
+      }
+
+      if (!person.securityAnswer) {
+        return res.status(500).json({
+          success: false,
+          message:
+            "Câu hỏi xác thực chưa được cấu hình đầy đủ.",
+        });
+      }
+
+      const correct = await bcrypt.compare(
+        answer,
+        person.securityAnswer
+      );
+
+      if (!correct) {
+        return res.status(401).json({
+          success: false,
+          message: "Câu trả lời không chính xác.",
+        });
+      }
+
+      return res.json({
+        success: true,
+        album: person.album,
+      });
+    } catch (error) {
+      console.error(
+        "Lỗi xác thực album bằng publicId:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+        message: "Không thể xác thực album.",
+        error: error.message,
+      });
+    }
+  }
+);
 
 app.post(
   "/api/people/:id/verify-album",
