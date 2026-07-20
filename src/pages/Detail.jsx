@@ -4,7 +4,7 @@ import api from "../services/api";
 import { Solar, Lunar } from "lunar-javascript";
 
 function Detail() {
-  const { id } = useParams();
+  const { publicId } = useParams();
   const navigate = useNavigate();
 
   const [person, setPerson] = useState(null);
@@ -22,7 +22,9 @@ function Detail() {
         setLoading(true);
         setError("");
 
-        const response = await api.get(`/people/${id}`);
+        const response = await api.get(
+          `/people/public/${publicId}`
+        );
         setPerson(response.data);
       } catch (error) {
         console.error("Lỗi tải thông tin:", error);
@@ -37,7 +39,7 @@ function Detail() {
     };
 
     loadPerson();
-  }, [id]);
+  }, [publicId]);
 
   const age = useMemo(() => {
     if (!person?.birthday) return null;
@@ -347,65 +349,64 @@ function Detail() {
   };
 
   const formatLunarDate = (date) => {
-  if (!date) return "Chưa cập nhật";
+    if (!date) return "Chưa cập nhật";
 
-  try {
-    const normalizedDate = String(date).slice(0, 10);
-    const [year, month, day] = normalizedDate.split("-").map(Number);
+    try {
+      const normalizedDate = String(date).slice(0, 10);
+      const [year, month, day] = normalizedDate.split("-").map(Number);
 
-    const solar = Solar.fromYmd(year, month, day);
-    const lunar = solar.getLunar();
+      const solar = Solar.fromYmd(year, month, day);
+      const lunar = solar.getLunar();
 
-    const lunarDay = lunar.getDay();
-    const lunarMonth = Math.abs(lunar.getMonth());
-    const lunarYear = lunar.getYear();
+      const lunarDay = lunar.getDay();
+      const lunarMonth = Math.abs(lunar.getMonth());
+      const lunarYear = lunar.getYear();
 
-    let monthText;
-    if (lunarMonth === 1) {
-      monthText = "Giêng";
-    } else if (lunarMonth === 12) {
-      monthText = "Chạp";
-    } else {
-      monthText = lunarMonth;
+      let monthText;
+      if (lunarMonth === 1) {
+        monthText = "Giêng";
+      } else if (lunarMonth === 12) {
+        monthText = "Chạp";
+      } else {
+        monthText = lunarMonth;
+      }
+
+      const can = [
+        "Canh",
+        "Tân",
+        "Nhâm",
+        "Quý",
+        "Giáp",
+        "Ất",
+        "Bính",
+        "Đinh",
+        "Mậu",
+        "Kỷ",
+      ];
+
+      const chi = [
+        "Thân",
+        "Dậu",
+        "Tuất",
+        "Hợi",
+        "Tý",
+        "Sửu",
+        "Dần",
+        "Mão",
+        "Thìn",
+        "Tỵ",
+        "Ngọ",
+        "Mùi",
+      ];
+
+      const yearCanChi = `${can[lunarYear % 10]} ${chi[lunarYear % 12]}`;
+
+      return `${String(lunarDay).padStart(2, "0")}/${monthText}${lunar.getMonth() < 0 ? " (nhuận)" : ""
+        }/${yearCanChi}`;
+    } catch (error) {
+      return "Không xác định";
     }
-
-    const can = [
-      "Canh",
-      "Tân",
-      "Nhâm",
-      "Quý",
-      "Giáp",
-      "Ất",
-      "Bính",
-      "Đinh",
-      "Mậu",
-      "Kỷ",
-    ];
-
-    const chi = [
-      "Thân",
-      "Dậu",
-      "Tuất",
-      "Hợi",
-      "Tý",
-      "Sửu",
-      "Dần",
-      "Mão",
-      "Thìn",
-      "Tỵ",
-      "Ngọ",
-      "Mùi",
-    ];
-
-    const yearCanChi = `${can[lunarYear % 10]} ${chi[lunarYear % 12]}`;
-
-    return `${String(lunarDay).padStart(2, "0")}/${monthText}${
-      lunar.getMonth() < 0 ? " (nhuận)" : ""
-    }/${yearCanChi}`;
-  } catch (error) {
-    return "Không xác định";
-  }
-};
+  };
 
   const handleOpenAlbum = () => {
     if (!person.hasAlbum && !person.album) {
@@ -425,41 +426,41 @@ function Detail() {
   };
 
   const handleVerifyAlbum = async (event) => {
-    event.preventDefault();
+  event.preventDefault();
 
-    if (!verifyAnswer.trim()) {
-      setVerifyError("Vui lòng nhập câu trả lời.");
-      return;
-    }
+  if (!verifyAnswer.trim()) {
+    setVerifyError("Vui lòng nhập câu trả lời.");
+    return;
+  }
 
-    try {
-      setVerifying(true);
-      setVerifyError("");
+  try {
+    setVerifying(true);
+    setVerifyError("");
 
-      const response = await api.post(
-        `/people/${person.id}/verify-album`,
-        {
-          answer: verifyAnswer,
-        }
-      );
+    const response = await api.post(
+      `/people/public/${publicId}/verify-album`,
+      {
+        answer: verifyAnswer,
+      }
+    );
 
-      setVerifyOpen(false);
-      setVerifyAnswer("");
+    setVerifyOpen(false);
+    setVerifyAnswer("");
 
-      window.open(
-        response.data.album,
-        "_blank",
-        "noopener,noreferrer"
-      );
-    } catch (error) {
-      setVerifyError(
-        error.response?.data?.message ||
+    window.open(
+      response.data.album,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  } catch (error) {
+    setVerifyError(
+      error.response?.data?.message ||
         "Không thể xác thực câu trả lời."
-      );
-    } finally {
-      setVerifying(false);
-    }
-  };
+    );
+  } finally {
+    setVerifying(false);
+  }
+};
 
   if (loading) {
     return (

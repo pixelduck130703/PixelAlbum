@@ -119,39 +119,92 @@ app.get("/api/test", async (req, res) => {
 ========================== */
 
 app.get("/api/people", async (req, res) => {
-  try {
-    const result = await pool.query(`
-      SELECT
-  id,
-  name,
-  TO_CHAR(birthday, 'YYYY-MM-DD') AS birthday,
-  TO_CHAR("deathDate", 'YYYY-MM-DD') AS "deathDate",
-        gender,
-        class,
-        phone,
-        address,
-        avatar,
-        album,
-        "securityQuestion"
-      FROM people
-      ORDER BY id DESC
-    `);
+    try {
+        const result = await pool.query(`
+            SELECT
+                id,
+                "publicId",
+                name,
+                birthday,
+                "deathDate",
+                gender,
+                class,
+                phone,
+                address,
+                avatar,
+                album,
+                "securityQuestion"
+            FROM people
+            ORDER BY id DESC
+        `);
 
-    res.json(result.rows);
-  } catch (error) {
-    console.error("Lỗi lấy danh sách người:", error);
+        return res.json(result.rows);
+    } catch (error) {
+        console.error("Lỗi lấy danh sách người:", error);
 
-    res.status(500).json({
-      success: false,
-      message: "Không thể lấy danh sách người.",
-      error: error.message,
-    });
-  }
+        return res.status(500).json({
+            message: "Lỗi máy chủ",
+        });
+    }
 });
 
 /* ==========================
    Lấy người theo ID
 ========================== */
+app.get("/api/people/public/:publicId", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `
+      SELECT
+        "publicId",
+        name,
+        TO_CHAR(birthday, 'YYYY-MM-DD') AS birthday,
+        TO_CHAR("deathDate", 'YYYY-MM-DD') AS "deathDate",
+        gender,
+        class,
+        phone,
+        address,
+        avatar,
+
+        CASE
+          WHEN "securityQuestion" IS NULL
+            OR TRIM("securityQuestion") = ''
+          THEN album
+          ELSE NULL
+        END AS album,
+
+        CASE
+          WHEN album IS NULL
+            OR TRIM(album) = ''
+          THEN FALSE
+          ELSE TRUE
+        END AS "hasAlbum",
+
+        "securityQuestion"
+
+      FROM people
+      WHERE "publicId" = $1
+      `,
+      [req.params.publicId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy người.",
+      });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Không thể lấy thông tin người.",
+    });
+  }
+});
 
 app.get("/api/people/:id", async (req, res) => {
   try {

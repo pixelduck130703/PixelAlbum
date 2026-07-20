@@ -514,7 +514,7 @@ function Dashboard() {
                 {todayPeople.map((person) => (
                   <a
                     key={person.id}
-                    href={`/person/${person.id}`}
+                    href={`/person/${person.publicId}`}
                     className="flex items-center gap-3 rounded-2xl border border-slate-200 p-3 transition hover:border-blue-300 hover:bg-blue-50 sm:gap-4 sm:p-4"
                   >
                     <img
@@ -588,7 +588,7 @@ function Dashboard() {
                 {monthPeople.map((person) => (
                   <a
                     key={person.id}
-                    href={`/person/${person.id}`}
+                    href={`/person/${person.publicId}`}
                     className="flex items-center gap-3 rounded-2xl border border-slate-200 p-3 transition hover:border-blue-300 hover:bg-blue-50 sm:gap-4 sm:p-4"
                   >
                     <img
@@ -721,7 +721,7 @@ function Dashboard() {
                 {birthdayMonthPeople.map((person) => (
                   <a
                     key={person.id}
-                    href={`/person/${person.id}`}
+                    href={`/person/${person.publicId}`}
                     className="flex items-center gap-3 rounded-2xl border border-slate-200 p-3 transition hover:border-pink-300 hover:bg-pink-50 sm:gap-4 sm:p-4"
                   >
                     <img

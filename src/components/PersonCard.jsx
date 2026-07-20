@@ -6,7 +6,7 @@ function PersonCard({ person }) {
 
   return (
     <div
-      onClick={() => navigate(`/person/${person.id}`)}
+      onClick={() => navigate(`/person/${person.publicId}`)}
       className="bg-white rounded-2xl shadow p-4 flex items-center gap-4 cursor-pointer hover:shadow-lg hover:scale-[1.02] transition"
     >
       <img
