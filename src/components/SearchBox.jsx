@@ -111,7 +111,7 @@ function SearchBox({
             placeholder={
               birthday
                 ? "Xóa ngày sinh để tìm theo tên"
-                : "Ví dụ: Nguyễn Tuấn Hùng hoặc Hà Giang"
+                : "Nguyễn Tuấn Hùng, IT2 hoặc Hà Giang"
             }
             className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
           />

@@ -11,6 +11,7 @@ function Dashboard() {
     thisMonth: 0,
     album: 0,
     today: 0,
+    totalAlbumViews: 0,
   });
 
   const [formOpen, setFormOpen] = useState(false);
@@ -348,6 +349,20 @@ function Dashboard() {
             </h2>
 
             <span className="text-2xl sm:text-3xl">🖼️</span>
+          </div>
+        </div>
+
+        <div className="w-full rounded-2xl bg-white p-4 sm:p-6 shadow-sm transition hover:scale-[1.02] hover:shadow-lg">
+          <p className="text-sm font-medium text-slate-500">
+            Tổng lượt xem album
+          </p>
+
+          <div className="mt-4 flex items-end justify-between">
+            <h2 className="text-3xl font-bold sm:text-4xl text-blue-600">
+              {Number(stats.totalAlbumViews || 0).toLocaleString("vi-VN")}
+            </h2>
+
+            <span className="text-2xl sm:text-3xl">👁️</span>
           </div>
         </div>
 

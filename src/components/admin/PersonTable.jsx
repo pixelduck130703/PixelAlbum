@@ -1,8 +1,15 @@
-import { FaEdit, FaTrash, FaExternalLinkAlt } from "react-icons/fa";
+import {
+  FaEdit,
+  FaTrash,
+  FaExternalLinkAlt,
+  FaEye,
+} from "react-icons/fa";
 
 function PersonTable({ people, onEdit, onDelete }) {
   const formatBirthday = (birthday) => {
-    if (!birthday) return "Chưa cập nhật";
+    if (!birthday) {
+      return "Chưa cập nhật";
+    }
 
     const [year, month, day] = birthday.split("-");
 
@@ -11,6 +18,10 @@ function PersonTable({ people, onEdit, onDelete }) {
     }
 
     return `${day}/${month}/${year}`;
+  };
+
+  const formatAlbumViews = (albumViews) => {
+    return Number(albumViews || 0).toLocaleString("vi-VN");
   };
 
   if (!people || people.length === 0) {
@@ -34,15 +45,36 @@ function PersonTable({ people, onEdit, onDelete }) {
       {/* ================= Desktop ================= */}
       <div className="hidden overflow-hidden rounded-2xl bg-white shadow-sm md:block">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[900px]">
+          <table className="w-full min-w-[1050px]">
             <thead className="bg-slate-100">
               <tr className="text-left text-sm font-semibold text-slate-600">
-                <th className="px-6 py-4">Họ và tên</th>
-                <th className="px-6 py-4">Ngày sinh</th>
-                <th className="px-6 py-4">Giới tính</th>
-                <th className="px-6 py-4">Quê quán</th>
-                <th className="px-6 py-4">Album</th>
-                <th className="px-6 py-4 text-center">Thao tác</th>
+                <th className="px-6 py-4">
+                  Họ và tên
+                </th>
+
+                <th className="px-6 py-4">
+                  Ngày sinh
+                </th>
+
+                <th className="px-6 py-4">
+                  Giới tính
+                </th>
+
+                <th className="px-6 py-4">
+                  Quê quán
+                </th>
+
+                <th className="px-6 py-4 text-center">
+                  Lượt xem album
+                </th>
+
+                <th className="px-6 py-4 text-center">
+                  Album
+                </th>
+
+                <th className="px-6 py-4 text-center">
+                  Thao tác
+                </th>
               </tr>
             </thead>
 
@@ -63,52 +95,77 @@ function PersonTable({ people, onEdit, onDelete }) {
                         className="h-12 w-12 rounded-full object-cover"
                       />
 
-                      <div className="font-bold">
+                      <div className="font-bold text-slate-800">
                         {person.name}
                       </div>
                     </div>
                   </td>
 
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 text-slate-600">
                     {formatBirthday(person.birthday)}
                   </td>
 
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 text-slate-600">
                     {person.gender || "Chưa cập nhật"}
                   </td>
 
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 text-slate-600">
                     {person.address || "Chưa cập nhật"}
                   </td>
 
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 text-center">
+                    {person.album ? (
+                      <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700">
+                        <FaEye />
+
+                        {formatAlbumViews(
+                          person.albumViews
+                        )}
+                      </span>
+                    ) : (
+                      <span className="text-sm text-slate-400">
+                        Chưa có album
+                      </span>
+                    )}
+                  </td>
+
+                  <td className="px-6 py-4 text-center">
                     {person.album ? (
                       <a
                         href={person.album}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-2 text-blue-600"
+                        className="inline-flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-2 text-blue-600 transition hover:bg-blue-100"
                       >
                         <FaExternalLinkAlt />
+
                         Album
                       </a>
                     ) : (
-                      "Chưa có"
+                      <span className="text-slate-400">
+                        Chưa có
+                      </span>
                     )}
                   </td>
 
                   <td className="px-6 py-4">
                     <div className="flex justify-center gap-2">
                       <button
+                        type="button"
                         onClick={() => onEdit(person)}
-                        className="rounded-lg bg-amber-50 p-3 text-amber-600 hover:bg-amber-100"
+                        className="rounded-lg bg-amber-50 p-3 text-amber-600 transition hover:bg-amber-100"
+                        title="Sửa"
                       >
                         <FaEdit />
                       </button>
 
                       <button
-                        onClick={() => onDelete(person.id)}
-                        className="rounded-lg bg-red-50 p-3 text-red-600 hover:bg-red-100"
+                        type="button"
+                        onClick={() =>
+                          onDelete(person.id)
+                        }
+                        className="rounded-lg bg-red-50 p-3 text-red-600 transition hover:bg-red-100"
+                        title="Xóa"
                       >
                         <FaTrash />
                       </button>
@@ -139,7 +196,7 @@ function PersonTable({ people, onEdit, onDelete }) {
               />
 
               <div className="min-w-0 flex-1">
-                <h3 className="truncate text-lg font-bold">
+                <h3 className="truncate text-lg font-bold text-slate-800">
                   {person.name}
                 </h3>
 
@@ -149,8 +206,7 @@ function PersonTable({ people, onEdit, onDelete }) {
               </div>
             </div>
 
-            <div className="mt-4 space-y-2 text-sm">
-
+            <div className="mt-4 space-y-3 text-sm text-slate-700">
               <p>
                 <span className="font-semibold">
                   Giới tính:
@@ -165,6 +221,25 @@ function PersonTable({ people, onEdit, onDelete }) {
                 {person.address || "Chưa cập nhật"}
               </p>
 
+              <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-3">
+                <span className="font-semibold">
+                  Lượt xem album:
+                </span>
+
+                {person.album ? (
+                  <span className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1 font-semibold text-blue-700">
+                    <FaEye />
+
+                    {formatAlbumViews(
+                      person.albumViews
+                    )}
+                  </span>
+                ) : (
+                  <span className="text-slate-400">
+                    Chưa có album
+                  </span>
+                )}
+              </div>
             </div>
 
             {person.album && (
@@ -172,31 +247,34 @@ function PersonTable({ people, onEdit, onDelete }) {
                 href={person.album}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 text-white"
+                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 font-semibold text-white transition hover:bg-blue-700"
               >
                 <FaExternalLinkAlt />
+
                 Xem album
               </a>
             )}
 
             <div className="mt-4 grid grid-cols-2 gap-3">
-
               <button
+                type="button"
                 onClick={() => onEdit(person)}
-                className="rounded-xl bg-amber-500 py-3 font-semibold text-white"
+                className="rounded-xl bg-amber-500 py-3 font-semibold text-white transition hover:bg-amber-600"
               >
                 <FaEdit className="mr-2 inline" />
                 Sửa
               </button>
 
               <button
-                onClick={() => onDelete(person.id)}
-                className="rounded-xl bg-red-600 py-3 font-semibold text-white"
+                type="button"
+                onClick={() =>
+                  onDelete(person.id)
+                }
+                className="rounded-xl bg-red-600 py-3 font-semibold text-white transition hover:bg-red-700"
               >
                 <FaTrash className="mr-2 inline" />
                 Xóa
               </button>
-
             </div>
           </div>
         ))}

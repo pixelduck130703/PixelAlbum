@@ -76,6 +76,31 @@ function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const [visits, setVisits] = useState(0);
+
+  useEffect(() => {
+    const loadVisits = async () => {
+      try {
+        const visited = sessionStorage.getItem("websiteVisited");
+
+        if (!visited) {
+          // Ghi trước để React StrictMode không gọi POST lần thứ hai
+          sessionStorage.setItem("websiteVisited", "true");
+
+          await api.post("/visits");
+        }
+
+        const response = await api.get("/visits");
+
+        setVisits(Number(response.data.visits) || 0);
+      } catch (error) {
+        console.error("Lỗi tải lượt truy cập:", error);
+      }
+    };
+
+    loadVisits();
+  }, []);
+
 
   useEffect(() => {
     let retryTimer;
@@ -382,12 +407,27 @@ function Home() {
         {/* Gửi kiến nghị và ủng hộ */}
         <div className="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-2 lg:items-stretch">
           <FeedbackForm />
-
           <DonateCard />
+        </div>
+
+        <div className="mt-6 flex items-center gap-4 rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50 via-white to-cyan-50 p-5 shadow-lg">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-100 text-3xl shadow">
+            👥
+          </div>
+
+          <div>
+            <p className="text-sm font-medium uppercase tracking-wider text-slate-500">
+              Lượt truy cập
+            </p>
+
+            <h2 className="text-3xl font-extrabold text-blue-600">
+              {visits.toLocaleString()}
+            </h2>
+          </div>
         </div>
         {/*<FootballScores />*/}
 
-        <FIFAWC />
+        {/*<FIFAWC /> */}
       </main>
 
       <Footer />

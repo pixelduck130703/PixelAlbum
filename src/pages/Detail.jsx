@@ -15,6 +15,8 @@ function Detail() {
   const [verifyAnswer, setVerifyAnswer] = useState("");
   const [verifyError, setVerifyError] = useState("");
   const [verifying, setVerifying] = useState(false);
+  const [openingAlbum, setOpeningAlbum] = useState(false);
+
 
   useEffect(() => {
     const loadPerson = async () => {
@@ -408,7 +410,31 @@ function Detail() {
     }
   };
 
-  const handleOpenAlbum = () => {
+  const openAlbumAndCountView = async (albumUrl) => {
+    if (!albumUrl || openingAlbum) {
+      return;
+    }
+
+    setOpeningAlbum(true);
+
+    try {
+      await api.post(`/people/public/${publicId}/album-view`);
+
+      window.open(
+        albumUrl,
+        "_blank",
+        "noopener,noreferrer"
+      );
+    } catch (error) {
+      console.error("Lỗi tăng lượt xem album:", error);
+
+      alert("Không thể mở album. Vui lòng thử lại.");
+    } finally {
+      setOpeningAlbum(false);
+    }
+  };
+
+  const handleOpenAlbum = async () => {
     if (!person.hasAlbum && !person.album) {
       return;
     }
@@ -421,46 +447,44 @@ function Detail() {
     }
 
     if (person.album) {
-      window.open(person.album, "_blank", "noopener,noreferrer");
+      await openAlbumAndCountView(person.album);
     }
   };
 
   const handleVerifyAlbum = async (event) => {
-  event.preventDefault();
+    event.preventDefault();
 
-  if (!verifyAnswer.trim()) {
-    setVerifyError("Vui lòng nhập câu trả lời.");
-    return;
-  }
+    if (!verifyAnswer.trim()) {
+      setVerifyError("Vui lòng nhập câu trả lời.");
+      return;
+    }
 
-  try {
-    setVerifying(true);
-    setVerifyError("");
+    try {
+      setVerifying(true);
+      setVerifyError("");
 
-    const response = await api.post(
-      `/people/public/${publicId}/verify-album`,
-      {
-        answer: verifyAnswer,
-      }
-    );
+      const response = await api.post(
+        `/people/public/${publicId}/verify-album`,
+        {
+          answer: verifyAnswer,
+        }
+      );
 
-    setVerifyOpen(false);
-    setVerifyAnswer("");
+      setVerifyOpen(false);
+      setVerifyAnswer("");
 
-    window.open(
-      response.data.album,
-      "_blank",
-      "noopener,noreferrer"
-    );
-  } catch (error) {
-    setVerifyError(
-      error.response?.data?.message ||
+      await openAlbumAndCountView(
+        response.data.album || person.album
+      );
+    } catch (error) {
+      setVerifyError(
+        error.response?.data?.message ||
         "Không thể xác thực câu trả lời."
-    );
-  } finally {
-    setVerifying(false);
-  }
-};
+      );
+    } finally {
+      setVerifying(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -740,9 +764,12 @@ function Detail() {
                 <button
                   type="button"
                   onClick={handleOpenAlbum}
-                  className="mt-5 flex w-full items-center justify-center rounded-xl bg-blue-500 px-5 py-3 font-semibold text-white transition hover:bg-blue-700"
+                  disabled={openingAlbum}
+                  className="mt-5 flex w-full items-center justify-center rounded-xl bg-blue-500 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  🖼️ Xem album ảnh
+                  {openingAlbum
+                    ? "Đang mở album..."
+                    : "🖼️ Xem album ảnh"}
                 </button>
               ) : (
                 <div className="mt-5 flex w-full items-center justify-center rounded-xl bg-gray-300 px-5 py-3 font-bold text-red-500 transition hover:bg-blue-700">

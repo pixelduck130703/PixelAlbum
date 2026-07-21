@@ -119,33 +119,36 @@ app.get("/api/test", async (req, res) => {
 ========================== */
 
 app.get("/api/people", async (req, res) => {
-    try {
-        const result = await pool.query(`
-            SELECT
-                id,
-                "publicId",
-                name,
-                birthday,
-                "deathDate",
-                gender,
-                class,
-                phone,
-                address,
-                avatar,
-                album,
-                "securityQuestion"
-            FROM people
-            ORDER BY id DESC
-        `);
+  try {
+    const result = await pool.query(`
+      SELECT
+  id,
+  "publicId",
+  name,
+  TO_CHAR(birthday, 'YYYY-MM-DD') AS birthday,
+  TO_CHAR("deathDate", 'YYYY-MM-DD') AS "deathDate",
+  gender,
+  class,
+  phone,
+  address,
+  avatar,
+  album,
+  "securityQuestion",
+  COALESCE("albumViews", 0) AS "albumViews"
+FROM people
+ORDER BY
+  COALESCE("albumViews", 0) DESC,
+  id DESC;
+    `);
 
-        return res.json(result.rows);
-    } catch (error) {
-        console.error("Lỗi lấy danh sách người:", error);
+    return res.json(result.rows);
+  } catch (error) {
+    console.error("Lỗi lấy danh sách người:", error);
 
-        return res.status(500).json({
-            message: "Lỗi máy chủ",
-        });
-    }
+    return res.status(500).json({
+      message: "Lỗi máy chủ",
+    });
+  }
 });
 
 /* ==========================
@@ -202,6 +205,41 @@ app.get("/api/people/public/:publicId", async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Không thể lấy thông tin người.",
+    });
+  }
+});
+
+app.post("/api/people/public/:publicId/album-view", async (req, res) => {
+  try {
+    const { publicId } = req.params;
+
+    const result = await pool.query(
+      `
+      UPDATE people
+      SET "albumViews" = COALESCE("albumViews", 0) + 1
+      WHERE "publicId" = $1
+      RETURNING "albumViews"
+      `,
+      [publicId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy người dùng.",
+      });
+    }
+
+    return res.json({
+      success: true,
+      albumViews: Number(result.rows[0].albumViews),
+    });
+  } catch (error) {
+    console.error("Lỗi tăng lượt xem album:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Không thể tăng lượt xem album.",
     });
   }
 });
@@ -451,11 +489,22 @@ app.get("/api/dashboard", verifyAdminToken, async (req, res) => {
               EXTRACT(MONTH FROM CURRENT_DATE)
           AND EXTRACT(DAY FROM birthday) =
               EXTRACT(DAY FROM CURRENT_DATE)
-        )::INTEGER AS today
+        )::INTEGER AS today,
+
+        COALESCE(
+          SUM("albumViews"),
+          0
+        )::BIGINT AS "totalAlbumViews"
+
       FROM people
     `);
 
-    res.json(result.rows[0]);
+    const stats = result.rows[0];
+
+    res.json({
+      ...stats,
+      totalAlbumViews: Number(stats.totalAlbumViews || 0),
+    });
   } catch (error) {
     console.error("Lỗi lấy thống kê dashboard:", error);
 
@@ -884,6 +933,54 @@ app.post(
     }
   }
 );
+
+/* ==========================
+   API tăng lượt truy cập website
+========================== */
+
+app.post("/api/visits", async (req, res) => {
+  try {
+    await pool.query(`
+      UPDATE website_stats
+      SET visits = visits + 1
+      WHERE id = 1
+    `);
+
+    res.json({
+      success: true,
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+    });
+  }
+});
+
+/* ==========================
+   API lấy số lượt truy cập web
+========================== */
+
+app.get("/api/visits", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT visits
+      FROM website_stats
+      WHERE id = 1
+    `);
+
+    res.json({
+      visits: result.rows[0].visits,
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      visits: 0,
+    });
+  }
+});
 
 /* ==========================
    Middleware xử lý lỗi CORS
