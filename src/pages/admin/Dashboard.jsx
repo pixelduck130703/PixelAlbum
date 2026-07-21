@@ -323,79 +323,88 @@ function Dashboard() {
 
 
       {/* Thẻ thống kê */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-4">
-        <div className="w-full rounded-2xl bg-white p-4 sm:p-6 shadow-sm transition hover:scale-[1.02] hover:shadow-lg">
-          <p className="text-sm font-medium text-slate-500">
-            Tổng số người
-          </p>
+<div className="grid grid-cols-2 gap-3 md:grid-cols-5 md:gap-4">
+  {/* Tổng số người */}
+  <div className="rounded-2xl bg-white p-3 md:p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+    <p className="text-sm font-medium text-slate-500">
+      Tổng số người
+    </p>
 
-          <div className="mt-4 flex items-end justify-between">
-            <h2 className="text-3xl font-bold sm:text-4xl text-blue-600">
-              {stats.totalPeople}
-            </h2>
+    <div className="mt-3 flex items-end justify-between">
+      <h2 className="text-2xl font-bold text-blue-600 lg:text-3xl">
+        {stats.totalPeople}
+      </h2>
 
-            <span className="text-2xl sm:text-3xl">👥</span>
-          </div>
-        </div>
+      <span className="text-xl lg:text-2xl">👥</span>
+    </div>
+  </div>
 
-        <div className="w-full rounded-2xl bg-white p-4 sm:p-6 shadow-sm transition hover:scale-[1.02] hover:shadow-lg">
-          <p className="text-sm font-medium text-slate-500">
-            Có liên kết album
-          </p>
+  {/* Có liên kết album */}
+  <div className="rounded-2xl bg-white p-3 md:p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+    <p className="text-sm font-medium text-slate-500">
+      Có liên kết album
+    </p>
 
-          <div className="mt-4 flex items-end justify-between">
-            <h2 className="text-3xl font-bold sm:text-4xl text-purple-600">
-              {stats.album}
-            </h2>
+    <div className="mt-3 flex items-end justify-between">
+      <h2 className="text-2xl font-bold text-purple-600 lg:text-3xl">
+        {stats.album}
+      </h2>
 
-            <span className="text-2xl sm:text-3xl">🖼️</span>
-          </div>
-        </div>
+      <span className="text-xl lg:text-2xl">🖼️</span>
+    </div>
+  </div>
 
-        <div className="w-full rounded-2xl bg-white p-4 sm:p-6 shadow-sm transition hover:scale-[1.02] hover:shadow-lg">
-          <p className="text-sm font-medium text-slate-500">
-            Tổng lượt xem album
-          </p>
+  {/* Tổng lượt xem album */}
+  <div className="rounded-2xl bg-white p-3 md:p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+    <p className="text-sm font-medium text-slate-500">
+      Tổng lượt xem album
+    </p>
 
-          <div className="mt-4 flex items-end justify-between">
-            <h2 className="text-3xl font-bold sm:text-4xl text-blue-600">
-              {Number(stats.totalAlbumViews || 0).toLocaleString("vi-VN")}
-            </h2>
+    <div className="mt-3 flex items-end justify-between">
+      <h2 className="text-2xl font-bold text-blue-600 lg:text-3xl">
+        {Number(stats.totalAlbumViews || 0).toLocaleString("vi-VN")}
+      </h2>
 
-            <span className="text-2xl sm:text-3xl">👁️</span>
-          </div>
-        </div>
+      <span className="text-xl lg:text-2xl">👁️</span>
+    </div>
+  </div>
 
-        <button onClick={handleShowMonthBirthday}
-          className="w-full rounded-2xl bg-white p-4 sm:p-6 shadow-sm transition hover:scale-[1.02] hover:shadow-lg">
-          <p className="text-left text-sm font-medium text-slate-500">
-            Sinh nhật tháng này
-          </p>
+  {/* Sinh nhật tháng này */}
+  <button
+    onClick={handleShowMonthBirthday}
+    className="rounded-2xl bg-white p-3 text-left shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg md:p-4"
+  >
+    <p className="text-sm font-medium text-slate-500">
+      Sinh nhật tháng này
+    </p>
 
-          <div className="mt-4 flex items-end justify-between">
-            <h2 className="text-3xl font-bold sm:text-4xl text-red-500">
-              {stats.thisMonth}
-            </h2>
+    <div className="mt-3 flex items-end justify-between">
+      <h2 className="text-2xl font-bold text-red-500 lg:text-3xl">
+        {stats.thisMonth}
+      </h2>
 
-            <span className="text-2xl sm:text-3xl">📅</span>
-          </div>
-        </button>
+      <span className="text-xl lg:text-2xl">📅</span>
+    </div>
+  </button>
 
-        <button onClick={handleShowTodayBirthday}
-          className="w-full rounded-2xl bg-white p-4 sm:p-6 shadow-sm transition hover:scale-[1.02] hover:shadow-lg">
-          <p className="text-left text-sm font-medium text-slate-500">
-            Sinh nhật hôm nay
-          </p>
+  {/* Sinh nhật hôm nay */}
+  <button
+    onClick={handleShowTodayBirthday}
+    className="rounded-2xl bg-white p-3 text-left shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg md:p-4"
+  >
+    <p className="text-sm font-medium text-slate-500">
+      Sinh nhật hôm nay
+    </p>
 
-          <div className="mt-4 flex items-end justify-between">
-            <h2 className="text-3xl font-bold sm:text-4xl text-red-500">
-              {stats.today}
-            </h2>
+    <div className="mt-3 flex items-end justify-between">
+      <h2 className="text-2xl font-bold text-red-500 lg:text-3xl">
+        {stats.today}
+      </h2>
 
-            <span className="text-2xl sm:text-3xl">🎂</span>
-          </div>
-        </button>
-      </div>
+      <span className="text-xl lg:text-2xl">🎂</span>
+    </div>
+  </button>
+</div>
 
       {/* Khối quản lý người */}
       <div className="mt-8 sm:mt-10">

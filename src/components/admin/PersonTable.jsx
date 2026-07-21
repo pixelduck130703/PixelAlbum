@@ -43,36 +43,36 @@ function PersonTable({ people, onEdit, onDelete }) {
   return (
     <>
       {/* ================= Desktop ================= */}
-      <div className="hidden overflow-hidden rounded-2xl bg-white shadow-sm md:block">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[1050px]">
-            <thead className="bg-slate-100">
-              <tr className="text-left text-sm font-semibold text-slate-600">
-                <th className="px-6 py-4">
+      <div className="hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm md:block">
+        <div className="max-h-[650px] overflow-auto">
+          <table className="w-full min-w-[1100px] table-fixed">
+            <thead className="sticky top-0 z-10 bg-slate-100">
+              <tr className="text-sm font-semibold text-slate-600">
+                <th className="w-[28%] px-5 py-4 text-left">
                   Họ và tên
                 </th>
 
-                <th className="px-6 py-4">
+                <th className="w-[12%] px-5 py-4 text-center">
                   Ngày sinh
                 </th>
 
-                <th className="px-6 py-4">
+                <th className="w-[8%] px-5 py-4 text-center">
                   Giới tính
                 </th>
 
-                <th className="px-6 py-4">
+                <th className="w-[12%] px-5 py-4 text-center">
                   Quê quán
                 </th>
 
-                <th className="px-6 py-4">
+                <th className="w-[12%] px-5 py-4 text-center">
                   Lượt xem album
                 </th>
 
-                <th className="px-6 py-4">
+                <th className="w-[10%] px-5 py-4 text-center">
                   Album
                 </th>
 
-                <th className="px-6 py-4">
+                <th className="w-[12%] px-5 py-4 text-center">
                   Thao tác
                 </th>
               </tr>
@@ -82,92 +82,97 @@ function PersonTable({ people, onEdit, onDelete }) {
               {people.map((person) => (
                 <tr
                   key={person.id}
-                  className="border-t border-slate-100 hover:bg-slate-50"
+                  className="h-[78px] border-t border-slate-100 transition hover:bg-slate-50"
                 >
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-4">
+                  <td className="px-5 py-3 align-middle">
+                    <div className="flex min-w-0 items-center gap-3">
                       <img
                         src={
                           person.avatar ||
                           "https://placehold.co/100x100?text=Avatar"
                         }
                         alt={person.name}
-                        className="h-12 w-12 rounded-full object-cover"
+                        className="h-12 w-12 shrink-0 rounded-full border border-slate-200 object-cover"
                       />
 
-                      <div className="font-bold text-slate-800">
-                        {person.name}
+                      <div className="min-w-0">
+                        <p
+                          className="truncate font-bold text-slate-800"
+                          title={person.name}
+                        >
+                          {person.name}
+                        </p>
                       </div>
                     </div>
                   </td>
 
-                  <td className="px-6 py-4 text-slate-600">
+                  <td className="px-5 py-3 text-center align-middle text-slate-600">
                     {formatBirthday(person.birthday)}
                   </td>
 
-                  <td className="px-6 py-4 text-slate-600">
+                  <td className="px-5 py-3 text-center align-middle text-slate-600">
                     {person.gender || "Chưa cập nhật"}
                   </td>
 
-                  <td className="px-6 py-4 text-slate-600">
-                    {person.address || "Chưa cập nhật"}
+                  <td className="px-5 py-3 text-center align-middle text-slate-600">
+                    <p
+                      className="truncate"
+                      title={person.address || "Chưa cập nhật"}
+                    >
+                      {person.address || "Chưa cập nhật"}
+                    </p>
                   </td>
 
-                  <td className="px-6 py-4">
+                  <td className="px-5 py-3 text-center align-middle">
                     {person.album ? (
-                      <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700">
-                        <FaEye />
+                      <span className="inline-flex min-w-[58px] items-center justify-center gap-1.5 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700">
+                        <FaEye className="text-[11px]" />
 
-                        {formatAlbumViews(
-                          person.albumViews
-                        )}
+                        {formatAlbumViews(person.albumViews)}
                       </span>
                     ) : (
-                      <span className="text-sm text-slate-400">
+                      <span className="text-xs text-slate-400">
                         Chưa có album
                       </span>
                     )}
                   </td>
 
-                  <td className="px-6 py-4">
+                  <td className="px-5 py-3 text-center align-middle">
                     {person.album ? (
                       <a
                         href={person.album}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-2 text-blue-600 transition hover:bg-blue-100"
+                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-50 px-3 py-2 text-sm font-medium text-blue-600 transition hover:bg-blue-100"
                       >
-                        <FaExternalLinkAlt />
-
+                        <FaExternalLinkAlt className="text-xs" />
                         Album
                       </a>
                     ) : (
-                      <span className="text-slate-400">
+                      <span className="text-sm text-slate-400">
                         Chưa có
                       </span>
                     )}
                   </td>
 
-                  <td className="px-6 py-4">
-                    <div className="flex justify-center gap-2">
+                  <td className="px-5 py-3 text-center align-middle">
+                    <div className="flex items-center justify-center gap-2">
                       <button
                         type="button"
                         onClick={() => onEdit(person)}
-                        className="rounded-lg bg-amber-50 p-3 text-amber-600 transition hover:bg-amber-100"
+                        className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50 text-amber-600 transition hover:bg-amber-100"
                         title="Sửa"
                       >
-                        <FaEdit />
+                        <FaEdit className="text-sm" />
                       </button>
 
                       <button
                         type="button"
-                        onClick={() =>
-                          onDelete(person.id)
-                        }
-                        className="rounded-lg bg-red-50 p-3 text-red-600 transition hover:bg-red-100"
+                        onClick={() => onDelete(person.id)}
+                        className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-50 text-red-600 transition hover:bg-red-100"
                         title="Xóa"
                       >
-                        <FaTrash />
+                        <FaTrash className="text-sm" />
                       </button>
                     </div>
                   </td>
@@ -223,7 +228,7 @@ function PersonTable({ people, onEdit, onDelete }) {
 
               <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-3">
                 <span className="font-semibold">
-                  Lượt xem album:
+                  Lượt xem:
                 </span>
 
                 {person.album ? (
