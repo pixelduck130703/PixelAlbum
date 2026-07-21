@@ -64,15 +64,15 @@ function PersonTable({ people, onEdit, onDelete }) {
                   Quê quán
                 </th>
 
-                <th className="px-6 py-4 text-center">
+                <th className="px-6 py-4">
                   Lượt xem album
                 </th>
 
-                <th className="px-6 py-4 text-center">
+                <th className="px-6 py-4">
                   Album
                 </th>
 
-                <th className="px-6 py-4 text-center">
+                <th className="px-6 py-4">
                   Thao tác
                 </th>
               </tr>
@@ -113,7 +113,7 @@ function PersonTable({ people, onEdit, onDelete }) {
                     {person.address || "Chưa cập nhật"}
                   </td>
 
-                  <td className="px-6 py-4 text-center">
+                  <td className="px-6 py-4">
                     {person.album ? (
                       <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700">
                         <FaEye />
@@ -129,7 +129,7 @@ function PersonTable({ people, onEdit, onDelete }) {
                     )}
                   </td>
 
-                  <td className="px-6 py-4 text-center">
+                  <td className="px-6 py-4">
                     {person.album ? (
                       <a
                         href={person.album}
