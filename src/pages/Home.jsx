@@ -78,30 +78,37 @@ function Home() {
 
   const [visits, setVisits] = useState(null);
 
-useEffect(() => {
-  const loadVisits = async () => {
-    try {
+  useEffect(() => {
+    const loadVisits = async () => {
       const visited = sessionStorage.getItem("websiteVisited");
 
-      if (!visited) {
-        const response = await api.post("/visits");
+      try {
+        if (!visited) {
+          // Đánh dấu trước khi gọi API để tránh React gọi POST 2 lần
+          sessionStorage.setItem("websiteVisited", "true");
 
-        setVisits(Number(response.data.visits) || 0);
+          const response = await api.post("/visits");
 
-        sessionStorage.setItem("websiteVisited", "true");
-      } else {
-        const response = await api.get("/visits");
+          setVisits(Number(response.data.visits) || 0);
+        } else {
+          const response = await api.get("/visits");
 
-        setVisits(Number(response.data.visits) || 0);
+          setVisits(Number(response.data.visits) || 0);
+        }
+      } catch (error) {
+        console.error("Lỗi tải lượt truy cập:", error);
+
+        // Nếu POST lỗi thì cho phép thử lại khi tải lại trang
+        if (!visited) {
+          sessionStorage.removeItem("websiteVisited");
+        }
+
+        setVisits(0);
       }
-    } catch (error) {
-      console.error("Lỗi tải lượt truy cập:", error);
-      setVisits(0);
-    }
-  };
+    };
 
-  loadVisits();
-}, []);
+    loadVisits();
+  }, []);
 
 
   useEffect(() => {

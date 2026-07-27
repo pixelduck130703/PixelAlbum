@@ -4,6 +4,7 @@ const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const ExcelJS = require("exceljs");
 
 const {
   pool,
@@ -935,29 +936,264 @@ app.post(
 );
 
 /* ==========================
+   API xuất Excel
+========================== */
+
+app.get(
+  "/api/admin/export-excel",
+  verifyAdminToken,
+  async (req, res) => {
+    try {
+      const result = await pool.query(`
+        SELECT
+          id,
+          name,
+          birthday,
+          "deathDate",
+          gender,
+          class,
+          phone,
+          address,
+          avatar,
+          album
+        FROM people
+        ORDER BY id DESC
+      `);
+
+      const workbook = new ExcelJS.Workbook();
+
+      workbook.creator = "Pixel Album";
+      workbook.created = new Date();
+
+      const worksheet = workbook.addWorksheet("Danh sách album");
+
+      worksheet.columns = [
+        { header: "STT", key: "stt", width: 8 },
+        { header: "Họ và tên", key: "name", width: 28 },
+        { header: "Ngày sinh", key: "birthday", width: 16 },
+        { header: "Ngày mất", key: "deathDate", width: 16 },
+        { header: "Giới tính", key: "gender", width: 12 },
+        { header: "Lớp", key: "className", width: 16 },
+        { header: "Số điện thoại", key: "phone", width: 18 },
+        { header: "Địa chỉ", key: "address", width: 35 },
+        { header: "Ảnh đại diện", key: "avatar", width: 45 },
+        { header: "Liên kết album", key: "album", width: 45 },
+      ];
+
+      const headerRow = worksheet.getRow(1);
+
+      headerRow.font = {
+        bold: true,
+        color: { argb: "FFFFFFFF" },
+      };
+
+      headerRow.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF16A34A" },
+      };
+
+      headerRow.alignment = {
+        vertical: "middle",
+        horizontal: "center",
+      };
+
+      headerRow.height = 25;
+
+      const formatDate = (value) => {
+        if (!value) return "";
+
+        const date = new Date(value);
+
+        if (Number.isNaN(date.getTime())) {
+          return value;
+        }
+
+        return date.toLocaleDateString("vi-VN");
+      };
+
+      result.rows.forEach((person, index) => {
+        worksheet.addRow({
+          stt: index + 1,
+          name: person.name || "",
+          birthday: formatDate(person.birthday),
+          deathDate: formatDate(person.deathDate),
+          gender: person.gender || "",
+          className: person.class || "",
+          phone: person.phone || "",
+          address: person.address || "",
+          avatar: person.avatar || "",
+          album: person.album || "",
+        });
+      });
+
+      worksheet.autoFilter = {
+        from: "A1",
+        to: "J1",
+      };
+
+      worksheet.views = [
+        {
+          state: "frozen",
+          ySplit: 1,
+        },
+      ];
+
+      worksheet.eachRow((row, rowNumber) => {
+        row.alignment = {
+          vertical: "middle",
+          horizontal: rowNumber === 1 ? "center" : "left",
+          wrapText: true,
+        };
+
+        row.eachCell((cell) => {
+          cell.border = {
+            top: { style: "thin", color: { argb: "FFD1D5DB" } },
+            left: { style: "thin", color: { argb: "FFD1D5DB" } },
+            bottom: { style: "thin", color: { argb: "FFD1D5DB" } },
+            right: { style: "thin", color: { argb: "FFD1D5DB" } },
+          };
+        });
+      });
+
+      const buffer = await workbook.xlsx.writeBuffer();
+
+      const fileName = `DanhSachAlbum-${new Date()
+        .toISOString()
+        .slice(0, 10)}.xlsx`;
+
+      res.status(200);
+
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
+
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${fileName}"`
+      );
+
+      res.setHeader("Content-Length", buffer.length);
+
+      return res.send(Buffer.from(buffer));
+    } catch (error) {
+      console.error("Lỗi xuất Excel:", error);
+
+      return res.status(500).json({
+        message: "Không thể xuất file Excel",
+        error: error.message,
+      });
+    }
+  }
+);
+
+/* ==========================
    API tăng lượt truy cập website
 ========================== */
 
 app.post("/api/visits", async (req, res) => {
+  const client = await pool.connect();
+
   try {
-    const result = await pool.query(`
-      UPDATE website_stats
-      SET visits = visits + 1
-      WHERE id = 1
+    await client.query("BEGIN");
+
+    // Tăng tổng lượt truy cập
+    const totalResult = await client.query(`
+      INSERT INTO website_stats (id, visits)
+      VALUES (1, 1)
+      ON CONFLICT (id)
+      DO UPDATE
+      SET visits = website_stats.visits + 1
       RETURNING visits
     `);
 
-    res.json({
-      visits: Number(result.rows[0].visits),
+    // Tăng lượt truy cập của ngày hiện tại
+    await client.query(`
+      INSERT INTO website_visit_daily (visit_date, visits)
+      VALUES (
+        (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date,
+        1
+      )
+      ON CONFLICT (visit_date)
+      DO UPDATE
+      SET visits = website_visit_daily.visits + 1
+    `);
+
+    await client.query("COMMIT");
+
+    return res.json({
+      visits: Number(totalResult.rows[0].visits),
     });
   } catch (error) {
-    console.error(error);
+    await client.query("ROLLBACK");
 
-    res.status(500).json({
-      visits: 0,
+    console.error("Lỗi tăng lượt truy cập:", error);
+
+    return res.status(500).json({
+      message: "Không thể cập nhật lượt truy cập",
     });
+  } finally {
+    client.release();
   }
 });
+
+/* ==========================
+   API lấy dữ liệu biểu đồ
+========================== */
+
+app.get(
+  "/api/admin/visit-chart",
+  verifyAdminToken,
+  async (req, res) => {
+    try {
+      const daysValue = Number(req.query.days);
+      const days =
+        Number.isInteger(daysValue) &&
+        daysValue >= 7 &&
+        daysValue <= 365
+          ? daysValue
+          : 30;
+
+      const result = await pool.query(
+        `
+          WITH date_range AS (
+            SELECT generate_series(
+              (
+                (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date
+                - ($1::integer - 1)
+              ),
+              (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date,
+              INTERVAL '1 day'
+            )::date AS visit_date
+          )
+          SELECT
+            TO_CHAR(date_range.visit_date, 'YYYY-MM-DD') AS date,
+            COALESCE(website_visit_daily.visits, 0)::integer AS visits
+          FROM date_range
+          LEFT JOIN website_visit_daily
+            ON website_visit_daily.visit_date = date_range.visit_date
+          ORDER BY date_range.visit_date ASC
+        `,
+        [days]
+      );
+
+      return res.json({
+        days,
+        data: result.rows.map((item) => ({
+          date: item.date,
+          visits: Number(item.visits) || 0,
+        })),
+      });
+    } catch (error) {
+      console.error("Lỗi lấy biểu đồ lượt truy cập:", error);
+
+      return res.status(500).json({
+        message: "Không thể tải biểu đồ lượt truy cập",
+      });
+    }
+  }
+);
 
 /* ==========================
    API lấy số lượt truy cập web

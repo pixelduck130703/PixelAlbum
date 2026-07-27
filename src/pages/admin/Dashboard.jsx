@@ -4,6 +4,8 @@ import PersonTable from "../../components/admin/PersonTable";
 import api from "../../services/api";
 import PersonForm from "../../components/admin/PersonForm";
 import toast from "react-hot-toast";
+import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, } from "recharts";
+import VisitChart from "../../components/admin/VisitChart";
 
 function Dashboard() {
   const [stats, setStats] = useState({
@@ -26,6 +28,49 @@ function Dashboard() {
   const [showTodayModal, setShowTodayModal] = useState(false);
   const [todayPeople, setTodayPeople] = useState([]);
   const [visits, setVisits] = useState(null);
+  const [visitChart, setVisitChart] = useState([]);
+  const [visitChartDays, setVisitChartDays] = useState(30);
+  const [loadingVisitChart, setLoadingVisitChart] = useState(true);
+
+  const loadVisitChart = async (days = 30) => {
+    try {
+      setLoadingVisitChart(true);
+
+      const response = await api.get(
+        `/admin/visit-chart?days=${days}`
+      );
+
+      const chartData = Array.isArray(response.data?.data)
+        ? response.data.data
+        : [];
+
+      setVisitChart(
+        chartData.map((item) => ({
+          date: item.date,
+          displayDate: new Date(
+            `${item.date}T00:00:00`
+          ).toLocaleDateString("vi-VN", {
+            day: "2-digit",
+            month: "2-digit",
+          }),
+          visits: Number(item.visits) || 0,
+        }))
+      );
+    } catch (error) {
+      console.error(
+        "Lỗi tải biểu đồ lượt truy cập:",
+        error
+      );
+
+      setVisitChart([]);
+    } finally {
+      setLoadingVisitChart(false);
+    }
+  };
+
+  useEffect(() => {
+    loadVisitChart(visitChartDays);
+  }, [visitChartDays]);
 
   useEffect(() => {
     const loadVisits = async () => {
@@ -150,6 +195,64 @@ function Dashboard() {
           "Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại."
         );
       }
+    }
+  };
+
+  const handleExportExcel = async () => {
+    try {
+      const response = await api.get("/admin/export-excel", {
+        responseType: "blob",
+      });
+
+      const contentType = response.headers["content-type"] || "";
+
+      if (
+        !contentType.includes(
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+      ) {
+        const errorText = await response.data.text();
+
+        console.error("Phản hồi không phải Excel:", errorText);
+
+        alert("Máy chủ không trả về file Excel hợp lệ.");
+        return;
+      }
+
+      const blob = new Blob([response.data], {
+        type: contentType,
+      });
+
+      const downloadUrl = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+
+      link.href = downloadUrl;
+      link.download = `DanhSachAlbum-${new Date()
+        .toISOString()
+        .slice(0, 10)}.xlsx`;
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      console.error("Lỗi xuất Excel:", error);
+
+      if (error.response?.data instanceof Blob) {
+        try {
+          const errorText = await error.response.data.text();
+          const errorData = JSON.parse(errorText);
+
+          alert(errorData.message || "Không thể xuất file Excel.");
+          return;
+        } catch {
+          // Bỏ qua nếu phản hồi không phải JSON.
+        }
+      }
+
+      alert("Không thể xuất file Excel. Vui lòng thử lại.");
     }
   };
 
@@ -351,7 +454,7 @@ function Dashboard() {
 
             <span className="text-2xl md:text-3xl">👥</span>
           </div>
-        </div>  
+        </div>
 
         {/* Có liên kết album */}
         <div className="rounded-2xl bg-white p-3 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg md:p-4">
@@ -439,6 +542,14 @@ function Dashboard() {
         </button>
       </div>
 
+      {/* Biểu đồ lượt truy cập theo ngày */}
+      <VisitChart
+        visitChart={visitChart}
+        visitChartDays={visitChartDays}
+        setVisitChartDays={setVisitChartDays}
+        loadingVisitChart={loadingVisitChart}
+      />
+
       {/* Khối quản lý người */}
       <div className="mt-8 sm:mt-10">
         <div className="mb-5 flex flex-col-reverse gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -455,6 +566,15 @@ function Dashboard() {
               className="w-full rounded-xl bg-pink-400 px-5 py-3 font-semibold text-white transition hover:bg-pink-600 sm:w-auto"
             >
               📅 Sinh nhật theo tháng
+            </button>
+
+            <button
+              type="button"
+              onClick={handleExportExcel}
+              className="flex items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700 hover:shadow-md"
+            >
+              <span>📊</span>
+              <span>Xuất Excel</span>
             </button>
 
             <button
