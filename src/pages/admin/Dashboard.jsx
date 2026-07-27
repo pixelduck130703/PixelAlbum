@@ -336,8 +336,6 @@ function Dashboard() {
 
   return (
     <Layout>
-
-
       {/* Thẻ thống kê */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
         {/* Tổng số người */}
@@ -347,7 +345,7 @@ function Dashboard() {
           </p>
 
           <div className="mt-3 flex items-end justify-between">
-            <h2 className="text-xl font-bold text-blue-600 md:text-3xl">
+            <h2 className="text-2xl font-bold text-blue-600 md:text-3xl">
               {stats.totalPeople}
             </h2>
 
@@ -362,7 +360,7 @@ function Dashboard() {
           </p>
 
           <div className="mt-3 flex items-end justify-between">
-            <h2 className="text-xl font-bold text-purple-600 md:text-3xl">
+            <h2 className="text-2xl font-bold text-purple-600 md:text-3xl">
               {stats.album}
             </h2>
 
@@ -377,7 +375,7 @@ function Dashboard() {
           </p>
 
           <div className="mt-3 flex items-end justify-between">
-            <h2 className="text-xl font-bold text-indigo-600 md:text-3xl">
+            <h2 className="text-2xl font-bold text-indigo-600 md:text-3xl">
               {Number(stats.totalAlbumViews || 0).toLocaleString("vi-VN")}
             </h2>
 
@@ -392,7 +390,7 @@ function Dashboard() {
           </p>
 
           <div className="mt-3 flex items-end justify-between">
-            <h2 className="text-xl font-bold text-green-600 md:text-3xl">
+            <h2 className="text-2xl font-bold text-green-600 md:text-3xl">
               {visits === null
                 ? "..."
                 : Number(visits || 0).toLocaleString("vi-VN")}
@@ -413,7 +411,7 @@ function Dashboard() {
           </p>
 
           <div className="mt-3 flex items-end justify-between">
-            <h2 className="text-xl font-bold text-red-500 md:text-3xl">
+            <h2 className="text-2xl font-bold text-red-500 md:text-3xl">
               {stats.thisMonth}
             </h2>
 
@@ -432,7 +430,7 @@ function Dashboard() {
           </p>
 
           <div className="mt-3 flex items-end justify-between">
-            <h2 className="text-xl font-bold text-pink-500 md:text-3xl">
+            <h2 className="text-2xl font-bold text-pink-500 md:text-3xl">
               {stats.today}
             </h2>
 
