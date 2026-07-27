@@ -383,7 +383,22 @@ function Dashboard() {
           </div>
         </div>
 
-        
+        {/* Lượt truy cập website */}
+        <div className="rounded-2xl bg-white p-3 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg md:p-4">
+          <p className="text-xs font-medium text-slate-500 md:text-sm">
+            Lượt truy cập website
+          </p>
+
+          <div className="mt-3 flex items-end justify-between">
+            <h2 className="text-2xl font-bold text-green-600 md:text-3xl">
+              {visits === null
+                ? "..."
+                : Number(visits || 0).toLocaleString("vi-VN")}
+            </h2>
+
+            <span className="text-2xl md:text-3xl">🌐</span>
+          </div>
+        </div>
 
         {/* Sinh nhật tháng này */}
         <button
