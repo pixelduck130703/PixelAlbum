@@ -76,30 +76,32 @@ function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [visits, setVisits] = useState(0);
+  const [visits, setVisits] = useState(null);
 
-  useEffect(() => {
-    const loadVisits = async () => {
-      try {
-        const visited = sessionStorage.getItem("websiteVisited");
+useEffect(() => {
+  const loadVisits = async () => {
+    try {
+      const visited = sessionStorage.getItem("websiteVisited");
 
-        if (!visited) {
-          // Ghi trước để React StrictMode không gọi POST lần thứ hai
-          sessionStorage.setItem("websiteVisited", "true");
+      if (!visited) {
+        const response = await api.post("/visits");
 
-          await api.post("/visits");
-        }
+        setVisits(Number(response.data.visits) || 0);
 
+        sessionStorage.setItem("websiteVisited", "true");
+      } else {
         const response = await api.get("/visits");
 
         setVisits(Number(response.data.visits) || 0);
-      } catch (error) {
-        console.error("Lỗi tải lượt truy cập:", error);
       }
-    };
+    } catch (error) {
+      console.error("Lỗi tải lượt truy cập:", error);
+      setVisits(0);
+    }
+  };
 
-    loadVisits();
-  }, []);
+  loadVisits();
+}, []);
 
 
   useEffect(() => {
@@ -421,7 +423,7 @@ function Home() {
             </p>
 
             <h2 className="text-3xl font-extrabold text-blue-600">
-              {visits.toLocaleString()}
+              {Number(visits ?? 0).toLocaleString("vi-VN")}
             </h2>
           </div>
         </div>

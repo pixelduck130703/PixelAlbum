@@ -940,20 +940,21 @@ app.post(
 
 app.post("/api/visits", async (req, res) => {
   try {
-    await pool.query(`
+    const result = await pool.query(`
       UPDATE website_stats
       SET visits = visits + 1
       WHERE id = 1
+      RETURNING visits
     `);
 
     res.json({
-      success: true,
+      visits: Number(result.rows[0].visits),
     });
   } catch (error) {
     console.error(error);
 
     res.status(500).json({
-      success: false,
+      visits: 0,
     });
   }
 });
@@ -971,7 +972,7 @@ app.get("/api/visits", async (req, res) => {
     `);
 
     res.json({
-      visits: result.rows[0].visits,
+      visits: Number(result.rows[0].visits),
     });
   } catch (error) {
     console.error(error);
