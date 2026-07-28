@@ -208,12 +208,6 @@ function Dashboard() {
         "Lỗi lấy thống kê:",
         error.response?.data || error
       );
-
-      if (error.response?.status === 401) {
-        toast.error(
-          "Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại."
-        );
-      }
     }
   };
 
