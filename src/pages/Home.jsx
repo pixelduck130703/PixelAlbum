@@ -393,17 +393,19 @@ function Home() {
       yearZhi={yearZhi}
     />
 
-    <main className="mx-auto w-full max-w-7xl flex-1 -mt-4 px-4 pb-8 pt-3 sm:mt-0 sm:px-6 sm:pb-10 sm:pt-4">
+    <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-8 pt-1 sm:px-6 sm:pb-10 sm:pt-4">
       {/* Thẻ thống kê */}
-      <HomeStatistics
-        visits={visits}
-        totalAlbums={homeStatistics.totalAlbums}
-        totalAlbumViews={homeStatistics.totalAlbumViews}
-        birthdaysThisMonth={homeStatistics.birthdaysThisMonth}
-      />
+      <section>
+        <HomeStatistics
+          visits={visits}
+          totalAlbums={homeStatistics.totalAlbums}
+          totalAlbumViews={homeStatistics.totalAlbumViews}
+          birthdaysThisMonth={homeStatistics.birthdaysThisMonth}
+        />
+      </section>
 
       {/* Sự kiện hôm nay */}
-      <div className="mt-6">
+      <section className="mt-4 sm:mt-6">
         <TodayEvents
           todayBirthdayPeople={todayBirthdayPeople}
           todayDeathPeople={todayDeathPeople}
@@ -412,11 +414,10 @@ function Home() {
           yearGan={yearGan}
           yearZhi={yearZhi}
         />
-      </div>
+      </section>
 
       {/* Tìm kiếm và giới thiệu */}
-      <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
-        {/* Bên trái: Tìm kiếm */}
+      <section className="mt-6 grid gap-6 sm:mt-8 sm:gap-8 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
         <div className="min-w-0">
           <SearchBox
             name={nameInput}
@@ -428,14 +429,14 @@ function Home() {
           />
         </div>
 
-        {/* Desktop: Giới thiệu bên phải */}
+        {/* Desktop */}
         <div className="hidden min-w-0 lg:block">
           <AboutMe />
         </div>
-      </div>
+      </section>
 
       {/* Kết quả tìm kiếm */}
-      <div className="mt-8">
+      <section className="mt-6 sm:mt-8">
         <SearchResult
           loading={loading}
           error={error}
@@ -443,18 +444,18 @@ function Home() {
           searchDescription={searchDescription}
           results={results}
         />
-      </div>
+      </section>
 
-      {/* Mobile: Giới thiệu nằm sau kết quả */}
-      <div className="mt-8 lg:hidden">
+      {/* Mobile */}
+      <section className="mt-6 lg:hidden">
         <AboutMe />
-      </div>
+      </section>
 
       {/* Gửi kiến nghị và ủng hộ */}
-      <div className="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-2 lg:items-stretch">
+      <section className="mt-8 grid grid-cols-1 gap-6 sm:mt-10 sm:gap-8 lg:grid-cols-2 lg:items-stretch">
         <FeedbackForm />
         <DonateCard />
-      </div>
+      </section>
     </main>
 
     <Footer />
