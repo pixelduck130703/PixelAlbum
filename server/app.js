@@ -210,41 +210,6 @@ app.get("/api/people/public/:publicId", async (req, res) => {
   }
 });
 
-app.post("/api/people/public/:publicId/album-view", async (req, res) => {
-  try {
-    const { publicId } = req.params;
-
-    const result = await pool.query(
-      `
-      UPDATE people
-      SET "albumViews" = COALESCE("albumViews", 0) + 1
-      WHERE "publicId" = $1
-      RETURNING "albumViews"
-      `,
-      [publicId]
-    );
-
-    if (result.rowCount === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Không tìm thấy người dùng.",
-      });
-    }
-
-    return res.json({
-      success: true,
-      albumViews: Number(result.rows[0].albumViews),
-    });
-  } catch (error) {
-    console.error("Lỗi tăng lượt xem album:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Không thể tăng lượt xem album.",
-    });
-  }
-});
-
 app.get("/api/people/:id", async (req, res) => {
   try {
     const result = await pool.query(
@@ -1139,7 +1104,7 @@ app.post("/api/visits", async (req, res) => {
 });
 
 /* ==========================
-   API lấy dữ liệu biểu đồ
+   API lấy dữ liệu biểu đồ số lần truy cập web
 ========================== */
 
 app.get(
@@ -1150,8 +1115,8 @@ app.get(
       const daysValue = Number(req.query.days);
       const days =
         Number.isInteger(daysValue) &&
-        daysValue >= 7 &&
-        daysValue <= 365
+          daysValue >= 7 &&
+          daysValue <= 365
           ? daysValue
           : 30;
 
@@ -1220,6 +1185,128 @@ app.get("/api/visits", async (req, res) => {
 });
 
 /* ==========================
+   API ghi nhận số lượt truy cập album
+========================== */
+
+app.post(
+  "/api/people/public/:publicId/album-view",
+  async (req, res) => {
+    const client = await pool.connect();
+
+    try {
+      const { publicId } = req.params;
+
+      await client.query("BEGIN");
+
+      const personResult = await client.query(
+        `
+          UPDATE people
+SET "albumViews" = COALESCE("albumViews",0)+1
+WHERE "publicId"=$1
+RETURNING id,"albumViews";
+        `,
+        [publicId]
+      );
+
+      if (personResult.rowCount === 0) {
+        await client.query("ROLLBACK");
+
+        return res.status(404).json({
+          message: "Không tìm thấy người dùng",
+        });
+      }
+
+      const dailyResult = await client.query(`
+        INSERT INTO album_view_daily (view_date, views)
+        VALUES (
+          (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date,
+          1
+        )
+        ON CONFLICT (view_date)
+        DO UPDATE SET
+          views = album_view_daily.views + 1
+        RETURNING view_date, views
+      `);
+
+      await client.query("COMMIT");
+
+      return res.json({
+        success: true,
+        totalViews: Number(personResult.rows[0].album_views),
+        dailyViews: Number(dailyResult.rows[0].views),
+      });
+    } catch (error) {
+      await client.query("ROLLBACK");
+      console.error("Lỗi tăng lượt mở album:", error);
+
+      return res.status(500).json({
+        message: "Không thể tăng lượt mở album",
+      });
+    } finally {
+      client.release();
+    }
+  }
+);
+
+/* ==========================
+   API lấy số lượt truy cập album
+========================== */
+
+app.get(
+  "/api/admin/album-view-chart",
+  verifyAdminToken,
+  async (req, res) => {
+    try {
+      const requestedDays = Number(req.query.days);
+
+      const days =
+        Number.isInteger(requestedDays) &&
+          requestedDays >= 7 &&
+          requestedDays <= 365
+          ? requestedDays
+          : 30;
+
+      const result = await pool.query(
+        `
+          WITH date_range AS (
+            SELECT generate_series(
+              (
+                (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date
+                - ($1::integer - 1)
+              ),
+              (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date,
+              INTERVAL '1 day'
+            )::date AS view_date
+          )
+          SELECT
+            TO_CHAR(date_range.view_date, 'YYYY-MM-DD') AS date,
+            COALESCE(album_view_daily.views, 0)::integer AS views
+          FROM date_range
+          LEFT JOIN album_view_daily
+            ON album_view_daily.view_date = date_range.view_date
+          ORDER BY date_range.view_date ASC
+        `,
+        [days]
+      );
+
+      return res.status(200).json({
+        days,
+        data: result.rows.map((item) => ({
+          date: item.date,
+          views: Number(item.views) || 0,
+        })),
+      });
+    } catch (error) {
+      console.error("Lỗi lấy biểu đồ lượt mở album:", error);
+
+      return res.status(500).json({
+        message: "Không thể tải biểu đồ lượt mở album",
+      });
+    }
+  }
+);
+
+/* ==========================
    Middleware xử lý lỗi CORS
 ========================== */
 
@@ -1232,50 +1319,6 @@ app.use((error, req, res, next) => {
   }
 
   next(error);
-});
-
-/* ==========================
-   Kết quả bóng đá
-========================== */
-
-app.get("/api/football/live", async (req, res) => {
-  try {
-    if (!process.env.FOOTBALL_API_KEY) {
-      return res.status(500).json({
-        success: false,
-        message: "Thiếu FOOTBALL_API_KEY.",
-      });
-    }
-
-    const response = await fetch(
-      "https://v3.football.api-sports.io/fixtures?live=all",
-      {
-        headers: {
-          "x-apisports-key": process.env.FOOTBALL_API_KEY,
-        },
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(
-        `Football API trả về lỗi ${response.status}`
-      );
-    }
-
-    const data = await response.json();
-
-    res.json({
-      success: true,
-      matches: data.response || [],
-    });
-  } catch (error) {
-    console.error("Lỗi lấy kết quả bóng đá:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Không thể tải kết quả bóng đá.",
-    });
-  }
 });
 
 /* ==========================

@@ -9,8 +9,6 @@ import AboutMe from "../components/AboutMe";
 import FeedbackForm from "../components/FeedbackForm";
 import DonateCard from "../components/DonateCard";
 import { Solar } from "lunar-javascript";
-import FIFAWC from "../components/FIFAWC";
-import FootballScores from "../components/FootballScores";
 import TodayEvents from "../components/TodayEvents";
 import DateHeader from "../components/DateHeader";
 import SearchResult from "../components/SearchResult";
@@ -434,9 +432,7 @@ function Home() {
             </h2>
           </div>
         </div>
-        {/*<FootballScores />*/}
 
-        {/*<FIFAWC /> */}
       </main>
 
       <Footer />

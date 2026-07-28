@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import Layout from "../../components/admin/Layout";
 import PersonTable from "../../components/admin/PersonTable";
-import api from "../../services/api";
 import PersonForm from "../../components/admin/PersonForm";
+import TrafficChart from "../../components/admin/TrafficChart";
+import api from "../../services/api";
 import toast from "react-hot-toast";
-import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, } from "recharts";
-import VisitChart from "../../components/admin/VisitChart";
 
 function Dashboard() {
   const [stats, setStats] = useState({
@@ -28,49 +27,69 @@ function Dashboard() {
   const [showTodayModal, setShowTodayModal] = useState(false);
   const [todayPeople, setTodayPeople] = useState([]);
   const [visits, setVisits] = useState(null);
+
   const [visitChart, setVisitChart] = useState([]);
-  const [visitChartDays, setVisitChartDays] = useState(30);
-  const [loadingVisitChart, setLoadingVisitChart] = useState(true);
+  const [albumViewChart, setAlbumViewChart] = useState([]);
+  const [chartDays, setChartDays] = useState(7);
+  const [loadingTrafficChart, setLoadingTrafficChart] = useState(true);
 
-  const loadVisitChart = async (days = 30) => {
+  const formatChartDate = (dateString) => {
+    if (!dateString) return "";
+
+    const [, month, day] = String(dateString).split("-");
+
+    return day && month ? `${day}/${month}` : String(dateString);
+  };
+
+  const loadTrafficChart = async () => {
     try {
-      setLoadingVisitChart(true);
+      setLoadingTrafficChart(true);
 
-      const response = await api.get(
-        `/admin/visit-chart?days=${days}`
-      );
+      const [visitResponse, albumResponse] = await Promise.all([
+        api.get(`/admin/visit-chart?days=${chartDays}`),
+        api.get(`/admin/album-view-chart?days=${chartDays}`),
+      ]);
 
-      const chartData = Array.isArray(response.data?.data)
-        ? response.data.data
+      const visitData = Array.isArray(visitResponse.data?.data)
+        ? visitResponse.data.data
+        : [];
+
+      const albumData = Array.isArray(albumResponse.data?.data)
+        ? albumResponse.data.data
         : [];
 
       setVisitChart(
-        chartData.map((item) => ({
+        visitData.map((item) => ({
           date: item.date,
-          displayDate: new Date(
-            `${item.date}T00:00:00`
-          ).toLocaleDateString("vi-VN", {
-            day: "2-digit",
-            month: "2-digit",
-          }),
+          displayDate: formatChartDate(item.date),
           visits: Number(item.visits) || 0,
+        }))
+      );
+
+      setAlbumViewChart(
+        albumData.map((item) => ({
+          date: item.date,
+          displayDate: formatChartDate(item.date),
+          views: Number(item.views) || 0,
         }))
       );
     } catch (error) {
       console.error(
-        "Lỗi tải biểu đồ lượt truy cập:",
-        error
+        "Lỗi tải biểu đồ thống kê:",
+        error.response?.data || error
       );
 
       setVisitChart([]);
+      setAlbumViewChart([]);
+      toast.error("Không thể tải dữ liệu biểu đồ.");
     } finally {
-      setLoadingVisitChart(false);
+      setLoadingTrafficChart(false);
     }
   };
 
   useEffect(() => {
-    loadVisitChart(visitChartDays);
-  }, [visitChartDays]);
+    loadTrafficChart();
+  }, [chartDays]);
 
   useEffect(() => {
     const loadVisits = async () => {
@@ -542,12 +561,13 @@ function Dashboard() {
         </button>
       </div>
 
-      {/* Biểu đồ lượt truy cập theo ngày */}
-      <VisitChart
+      {/* Biểu đồ thống kê */}
+      <TrafficChart
         visitChart={visitChart}
-        visitChartDays={visitChartDays}
-        setVisitChartDays={setVisitChartDays}
-        loadingVisitChart={loadingVisitChart}
+        albumViewChart={albumViewChart}
+        days={chartDays}
+        setDays={setChartDays}
+        loading={loadingTrafficChart}
       />
 
       {/* Khối quản lý người */}
