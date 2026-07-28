@@ -14,6 +14,7 @@ import DateHeader from "../components/DateHeader";
 import SearchResult from "../components/SearchResult";
 import { getTodayVietnamHolidays } from "../utils/vietnamHolidays";
 import HomeStatistics from "../components/HomeStatistics";
+import DailyQuote from "../components/DailyQuote";
 
 const today = new Date();
 
@@ -393,70 +394,77 @@ function Home() {
       yearZhi={yearZhi}
     />
 
-    <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-8 pt-1 sm:px-6 sm:pb-10 sm:pt-4">
-      {/* Thẻ thống kê */}
-      <section>
-        <HomeStatistics
-          visits={visits}
-          totalAlbums={homeStatistics.totalAlbums}
-          totalAlbumViews={homeStatistics.totalAlbumViews}
-          birthdaysThisMonth={homeStatistics.birthdaysThisMonth}
-        />
-      </section>
+    <main className="mx-auto w-full max-w-7xl flex-1 px-4 pt-2 pb-8 sm:px-6 sm:pt-4 sm:pb-10">
 
-      {/* Sự kiện hôm nay */}
-      <section className="mt-4 sm:mt-6">
-        <TodayEvents
-          todayBirthdayPeople={todayBirthdayPeople}
-          todayDeathPeople={todayDeathPeople}
-          todayHolidays={todayHolidays}
-          formatDate={formatDate}
-          yearGan={yearGan}
-          yearZhi={yearZhi}
-        />
-      </section>
+  {/* Thống kê */}
+  <section>
+    <HomeStatistics
+      visits={visits}
+      totalAlbums={homeStatistics.totalAlbums}
+      totalAlbumViews={homeStatistics.totalAlbumViews}
+      birthdaysThisMonth={homeStatistics.birthdaysThisMonth}
+    />
+  </section>
 
-      {/* Tìm kiếm và giới thiệu */}
-      <section className="mt-6 grid gap-6 sm:mt-8 sm:gap-8 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
-        <div className="min-w-0">
-          <SearchBox
-            name={nameInput}
-            setName={setNameInput}
-            birthday={birthdayInput}
-            setBirthday={setBirthdayInput}
-            onSearch={handleSearch}
-            onClear={handleClear}
-          />
-        </div>
+  {/* Sự kiện */}
+  <section className="mt-5">
+    <TodayEvents
+      todayBirthdayPeople={todayBirthdayPeople}
+      todayDeathPeople={todayDeathPeople}
+      todayHolidays={todayHolidays}
+      formatDate={formatDate}
+      yearGan={yearGan}
+      yearZhi={yearZhi}
+    />
+  </section>
 
-        {/* Desktop */}
-        <div className="hidden min-w-0 lg:block">
-          <AboutMe />
-        </div>
-      </section>
+  {/* Tìm kiếm */}
+  <section className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
+    <div className="min-w-0">
+      <SearchBox
+        name={nameInput}
+        setName={setNameInput}
+        birthday={birthdayInput}
+        setBirthday={setBirthdayInput}
+        onSearch={handleSearch}
+        onClear={handleClear}
+      />
+    </div>
 
-      {/* Kết quả tìm kiếm */}
-      <section className="mt-6 sm:mt-8">
-        <SearchResult
-          loading={loading}
-          error={error}
-          hasSearched={hasSearched}
-          searchDescription={searchDescription}
-          results={results}
-        />
-      </section>
+    {/* Desktop */}
+    <div className="hidden lg:block">
+      <AboutMe />
+    </div>
+  </section>
 
-      {/* Mobile */}
-      <section className="mt-6 lg:hidden">
-        <AboutMe />
-      </section>
+  {/* Kết quả */}
+  <section className="mt-6">
+    <SearchResult
+      loading={loading}
+      error={error}
+      hasSearched={hasSearched}
+      searchDescription={searchDescription}
+      results={results}
+    />
+  </section>
 
-      {/* Gửi kiến nghị và ủng hộ */}
-      <section className="mt-8 grid grid-cols-1 gap-6 sm:mt-10 sm:gap-8 lg:grid-cols-2 lg:items-stretch">
-        <FeedbackForm />
-        <DonateCard />
-      </section>
-    </main>
+  {/* Quote */}
+  <section className="mt-6">
+    <DailyQuote />
+  </section>
+
+  {/* About mobile */}
+  <section className="mt-6 lg:hidden">
+    <AboutMe />
+  </section>
+
+  {/* Feedback */}
+  <section className="mt-8 grid gap-6 lg:grid-cols-2">
+    <FeedbackForm />
+    <DonateCard />
+  </section>
+
+</main>
 
     <Footer />
   </div>
