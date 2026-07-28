@@ -13,6 +13,7 @@ import TodayEvents from "../components/TodayEvents";
 import DateHeader from "../components/DateHeader";
 import SearchResult from "../components/SearchResult";
 import { getTodayVietnamHolidays } from "../utils/vietnamHolidays";
+import HomeStatistics from "../components/HomeStatistics";
 
 const today = new Date();
 
@@ -352,22 +353,57 @@ function Home() {
       });
   }, [people]);
 
-  return (
-    <div className="flex min-h-screen flex-col bg-slate-100">
-      <Navbar />
+  const homeStatistics = useMemo(() => {
+    const currentMonth = new Date().getMonth() + 1;
 
-      <DateHeader
-        today={today}
-        weekdays={weekdays}
-        lunarToday={lunarToday}
-        monthText={monthText}
-        yearGan={yearGan}
-        yearZhi={yearZhi}
+    const totalAlbums = people.length;
+
+    const totalAlbumViews = people.reduce((total, person) => {
+      return total + (Number(person.albumViews) || 0);
+    }, 0);
+
+    const birthdaysThisMonth = people.filter((person) => {
+      if (!person.birthday) {
+        return false;
+      }
+
+      const normalizedBirthday = String(person.birthday).slice(0, 10);
+      const [, month] = normalizedBirthday.split("-");
+
+      return Number(month) === currentMonth;
+    }).length;
+
+    return {
+      totalAlbums,
+      totalAlbumViews,
+      birthdaysThisMonth,
+    };
+  }, [people]);
+
+  return (
+  <div className="flex min-h-screen flex-col bg-slate-100">
+    <Navbar />
+
+    <DateHeader
+      today={today}
+      weekdays={weekdays}
+      lunarToday={lunarToday}
+      monthText={monthText}
+      yearGan={yearGan}
+      yearZhi={yearZhi}
+    />
+
+    <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-8 pt-3 sm:px-6 sm:pb-10 sm:pt-4">
+      {/* Thẻ thống kê */}
+      <HomeStatistics
+        visits={visits}
+        totalAlbums={homeStatistics.totalAlbums}
+        totalAlbumViews={homeStatistics.totalAlbumViews}
+        birthdaysThisMonth={homeStatistics.birthdaysThisMonth}
       />
 
-      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 sm:py-6">
-
-        {/* Sự kiện hôm nay */}
+      {/* Sự kiện hôm nay */}
+      <div className="mt-6">
         <TodayEvents
           todayBirthdayPeople={todayBirthdayPeople}
           todayDeathPeople={todayDeathPeople}
@@ -376,27 +412,30 @@ function Home() {
           yearGan={yearGan}
           yearZhi={yearZhi}
         />
+      </div>
 
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
-          {/* Bên trái: Tìm kiếm */}
-          <div className="min-w-0">
-            <SearchBox
-              name={nameInput}
-              setName={setNameInput}
-              birthday={birthdayInput}
-              setBirthday={setBirthdayInput}
-              onSearch={handleSearch}
-              onClear={handleClear}
-            />
-          </div>
-
-          {/* Desktop: Giới thiệu bên phải */}
-          <div className="hidden min-w-0 lg:block">
-            <AboutMe />
-          </div>
+      {/* Tìm kiếm và giới thiệu */}
+      <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
+        {/* Bên trái: Tìm kiếm */}
+        <div className="min-w-0">
+          <SearchBox
+            name={nameInput}
+            setName={setNameInput}
+            birthday={birthdayInput}
+            setBirthday={setBirthdayInput}
+            onSearch={handleSearch}
+            onClear={handleClear}
+          />
         </div>
 
-        {/* Kết quả tìm kiếm */}
+        {/* Desktop: Giới thiệu bên phải */}
+        <div className="hidden min-w-0 lg:block">
+          <AboutMe />
+        </div>
+      </div>
+
+      {/* Kết quả tìm kiếm */}
+      <div className="mt-8">
         <SearchResult
           loading={loading}
           error={error}
@@ -404,40 +443,23 @@ function Home() {
           searchDescription={searchDescription}
           results={results}
         />
+      </div>
 
-        {/* Mobile: Giới thiệu nằm sau kết quả */}
-        <div className="mt-8 lg:hidden">
-          <AboutMe />
-        </div>
+      {/* Mobile: Giới thiệu nằm sau kết quả */}
+      <div className="mt-8 lg:hidden">
+        <AboutMe />
+      </div>
 
-        {/* Gửi kiến nghị */}
-        {/* Gửi kiến nghị và ủng hộ */}
-        <div className="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-2 lg:items-stretch">
-          <FeedbackForm />
-          <DonateCard />
-        </div>
+      {/* Gửi kiến nghị và ủng hộ */}
+      <div className="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-2 lg:items-stretch">
+        <FeedbackForm />
+        <DonateCard />
+      </div>
+    </main>
 
-        <div className="mt-6 flex items-center gap-4 rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50 via-white to-cyan-50 p-5 shadow-lg">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-100 text-3xl shadow">
-            👥
-          </div>
-
-          <div>
-            <p className="text-sm font-medium uppercase tracking-wider text-slate-500">
-              Lượt truy cập
-            </p>
-
-            <h2 className="text-3xl font-extrabold text-blue-600">
-              {Number(visits ?? 0).toLocaleString("vi-VN")}
-            </h2>
-          </div>
-        </div>
-
-      </main>
-
-      <Footer />
-    </div>
-  );
+    <Footer />
+  </div>
+);
 }
 
 function formatDate(value) {

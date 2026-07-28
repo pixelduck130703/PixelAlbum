@@ -79,7 +79,7 @@ function SearchBox({
 
           {birthday && (
             <p className="mt-2 text-xs text-blue-600">
-              Đã chọn ngày sinh. Tìm kiếm theo tên đang được khóa.
+              Đã chọn ngày sinh, tìm kiếm theo tên, địa điểm du lịch, lớp đang được khóa.
             </p>
           )}
         </div>
@@ -99,7 +99,7 @@ function SearchBox({
             htmlFor="name-search"
             className="mb-2 block text-sm font-semibold text-slate-700"
           >
-            Tìm theo họ và tên, địa điểm, lớp (A3, IT2)
+            Tìm theo họ và tên, địa điểm du lịch, lớp (A3, IT2)
           </label>
 
           <input
@@ -118,7 +118,7 @@ function SearchBox({
 
           {name.trim() && (
             <p className="mt-2 text-xs text-blue-600">
-              Đã nhập họ tên. Tìm kiếm theo ngày sinh đang được khóa.
+              Đã nhập họ tên tìm kiếm theo ngày sinh đang được khóa.
             </p>
           )}
         </div>

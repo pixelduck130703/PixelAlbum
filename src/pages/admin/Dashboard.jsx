@@ -457,7 +457,7 @@ function Dashboard() {
         {/* Tổng số người */}
         <div className="rounded-2xl bg-white p-3 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg md:p-4">
           <p className="text-xs font-medium text-slate-500 md:text-sm">
-            Tổng số người
+            Tổng số
           </p>
 
           <div className="mt-3 flex items-end justify-between">
@@ -577,15 +577,16 @@ function Dashboard() {
             <button
               type="button"
               onClick={handleShowBirthdayByMonth}
-              className="w-full rounded-xl bg-pink-400 px-5 py-3 font-semibold text-white transition hover:bg-pink-600 sm:w-auto"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-pink-400 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-pink-600 hover:shadow-md sm:w-auto"
             >
-              📅 Sinh nhật theo tháng
+              <span>📅</span>
+              <span>Sinh nhật theo tháng</span>
             </button>
 
             <button
               type="button"
               onClick={handleExportExcel}
-              className="flex items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700 hover:shadow-md"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700 hover:shadow-md sm:w-auto"
             >
               <span>📊</span>
               <span>Xuất Excel</span>
@@ -594,9 +595,10 @@ function Dashboard() {
             <button
               type="button"
               onClick={handleAdd}
-              className="w-full rounded-xl bg-blue-500 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 sm:w-auto"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-500 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 hover:shadow-md sm:w-auto"
             >
-              + Thêm người
+              <span>➕</span>
+              <span>Thêm Album</span>
             </button>
           </div>
         </div>
