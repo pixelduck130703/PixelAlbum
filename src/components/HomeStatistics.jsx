@@ -28,7 +28,7 @@ export default function HomeStatistics({
     },
     {
       icon: "🎂",
-      title: "Sinh nhật tháng",
+      title: "Sinh nhật tháng này",
       value: Number(birthdaysThisMonth).toLocaleString("vi-VN"),
       bg: "bg-pink-100",
       color: "text-pink-600",
