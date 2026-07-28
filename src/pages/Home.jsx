@@ -393,7 +393,7 @@ function Home() {
       yearZhi={yearZhi}
     />
 
-    <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-8 pt-3 sm:px-6 sm:pb-10 sm:pt-4">
+    <main className="mx-auto w-full max-w-7xl flex-1 -mt-4 px-4 pb-8 pt-3 sm:mt-0 sm:px-6 sm:pb-10 sm:pt-4">
       {/* Thẻ thống kê */}
       <HomeStatistics
         visits={visits}

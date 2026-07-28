@@ -1,8 +1,8 @@
 export default function HomeStatistics({
   visits,
-  totalAlbums,
-  totalAlbumViews,
-  birthdaysThisMonth,
+  totalAlbums = 0,
+  totalAlbumViews = 0,
+  birthdaysThisMonth = 0,
 }) {
   const cards = [
     {
@@ -15,70 +15,72 @@ export default function HomeStatistics({
     {
       icon: "🖼️",
       title: "Số album",
-      value: totalAlbums.toLocaleString("vi-VN"),
+      value: Number(totalAlbums).toLocaleString("vi-VN"),
       bg: "bg-green-100",
       color: "text-green-600",
     },
     {
       icon: "👁️",
       title: "Lượt xem album",
-      value: totalAlbumViews.toLocaleString("vi-VN"),
+      value: Number(totalAlbumViews).toLocaleString("vi-VN"),
       bg: "bg-purple-100",
       color: "text-purple-600",
     },
     {
       icon: "🎂",
       title: "Sinh nhật tháng",
-      value: birthdaysThisMonth.toLocaleString("vi-VN"),
+      value: Number(birthdaysThisMonth).toLocaleString("vi-VN"),
       bg: "bg-pink-100",
       color: "text-pink-600",
     },
   ];
 
   return (
-  <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
-    {cards.map((card) => (
-      <div
-        key={card.title}
-        className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-3 shadow-sm transition hover:shadow-md lg:flex-col lg:justify-center lg:px-5 lg:py-5 lg:text-center"
-      >
-        {/* Desktop */}
-        <div className="hidden lg:block">
-          <div
-            className={`mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full ${card.bg} text-2xl`}
-          >
-            {card.icon}
-          </div>
-
-          <p className="text-sm font-medium text-slate-500">
-            {card.title}
-          </p>
-
-          <p className={`mt-2 text-3xl font-bold ${card.color}`}>
-            {card.value}
-          </p>
-        </div>
-
-        {/* Mobile */}
-        <div className="flex w-full items-center justify-between lg:hidden">
-          <div className="flex items-center gap-2 min-w-0">
+    <div className="mt-3 grid grid-cols-2 gap-2.5 sm:gap-3 lg:mt-6 lg:grid-cols-4 lg:gap-4">
+      {cards.map((card) => (
+        <div
+          key={card.title}
+          className="min-w-0 rounded-xl border border-slate-200 bg-white px-2.5 py-3 shadow-sm transition hover:shadow-md sm:px-3 lg:flex lg:flex-col lg:items-center lg:justify-center lg:px-5 lg:py-5 lg:text-center"
+        >
+          {/* Mobile */}
+          <div className="flex min-w-0 items-center gap-2 lg:hidden">
             <div
-              className={`flex h-9 w-9 items-center justify-center rounded-full ${card.bg}`}
+              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${card.bg} text-sm sm:h-9 sm:w-9 sm:text-base`}
             >
               {card.icon}
             </div>
 
-            <span className="truncate text-xs font-medium text-slate-600">
-              {card.title}
-            </span>
+            <div className="flex min-w-0 flex-1 items-center justify-between gap-1.5">
+              <span className="min-w-0 text-[10px] font-medium leading-tight text-slate-600 sm:text-xs">
+                {card.title}
+              </span>
+
+              <span
+                className={`shrink-0 text-base font-bold sm:text-lg ${card.color}`}
+              >
+                {card.value}
+              </span>
+            </div>
           </div>
 
-          <span className={`ml-2 text-lg font-bold ${card.color}`}>
-            {card.value}
-          </span>
+          {/* Desktop */}
+          <div className="hidden lg:block">
+            <div
+              className={`mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full ${card.bg} text-2xl`}
+            >
+              {card.icon}
+            </div>
+
+            <p className="text-sm font-medium text-slate-500">
+              {card.title}
+            </p>
+
+            <p className={`mt-2 text-3xl font-bold ${card.color}`}>
+              {card.value}
+            </p>
+          </div>
         </div>
-      </div>
-    ))}
-  </div>
-);
+      ))}
+    </div>
+  );
 }
