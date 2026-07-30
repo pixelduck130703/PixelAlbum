@@ -261,8 +261,8 @@ function Dashboard() {
       const response = await api.get("/people");
       setPeople(response.data);
     } catch (error) {
-      console.error("Lỗi lấy danh sách người:", error);
-      setError("Không thể tải danh sách người.");
+      console.error("Lỗi lấy danh sách album:", error);
+      setError("Không thể tải danh sách album.");
     } finally {
       setLoading(false);
     }
@@ -337,10 +337,10 @@ function Dashboard() {
 
       if (editingPerson) {
         await api.put(`/people/${editingPerson.id}`, formData);
-        toast.success("Cập nhật người thành công!");
+        toast.success("Cập nhật album thành công!");
       } else {
         await api.post("/people", formData);
-        toast.success("Thêm người thành công!");
+        toast.success("Thêm album thành công!");
       }
 
       setFormOpen(false);
@@ -368,7 +368,7 @@ function Dashboard() {
     const person = people.find((item) => item.id === id);
 
     const confirmed = window.confirm(
-      `Bạn có chắc muốn xóa ${person?.name || "người này"
+      `Bạn có chắc muốn xóa ${person?.name || "album này"
       } khỏi hệ thống không?`
     );
 
@@ -385,9 +385,9 @@ function Dashboard() {
 
       await loadDashboard();
 
-      toast.success("Xóa người thành công!");
+      toast.success("Xóa album thành công!");
     } catch (error) {
-      console.error("Lỗi xóa người:", error);
+      console.error("Lỗi xóa album:", error);
 
       const message =
         error.response?.data?.message ||
@@ -402,10 +402,10 @@ function Dashboard() {
     <Layout>
       {/* Thẻ thống kê */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
-        {/* Tổng số người */}
+        {/* Tổng số album */}
         <div className="rounded-2xl bg-white p-3 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg md:p-4">
           <p className="text-xs font-medium text-slate-500 md:text-sm">
-            Tổng số người
+            Tổng số album
           </p>
 
           <div className="mt-3 flex items-end justify-between">
@@ -420,7 +420,7 @@ function Dashboard() {
         {/* Có liên kết album */}
         <div className="rounded-2xl bg-white p-3 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg md:p-4">
           <p className="text-xs font-medium text-slate-500 md:text-sm">
-            Có liên kết Album
+            Có liên kết
           </p>
 
           <div className="mt-3 flex items-end justify-between">
@@ -511,7 +511,7 @@ function Dashboard() {
         loading={loadingTrafficChart}
       />
 
-      {/* Khối quản lý người */}
+      {/* Khối quản lý album */}
       <div className="mt-8 sm:mt-10">
         <div className="mb-5 flex flex-col-reverse gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -536,7 +536,7 @@ function Dashboard() {
               onClick={handleAdd}
               className="w-full rounded-xl bg-blue-500 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 sm:w-auto"
             >
-              + Thêm người
+              + Thêm Album
             </button>
           </div>
         </div>
@@ -587,7 +587,7 @@ function Dashboard() {
         {!loading && !error && (
           <>
             <div className="mb-3 text-sm text-slate-500">
-              Hiển thị {filteredPeople.length} / {people.length} người
+              Hiển thị {filteredPeople.length} / {people.length} Album
             </div>
 
             <PersonTable
