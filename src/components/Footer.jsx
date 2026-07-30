@@ -233,7 +233,7 @@ function Footer() {
               </a>
 
               <a
-                href="hhttps://neon.com/"
+                href="https://neon.com/"
                 target="_blank"
                 rel="noopener noreferrer"
               >

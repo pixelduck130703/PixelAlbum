@@ -81,7 +81,6 @@ function Dashboard() {
 
       setVisitChart([]);
       setAlbumViewChart([]);
-      toast.error("Không thể tải dữ liệu biểu đồ.");
     } finally {
       setLoadingTrafficChart(false);
     }
@@ -649,7 +648,7 @@ function Dashboard() {
         {!loading && !error && (
           <>
             <div className="mb-3 text-sm text-slate-500">
-              Hiển thị {filteredPeople.length} / {people.length} người
+              Hiển thị {filteredPeople.length} / {people.length} Album
             </div>
 
             <PersonTable

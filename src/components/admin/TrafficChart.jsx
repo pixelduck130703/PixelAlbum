@@ -52,15 +52,18 @@ function TrafficChart({
     );
   })();
 
+  const xAxisInterval =
+    days <= 7 ? 0 : days <= 14 ? 1 : days <= 30 ? 4 : 9;
+
   return (
-    <div className="mt-6 rounded-3xl bg-white p-4 shadow-sm md:p-6">
+    <div className="mt-6 overflow-hidden rounded-3xl bg-white p-3 shadow-sm sm:p-4 md:p-6">
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-lg font-bold text-slate-800 md:text-xl">
+        <div className="min-w-0">
+          <h2 className="text-base font-bold text-slate-800 sm:text-lg md:text-xl">
             Thống kê lượt truy cập
           </h2>
 
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-xs leading-5 text-slate-500 sm:text-sm">
             So sánh lượt truy cập website và lượt mở album theo ngày
           </p>
         </div>
@@ -68,7 +71,7 @@ function TrafficChart({
         <select
           value={days}
           onChange={(event) => setDays(Number(event.target.value))}
-          className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 sm:w-auto"
         >
           <option value={7}>7 ngày gần nhất</option>
           <option value={14}>14 ngày gần nhất</option>
@@ -78,30 +81,44 @@ function TrafficChart({
       </div>
 
       {loading ? (
-        <div className="flex h-[320px] items-center justify-center text-sm text-slate-500">
+        <div className="flex h-[280px] items-center justify-center text-sm text-slate-500 sm:h-[320px]">
           Đang tải biểu đồ...
         </div>
       ) : mergedData.length === 0 ? (
-        <div className="flex h-[320px] items-center justify-center text-sm text-slate-500">
+        <div className="flex h-[280px] items-center justify-center text-sm text-slate-500 sm:h-[320px]">
           Chưa có dữ liệu thống kê
         </div>
       ) : (
-        <div className="h-[320px] w-full md:h-[420px]">
+        <div className="h-[300px] w-full sm:h-[340px] md:h-[420px]">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={mergedData}
-              margin={{ top: 10, right: 20, left: -20, bottom: 5 }}
+              margin={{
+                top: 10,
+                right: 8,
+                left: 0,
+                bottom: 10,
+              }}
             >
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <CartesianGrid
+                strokeDasharray="3 3"
+                vertical={false}
+              />
 
               <XAxis
                 dataKey="displayDate"
-                tick={{ fontSize: 12 }}
-                tickMargin={10}
-                minTickGap={20}
+                interval={xAxisInterval}
+                tick={{ fontSize: 10 }}
+                tickMargin={8}
+                minTickGap={12}
+                padding={{ left: 8, right: 8 }}
               />
 
-              <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+              <YAxis
+                allowDecimals={false}
+                width={34}
+                tick={{ fontSize: 10 }}
+              />
 
               <Tooltip
                 labelFormatter={(_, payload) => {
@@ -115,19 +132,31 @@ function TrafficChart({
                 contentStyle={{
                   borderRadius: "12px",
                   border: "1px solid #e2e8f0",
+                  fontSize: "12px",
+                  maxWidth: "220px",
                 }}
               />
 
-              <Legend verticalAlign="top" height={36} />
+              <Legend
+                verticalAlign="top"
+                align="center"
+                height={48}
+                iconSize={10}
+                wrapperStyle={{
+                  fontSize: "11px",
+                  lineHeight: "20px",
+                  paddingBottom: "8px",
+                }}
+              />
 
               <Line
                 type="monotone"
                 dataKey="visits"
-                name="Lượt truy cập website"
+                name="Lượt truy cập"
                 stroke="#FF0000"
-                strokeWidth={3}
-                dot={{ r: 3 }}
-                activeDot={{ r: 6 }}
+                strokeWidth={2.5}
+                dot={{ r: 2 }}
+                activeDot={{ r: 5 }}
               />
 
               <Line
@@ -135,9 +164,9 @@ function TrafficChart({
                 dataKey="views"
                 name="Lượt mở album"
                 stroke="#2563eb"
-                strokeWidth={3}
-                dot={{ r: 3 }}
-                activeDot={{ r: 6 }}
+                strokeWidth={2.5}
+                dot={{ r: 2 }}
+                activeDot={{ r: 5 }}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -154,6 +183,7 @@ function formatDisplayDate(dateString) {
 
 function formatFullDate(dateString) {
   const [year, month, day] = String(dateString || "").split("-");
+
   return day && month && year
     ? `${day}/${month}/${year}`
     : String(dateString || "");

@@ -410,51 +410,71 @@ function Detail() {
     }
   };
 
-  const openAlbumAndCountView = async (albumUrl) => {
-    if (!albumUrl || openingAlbum) {
+  const normalizeAlbumUrl = (url) => {
+    if (!url) return "";
+
+    const normalizedUrl = String(url).trim();
+
+    if (/^https?:\/\//i.test(normalizedUrl)) {
+      return normalizedUrl;
+    }
+
+    return `https://${normalizedUrl}`;
+  };
+
+  const recordAlbumView = () => {
+    api
+      .post(`/people/public/${publicId}/album-view`)
+      .catch((error) => {
+        console.error("Lỗi tăng lượt xem album:", error);
+      });
+  };
+
+  const redirectToAlbum = (albumUrl) => {
+    const normalizedUrl = normalizeAlbumUrl(albumUrl);
+
+    if (!normalizedUrl || openingAlbum) {
       return;
     }
 
     setOpeningAlbum(true);
 
-    try {
-      await api.post(`/people/public/${publicId}/album-view`);
+    // Ghi nhận lượt xem ở chế độ nền, không chờ phản hồi.
+    recordAlbumView();
 
-      window.open(
-        albumUrl,
-        "_blank",
-        "noopener,noreferrer"
-      );
-    } catch (error) {
-      console.error("Lỗi tăng lượt xem album:", error);
-
-      alert("Không thể mở album. Vui lòng thử lại.");
-    } finally {
-      setOpeningAlbum(false);
-    }
+    // Mở trong tab hiện tại để Safari iPhone không chặn popup.
+    window.location.assign(normalizedUrl);
   };
 
-  const handleOpenAlbum = async () => {
-    if (!person.hasAlbum && !person.album) {
+  const handleOpenAlbum = () => {
+    if (openingAlbum) {
       return;
     }
 
-    if (person.securityQuestion) {
+    if (!person?.hasAlbum && !person?.album) {
+      return;
+    }
+
+    if (person?.securityQuestion) {
       setVerifyAnswer("");
       setVerifyError("");
       setVerifyOpen(true);
       return;
     }
 
-    if (person.album) {
-      await openAlbumAndCountView(person.album);
-    }
+    redirectToAlbum(person?.album);
   };
 
   const handleVerifyAlbum = async (event) => {
     event.preventDefault();
 
-    if (!verifyAnswer.trim()) {
+    if (verifying || openingAlbum) {
+      return;
+    }
+
+    const answer = verifyAnswer.trim();
+
+    if (!answer) {
       setVerifyError("Vui lòng nhập câu trả lời.");
       return;
     }
@@ -465,21 +485,31 @@ function Detail() {
 
       const response = await api.post(
         `/people/public/${publicId}/verify-album`,
-        {
-          answer: verifyAnswer,
-        }
+        { answer }
       );
+
+      const albumUrl = normalizeAlbumUrl(
+        response.data?.album || person?.album
+      );
+
+      if (!albumUrl) {
+        setVerifyError("Không tìm thấy liên kết album.");
+        return;
+      }
 
       setVerifyOpen(false);
       setVerifyAnswer("");
+      setOpeningAlbum(true);
 
-      await openAlbumAndCountView(
-        response.data.album || person.album
-      );
+      // Ghi nhận lượt xem ở chế độ nền.
+      recordAlbumView();
+
+      // Không dùng window.open để tránh Safari iPhone chặn popup.
+      window.location.assign(albumUrl);
     } catch (error) {
       setVerifyError(
         error.response?.data?.message ||
-        "Không thể xác thực câu trả lời."
+          "Không thể xác thực câu trả lời."
       );
     } finally {
       setVerifying(false);
@@ -765,7 +795,8 @@ function Detail() {
                   type="button"
                   onClick={handleOpenAlbum}
                   disabled={openingAlbum}
-                  className="mt-5 flex w-full items-center justify-center rounded-xl bg-blue-500 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  style={{ touchAction: "manipulation" }}
+                  className="mt-5 flex w-full select-none items-center justify-center rounded-xl bg-blue-500 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {openingAlbum
                     ? "Đang mở album..."
@@ -832,9 +863,10 @@ function Detail() {
 
                 <button
                   type="submit"
-                  className="flex-1 rounded-xl bg-blue-600 py-3 text-white"
+                  disabled={verifying}
+                  className="flex-1 rounded-xl bg-blue-600 py-3 text-white disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Xác nhận
+                  {verifying ? "Đang xác thực..." : "Xác nhận"}
                 </button>
 
               </div>
