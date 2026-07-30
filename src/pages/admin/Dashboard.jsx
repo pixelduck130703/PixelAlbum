@@ -22,8 +22,6 @@ function Dashboard() {
   const [keyword, setKeyword] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [showMonthModal, setShowMonthModal] = useState(false);
-  const [monthPeople, setMonthPeople] = useState([]);
   const [showTodayModal, setShowTodayModal] = useState(false);
   const [todayPeople, setTodayPeople] = useState([]);
   const [visits, setVisits] = useState(null);
@@ -81,6 +79,7 @@ function Dashboard() {
 
       setVisitChart([]);
       setAlbumViewChart([]);
+      toast.error("Không thể tải dữ liệu biểu đồ.");
     } finally {
       setLoadingTrafficChart(false);
     }
@@ -144,58 +143,38 @@ function Dashboard() {
     }
   };
 
-  const handleShowMonthBirthday = async () => {
-    try {
-      const response = await api.get("/people");
+  const getBirthdayPeopleByMonth = (selectedMonth) => {
+    const month = String(selectedMonth).padStart(2, "0");
 
-      const currentMonth = String(
-        new Date().getMonth() + 1
-      ).padStart(2, "0");
+    return people
+      .filter((person) => {
+        if (!person.birthday || person.deathDate) {
+          return false;
+        }
 
-      const list = response.data
-        .filter((person) => {
-          if (!person.birthday || person.deathDate) {
-            return false;
-          }
+        return String(person.birthday).slice(5, 7) === month;
+      })
+      .sort((a, b) => {
+        const birthdayA = String(a.birthday).slice(0, 10);
+        const birthdayB = String(b.birthday).slice(0, 10);
 
-          return (
-            String(person.birthday).slice(5, 7) ===
-            currentMonth
-          );
-        })
-        .sort((a, b) => {
-          const birthdayA = String(a.birthday).slice(0, 10);
-          const birthdayB = String(b.birthday).slice(0, 10);
+        const [yearA, , dayA] = birthdayA.split("-").map(Number);
+        const [yearB, , dayB] = birthdayB.split("-").map(Number);
 
-          const [yearA, monthA, dayA] = birthdayA
-            .split("-")
-            .map(Number);
+        if (dayA !== dayB) {
+          return dayA - dayB;
+        }
 
-          const [yearB, monthB, dayB] = birthdayB
-            .split("-")
-            .map(Number);
+        return yearA - yearB;
+      });
+  };
 
-          // Ưu tiên sắp xếp theo ngày trong tháng
-          if (dayA !== dayB) {
-            return dayA - dayB;
-          }
+  const handleShowMonthBirthday = () => {
+    const currentMonth = String(new Date().getMonth() + 1);
 
-          // Nếu cùng ngày thì người sinh năm trước đứng trước
-          return yearA - yearB;
-        });
-
-      setMonthPeople(list);
-      setShowMonthModal(true);
-    } catch (error) {
-      console.error(
-        "Lỗi lấy sinh nhật tháng này:",
-        error
-      );
-
-      toast.error(
-        "Không thể tải danh sách sinh nhật tháng này."
-      );
-    }
+    setSelectedBirthdayMonth(currentMonth);
+    setBirthdayMonthPeople(getBirthdayPeopleByMonth(currentMonth));
+    setShowBirthdayMonthModal(true);
   };
 
   const loadDashboard = async () => {
@@ -207,6 +186,12 @@ function Dashboard() {
         "Lỗi lấy thống kê:",
         error.response?.data || error
       );
+
+      if (error.response?.status === 401) {
+        toast.error(
+          "Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại."
+        );
+      }
     }
   };
 
@@ -321,42 +306,6 @@ function Dashboard() {
   const [birthdayMonthPeople, setBirthdayMonthPeople] =
     useState([]);
 
-  const handleShowBirthdayByMonth = () => {
-    const month = String(selectedBirthdayMonth).padStart(2, "0");
-
-    const list = people
-      .filter((person) => {
-        if (!person.birthday || person.deathDate) {
-          return false;
-        }
-
-        const birthday = String(person.birthday).slice(0, 10);
-
-        return birthday.slice(5, 7) === month;
-      })
-      .sort((a, b) => {
-        const birthdayA = String(a.birthday).slice(0, 10);
-        const birthdayB = String(b.birthday).slice(0, 10);
-
-        const [yearA, , dayA] = birthdayA
-          .split("-")
-          .map(Number);
-
-        const [yearB, , dayB] = birthdayB
-          .split("-")
-          .map(Number);
-
-        if (dayA !== dayB) {
-          return dayA - dayB;
-        }
-
-        return yearA - yearB;
-      });
-
-    setBirthdayMonthPeople(list);
-    setShowBirthdayMonthModal(true);
-  };
-
   const handleAdd = () => {
     setEditingPerson(null);
     setFormOpen(true);
@@ -456,7 +405,7 @@ function Dashboard() {
         {/* Tổng số người */}
         <div className="rounded-2xl bg-white p-3 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg md:p-4">
           <p className="text-xs font-medium text-slate-500 md:text-sm">
-            Tổng số
+            Tổng số người
           </p>
 
           <div className="mt-3 flex items-end justify-between">
@@ -554,7 +503,6 @@ function Dashboard() {
         </button>
       </div>
 
-      {/* Biểu đồ thống kê */}
       <TrafficChart
         visitChart={visitChart}
         albumViewChart={albumViewChart}
@@ -573,19 +521,11 @@ function Dashboard() {
           </div>
 
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-            <button
-              type="button"
-              onClick={handleShowBirthdayByMonth}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-pink-400 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-pink-600 hover:shadow-md sm:w-auto"
-            >
-              <span>📅</span>
-              <span>Sinh nhật theo tháng</span>
-            </button>
 
             <button
               type="button"
               onClick={handleExportExcel}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700 hover:shadow-md sm:w-auto"
+              className="flex items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700 hover:shadow-md"
             >
               <span>📊</span>
               <span>Xuất Excel</span>
@@ -594,10 +534,9 @@ function Dashboard() {
             <button
               type="button"
               onClick={handleAdd}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-500 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 hover:shadow-md sm:w-auto"
+              className="w-full rounded-xl bg-blue-500 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 sm:w-auto"
             >
-              <span>➕</span>
-              <span>Thêm Album</span>
+              + Thêm người
             </button>
           </div>
         </div>
@@ -648,7 +587,7 @@ function Dashboard() {
         {!loading && !error && (
           <>
             <div className="mb-3 text-sm text-slate-500">
-              Hiển thị {filteredPeople.length} / {people.length} Album
+              Hiển thị {filteredPeople.length} / {people.length} người
             </div>
 
             <PersonTable
@@ -741,79 +680,6 @@ function Dashboard() {
         </div>
       )}
 
-      {showMonthModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4"
-          onClick={() => setShowMonthModal(false)}
-        >
-          <div
-            className="max-h-[88vh] w-full overflow-hidden rounded-t-3xl bg-white p-5 shadow-2xl sm:max-w-2xl sm:rounded-3xl sm:p-6"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="mb-5 flex items-center justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-bold text-slate-800 sm:text-2xl">
-                  📅 Sinh nhật tháng này
-                </h2>
-
-                <p className="mt-1 text-sm text-slate-500">
-                  Có {monthPeople.length} người
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setShowMonthModal(false)}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xl text-slate-600 hover:bg-slate-200"
-                aria-label="Đóng"
-              >
-                ✕
-              </button>
-            </div>
-
-            {monthPeople.length === 0 ? (
-              <div className="rounded-2xl bg-slate-100 p-8 text-center text-slate-500">
-                Không có ai sinh trong tháng này.
-              </div>
-            ) : (
-              <div className="max-h-[65vh] space-y-3 overflow-y-auto pr-1">
-                {monthPeople.map((person) => (
-                  <a
-                    key={person.id}
-                    href={`/person/${person.publicId}`}
-                    className="flex items-center gap-3 rounded-2xl border border-slate-200 p-3 transition hover:border-blue-300 hover:bg-blue-50 sm:gap-4 sm:p-4"
-                  >
-                    <img
-                      src={
-                        person.avatar ||
-                        "https://placehold.co/100x100?text=Avatar"
-                      }
-                      alt={person.name}
-                      className="h-12 w-12 shrink-0 rounded-full object-cover sm:h-14 sm:w-14"
-                      onError={(event) => {
-                        event.currentTarget.src =
-                          "https://placehold.co/100x100?text=Avatar";
-                      }}
-                    />
-
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-bold text-slate-800">
-                        {person.name}
-                      </p>
-
-                      <p className="mt-1 text-sm text-slate-500">
-                        {formatDate(person.birthday)}
-                      </p>
-                    </div>
-
-                    <span className="shrink-0 text-slate-400">→</span>
-                  </a>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
       {showBirthdayMonthModal && (
         <div
           className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-4"
@@ -826,11 +692,11 @@ function Dashboard() {
             <div className="mb-5 flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-xl font-bold text-slate-800 sm:text-2xl">
-                  📅 Sinh nhật theo tháng
+                  📅 Sinh nhật tháng {selectedBirthdayMonth}
                 </h2>
 
                 <p className="mt-1 text-sm text-slate-500">
-                  Có {birthdayMonthPeople.length} người trong tháng{" "}
+                  Có {birthdayMonthPeople.length} người sinh trong tháng{" "}
                   {selectedBirthdayMonth}
                 </p>
               </div>
@@ -857,38 +723,9 @@ function Dashboard() {
 
                   setSelectedBirthdayMonth(selectedMonth);
 
-                  const month = String(selectedMonth).padStart(2, "0");
-
-                  const list = people
-                    .filter((person) => {
-                      if (!person.birthday) {
-                        return false;
-                      }
-
-                      return (
-                        String(person.birthday).slice(5, 7) === month
-                      );
-                    })
-                    .sort((a, b) => {
-                      const birthdayA = String(a.birthday).slice(0, 10);
-                      const birthdayB = String(b.birthday).slice(0, 10);
-
-                      const [yearA, , dayA] = birthdayA
-                        .split("-")
-                        .map(Number);
-
-                      const [yearB, , dayB] = birthdayB
-                        .split("-")
-                        .map(Number);
-
-                      if (dayA !== dayB) {
-                        return dayA - dayB;
-                      }
-
-                      return yearA - yearB;
-                    });
-
-                  setBirthdayMonthPeople(list);
+                  setBirthdayMonthPeople(
+                    getBirthdayPeopleByMonth(selectedMonth)
+                  );
                 }}
                 className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-pink-500 focus:ring-4 focus:ring-pink-100"
               >
