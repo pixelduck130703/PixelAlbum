@@ -57,7 +57,7 @@ function TodayAlbumViewsModal({
 
             <div className="rounded-2xl bg-white/15 px-4 py-3 backdrop-blur">
               <p className="text-xs font-medium uppercase tracking-wide text-white/75">
-                Tổng lượt mở
+                Số lượt mở
               </p>
 
               <p className="mt-1 text-2xl font-bold">
