@@ -509,7 +509,7 @@ function Detail() {
     } catch (error) {
       setVerifyError(
         error.response?.data?.message ||
-          "Không thể xác thực câu trả lời."
+        "Không thể xác thực câu trả lời."
       );
     } finally {
       setVerifying(false);
@@ -582,6 +582,7 @@ function Detail() {
                 alt={person.name}
                 className="mx-auto h-36 w-36 rounded-full border-4 border-white object-cover shadow-2xl sm:h-44 sm:w-44"
                 onError={(event) => {
+                  event.currentTarget.onerror = null;
                   event.currentTarget.src =
                     "https://placehold.co/300x300?text=Avatar";
                 }}
@@ -597,6 +598,11 @@ function Detail() {
                     🎂 {age} tuổi
                   </span>
                 )}
+
+                <span className="rounded-full bg-white/20 px-4 py-2 text-sm font-semibold backdrop-blur-md">
+                  👁️{" "}
+                  {Number(person.albumViews || 0).toLocaleString("vi-VN")} lượt xem
+                </span>
 
                 {person.class && (
                   <span className="rounded-full bg-white/20 px-4 py-2 text-sm font-semibold backdrop-blur-md">
@@ -788,75 +794,149 @@ function Detail() {
               </div>
             )}
 
-            <div className="mt-8 border-t border-slate-200 pt-4 items-center">
+            <div className="mt-8 border-t border-slate-200 pt-6">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                {/* Nút xem album bên trái */}
+                {person.hasAlbum || person.album ? (
+                  <button
+                    type="button"
+                    onClick={handleOpenAlbum}
+                    disabled={openingAlbum}
+                    style={{ touchAction: "manipulation" }}
+                    className="group flex min-h-[56px] w-full select-none items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 px-3 py-3 text-sm font-bold text-white shadow-lg shadow-blue-500/20 transition duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-blue-500/30 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60 sm:px-5 sm:text-base"
+                  >
+                    <span className="shrink-0 text-lg transition duration-300 group-hover:scale-110 sm:text-xl">
+                      {openingAlbum ? "⏳" : "🖼️"}
+                    </span>
 
-              {person.hasAlbum || person.album ? (
+                    <span className="min-w-0 truncate">
+                      {openingAlbum
+                        ? "Đang mở..."
+                        : person.securityQuestion
+                          ? "Xem album"
+                          : "Xem album"}
+                    </span>
+                  </button>
+                ) : (
+                  <div className="flex min-h-[56px] w-full items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-100 px-3 py-3 text-center text-xs font-semibold text-slate-500 sm:px-5 sm:text-sm">
+                    Chưa có album
+                  </div>
+                )}
+
+                {/* Nút quay lại bên phải */}
                 <button
                   type="button"
-                  onClick={handleOpenAlbum}
-                  disabled={openingAlbum}
-                  style={{ touchAction: "manipulation" }}
-                  className="mt-5 flex w-full select-none items-center justify-center rounded-xl bg-blue-500 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  onClick={() => navigate(-1)}
+                  className="group flex min-h-[56px] w-full items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-white px-3 py-3 text-sm font-bold text-slate-700 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700 hover:shadow-md active:translate-y-0 sm:px-5 sm:text-base"
                 >
-                  {openingAlbum
-                    ? "Đang mở album..."
-                    : "🖼️ Xem album ảnh"}
-                </button>
-              ) : (
-                <div className="mt-5 flex w-full items-center justify-center rounded-xl bg-gray-300 px-5 py-3 font-bold text-red-500 transition hover:bg-blue-700">
-                  Người này chưa có liên kết album
-                </div>
-              )}
-            </div>
+                  <span className="shrink-0 text-lg transition duration-300 group-hover:-translate-x-1">
+                    ←
+                  </span>
 
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="mt-5 flex w-full items-center justify-center rounded-xl bg-blue-500 px-5 py-3 font-semibold text-white transition hover:bg-blue-700"
-            >
-              ← Quay lại
-            </button>
+                  <span>Quay lại</span>
+                </button>
+              </div>
+            </div>
 
           </div>
         </div>
       </div>
 
       {verifyOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm"
+          onClick={() => {
+            if (!verifying) {
+              setVerifyOpen(false);
+            }
+          }}
+        >
+          <div
+            className="w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 px-5 py-6 text-white sm:px-6">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 text-2xl shadow-sm backdrop-blur">
+                    🔐
+                  </div>
 
-            <h2 className="text-2xl font-bold">
-              Xác thực để xem album
-            </h2>
-
-            <p className="mt-3 text-gray-600">
-              {person.securityQuestion}
-            </p>
-
-            <form
-              onSubmit={handleVerifyAlbum}
-              className="mt-6"
-            >
-              <input
-                type="text"
-                value={verifyAnswer}
-                onChange={(e) => setVerifyAnswer(e.target.value)}
-                placeholder="Nhập câu trả lời..."
-                className="w-full rounded-xl border p-3"
-              />
-
-              {verifyError && (
-                <p className="mt-3 text-red-500">
-                  {verifyError}
-                </p>
-              )}
-
-              <div className="mt-6 flex gap-3">
+                  <h2 className="mt-4 text-2xl font-bold">
+                    Xác thực để xem album
+                  </h2>
+                </div>
 
                 <button
                   type="button"
                   onClick={() => setVerifyOpen(false)}
-                  className="flex-1 rounded-xl bg-gray-300 py-3"
+                  disabled={verifying}
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15 text-xl text-white transition hover:bg-white/25 disabled:cursor-not-allowed disabled:opacity-50"
+                  aria-label="Đóng"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Nội dung */}
+            <form
+              onSubmit={handleVerifyAlbum}
+              className="p-5 sm:p-6"
+            >
+              {/* Câu hỏi */}
+              <div className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
+                <p className="text-xs font-bold uppercase tracking-wide text-blue-500">
+                  Câu hỏi xác thực
+                </p>
+
+                <p className="mt-2 break-words font-semibold leading-7 text-slate-800">
+                  {person.securityQuestion}
+                </p>
+              </div>
+
+              {/* Câu trả lời */}
+              <div className="mt-5">
+                <label
+                  htmlFor="verify-answer"
+                  className="mb-2 block text-sm font-semibold text-slate-700"
+                >
+                  Câu trả lời
+                </label>
+
+                <input
+                  id="verify-answer"
+                  type="text"
+                  value={verifyAnswer}
+                  onChange={(event) =>
+                    setVerifyAnswer(event.target.value)
+                  }
+                  placeholder="Nhập câu trả lời..."
+                  autoFocus
+                  disabled={verifying}
+                  className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3.5 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:opacity-70"
+                />
+              </div>
+
+              {/* Lỗi */}
+              {verifyError && (
+                <div className="mt-3 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+                  <span className="shrink-0">⚠️</span>
+
+                  <span className="break-words">
+                    {verifyError}
+                  </span>
+                </div>
+              )}
+
+              {/* Nút */}
+              <div className="mt-6 grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setVerifyOpen(false)}
+                  disabled={verifying}
+                  className="min-h-[48px] rounded-xl bg-slate-100 px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Hủy
                 </button>
@@ -864,15 +944,20 @@ function Detail() {
                 <button
                   type="submit"
                   disabled={verifying}
-                  className="flex-1 rounded-xl bg-blue-600 py-3 text-white disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 font-semibold text-white shadow-sm transition hover:from-blue-700 hover:to-indigo-700 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {verifying ? "Đang xác thực..." : "Xác nhận"}
+                  {verifying && (
+                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                  )}
+
+                  <span>
+                    {verifying
+                      ? "Đang xác thực..."
+                      : "Xác nhận"}
+                  </span>
                 </button>
-
               </div>
-
             </form>
-
           </div>
         </div>
       )}

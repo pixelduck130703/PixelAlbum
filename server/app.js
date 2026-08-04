@@ -170,6 +170,8 @@ app.get("/api/people/public/:publicId", async (req, res) => {
         address,
         avatar,
 
+        COALESCE("albumViews", 0) AS "albumViews",
+
         CASE
           WHEN "securityQuestion" IS NULL
             OR TRIM("securityQuestion") = ''
