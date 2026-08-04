@@ -73,9 +73,6 @@ export default function DailyQuote() {
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-indigo-600">
-            Câu nói hôm nay
-          </p>
 
           <p className="text-sm italic leading-6 text-slate-700">
             “{quote}”

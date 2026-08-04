@@ -182,16 +182,7 @@ function Dashboard() {
       const response = await api.get("/dashboard");
       setStats(response.data);
     } catch (error) {
-      console.error(
-        "Lỗi lấy thống kê:",
-        error.response?.data || error
-      );
-
-      if (error.response?.status === 401) {
-        toast.error(
-          "Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại."
-        );
-      }
+      //Xóa thông báo lỗi
     }
   };
 
@@ -253,6 +244,27 @@ function Dashboard() {
     }
   };
 
+  const [
+    showTodayAlbumViewsModal,
+    setShowTodayAlbumViewsModal,
+  ] = useState(false);
+
+  const [todayAlbumViews, setTodayAlbumViews] =
+    useState([]);
+
+  const [
+    todayAlbumViewSummary,
+    setTodayAlbumViewSummary,
+  ] = useState({
+    totalAlbums: 0,
+    totalViews: 0,
+  });
+
+  const [
+    loadingTodayAlbumViews,
+    setLoadingTodayAlbumViews,
+  ] = useState(false);
+
   const loadPeople = async () => {
     try {
       setLoading(true);
@@ -305,6 +317,40 @@ function Dashboard() {
 
   const [birthdayMonthPeople, setBirthdayMonthPeople] =
     useState([]);
+
+  const handleShowTodayAlbumViews = async () => {
+    if (loadingTodayAlbumViews) {
+      return;
+    }
+
+    try {
+      setLoadingTodayAlbumViews(true);
+
+      const response = await api.get(
+        "/admin/today-album-views"
+      );
+
+      const list = Array.isArray(response.data?.data)
+        ? response.data.data
+        : [];
+
+      setTodayAlbumViews(list);
+
+      setTodayAlbumViewSummary({
+        totalAlbums:
+          Number(response.data?.totalAlbums) || 0,
+
+        totalViews:
+          Number(response.data?.totalViews) || 0,
+      });
+
+      setShowTodayAlbumViewsModal(true);
+    } catch (error) {
+      //xóa thông báo
+    } finally {
+      setLoadingTodayAlbumViews(false);
+    }
+  };
 
   const handleAdd = () => {
     setEditingPerson(null);
@@ -520,12 +566,26 @@ function Dashboard() {
             </h2>
           </div>
 
-          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+          <div className="grid w-full grid-cols-1 gap-3 sm:w-auto sm:grid-cols-3">
+            <button
+              type="button"
+              onClick={handleShowTodayAlbumViews}
+              disabled={loadingTodayAlbumViews}
+              className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <span>🔥</span>
+
+              <span>
+                {loadingTodayAlbumViews
+                  ? "Đang tải..."
+                  : "Album xem hôm nay"}
+              </span>
+            </button>
 
             <button
               type="button"
               onClick={handleExportExcel}
-              className="flex items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700 hover:shadow-md"
+              className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-green-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700 hover:shadow-md"
             >
               <span>📊</span>
               <span>Xuất Excel</span>
@@ -534,9 +594,10 @@ function Dashboard() {
             <button
               type="button"
               onClick={handleAdd}
-              className="w-full rounded-xl bg-blue-500 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 sm:w-auto"
+              className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-blue-500 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 hover:shadow-md"
             >
-              + Thêm Album
+              <span>➕</span>
+              <span>Thêm Album</span>
             </button>
           </div>
         </div>
@@ -777,6 +838,124 @@ function Dashboard() {
                     </div>
 
                     <span className="shrink-0 text-slate-400">→</span>
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      {showTodayAlbumViewsModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4"
+          onClick={() =>
+            setShowTodayAlbumViewsModal(false)
+          }
+        >
+          <div
+            className="max-h-[90vh] w-full overflow-hidden rounded-t-3xl bg-white p-5 shadow-2xl sm:max-w-2xl sm:rounded-3xl sm:p-6"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-slate-800 sm:text-2xl">
+                  Album được xem hôm nay
+                </h2>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  {todayAlbumViewSummary.totalAlbums} album
+                  {" · "}
+                  {Number(
+                    todayAlbumViewSummary.totalViews
+                  ).toLocaleString("vi-VN")}{" "}
+                  lượt mở
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setShowTodayAlbumViewsModal(false)
+                }
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xl text-slate-600 transition hover:bg-slate-200"
+                aria-label="Đóng"
+              >
+                ✕
+              </button>
+            </div>
+
+            {todayAlbumViews.length === 0 ? (
+              <div className="rounded-2xl bg-slate-100 p-8 text-center">
+                <div className="text-4xl">👀</div>
+
+                <p className="mt-3 font-semibold text-slate-700">
+                  Hôm nay chưa có album nào được xem
+                </p>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  Danh sách sẽ xuất hiện khi người dùng mở album.
+                </p>
+              </div>
+            ) : (
+              <div className="max-h-[65vh] space-y-3 overflow-y-auto pr-1">
+                {todayAlbumViews.map((person) => (
+                  <a
+                    key={person.id}
+                    href={`/person/${person.publicId}`}
+                    className="flex items-center gap-3 rounded-2xl border border-slate-200 p-3 transition hover:border-violet-300 hover:bg-violet-50 sm:gap-4 sm:p-4"
+                  >
+                    <img
+                      src={
+                        person.avatar ||
+                        "https://placehold.co/100x100?text=Avatar"
+                      }
+                      alt={person.name || "Avatar"}
+                      className="h-12 w-12 shrink-0 rounded-full object-cover sm:h-14 sm:w-14"
+                      onError={(event) => {
+                        event.currentTarget.onerror = null;
+                        event.currentTarget.src =
+                          "https://placehold.co/100x100?text=Avatar";
+                      }}
+                    />
+
+                    <div className="min-w-0 flex-1">
+                      <p className="break-words font-bold text-slate-800">
+                        {person.name}
+                      </p>
+
+                      <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm text-slate-500">
+                        <span>
+                          👁️{" "}
+                          {Number(
+                            person.todayViews || 0
+                          ).toLocaleString("vi-VN")}{" "}
+                          lượt hôm nay
+                        </span>
+
+                        <span>
+                          Tổng:{" "}
+                          {Number(
+                            person.albumViews || 0
+                          ).toLocaleString("vi-VN")}
+                        </span>
+
+                        {person.lastViewedAt && (
+                          <span>
+                            🕒{" "}
+                            {new Date(
+                              person.lastViewedAt
+                            ).toLocaleTimeString("vi-VN", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <span className="shrink-0 text-slate-400">
+                      →
+                    </span>
                   </a>
                 ))}
               </div>

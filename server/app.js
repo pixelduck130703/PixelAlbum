@@ -1198,49 +1198,108 @@ app.post(
 
       await client.query("BEGIN");
 
+      // Tìm người theo publicId
       const personResult = await client.query(
         `
-          UPDATE people
-SET "albumViews" = COALESCE("albumViews",0)+1
-WHERE "publicId"=$1
-RETURNING id,"albumViews";
+          SELECT
+            id,
+            name,
+            album,
+            "albumViews"
+          FROM people
+          WHERE "publicId" = $1
+          LIMIT 1
         `,
         [publicId]
       );
 
-      if (personResult.rowCount === 0) {
+      if (personResult.rows.length === 0) {
         await client.query("ROLLBACK");
 
         return res.status(404).json({
-          message: "Không tìm thấy người dùng",
+          message: "Không tìm thấy album.",
         });
       }
 
-      const dailyResult = await client.query(`
-        INSERT INTO album_view_daily (view_date, views)
-        VALUES (
-          (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date,
-          1
-        )
-        ON CONFLICT (view_date)
-        DO UPDATE SET
-          views = album_view_daily.views + 1
-        RETURNING view_date, views
-      `);
+      const person = personResult.rows[0];
+
+      if (!person.album || !String(person.album).trim()) {
+        await client.query("ROLLBACK");
+
+        return res.status(400).json({
+          message: "Người này chưa có liên kết album.",
+        });
+      }
+
+      // 1. Tăng tổng lượt xem của chính album đó
+      const updatedPerson = await client.query(
+        `
+          UPDATE people
+          SET "albumViews" = COALESCE("albumViews", 0) + 1
+          WHERE id = $1
+          RETURNING "albumViews"
+        `,
+        [person.id]
+      );
+
+      // 2. Tăng tổng lượt mở của tất cả album trong ngày
+      await client.query(
+        `
+          INSERT INTO album_view_daily (
+            view_date,
+            views
+          )
+          VALUES (
+            (NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh')::date,
+            1
+          )
+          ON CONFLICT (view_date)
+          DO UPDATE SET
+            views = album_view_daily.views + 1
+        `
+      );
+
+      // 3. Ghi lượt mở theo từng album trong ngày
+      await client.query(
+        `
+          INSERT INTO album_view_by_person_daily (
+            person_id,
+            view_date,
+            views,
+            last_viewed_at
+          )
+          VALUES (
+            $1,
+            (NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh')::date,
+            1,
+            NOW()
+          )
+          ON CONFLICT (person_id, view_date)
+          DO UPDATE SET
+            views = album_view_by_person_daily.views + 1,
+            last_viewed_at = NOW()
+        `,
+        [person.id]
+      );
 
       await client.query("COMMIT");
 
       return res.json({
-        success: true,
-        totalViews: Number(personResult.rows[0].album_views),
-        dailyViews: Number(dailyResult.rows[0].views),
+        message: "Đã ghi nhận lượt xem album.",
+        albumViews: Number(
+          updatedPerson.rows[0]?.albumViews || 0
+        ),
       });
     } catch (error) {
       await client.query("ROLLBACK");
-      console.error("Lỗi tăng lượt mở album:", error);
+
+      console.error(
+        "Lỗi ghi nhận lượt xem album:",
+        error
+      );
 
       return res.status(500).json({
-        message: "Không thể tăng lượt mở album",
+        message: "Không thể ghi nhận lượt xem album.",
       });
     } finally {
       client.release();
@@ -1320,6 +1379,68 @@ app.use((error, req, res, next) => {
 
   next(error);
 });
+
+/* ==========================
+   API lấy album được xem hôm nay
+========================== */
+
+app.get(
+  "/api/admin/today-album-views",
+  verifyAdminToken,
+  async (req, res) => {
+    try {
+      const result = await pool.query(`
+        SELECT
+          p.id,
+          p."publicId",
+          p.name,
+          p.avatar,
+          p.birthday,
+          p.album,
+          p."albumViews",
+
+          daily.views AS "todayViews",
+          daily.last_viewed_at AS "lastViewedAt"
+
+        FROM album_view_by_person_daily daily
+
+        INNER JOIN people p
+          ON p.id = daily.person_id
+
+        WHERE daily.view_date =
+          (NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh')::date
+
+        ORDER BY
+          daily.last_viewed_at DESC,
+          daily.views DESC,
+          p.name ASC
+      `);
+
+      const totalViews = result.rows.reduce(
+        (total, person) => {
+          return total + Number(person.todayViews || 0);
+        },
+        0
+      );
+
+      return res.json({
+        totalAlbums: result.rows.length,
+        totalViews,
+        data: result.rows,
+      });
+    } catch (error) {
+      console.error(
+        "Lỗi lấy album được xem hôm nay:",
+        error
+      );
+
+      return res.status(500).json({
+        message:
+          "Không thể tải danh sách album được xem hôm nay.",
+      });
+    }
+  }
+);
 
 /* ==========================
    Khởi động server
