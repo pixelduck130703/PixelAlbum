@@ -90,7 +90,6 @@ function Dashboard() {
 
       setVisitChart([]);
       setAlbumViewChart([]);
-      toast.error("Không thể tải dữ liệu biểu đồ.");
     } finally {
       setLoadingTrafficChart(false);
     }
