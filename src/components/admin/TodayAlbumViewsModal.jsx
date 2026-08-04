@@ -130,10 +130,10 @@ function TodayAlbumViewsModal({
                       </span>
 
                       <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
-                        Tổng{" "}
+                        Tổng: {" "}
                         {Number(
                           person.albumViews || 0
-                        ).toLocaleString("vi-VN")}
+                        ).toLocaleString("vi-VN")} lượt xem
                       </span>
                     </div>
 
