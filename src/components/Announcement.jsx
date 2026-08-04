@@ -1,8 +1,35 @@
+import { useEffect, useState } from "react";
+
 function Announcement({
   content = "",
   updatedAt = null,
 }) {
   const normalizedContent = String(content || "").trim();
+
+  const [displayText, setDisplayText] = useState("");
+
+  useEffect(() => {
+    if (!normalizedContent) {
+      setDisplayText("");
+      return;
+    }
+
+    let index = 0;
+
+    const timer = setInterval(() => {
+      index++;
+
+      setDisplayText(
+        normalizedContent.slice(0, index)
+      );
+
+      if (index >= normalizedContent.length) {
+        clearInterval(timer);
+      }
+    }, 25); // tốc độ gõ (ms/ký tự)
+
+    return () => clearInterval(timer);
+  }, [normalizedContent]);
 
   if (!normalizedContent) {
     return null;
@@ -27,13 +54,9 @@ function Announcement({
         </div>
 
         <div>
-          <h2 className="text-lg font-bold tracking-wide uppercase">
+          <h2 className="text-lg font-bold uppercase tracking-wide">
             Thông báo
           </h2>
-
-          <p className="text-xs text-white/80">
-            Từ quản trị viên
-          </p>
         </div>
       </div>
 
@@ -41,7 +64,12 @@ function Announcement({
       <div className="px-5 py-5">
         <div className="rounded-2xl border-l-4 border-amber-500 bg-white/80 p-5 shadow-sm">
           <p className="whitespace-pre-wrap break-words text-[17px] font-medium leading-8 text-slate-800">
-            {normalizedContent}
+            {displayText}
+
+            {/* Con trỏ nhấp nháy */}
+            <span className="ml-1 inline-block animate-pulse font-bold text-amber-600">
+              |
+            </span>
           </p>
         </div>
 
