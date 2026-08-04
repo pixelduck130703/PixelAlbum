@@ -15,6 +15,7 @@ import SearchResult from "../components/SearchResult";
 import { getTodayVietnamHolidays } from "../utils/vietnamHolidays";
 import HomeStatistics from "../components/HomeStatistics";
 import DailyQuote from "../components/DailyQuote";
+import Announcement from "../components/Announcement";
 
 const today = new Date();
 
@@ -77,6 +78,33 @@ function Home() {
   const [error, setError] = useState("");
 
   const [visits, setVisits] = useState(null);
+
+  const [announcement, setAnnouncement] = useState({
+    content: "",
+    updatedAt: null,
+  });
+
+  useEffect(() => {
+    const loadAnnouncement = async () => {
+      try {
+        const response = await api.get("/announcement");
+
+        setAnnouncement({
+          content: response.data?.content || "",
+          updatedAt: response.data?.updatedAt || null,
+        });
+      } catch (error) {
+        console.error("Lỗi tải thông báo:", error);
+
+        setAnnouncement({
+          content: "",
+          updatedAt: null,
+        });
+      }
+    };
+
+    loadAnnouncement();
+  }, []);
 
   useEffect(() => {
     const loadVisits = async () => {
@@ -382,93 +410,103 @@ function Home() {
   }, [people]);
 
   return (
-  <div className="flex min-h-screen flex-col bg-slate-100">
-    <Navbar />
+    <div className="flex min-h-screen flex-col bg-slate-100">
+      <Navbar />
 
-    <DateHeader
-      today={today}
-      weekdays={weekdays}
-      lunarToday={lunarToday}
-      monthText={monthText}
-      yearGan={yearGan}
-      yearZhi={yearZhi}
-    />
-
-    <main className="mx-auto w-full max-w-7xl flex-1 px-4 pt-2 pb-8 sm:px-6 sm:pt-4 sm:pb-10">
-
-  {/* Thống kê */}
-  <section>
-    <HomeStatistics
-      visits={visits}
-      totalAlbums={homeStatistics.totalAlbums}
-      totalAlbumViews={homeStatistics.totalAlbumViews}
-      birthdaysThisMonth={homeStatistics.birthdaysThisMonth}
-    />
-  </section>
-
-  {/* Sự kiện */}
-  <section className="mt-5">
-    <TodayEvents
-      todayBirthdayPeople={todayBirthdayPeople}
-      todayDeathPeople={todayDeathPeople}
-      todayHolidays={todayHolidays}
-      formatDate={formatDate}
-      yearGan={yearGan}
-      yearZhi={yearZhi}
-    />
-  </section>
-
-  {/* Tìm kiếm */}
-  <section className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
-    <div className="min-w-0">
-      <SearchBox
-        name={nameInput}
-        setName={setNameInput}
-        birthday={birthdayInput}
-        setBirthday={setBirthdayInput}
-        onSearch={handleSearch}
-        onClear={handleClear}
+      <DateHeader
+        today={today}
+        weekdays={weekdays}
+        lunarToday={lunarToday}
+        monthText={monthText}
+        yearGan={yearGan}
+        yearZhi={yearZhi}
       />
+
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 pt-2 pb-8 sm:px-6 sm:pt-4 sm:pb-10">
+        
+        {/* Thống kê */}
+        <section>
+          <HomeStatistics
+            visits={visits}
+            totalAlbums={homeStatistics.totalAlbums}
+            totalAlbumViews={homeStatistics.totalAlbumViews}
+            birthdaysThisMonth={homeStatistics.birthdaysThisMonth}
+          />
+        </section>
+
+        {/* Sự kiện */}
+        <section className="mt-5">
+          <TodayEvents
+            todayBirthdayPeople={todayBirthdayPeople}
+            todayDeathPeople={todayDeathPeople}
+            todayHolidays={todayHolidays}
+            formatDate={formatDate}
+            yearGan={yearGan}
+            yearZhi={yearZhi}
+          />
+        </section>
+
+        {/* Thông báo */}
+        {announcement.content?.trim() && (
+          <section className="mt-6">
+            <Announcement
+              content={announcement.content}
+              updatedAt={announcement.updatedAt}
+            />
+          </section>
+        )}
+
+        {/* Tìm kiếm */}
+        <section className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
+          <div className="min-w-0">
+            <SearchBox
+              name={nameInput}
+              setName={setNameInput}
+              birthday={birthdayInput}
+              setBirthday={setBirthdayInput}
+              onSearch={handleSearch}
+              onClear={handleClear}
+            />
+          </div>
+
+          {/* Desktop */}
+          <div className="hidden lg:block">
+            <AboutMe />
+          </div>
+        </section>
+
+        {/* Kết quả */}
+        <section className="mt-6">
+          <SearchResult
+            loading={loading}
+            error={error}
+            hasSearched={hasSearched}
+            searchDescription={searchDescription}
+            results={results}
+          />
+        </section>
+
+        {/* Quote */}
+        <section className="mt-6">
+          <DailyQuote />
+        </section>
+
+        {/* About mobile */}
+        <section className="mt-6 lg:hidden">
+          <AboutMe />
+        </section>
+
+        {/* Feedback */}
+        <section className="mt-8 grid gap-6 lg:grid-cols-2">
+          <FeedbackForm />
+          <DonateCard />
+        </section>
+
+      </main>
+
+      <Footer />
     </div>
-
-    {/* Desktop */}
-    <div className="hidden lg:block">
-      <AboutMe />
-    </div>
-  </section>
-
-  {/* Kết quả */}
-  <section className="mt-6">
-    <SearchResult
-      loading={loading}
-      error={error}
-      hasSearched={hasSearched}
-      searchDescription={searchDescription}
-      results={results}
-    />
-  </section>
-
-  {/* Quote */}
-  <section className="mt-6">
-    <DailyQuote />
-  </section>
-
-  {/* About mobile */}
-  <section className="mt-6 lg:hidden">
-    <AboutMe />
-  </section>
-
-  {/* Feedback */}
-  <section className="mt-8 grid gap-6 lg:grid-cols-2">
-    <FeedbackForm />
-    <DonateCard />
-  </section>
-
-</main>
-
-    <Footer />
-  </div>
-);
+  );
 }
 
 function formatDate(value) {

@@ -47,9 +47,6 @@ pool.on("error", (error) => {
 });
 
 async function initializeDatabase() {
-  // ==========================
-  // Bảng people
-  // ==========================
   await pool.query(`
     CREATE TABLE IF NOT EXISTS people (
       id SERIAL PRIMARY KEY,
@@ -71,53 +68,29 @@ async function initializeDatabase() {
 
   console.log("✅ Bảng people đã sẵn sàng");
 
-  // ==========================
-  // Tổng lượt xem tất cả album theo ngày
-  // ==========================
   await pool.query(`
-    CREATE TABLE IF NOT EXISTS album_view_daily (
-      id SERIAL PRIMARY KEY,
-      view_date DATE UNIQUE,
-      views INTEGER NOT NULL DEFAULT 0
+    CREATE TABLE IF NOT EXISTS announcements (
+      id INTEGER PRIMARY KEY,
+      content TEXT,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `);
 
-  console.log("✅ Bảng album_view_daily đã sẵn sàng");
-
-  // ==========================
-  // Lượt xem từng album theo ngày
-  // ==========================
   await pool.query(`
-    CREATE TABLE IF NOT EXISTS album_view_by_person_daily (
-      id SERIAL PRIMARY KEY,
-
-      person_id INTEGER NOT NULL
-        REFERENCES people(id)
-        ON DELETE CASCADE,
-
-      view_date DATE NOT NULL,
-
-      views INTEGER NOT NULL DEFAULT 1,
-
-      last_viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-      CONSTRAINT album_view_by_person_daily_unique
-        UNIQUE (person_id, view_date)
+    INSERT INTO announcements (
+      id,
+      content,
+      updated_at
     )
+    VALUES (
+      1,
+      NULL,
+      NOW()
+    )
+    ON CONFLICT (id) DO NOTHING
   `);
 
-  // Index
-  await pool.query(`
-    CREATE INDEX IF NOT EXISTS idx_album_person_daily_date
-    ON album_view_by_person_daily(view_date)
-  `);
-
-  await pool.query(`
-    CREATE INDEX IF NOT EXISTS idx_album_person_daily_person
-    ON album_view_by_person_daily(person_id)
-  `);
-
-  console.log("✅ Bảng album_view_by_person_daily đã sẵn sàng");
+  console.log("✅ Bảng announcements đã sẵn sàng");
 }
 
 async function testDatabaseConnection() {

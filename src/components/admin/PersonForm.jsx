@@ -15,6 +15,102 @@ const initialForm = {
   securityAnswer: "",
 };
 
+const provinces = [
+  "An Giang",
+  "Bắc Ninh",
+  "Cà Mau",
+  "Cao Bằng",
+  "Cần Thơ",
+  "Đà Nẵng",
+  "Đắk Lắk",
+  "Điện Biên",
+  "Đồng Nai",
+  "Đồng Tháp",
+  "Gia Lai",
+  "Hà Nội",
+  "Hà Tĩnh",
+  "Hải Phòng",
+  "Hưng Yên",
+  "Huế",
+  "Khánh Hòa",
+  "Lai Châu",
+  "Lâm Đồng",
+  "Lạng Sơn",
+  "Lào Cai",
+  "Nghệ An",
+  "Ninh Bình",
+  "Phú Thọ",
+  "Quảng Ngãi",
+  "Quảng Ninh",
+  "Quảng Trị",
+  "Sơn La",
+  "Tây Ninh",
+  "Thái Nguyên",
+  "Thanh Hóa",
+  "Thành phố Hồ Chí Minh",
+  "Tuyên Quang",
+  "Vĩnh Long",
+];
+
+const inputClass =
+  "w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500";
+
+function convertToDisplayDate(value) {
+  if (!value) return "";
+
+  const normalized = String(value).slice(0, 10);
+
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(normalized)) {
+    return normalized;
+  }
+
+  const [year, month, day] = normalized.split("-");
+
+  if (!year || !month || !day) {
+    return String(value);
+  }
+
+  return `${day}/${month}/${year}`;
+}
+
+function convertToDatabaseDate(value) {
+  if (!value) return "";
+
+  const normalized = String(value).trim();
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(normalized)) {
+    return normalized;
+  }
+
+  const parts = normalized.split("/");
+
+  if (parts.length !== 3) {
+    return "";
+  }
+
+  const [day, month, year] = parts;
+
+  if (!/^\d{2}$/.test(day) || !/^\d{2}$/.test(month) || !/^\d{4}$/.test(year)) {
+    return "";
+  }
+
+  const dayNumber = Number(day);
+  const monthNumber = Number(month);
+  const yearNumber = Number(year);
+
+  const date = new Date(yearNumber, monthNumber - 1, dayNumber);
+
+  if (
+    date.getFullYear() !== yearNumber ||
+    date.getMonth() !== monthNumber - 1 ||
+    date.getDate() !== dayNumber
+  ) {
+    return "";
+  }
+
+  return `${year}-${month}-${day}`;
+}
+
 function PersonForm({
   open,
   person,
@@ -29,8 +125,8 @@ function PersonForm({
     if (person) {
       setForm({
         name: person.name || "",
-        birthday: person.birthday || "",
-        deathDate: person.deathDate || "",
+        birthday: convertToDisplayDate(person.birthday),
+        deathDate: convertToDisplayDate(person.deathDate),
         gender: person.gender || "Nam",
         class: person.class || "",
         phone: person.phone || "",
@@ -52,41 +148,37 @@ function PersonForm({
   }
 
   const handleChange = (event) => {
-  const { name, value } = event.target;
+    const { name, value } = event.target;
 
-  if (name === "birthday" || name === "deathDate") {
-    let date = value.replace(/\D/g, "");
+    if (name === "birthday" || name === "deathDate") {
+      let date = value.replace(/\D/g, "").slice(0, 8);
 
-    if (date.length > 2) {
-      date = date.slice(0, 2) + "/" + date.slice(2);
+      if (date.length > 2) {
+        date = `${date.slice(0, 2)}/${date.slice(2)}`;
+      }
+
+      if (date.length > 5) {
+        date = `${date.slice(0, 5)}/${date.slice(5)}`;
+      }
+
+      setForm((current) => ({
+        ...current,
+        [name]: date,
+      }));
+
+      return;
     }
-
-    if (date.length > 5) {
-      date = date.slice(0, 5) + "/" + date.slice(5);
-    }
-
-    date = date.slice(0, 10);
 
     setForm((current) => ({
       ...current,
-      [name]: date,   // ✅ Quan trọng là phải dùng [name]
+      [name]: value,
     }));
-
-    return;
-  }
-
-  setForm((current) => ({
-    ...current,
-    [name]: value,
-  }));
-};
+  };
 
   const handleAvatarUpload = async (event) => {
     const file = event.target.files?.[0];
 
-    if (!file) {
-      return;
-    }
+    if (!file) return;
 
     if (!file.type.startsWith("image/")) {
       alert("Vui lòng chọn đúng file ảnh.");
@@ -105,17 +197,13 @@ function PersonForm({
 
       const imageUrl = await uploadImageToCloudinary(file);
 
-      setForm((currentForm) => ({
-        ...currentForm,
+      setForm((current) => ({
+        ...current,
         avatar: imageUrl,
       }));
     } catch (error) {
       console.error("Lỗi upload ảnh:", error);
-
-      alert(
-        error.message ||
-        "Không thể tải ảnh lên Cloudinary."
-      );
+      alert(error.message || "Không thể tải ảnh lên Cloudinary.");
     } finally {
       setUploadingImage(false);
       event.target.value = "";
@@ -123,34 +211,10 @@ function PersonForm({
   };
 
   const handleRemoveAvatar = () => {
-    setForm((currentForm) => ({
-      ...currentForm,
+    setForm((current) => ({
+      ...current,
       avatar: "",
     }));
-  };
-
-  const convertToDatabaseDate = (value) => {
-    if (!value) return "";
-
-    // Nếu dữ liệu đã là YYYY-MM-DD thì giữ nguyên
-    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-      return value;
-    }
-
-    // Chuyển DD/MM/YYYY thành YYYY-MM-DD
-    const parts = value.trim().split("/");
-
-    if (parts.length !== 3) {
-      return "";
-    }
-
-    const [day, month, year] = parts;
-
-    if (!day || !month || !year) {
-      return "";
-    }
-
-    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
   };
 
   const handleSubmit = (event) => {
@@ -161,19 +225,16 @@ function PersonForm({
       return;
     }
 
-    const birthdayForDatabase =
-      convertToDatabaseDate(form.birthday);
-
-    const deathDateForDatabase =
-      convertToDatabaseDate(form.deathDate);
+    const birthdayForDatabase = convertToDatabaseDate(form.birthday);
+    const deathDateForDatabase = convertToDatabaseDate(form.deathDate);
 
     if (form.birthday && !birthdayForDatabase) {
-      alert("Ngày sinh phải đúng định dạng DD/MM/YYYY.");
+      alert("Ngày sinh phải đúng định dạng DD/MM/YYYY và là ngày hợp lệ.");
       return;
     }
 
     if (form.deathDate && !deathDateForDatabase) {
-      alert("Ngày mất phải đúng định dạng DD/MM/YYYY.");
+      alert("Ngày mất phải đúng định dạng DD/MM/YYYY và là ngày hợp lệ.");
       return;
     }
 
@@ -186,16 +247,11 @@ function PersonForm({
       return;
     }
 
-    const hasSecurityQuestion =
-      form.securityQuestion.trim() !== "";
-
+    const hasSecurityQuestion = form.securityQuestion.trim() !== "";
     const isCreatingNewQuestion =
       !person?.securityQuestion && hasSecurityQuestion;
 
-    if (
-      isCreatingNewQuestion &&
-      !form.securityAnswer.trim()
-    ) {
+    if (isCreatingNewQuestion && !form.securityAnswer.trim()) {
       alert("Vui lòng nhập câu trả lời xác thực.");
       return;
     }
@@ -213,425 +269,393 @@ function PersonForm({
       phone: form.phone.trim(),
       address: form.address.trim(),
       class: form.class.trim(),
+      avatar: form.avatar.trim(),
       album: form.album.trim(),
-      securityQuestion:
-        form.securityQuestion.trim(),
-      securityAnswer:
-        form.securityAnswer.trim(),
+      securityQuestion: form.securityQuestion.trim(),
+      securityAnswer: form.securityAnswer.trim(),
     });
   };
 
-  const convertToDisplayDate = (value) => {
-    if (!value) return "";
-
-    const normalized = String(value).slice(0, 10);
-    const [year, month, day] = normalized.split("-");
-
-    if (!year || !month || !day) {
-      return value;
-    }
-
-    return `${day}/${month}/${year}`;
-  };
-
   const handleBackdropClick = (event) => {
-    if (event.target === event.currentTarget && !submitting && !uploadingImage) {
+    if (
+      event.target === event.currentTarget &&
+      !submitting &&
+      !uploadingImage
+    ) {
       onClose();
     }
   };
 
+  const isBusy = submitting || uploadingImage;
+
   return (
     <div
       onClick={handleBackdropClick}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-3 backdrop-blur-sm sm:p-5"
     >
-      <div className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-white shadow-2xl">
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white px-6 py-5">
-          <div>
-            <h2 className="text-2xl font-bold text-slate-800">
-              {person ? "Sửa thông tin" : "Thêm người mới"}
-            </h2>
-
-            <p className="mt-1 text-sm text-slate-500">
-              Nhập đầy đủ thông tin bên dưới
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={submitting || uploadingImage}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-xl text-slate-600 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
-            aria-label="Đóng"
-          >
-            ×
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-6">
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-            <div className="md:col-span-2">
-              <label
-                htmlFor="name"
-                className="mb-2 block text-sm font-semibold text-slate-700"
-              >
-                Họ và tên <span className="text-red-500">*</span>
-              </label>
-
-              <input
-                id="name"
-                type="text"
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-                placeholder="Ví dụ: Nguyễn Tuấn Hùng"
-                className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="birthday"
-                className="mb-2 block text-sm font-semibold text-slate-700"
-              >
-                Ngày sinh
-              </label>
-
-              <input
-                id="birthday"
-                type="text"
-                name="birthday"
-                value={form.birthday}
-                onChange={handleChange}
-                placeholder="DD/MM/YYYY"
-                maxLength={10}
-                className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-              />
-            </div>
-
-            <div>
-  <label
-    htmlFor="deathDate"
-    className="mb-2 block text-sm font-semibold text-slate-700"
-  >
-    Ngày mất
-  </label>
-
-  <input
-    id="deathDate"
-    type="text"
-    name="deathDate"
-    value={form.deathDate}
-    onChange={handleChange}
-    placeholder="DD/MM/YYYY"
-    maxLength={10}
-    className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-  />
-
-  <p className="mt-2 text-xs text-slate-500">
-    Để trống nếu người này còn sống. Định dạng: DD/MM/YYYY
-  </p>
-</div>
-
-            <div>
-              <label
-                htmlFor="gender"
-                className="mb-2 block text-sm font-semibold text-slate-700"
-              >
-                Giới tính
-              </label>
-
-              <select
-                id="gender"
-                name="gender"
-                value={form.gender}
-                onChange={handleChange}
-                className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-              >
-                <option value="Nam">Nam</option>
-                <option value="Nữ">Nữ</option>
-                <option value="Khác">Khác</option>
-              </select>
-            </div>
-
-            <div>
-              <label
-                htmlFor="class"
-                className="mb-2 block text-sm font-semibold text-slate-700"
-              >
-                Lớp
-              </label>
-
-              <input
-                id="class"
-                type="text"
-                name="class"
-                value={form.class}
-                onChange={handleChange}
-                placeholder="Ví dụ: CNTT K63"
-                className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="phone"
-                className="mb-2 block text-sm font-semibold text-slate-700"
-              >
-                Số điện thoại
-              </label>
-
-              <input
-                id="phone"
-                type="tel"
-                name="phone"
-                value={form.phone}
-                onChange={handleChange}
-                placeholder="Ví dụ: 0123456789"
-                className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="address"
-                className="mb-2 block text-sm font-semibold text-slate-700"
-              >
-                Tỉnh/Thành phố
-              </label>
-
-              <input
-                id="address"
-                type="text"
-                name="address"
-                list="provinces-list"
-                value={form.address}
-                onChange={handleChange}
-                placeholder="Nhập hoặc chọn tỉnh/thành phố"
-                className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-              />
-
-              <datalist id="provinces-list">
-                <option value="An Giang" />
-                <option value="Bắc Ninh" />
-                <option value="Cà Mau" />
-                <option value="Cao Bằng" />
-                <option value="Cần Thơ" />
-                <option value="Đà Nẵng" />
-                <option value="Đắk Lắk" />
-                <option value="Điện Biên" />
-                <option value="Đồng Nai" />
-                <option value="Đồng Tháp" />
-                <option value="Gia Lai" />
-                <option value="Hà Nội" />
-                <option value="Hà Tĩnh" />
-                <option value="Hải Phòng" />
-                <option value="Hưng Yên" />
-                <option value="Huế" />
-                <option value="Khánh Hòa" />
-                <option value="Lai Châu" />
-                <option value="Lâm Đồng" />
-                <option value="Lạng Sơn" />
-                <option value="Lào Cai" />
-                <option value="Nghệ An" />
-                <option value="Ninh Bình" />
-                <option value="Phú Thọ" />
-                <option value="Quảng Ngãi" />
-                <option value="Quảng Ninh" />
-                <option value="Quảng Trị" />
-                <option value="Sơn La" />
-                <option value="Tây Ninh" />
-                <option value="Thái Nguyên" />
-                <option value="Thanh Hóa" />
-                <option value="Thành phố Hồ Chí Minh" />
-                <option value="Tuyên Quang" />
-                <option value="Vĩnh Long" />
-              </datalist>
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="mb-2 block text-sm font-semibold text-slate-700">
-                Ảnh đại diện
-              </label>
-
-              <div className="rounded-2xl border border-dashed border-slate-300 p-5">
-                <input
-                  type="file"
-                  accept="image/png,image/jpeg,image/jpg,image/webp"
-                  onChange={handleAvatarUpload}
-                  disabled={uploadingImage || submitting}
-                  className="block w-full text-sm text-slate-600
-                    file:mr-4
-                    file:rounded-lg
-                    file:border-0
-                    file:bg-blue-50
-                    file:px-4
-                    file:py-2
-                    file:font-semibold
-                    file:text-blue-600
-                    hover:file:bg-blue-100
-                    disabled:cursor-not-allowed
-                    disabled:opacity-60"
-                />
-
-                <p className="mt-2 text-xs text-slate-500">
-                  Hỗ trợ JPG, PNG và WEBP. Dung lượng tối đa 5MB.
-                </p>
-
-                {uploadingImage && (
-                  <div className="mt-4 rounded-xl bg-blue-50 p-3 text-sm font-medium text-blue-600">
-                    Đang tải ảnh lên Cloudinary...
-                  </div>
-                )}
-
-                {!uploadingImage && form.avatar && (
-                  <div className="mt-5 flex flex-col gap-4 rounded-xl bg-slate-50 p-4 sm:flex-row sm:items-center">
-                    <img
-                      src={form.avatar}
-                      alt="Ảnh đại diện xem trước"
-                      className="h-24 w-24 rounded-full border border-slate-200 object-cover"
-                      onError={(event) => {
-                        event.currentTarget.src =
-                          "https://placehold.co/150x150?text=No+Image";
-                      }}
-                    />
-
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-green-600">
-                        Upload ảnh thành công
-                      </p>
-
-                      <p className="mt-1 truncate text-xs text-slate-500">
-                        {form.avatar}
-                      </p>
-
-                      <button
-                        type="button"
-                        onClick={handleRemoveAvatar}
-                        disabled={submitting}
-                        className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        Xóa ảnh
-                      </button>
-                    </div>
-                  </div>
-                )}
+      <div className="flex max-h-[94vh] w-full max-w-4xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl">
+        <div className="shrink-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 px-5 py-5 text-white sm:px-7 sm:py-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-white/15 text-2xl backdrop-blur">
+                {person ? "✏️" : "➕"}
               </div>
-            </div>
 
-            <div className="md:col-span-2">
-              <label
-                htmlFor="album"
-                className="mb-2 block text-sm font-semibold text-slate-700"
-              >
-                Link album
-              </label>
+              <h2 className="text-xl font-bold sm:text-2xl">
+                {person ? "Chỉnh sửa album" : "Thêm album mới"}
+              </h2>
 
-              <input
-                id="album"
-                type="url"
-                name="album"
-                value={form.album}
-                onChange={handleChange}
-                placeholder="Ví dụ: https://photos.app.goo.gl/..."
-                className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-              />
-
-              <p className="mt-2 text-xs text-slate-500">
-                Có thể dùng link Google Photos, Google Drive hoặc website khác.
+              <p className="mt-1 text-sm leading-6 text-white/80">
+                Cập nhật thông tin, ảnh đại diện, liên kết album và bảo mật.
               </p>
             </div>
 
-            <div className="md:col-span-2">
-              <div className="rounded-2xl border border-amber-300 bg-amber-50 p-5">
-                <h3 className="text-lg font-bold text-slate-800">
-                  Xác thực khi xem album
-                </h3>
-
-                <p className="mt-1 text-sm text-slate-600">
-                  Nếu để trống câu hỏi thì người dùng có thể mở album ngay.
-                </p>
-
-                <div className="mt-5">
-                  <label
-                    htmlFor="securityQuestion"
-                    className="mb-2 block text-sm font-semibold text-slate-700"
-                  >
-                    Câu hỏi xác thực
-                  </label>
-
-                  <input
-                    id="securityQuestion"
-                    type="text"
-                    name="securityQuestion"
-                    value={form.securityQuestion}
-                    onChange={handleChange}
-                    placeholder="Ví dụ: Tên gọi ở nhà của người này là gì?"
-                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                  />
-                </div>
-
-                {form.securityQuestion.trim() && (
-                  <div className="mt-5">
-                    <label
-                      htmlFor="securityAnswer"
-                      className="mb-2 block text-sm font-semibold text-slate-700"
-                    >
-                      Câu trả lời xác thực
-                    </label>
-
-                    <input
-                      id="securityAnswer"
-                      type="text"
-                      name="securityAnswer"
-                      value={form.securityAnswer}
-                      onChange={handleChange}
-                      placeholder={
-                        person?.securityQuestion
-                          ? "Để trống nếu không muốn đổi câu trả lời"
-                          : "Nhập câu trả lời"
-                      }
-                      className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                    />
-
-                    <p className="mt-2 text-xs text-slate-500">
-                      Chỉ người trả lời đúng mới có thể mở album.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-          </div>
-
-          <div className="mt-8 flex flex-col-reverse gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:justify-end">
             <button
               type="button"
               onClick={onClose}
-              disabled={submitting || uploadingImage}
-              className="rounded-xl bg-slate-200 px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-300 disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={isBusy}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15 text-xl text-white transition hover:bg-white/25 disabled:cursor-not-allowed disabled:opacity-50"
+              aria-label="Đóng"
             >
-              Hủy
+              ✕
             </button>
+          </div>
+        </div>
 
-            <button
-              type="submit"
-              disabled={submitting || uploadingImage}
-              className="rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {submitting
-                ? "Đang lưu..."
-                : uploadingImage
-                  ? "Đang upload ảnh..."
-                  : person
-                    ? "Lưu thay đổi"
-                    : "Thêm người"}
-            </button>
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+          <div className="flex-1 overflow-y-auto bg-slate-50 p-4 sm:p-6">
+            <div className="space-y-6">
+              <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+                <SectionHeader
+                  icon="👤"
+                  title="Thông tin cơ bản"
+                  description="Thông tin nhận diện và liên hệ"
+                />
+
+                <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
+                  <FormField
+                    label="Họ và tên"
+                    htmlFor="name"
+                    required
+                    fullWidth
+                  >
+                    <input
+                      id="name"
+                      type="text"
+                      name="name"
+                      value={form.name}
+                      onChange={handleChange}
+                      placeholder="Ví dụ: Nguyễn Tuấn Hùng"
+                      className={inputClass}
+                    />
+                  </FormField>
+
+                  <FormField label="Ngày sinh" htmlFor="birthday">
+                    <input
+                      id="birthday"
+                      type="text"
+                      name="birthday"
+                      inputMode="numeric"
+                      value={form.birthday}
+                      onChange={handleChange}
+                      placeholder="DD/MM/YYYY"
+                      maxLength={10}
+                      className={inputClass}
+                    />
+                    <HelperText>Nhập theo định dạng ngày/tháng/năm.</HelperText>
+                  </FormField>
+
+                  <FormField label="Ngày mất" htmlFor="deathDate">
+                    <input
+                      id="deathDate"
+                      type="text"
+                      name="deathDate"
+                      inputMode="numeric"
+                      value={form.deathDate}
+                      onChange={handleChange}
+                      placeholder="DD/MM/YYYY"
+                      maxLength={10}
+                      className={inputClass}
+                    />
+                    <HelperText>Để trống nếu người này còn sống.</HelperText>
+                  </FormField>
+
+                  <FormField label="Giới tính" htmlFor="gender">
+                    <select
+                      id="gender"
+                      name="gender"
+                      value={form.gender}
+                      onChange={handleChange}
+                      className={inputClass}
+                    >
+                      <option value="Nam">Nam</option>
+                      <option value="Nữ">Nữ</option>
+                      <option value="Khác">Khác</option>
+                    </select>
+                  </FormField>
+
+                  <FormField label="Lớp" htmlFor="class">
+                    <input
+                      id="class"
+                      type="text"
+                      name="class"
+                      value={form.class}
+                      onChange={handleChange}
+                      placeholder="Ví dụ: CNTT K63"
+                      className={inputClass}
+                    />
+                  </FormField>
+
+                  <FormField label="Số điện thoại" htmlFor="phone">
+                    <input
+                      id="phone"
+                      type="tel"
+                      name="phone"
+                      value={form.phone}
+                      onChange={handleChange}
+                      placeholder="Ví dụ: 0123456789"
+                      className={inputClass}
+                    />
+                  </FormField>
+
+                  <FormField label="Tỉnh/Thành phố" htmlFor="address">
+                    <input
+                      id="address"
+                      type="text"
+                      name="address"
+                      list="provinces-list"
+                      value={form.address}
+                      onChange={handleChange}
+                      placeholder="Nhập hoặc chọn tỉnh/thành phố"
+                      className={inputClass}
+                    />
+
+                    <datalist id="provinces-list">
+                      {provinces.map((province) => (
+                        <option key={province} value={province} />
+                      ))}
+                    </datalist>
+                  </FormField>
+                </div>
+              </section>
+
+              <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+                <SectionHeader
+                  icon="📷"
+                  title="Ảnh đại diện"
+                  description="Tải ảnh lên Cloudinary, tối đa 5MB"
+                />
+
+                <div className="mt-5 rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 p-4 transition hover:border-blue-400 hover:bg-blue-50/40 sm:p-5">
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/jpg,image/webp"
+                    onChange={handleAvatarUpload}
+                    disabled={isBusy}
+                    className="block w-full text-sm text-slate-600 file:mr-4 file:rounded-xl file:border-0 file:bg-blue-600 file:px-4 file:py-2.5 file:font-semibold file:text-white hover:file:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  />
+
+                  <p className="mt-3 text-xs text-slate-500">
+                    Hỗ trợ JPG, PNG, WEBP. Dung lượng tối đa 5MB.
+                  </p>
+
+                  {uploadingImage && (
+                    <div className="mt-4 flex items-center gap-3 rounded-xl bg-blue-50 p-3 text-sm font-medium text-blue-700">
+                      <span className="h-5 w-5 animate-spin rounded-full border-2 border-blue-200 border-t-blue-600" />
+                      Đang tải ảnh lên Cloudinary...
+                    </div>
+                  )}
+
+                  {!uploadingImage && form.avatar && (
+                    <div className="mt-5 flex flex-col gap-4 rounded-2xl border border-green-200 bg-green-50 p-4 sm:flex-row sm:items-center">
+                      <img
+                        src={form.avatar}
+                        alt="Ảnh đại diện xem trước"
+                        className="h-24 w-24 shrink-0 rounded-2xl border-2 border-white object-cover shadow-md"
+                        onError={(event) => {
+                          event.currentTarget.onerror = null;
+                          event.currentTarget.src =
+                            "https://placehold.co/150x150?text=No+Image";
+                        }}
+                      />
+
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-green-700">
+                          ✓ Tải ảnh thành công
+                        </p>
+
+                        <p className="mt-1 truncate text-xs text-slate-500">
+                          {form.avatar}
+                        </p>
+
+                        <button
+                          type="button"
+                          onClick={handleRemoveAvatar}
+                          disabled={submitting}
+                          className="mt-3 rounded-xl bg-red-100 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-200 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          Xóa ảnh
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </section>
+
+              <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+                <SectionHeader
+                  icon="🖼️"
+                  title="Liên kết album"
+                  description="Google Photos, Google Drive hoặc liên kết khác"
+                />
+
+                <div className="mt-5">
+                  <input
+                    id="album"
+                    type="url"
+                    name="album"
+                    value={form.album}
+                    onChange={handleChange}
+                    placeholder="https://photos.app.goo.gl/..."
+                    className={inputClass}
+                  />
+                </div>
+              </section>
+
+              <section className="overflow-hidden rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-orange-50 shadow-sm">
+                <div className="p-4 sm:p-6">
+                  <SectionHeader
+                    icon="🔐"
+                    title="Xác thực khi xem album"
+                    description="Để trống câu hỏi nếu không cần bảo vệ album"
+                  />
+
+                  <div className="mt-5 space-y-5">
+                    <FormField
+                      label="Câu hỏi xác thực"
+                      htmlFor="securityQuestion"
+                    >
+                      <input
+                        id="securityQuestion"
+                        type="text"
+                        name="securityQuestion"
+                        value={form.securityQuestion}
+                        onChange={handleChange}
+                        placeholder="Ví dụ: Tên gọi ở nhà là gì?"
+                        className={inputClass}
+                      />
+                    </FormField>
+
+                    {form.securityQuestion.trim() && (
+                      <FormField
+                        label="Câu trả lời xác thực"
+                        htmlFor="securityAnswer"
+                      >
+                        <input
+                          id="securityAnswer"
+                          type="text"
+                          name="securityAnswer"
+                          value={form.securityAnswer}
+                          onChange={handleChange}
+                          placeholder={
+                            person?.securityQuestion
+                              ? "Để trống nếu không muốn đổi câu trả lời"
+                              : "Nhập câu trả lời"
+                          }
+                          className={inputClass}
+                        />
+
+                        <HelperText>
+                          Chỉ người trả lời đúng mới có thể mở album.
+                        </HelperText>
+                      </FormField>
+                    )}
+                  </div>
+                </div>
+              </section>
+            </div>
+          </div>
+
+          <div className="shrink-0 border-t border-slate-200 bg-white px-4 py-4 sm:px-6">
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={isBusy}
+                className="min-h-[48px] rounded-xl bg-slate-200 px-6 py-3 font-semibold text-slate-700 transition hover:bg-slate-300 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Hủy
+              </button>
+
+              <button
+                type="submit"
+                disabled={isBusy}
+                className="flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white shadow-sm transition hover:bg-blue-700 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {submitting && (
+                  <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                )}
+
+                {submitting
+                  ? "Đang lưu..."
+                  : uploadingImage
+                    ? "Đang tải ảnh..."
+                    : person
+                      ? "Lưu thay đổi"
+                      : "Thêm album"}
+              </button>
+            </div>
           </div>
         </form>
       </div>
     </div>
   );
+}
+
+function SectionHeader({ icon, title, description }) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-xl">
+        {icon}
+      </div>
+
+      <div>
+        <h3 className="font-bold text-slate-800 sm:text-lg">{title}</h3>
+
+        {description && (
+          <p className="mt-1 text-sm leading-5 text-slate-500">
+            {description}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function FormField({
+  label,
+  htmlFor,
+  required = false,
+  fullWidth = false,
+  children,
+}) {
+  return (
+    <div className={fullWidth ? "md:col-span-2" : ""}>
+      <label
+        htmlFor={htmlFor}
+        className="mb-2 block text-sm font-semibold text-slate-700"
+      >
+        {label}
+        {required && <span className="ml-1 text-red-500">*</span>}
+      </label>
+
+      {children}
+    </div>
+  );
+}
+
+function HelperText({ children }) {
+  return <p className="mt-2 text-xs leading-5 text-slate-500">{children}</p>;
 }
 
 export default PersonForm;

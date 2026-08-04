@@ -5,6 +5,12 @@ import PersonForm from "../../components/admin/PersonForm";
 import TrafficChart from "../../components/admin/TrafficChart";
 import api from "../../services/api";
 import toast from "react-hot-toast";
+import TodayBirthdayModal from "../../components/admin/TodayBirthdayModal";
+import BirthdayMonthModal from "../../components/admin/BirthdayMonthModal";
+import TodayAlbumViewsModal from "../../components/admin/TodayAlbumViewsModal";
+import DashboardStats from "../../components/admin/DashboardStats";
+import DashboardActions from "../../components/admin/DashboardActions";
+import AnnouncementManager from "../../components/admin/AnnouncementManager";
 
 function Dashboard() {
   const [stats, setStats] = useState({
@@ -30,6 +36,11 @@ function Dashboard() {
   const [albumViewChart, setAlbumViewChart] = useState([]);
   const [chartDays, setChartDays] = useState(7);
   const [loadingTrafficChart, setLoadingTrafficChart] = useState(true);
+
+  const [
+    showAnnouncementManager,
+    setShowAnnouncementManager,
+  ] = useState(false);
 
   const formatChartDate = (dateString) => {
     if (!dateString) return "";
@@ -447,108 +458,14 @@ function Dashboard() {
   return (
     <Layout>
       {/* Thẻ thống kê */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
-        {/* Tổng số album */}
-        <div className="rounded-2xl bg-white p-3 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg md:p-4">
-          <p className="text-xs font-medium text-slate-500 md:text-sm">
-            Tổng số album
-          </p>
+      <DashboardStats
+        stats={stats}
+        visits={visits}
+        onShowMonthBirthday={handleShowMonthBirthday}
+        onShowTodayBirthday={handleShowTodayBirthday}
+      />
 
-          <div className="mt-3 flex items-end justify-between">
-            <h2 className="text-2xl font-bold text-blue-600 md:text-3xl">
-              {stats.totalPeople}
-            </h2>
-
-            <span className="text-2xl md:text-3xl">👥</span>
-          </div>
-        </div>
-
-        {/* Có liên kết album */}
-        <div className="rounded-2xl bg-white p-3 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg md:p-4">
-          <p className="text-xs font-medium text-slate-500 md:text-sm">
-            Có liên kết
-          </p>
-
-          <div className="mt-3 flex items-end justify-between">
-            <h2 className="text-2xl font-bold text-purple-600 md:text-3xl">
-              {stats.album}
-            </h2>
-
-            <span className="text-2xl md:text-3xl">🖼️</span>
-          </div>
-        </div>
-
-        {/* Tổng lượt xem album */}
-        <div className="rounded-2xl bg-white p-3 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg md:p-4">
-          <p className="text-xs font-medium text-slate-500 md:text-sm">
-            Tổng lượt xem album
-          </p>
-
-          <div className="mt-3 flex items-end justify-between">
-            <h2 className="text-2xl font-bold text-indigo-600 md:text-3xl">
-              {Number(stats.totalAlbumViews || 0).toLocaleString("vi-VN")}
-            </h2>
-
-            <span className="text-2xl md:text-3xl">👁️</span>
-          </div>
-        </div>
-
-        {/* Lượt truy cập website */}
-        <div className="rounded-2xl bg-white p-3 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg md:p-4">
-          <p className="text-xs font-medium text-slate-500 md:text-sm">
-            Lượt truy cập website
-          </p>
-
-          <div className="mt-3 flex items-end justify-between">
-            <h2 className="text-2xl font-bold text-green-600 md:text-3xl">
-              {visits === null
-                ? "..."
-                : Number(visits || 0).toLocaleString("vi-VN")}
-            </h2>
-
-            <span className="text-2xl md:text-3xl">🌐</span>
-          </div>
-        </div>
-
-        {/* Sinh nhật tháng này */}
-        <button
-          type="button"
-          onClick={handleShowMonthBirthday}
-          className="rounded-2xl bg-white p-3 text-left shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg md:p-4"
-        >
-          <p className="text-xs font-medium text-slate-500 md:text-sm">
-            Sinh nhật tháng này
-          </p>
-
-          <div className="mt-3 flex items-end justify-between">
-            <h2 className="text-2xl font-bold text-red-500 md:text-3xl">
-              {stats.thisMonth}
-            </h2>
-
-            <span className="text-2xl md:text-3xl">📅</span>
-          </div>
-        </button>
-
-        {/* Sinh nhật hôm nay */}
-        <button
-          type="button"
-          onClick={handleShowTodayBirthday}
-          className="rounded-2xl bg-white p-3 text-left shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg md:p-4"
-        >
-          <p className="text-xs font-medium text-slate-500 md:text-sm">
-            Sinh nhật hôm nay
-          </p>
-
-          <div className="mt-3 flex items-end justify-between">
-            <h2 className="text-2xl font-bold text-pink-500 md:text-3xl">
-              {stats.today}
-            </h2>
-
-            <span className="text-2xl md:text-3xl">🎂</span>
-          </div>
-        </button>
-      </div>
-
+      {/* Biểu đồ */}
       <TrafficChart
         visitChart={visitChart}
         albumViewChart={albumViewChart}
@@ -566,40 +483,15 @@ function Dashboard() {
             </h2>
           </div>
 
-          <div className="grid w-full grid-cols-1 gap-3 sm:w-auto sm:grid-cols-3">
-            <button
-              type="button"
-              onClick={handleShowTodayAlbumViews}
-              disabled={loadingTodayAlbumViews}
-              className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <span>🔥</span>
-
-              <span>
-                {loadingTodayAlbumViews
-                  ? "Đang tải..."
-                  : "Album xem hôm nay"}
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleExportExcel}
-              className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-green-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700 hover:shadow-md"
-            >
-              <span>📊</span>
-              <span>Xuất Excel</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleAdd}
-              className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-blue-500 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 hover:shadow-md"
-            >
-              <span>➕</span>
-              <span>Thêm Album</span>
-            </button>
-          </div>
+          <DashboardActions
+            loadingTodayAlbumViews={loadingTodayAlbumViews}
+            onShowTodayAlbumViews={handleShowTodayAlbumViews}
+            onManageAnnouncement={() =>
+              setShowAnnouncementManager(true)
+            }
+            onExportExcel={handleExportExcel}
+            onAdd={handleAdd}
+          />
         </div>
 
         {/* Ô tìm kiếm */}
@@ -667,302 +559,46 @@ function Dashboard() {
         onClose={handleCloseForm}
         onSubmit={handleSubmitForm}
       />
-      {showTodayModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4"
-          onClick={() => setShowTodayModal(false)}
-        >
-          <div
-            className="max-h-[88vh] w-full overflow-hidden rounded-t-3xl bg-white p-5 shadow-2xl sm:max-w-2xl sm:rounded-3xl sm:p-6"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="mb-5 flex items-center justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-bold text-slate-800 sm:text-2xl">
-                  🎂 Sinh nhật hôm nay
-                </h2>
 
-                <p className="mt-1 text-sm text-slate-500">
-                  Có {todayPeople.length} người
-                </p>
-              </div>
+      <TodayBirthdayModal
+        open={showTodayModal}
+        people={todayPeople}
+        onClose={() => setShowTodayModal(false)}
+        formatDate={formatDate}
+      />
 
-              <button
-                type="button"
-                onClick={() => setShowTodayModal(false)}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xl text-slate-600 hover:bg-slate-200"
-                aria-label="Đóng"
-              >
-                ✕
-              </button>
-            </div>
+      <BirthdayMonthModal
+        open={showBirthdayMonthModal}
+        selectedMonth={selectedBirthdayMonth}
+        people={birthdayMonthPeople}
+        onChangeMonth={(month) => {
+          setSelectedBirthdayMonth(month);
 
-            {todayPeople.length === 0 ? (
-              <div className="rounded-2xl bg-slate-100 p-8 text-center text-slate-500">
-                Hôm nay không có ai sinh nhật.
-              </div>
-            ) : (
-              <div className="max-h-[65vh] space-y-3 overflow-y-auto pr-1">
-                {todayPeople.map((person) => (
-                  <a
-                    key={person.id}
-                    href={`/person/${person.publicId}`}
-                    className="flex items-center gap-3 rounded-2xl border border-slate-200 p-3 transition hover:border-blue-300 hover:bg-blue-50 sm:gap-4 sm:p-4"
-                  >
-                    <img
-                      src={
-                        person.avatar ||
-                        "https://placehold.co/100x100?text=Avatar"
-                      }
-                      alt={person.name}
-                      className="h-12 w-12 shrink-0 rounded-full object-cover sm:h-14 sm:w-14"
-                      onError={(event) => {
-                        event.currentTarget.src =
-                          "https://placehold.co/100x100?text=Avatar";
-                      }}
-                    />
+          setBirthdayMonthPeople(
+            getBirthdayPeopleByMonth(month)
+          );
+        }}
+        onClose={() =>
+          setShowBirthdayMonthModal(false)
+        }
+        formatDate={formatDate}
+      />
 
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-bold text-slate-800">
-                        {person.name}
-                      </p>
+      <TodayAlbumViewsModal
+        open={showTodayAlbumViewsModal}
+        people={todayAlbumViews}
+        summary={todayAlbumViewSummary}
+        onClose={() =>
+          setShowTodayAlbumViewsModal(false)
+        }
+      />
 
-                      <p className="mt-1 text-sm text-slate-500">
-                        {formatDate(person.birthday)}
-                      </p>
-                    </div>
-
-                    <span className="shrink-0 text-slate-400">→</span>
-                  </a>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {showBirthdayMonthModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-4"
-          onClick={() => setShowBirthdayMonthModal(false)}
-        >
-          <div
-            className="max-h-[90vh] w-full overflow-hidden rounded-t-3xl bg-white p-5 shadow-2xl sm:max-w-2xl sm:rounded-3xl sm:p-6"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="mb-5 flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-bold text-slate-800 sm:text-2xl">
-                  📅 Sinh nhật tháng {selectedBirthdayMonth}
-                </h2>
-
-                <p className="mt-1 text-sm text-slate-500">
-                  Có {birthdayMonthPeople.length} người sinh trong tháng{" "}
-                  {selectedBirthdayMonth}
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setShowBirthdayMonthModal(false)}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xl text-slate-600 transition hover:bg-slate-200"
-                aria-label="Đóng"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="mb-5">
-              <label className="mb-2 block text-sm font-semibold text-slate-700">
-                Chọn tháng
-              </label>
-
-              <select
-                value={selectedBirthdayMonth}
-                onChange={(event) => {
-                  const selectedMonth = event.target.value;
-
-                  setSelectedBirthdayMonth(selectedMonth);
-
-                  setBirthdayMonthPeople(
-                    getBirthdayPeopleByMonth(selectedMonth)
-                  );
-                }}
-                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-pink-500 focus:ring-4 focus:ring-pink-100"
-              >
-                {Array.from({ length: 12 }, (_, index) => {
-                  const month = index + 1;
-
-                  return (
-                    <option key={month} value={month}>
-                      Tháng {month}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-
-            {birthdayMonthPeople.length === 0 ? (
-              <div className="rounded-2xl bg-slate-100 p-8 text-center text-slate-500">
-                Không có ai sinh trong tháng này.
-              </div>
-            ) : (
-              <div className="max-h-[60vh] space-y-3 overflow-y-auto pr-1">
-                {birthdayMonthPeople.map((person) => (
-                  <a
-                    key={person.id}
-                    href={`/person/${person.publicId}`}
-                    className="flex items-center gap-3 rounded-2xl border border-slate-200 p-3 transition hover:border-pink-300 hover:bg-pink-50 sm:gap-4 sm:p-4"
-                  >
-                    <img
-                      src={
-                        person.avatar ||
-                        "https://placehold.co/100x100?text=Avatar"
-                      }
-                      alt={person.name}
-                      className="h-12 w-12 shrink-0 rounded-full object-cover sm:h-14 sm:w-14"
-                      onError={(event) => {
-                        event.currentTarget.src =
-                          "https://placehold.co/100x100?text=Avatar";
-                      }}
-                    />
-
-                    <div className="min-w-0 flex-1">
-                      <p className="break-words font-bold text-slate-800">
-                        {person.name}
-                      </p>
-
-                      <p className="mt-1 text-sm text-slate-500">
-                        {formatDate(person.birthday)}
-                      </p>
-                    </div>
-
-                    <span className="shrink-0 text-slate-400">→</span>
-                  </a>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-      {showTodayAlbumViewsModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4"
-          onClick={() =>
-            setShowTodayAlbumViewsModal(false)
-          }
-        >
-          <div
-            className="max-h-[90vh] w-full overflow-hidden rounded-t-3xl bg-white p-5 shadow-2xl sm:max-w-2xl sm:rounded-3xl sm:p-6"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="mb-5 flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-bold text-slate-800 sm:text-2xl">
-                  Album được xem hôm nay
-                </h2>
-
-                <p className="mt-1 text-sm text-slate-500">
-                  {todayAlbumViewSummary.totalAlbums} album
-                  {" · "}
-                  {Number(
-                    todayAlbumViewSummary.totalViews
-                  ).toLocaleString("vi-VN")}{" "}
-                  lượt mở
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() =>
-                  setShowTodayAlbumViewsModal(false)
-                }
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xl text-slate-600 transition hover:bg-slate-200"
-                aria-label="Đóng"
-              >
-                ✕
-              </button>
-            </div>
-
-            {todayAlbumViews.length === 0 ? (
-              <div className="rounded-2xl bg-slate-100 p-8 text-center">
-                <div className="text-4xl">👀</div>
-
-                <p className="mt-3 font-semibold text-slate-700">
-                  Hôm nay chưa có album nào được xem
-                </p>
-
-                <p className="mt-1 text-sm text-slate-500">
-                  Danh sách sẽ xuất hiện khi người dùng mở album.
-                </p>
-              </div>
-            ) : (
-              <div className="max-h-[65vh] space-y-3 overflow-y-auto pr-1">
-                {todayAlbumViews.map((person) => (
-                  <a
-                    key={person.id}
-                    href={`/person/${person.publicId}`}
-                    className="flex items-center gap-3 rounded-2xl border border-slate-200 p-3 transition hover:border-violet-300 hover:bg-violet-50 sm:gap-4 sm:p-4"
-                  >
-                    <img
-                      src={
-                        person.avatar ||
-                        "https://placehold.co/100x100?text=Avatar"
-                      }
-                      alt={person.name || "Avatar"}
-                      className="h-12 w-12 shrink-0 rounded-full object-cover sm:h-14 sm:w-14"
-                      onError={(event) => {
-                        event.currentTarget.onerror = null;
-                        event.currentTarget.src =
-                          "https://placehold.co/100x100?text=Avatar";
-                      }}
-                    />
-
-                    <div className="min-w-0 flex-1">
-                      <p className="break-words font-bold text-slate-800">
-                        {person.name}
-                      </p>
-
-                      <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm text-slate-500">
-                        <span>
-                          👁️{" "}
-                          {Number(
-                            person.todayViews || 0
-                          ).toLocaleString("vi-VN")}{" "}
-                          lượt hôm nay
-                        </span>
-
-                        <span>
-                          Tổng:{" "}
-                          {Number(
-                            person.albumViews || 0
-                          ).toLocaleString("vi-VN")}
-                        </span>
-
-                        {person.lastViewedAt && (
-                          <span>
-                            🕒{" "}
-                            {new Date(
-                              person.lastViewedAt
-                            ).toLocaleTimeString("vi-VN", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <span className="shrink-0 text-slate-400">
-                      →
-                    </span>
-                  </a>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      <AnnouncementManager
+        open={showAnnouncementManager}
+        onClose={() =>
+          setShowAnnouncementManager(false)
+        }
+      />
     </Layout>
 
   );
