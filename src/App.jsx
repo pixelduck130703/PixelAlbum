@@ -6,6 +6,7 @@ import Detail from "./pages/Detail";
 import Dashboard from "./pages/admin/Dashboard";
 import Login from "./pages/admin/Login";
 import ProtectedRoute from "./components/admin/ProtectedRoute";
+import Invitation from "./pages/Invitation";
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
       <Route path="/person/:publicId" element={<Detail />} />
 
       <Route path="/admin/login" element={<Login />} />
+      <Route path="/invitation" element={<Invitation />} />
 
       <Route
         path="/admin"
