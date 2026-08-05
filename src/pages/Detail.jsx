@@ -366,11 +366,11 @@ function Detail() {
 
       let monthText;
       if (lunarMonth === 1) {
-        monthText = "Giêng";
+        monthText = "01";
       } else if (lunarMonth === 12) {
-        monthText = "Chạp";
+        monthText = "12";
       } else {
-        monthText = lunarMonth;
+        monthText = String(lunarMonth).padStart(2, "0");
       }
 
       const can = [
