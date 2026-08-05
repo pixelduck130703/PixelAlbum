@@ -13,83 +13,15 @@ const MUSIC_TITLE = "A LITTLE DREAM OF ME";
 
 
 const INVITATION_ANIMATIONS = `
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(36px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes fadeInDown {
-    from {
-      opacity: 0;
-      transform: translateY(-28px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes zoomIn {
-    from {
-      opacity: 0;
-      transform: scale(0.86);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
-  }
-
-  @keyframes softFloat {
-    0%, 100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-10px);
-    }
-  }
-
-  @keyframes glowPulse {
-    0%, 100% {
-      opacity: 0.2;
-      transform: scale(1);
-    }
-    50% {
-      opacity: 0.48;
-      transform: scale(1.08);
-    }
-  }
-
-  @keyframes twinkle {
-    0%, 100% {
-      opacity: 0.18;
-      transform: scale(0.9) rotate(0deg);
-    }
-    50% {
-      opacity: 0.75;
-      transform: scale(1.15) rotate(8deg);
-    }
-  }
-
-  @keyframes shimmer {
-    0% {
-      transform: translateX(-180%) skewX(-20deg);
-    }
-    100% {
-      transform: translateX(280%) skewX(-20deg);
-    }
-  }
+  /* ==========================
+     HIỆU ỨNG ĐUNG ĐƯA SASH
+  ========================== */
 
   @keyframes swayLeft {
     0%, 100% {
       transform: rotate(0.8deg);
     }
+
     50% {
       transform: rotate(-0.5deg);
     }
@@ -99,59 +31,10 @@ const INVITATION_ANIMATIONS = `
     0%, 100% {
       transform: rotate(-0.8deg);
     }
+
     50% {
       transform: rotate(0.5deg);
     }
-  }
-
-  @keyframes numberPulse {
-    0%, 100% {
-      transform: scale(1);
-      text-shadow: 0 0 0 rgba(251, 191, 36, 0);
-    }
-    50% {
-      transform: scale(1.06);
-      text-shadow: 0 0 18px rgba(251, 191, 36, 0.45);
-    }
-  }
-
-  @keyframes modalPop {
-    from {
-      opacity: 0;
-      transform: scale(0.9) translateY(18px);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1) translateY(0);
-    }
-  }
-
-  .inv-fade-up {
-    animation: fadeInUp 0.9s cubic-bezier(.22,1,.36,1) both;
-  }
-
-  .inv-fade-down {
-    animation: fadeInDown 0.9s cubic-bezier(.22,1,.36,1) both;
-  }
-
-  .inv-zoom-in {
-    animation: zoomIn 1s cubic-bezier(.22,1,.36,1) both;
-  }
-
-  .inv-float {
-    animation: softFloat 4s ease-in-out infinite;
-  }
-
-  .inv-glow {
-    animation: glowPulse 3.5s ease-in-out infinite;
-  }
-
-  .inv-twinkle {
-    animation: twinkle 2.8s ease-in-out infinite;
-  }
-
-  .inv-number {
-    animation: numberPulse 2.2s ease-in-out infinite;
   }
 
   .inv-sash-left {
@@ -164,109 +47,9 @@ const INVITATION_ANIMATIONS = `
     animation: swayRight 5s ease-in-out infinite;
   }
 
-  .inv-shimmer {
-    position: relative;
-    overflow: hidden;
-  }
-
-  .inv-shimmer::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    width: 34%;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255,255,255,0.35),
-      transparent
-    );
-    animation: shimmer 3.6s ease-in-out infinite;
-    pointer-events: none;
-  }
-
-  .inv-modal {
-    animation: modalPop 0.3s cubic-bezier(.22,1,.36,1) both;
-  }
-
-  .inv-delay-1 { animation-delay: 0.12s; }
-  .inv-delay-2 { animation-delay: 0.24s; }
-  .inv-delay-3 { animation-delay: 0.36s; }
-  .inv-delay-4 { animation-delay: 0.48s; }
-  .inv-delay-5 { animation-delay: 0.60s; }
-
-
-  @keyframes roadMove {
-    from {
-      background-position: 0 0;
-    }
-    to {
-      background-position: 72px 0;
-    }
-  }
-
-  @keyframes vehicleFloat {
-    0%, 100% {
-      transform: translateX(0) translateY(0);
-    }
-    50% {
-      transform: translateX(12px) translateY(-4px);
-    }
-  }
-
-  @keyframes routePulse {
-    0%, 100% {
-      opacity: 0.25;
-      filter: drop-shadow(0 0 0 rgba(37, 99, 235, 0));
-    }
-    50% {
-      opacity: 0.9;
-      filter: drop-shadow(0 0 10px rgba(37, 99, 235, 0.35));
-    }
-  }
-
-  .utc-light-page {
-    background:
-      radial-gradient(circle at top, rgba(59,130,246,0.12), transparent 38%),
-      linear-gradient(180deg, #ffffff 0%, #f8fbff 38%, #eef5ff 100%);
-  }
-
-  .utc-road-pattern {
-    background-image:
-      linear-gradient(90deg, transparent 0 44%, rgba(37,99,235,0.08) 44% 56%, transparent 56%),
-      repeating-linear-gradient(90deg, transparent 0 22px, rgba(245,158,11,0.18) 22px 42px, transparent 42px 72px);
-    background-size: 100% 100%, 72px 3px;
-    background-repeat: no-repeat, repeat-x;
-    background-position: center, bottom 28px left;
-    animation: roadMove 12s linear infinite;
-  }
-
-  .utc-card-light {
-    position: relative;
-    overflow: hidden;
-    background: rgba(255,255,255,0.9);
-    box-shadow:
-      0 18px 45px rgba(30,64,175,0.10),
-      inset 0 1px 0 rgba(255,255,255,0.9);
-  }
-
-  .utc-card-light::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(120deg, transparent, rgba(59,130,246,0.06), transparent);
-    transform: translateX(-140%);
-    animation: shimmer 5s ease-in-out infinite;
-    pointer-events: none;
-  }
-
-  .utc-route-node {
-    animation: routePulse 3s ease-in-out infinite;
-  }
-
-  .utc-vehicle {
-    animation: vehicleFloat 5s ease-in-out infinite;
-  }
-
+  /* ==========================
+     HIỆU ỨNG CHUYỂN NGÔN NGỮ
+  ========================== */
 
   @keyframes languageFadeIn {
     from {
@@ -274,6 +57,7 @@ const INVITATION_ANIMATIONS = `
       transform: translateY(12px);
       filter: blur(6px);
     }
+
     to {
       opacity: 1;
       transform: translateY(0);
@@ -287,6 +71,7 @@ const INVITATION_ANIMATIONS = `
       transform: translateY(0);
       filter: blur(0);
     }
+
     to {
       opacity: 0;
       transform: translateY(-12px);
@@ -303,118 +88,51 @@ const INVITATION_ANIMATIONS = `
     pointer-events: none;
   }
 
+  /* ==========================
+     KIỂU TĨNH
+  ========================== */
 
-  @keyframes musicPulse {
-    0%, 100% {
-      transform: scale(1);
-      box-shadow:
-        0 14px 35px rgba(37,99,235,0.18),
-        0 0 0 0 rgba(37,99,235,0.18);
-    }
-    50% {
-      transform: scale(1.06);
-      box-shadow:
-        0 18px 42px rgba(37,99,235,0.24),
-        0 0 0 10px rgba(37,99,235,0);
-    }
+  .utc-light-page {
+    background:
+      radial-gradient(
+        circle at top,
+        rgba(59,130,246,0.12),
+        transparent 38%
+      ),
+      linear-gradient(
+        180deg,
+        #ffffff 0%,
+        #f8fbff 38%,
+        #eef5ff 100%
+      );
   }
 
-  @keyframes musicBarOne {
-    0%, 100% {
-      height: 8px;
-    }
-    50% {
-      height: 22px;
-    }
+  .utc-road-pattern {
+    background-image:
+      linear-gradient(
+        90deg,
+        transparent 0 44%,
+        rgba(37,99,235,0.08) 44% 56%,
+        transparent 56%
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent 0 22px,
+        rgba(245,158,11,0.18) 22px 42px,
+        transparent 42px 72px
+      );
+    background-size: 100% 100%, 72px 3px;
+    background-repeat: no-repeat, repeat-x;
+    background-position: center, bottom 28px left;
   }
 
-  @keyframes musicBarTwo {
-    0%, 100% {
-      height: 18px;
-    }
-    50% {
-      height: 7px;
-    }
-  }
-
-  @keyframes musicBarThree {
-    0%, 100% {
-      height: 12px;
-    }
-    50% {
-      height: 26px;
-    }
-  }
-
-  @keyframes musicLabelIn {
-    from {
-      opacity: 0;
-      transform: translateY(8px) scale(0.96);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
-  }
-
-  .music-button-playing {
-    animation: musicPulse 2.2s ease-in-out infinite;
-  }
-
-  .music-bar-one {
-    animation: musicBarOne 0.8s ease-in-out infinite;
-  }
-
-  .music-bar-two {
-    animation: musicBarTwo 0.95s ease-in-out infinite;
-  }
-
-  .music-bar-three {
-    animation: musicBarThree 0.7s ease-in-out infinite;
-  }
-
-  .music-label-enter {
-    animation: musicLabelIn 0.3s cubic-bezier(.22,1,.36,1) both;
-  }
-
-
-  @keyframes watermarkFloat {
-    0%, 100% {
-      transform: translateY(0) rotate(var(--wm-rotate, 0deg));
-    }
-    50% {
-      transform: translateY(-12px) rotate(var(--wm-rotate, 0deg));
-    }
-  }
-
-  @keyframes watermarkPulse {
-    0%, 100% {
-      opacity: 0.08;
-      filter: blur(0);
-    }
-    50% {
-      opacity: 0.14;
-      filter: blur(0.2px);
-    }
-  }
-
-  @keyframes watermarkSlide {
-    from {
-      transform: translateX(-4%);
-    }
-    to {
-      transform: translateX(4%);
-    }
-  }
-
-  .it-watermark-float {
-    animation:
-      watermarkFloat 7s ease-in-out infinite,
-      watermarkPulse 5s ease-in-out infinite;
-  }
-
-  .it-watermark-slide {
-    animation: watermarkSlide 10s ease-in-out infinite alternate;
+  .utc-card-light {
+    position: relative;
+    overflow: hidden;
+    background: rgba(255,255,255,0.9);
+    box-shadow:
+      0 18px 45px rgba(30,64,175,0.10),
+      inset 0 1px 0 rgba(255,255,255,0.9);
   }
 
   .it-watermark-chip {
@@ -432,26 +150,10 @@ const INVITATION_ANIMATIONS = `
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .inv-fade-up,
-    .inv-fade-down,
-    .inv-zoom-in,
-    .inv-float,
-    .inv-glow,
-    .inv-twinkle,
-    .inv-number,
     .inv-sash-left,
     .inv-sash-right,
-    .inv-shimmer::after,
-    .inv-modal,
     .inv-language-enter,
-    .inv-language-leave,
-    .music-button-playing,
-    .music-bar-one,
-    .music-bar-two,
-    .music-bar-three,
-    .music-label-enter,
-    .it-watermark-float,
-    .it-watermark-slide {
+    .inv-language-leave {
       animation: none !important;
     }
   }
@@ -813,20 +515,20 @@ function Invitation() {
             <div className="pointer-events-none absolute -left-40 top-36 h-[500px] w-[500px] rounded-full bg-blue-300/20 blur-3xl" />
             <div className="pointer-events-none absolute -right-40 bottom-20 h-[500px] w-[500px] rounded-full bg-amber-300/20 blur-3xl" />
 
-            <div className="pointer-events-none absolute inset-0 opacity-20">
-                <div className="inv-twinkle absolute left-[8%] top-[12%] text-4xl text-amber-600">
+            <div className="pointer-events-none absolute inset-0 opacity-10">
+                <div className="absolute left-[8%] top-[12%] text-4xl text-amber-600">
                     ◆
                 </div>
 
-                <div className="inv-twinkle inv-delay-2 absolute right-[12%] top-[8%] text-3xl text-amber-600">
+                <div className="absolute right-[12%] top-[8%] text-3xl text-amber-600">
                     ◆
                 </div>
 
-                <div className="inv-twinkle inv-delay-3 absolute left-[15%] top-[35%] text-2xl text-amber-600">
+                <div className="absolute left-[15%] top-[35%] text-2xl text-amber-600">
                     ✦
                 </div>
 
-                <div className="inv-twinkle inv-delay-4 absolute right-[18%] top-[32%] text-3xl text-amber-600">
+                <div className="absolute right-[18%] top-[32%] text-3xl text-amber-600">
                     ✦
                 </div>
             </div>
@@ -835,26 +537,26 @@ function Invitation() {
             <InformationTechnologyWatermark />
 
             {/* Họa tiết giao thông */}
-            <div className="pointer-events-none absolute inset-0 overflow-hidden">
-                <div className="utc-vehicle absolute left-[4%] top-[20%] hidden text-5xl opacity-20 lg:block">
+            <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-40">
+                <div className="absolute left-[4%] top-[20%] hidden text-5xl opacity-10 lg:block">
                     🚆
                 </div>
 
-                <div className="utc-vehicle inv-delay-2 absolute right-[5%] top-[34%] hidden text-5xl opacity-20 lg:block">
+                <div className="absolute right-[5%] top-[34%] hidden text-5xl opacity-10 lg:block">
                     🚌
                 </div>
 
                 <div className="absolute left-[8%] top-[58%] hidden h-32 w-32 lg:block">
                     <div className="absolute left-0 top-1/2 h-1 w-full rounded-full bg-blue-200" />
-                    <div className="utc-route-node absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full border-4 border-white bg-blue-600 shadow" />
-                    <div className="utc-route-node inv-delay-2 absolute left-1/2 top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-white bg-amber-400 shadow" />
-                    <div className="utc-route-node inv-delay-4 absolute right-0 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full border-4 border-white bg-blue-600 shadow" />
+                    <div className="absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full border-4 border-white bg-blue-600 shadow" />
+                    <div className="absolute left-1/2 top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-white bg-amber-400 shadow" />
+                    <div className="absolute right-0 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full border-4 border-white bg-blue-600 shadow" />
                 </div>
 
                 <div className="absolute right-[9%] top-[16%] hidden h-40 w-40 rounded-full border border-blue-200/70 lg:block">
                     <div className="absolute left-1/2 top-0 h-full w-px bg-blue-200/70" />
                     <div className="absolute left-0 top-1/2 h-px w-full bg-blue-200/70" />
-                    <div className="utc-route-node absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-400 shadow" />
+                    <div className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-400 shadow" />
                 </div>
             </div>
 
@@ -906,8 +608,8 @@ function Invitation() {
                 </div>
 
                 {/* Logo UTC */}
-                <section className="inv-fade-down text-center">
-                    <div className="inv-float mx-auto flex h-28 w-28 items-center justify-center sm:h-32 sm:w-32">
+                <section className="text-center">
+                    <div className="mx-auto flex h-28 w-28 items-center justify-center sm:h-32 sm:w-32">
                         <div className="h-full w-full overflow-hidden rounded-full shadow-[0_15px_35px_rgba(37,99,235,0.18)]">
                             <img
                                 src="/images/UTC.png"
@@ -929,7 +631,7 @@ function Invitation() {
                 </section>
 
                 {/* Tiêu đề */}
-                <section className="inv-fade-up inv-delay-1 mt-9 text-center">
+                <section className="mt-9 text-center">
                     <p
                         className="text-5xl font-black leading-[1.15] text-amber-600 drop-shadow-lg sm:text-7xl lg:text-8xl"
                         style={{
@@ -966,11 +668,8 @@ function Invitation() {
                 </section>
 
                 {/* Ảnh đại diện */}
-                <section className="inv-zoom-in inv-delay-2 mt-10 text-center">
+                <section className="mt-10 text-center">
                     <div className="relative mx-auto w-fit">
-
-                        {/* Hiệu ứng phát sáng */}
-                        <div className="inv-glow absolute -inset-8 rounded-full bg-blue-400/20 blur-3xl" />
 
                         {/* Vòng ngoài */}
                         <div className="relative h-60 w-60 rounded-full bg-gradient-to-br from-blue-700 via-blue-500 to-amber-400 p-[5px] shadow-[0_20px_60px_rgba(37,99,235,0.25)] sm:h-80 sm:w-80">
@@ -1036,7 +735,7 @@ function Invitation() {
                 </section>
 
                 {/* Học vị */}
-                <section className="utc-card-light inv-fade-up inv-delay-3 mt-9 w-full max-w-3xl rounded-3xl border border-blue-200 p-5 sm:p-7">
+                <section className="utc-card-light mt-9 w-full max-w-3xl rounded-3xl border border-blue-200 p-5 sm:p-7">
                     <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
                         <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-blue-200 bg-blue-50 text-3xl text-blue-700">
                             💻
@@ -1056,7 +755,7 @@ function Invitation() {
                 </section>
 
                 {/* Đếm ngược */}
-                <section className="inv-fade-up inv-delay-4 mt-10 w-full max-w-4xl text-center">
+                <section className="mt-10 w-full max-w-4xl text-center">
                     <h3 className="text-base font-bold uppercase tracking-[0.1em] text-slate-600 sm:text-xl">
                         {t.countdownTitle}
                     </h3>
@@ -1098,7 +797,7 @@ function Invitation() {
                 </section>
 
                 {/* Thông tin lễ */}
-                <section className="inv-fade-up inv-delay-5 mt-10 grid w-full max-w-5xl grid-cols-1 gap-4 sm:grid-cols-3">
+                <section className="mt-10 grid w-full max-w-5xl grid-cols-1 gap-4 sm:grid-cols-3">
                     <InvitationInfo
                         icon="📅"
                         label={t.eventDateLabel}
@@ -1125,7 +824,7 @@ function Invitation() {
                 </section>
 
                 {/* Chữ ký */}
-                <section className="inv-fade-up mt-10 text-center">
+                <section className="mt-10 text-center">
                     <p
                         className="text-3xl italic text-amber-600 sm:text-5xl"
                         style={{
@@ -1142,12 +841,12 @@ function Invitation() {
                 </section>
 
                 {/* Nút chức năng */}
-                <div className="inv-fade-up mt-10 grid w-full max-w-xl grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="mt-10 grid w-full max-w-xl grid-cols-1 gap-4 sm:grid-cols-2">
                     <a
                         href={MAP_URL}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inv-shimmer flex min-h-[56px] items-center justify-center gap-3 rounded-2xl border border-amber-400 bg-gradient-to-r from-amber-300 to-yellow-400 px-6 py-4 font-bold text-blue-950 shadow-xl transition hover:-translate-y-1 hover:scale-[1.02]"
+                        className="flex min-h-[56px] items-center justify-center gap-3 rounded-2xl border border-amber-400 bg-gradient-to-r from-amber-300 to-yellow-400 px-6 py-4 font-bold text-blue-950 shadow-xl transition hover:-translate-y-1 hover:scale-[1.02]"
                     >
                         <span className="text-xl">📍</span>
                         <span>{t.viewMap}</span>
@@ -1156,7 +855,7 @@ function Invitation() {
                     <button
                         type="button"
                         onClick={() => setShowPhone(true)}
-                        className="inv-shimmer flex min-h-[56px] items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 font-bold text-white shadow-xl transition hover:-translate-y-1 hover:scale-[1.02] hover:shadow-2xl"
+                        className="flex min-h-[56px] items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 font-bold text-white shadow-xl transition hover:-translate-y-1 hover:scale-[1.02] hover:shadow-2xl"
                     >
                         <span className="text-xl">📞</span>
                         <span>{t.contact}</span>
@@ -1178,7 +877,7 @@ function Invitation() {
                     role="presentation"
                 >
                     <div
-                        className="inv-modal w-full max-w-sm rounded-3xl border border-blue-200 bg-white p-6 text-slate-900 shadow-2xl"
+                        className="w-full max-w-sm rounded-3xl border border-blue-200 bg-white p-6 text-slate-900 shadow-2xl"
                         onClick={(event) => event.stopPropagation()}
                         role="dialog"
                         aria-modal="true"
@@ -1230,7 +929,7 @@ function Invitation() {
                 <div
                     className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 p-4 backdrop-blur-md"
                 >
-                    <div className="inv-modal w-full max-w-md rounded-3xl bg-white p-7 text-center shadow-2xl">
+                    <div className="w-full max-w-md rounded-3xl bg-white p-7 text-center shadow-2xl">
 
                         <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-blue-100 text-5xl">
                             🎵
@@ -1273,70 +972,70 @@ function InformationTechnologyWatermark() {
             name: "AI",
             short: "AI",
             className:
-                "left-[3%] top-[14%] border-blue-500 bg-blue-100/95 text-blue-800",
+                "left-[3%] top-[14%] border-blue-500 bg-blue-100/65/60 text-blue-800",
             rotate: "-7deg",
         },
         {
             name: "SQL",
             short: "SQL",
             className:
-                "right-[3%] top-[17%] border-amber-500 bg-amber-100/95 text-amber-800",
+                "right-[3%] top-[17%] border-amber-500 bg-amber-100/65/60 text-amber-800",
             rotate: "7deg",
         },
         {
             name: "React",
             short: "⚛",
             className:
-                "left-[7%] top-[31%] border-cyan-500 bg-cyan-100/95 text-cyan-800",
+                "left-[7%] top-[31%] border-cyan-500 bg-cyan-100/65/60 text-cyan-800",
             rotate: "-5deg",
         },
         {
             name: "Node.js",
             short: "JS",
             className:
-                "right-[7%] top-[34%] border-emerald-500 bg-emerald-100/95 text-emerald-800",
+                "right-[7%] top-[34%] border-emerald-500 bg-emerald-100/65/60 text-emerald-800",
             rotate: "5deg",
         },
         {
             name: "Git",
             short: "Git",
             className:
-                "left-[3%] top-[50%] border-orange-500 bg-orange-100/95 text-orange-800",
+                "left-[3%] top-[50%] border-orange-500 bg-orange-100/65/60 text-orange-800",
             rotate: "-6deg",
         },
         {
             name: "JavaScript",
             short: "JS",
             className:
-                "right-[3%] top-[53%] border-yellow-500 bg-yellow-100/95 text-yellow-800",
+                "right-[3%] top-[53%] border-yellow-500 bg-yellow-100/60 text-yellow-800",
             rotate: "6deg",
         },
         {
             name: "TypeScript",
             short: "TS",
             className:
-                "left-[9%] top-[70%] border-blue-500 bg-blue-100/95 text-blue-800",
+                "left-[9%] top-[70%] border-blue-500 bg-blue-100/65/60 text-blue-800",
             rotate: "-4deg",
         },
         {
             name: "PostgreSQL",
             short: "PG",
             className:
-                "right-[9%] top-[72%] border-indigo-500 bg-indigo-100/95 text-indigo-800",
+                "right-[9%] top-[72%] border-indigo-500 bg-indigo-100/65/60 text-indigo-800",
             rotate: "4deg",
         },
         {
             name: "Docker",
             short: "DK",
             className:
-                "left-[28%] top-[82%] border-sky-500 bg-sky-100/95 text-sky-800",
+                "left-[28%] top-[82%] border-sky-500 bg-sky-100/65/60 text-sky-800",
             rotate: "-3deg",
         },
         {
             name: "API",
             short: "API",
             className:
-                "right-[28%] top-[83%] border-violet-500 bg-violet-100/95 text-violet-800",
+                "right-[28%] top-[83%] border-violet-500 bg-violet-100/60 text-violet-800",
             rotate: "3deg",
         },
     ];
@@ -1346,49 +1045,49 @@ function InformationTechnologyWatermark() {
             name: "AI",
             short: "AI",
             className:
-                "left-2 top-[16%] border-blue-500 bg-blue-100 text-blue-800",
+                "left-2 top-[16%] border-blue-500 bg-blue-100/65 text-blue-800",
         },
         {
             name: "SQL",
             short: "SQL",
             className:
-                "right-2 top-[22%] border-amber-500 bg-amber-100 text-amber-800",
+                "right-2 top-[22%] border-amber-500 bg-amber-100/65 text-amber-800",
         },
         {
             name: "React",
             short: "⚛",
             className:
-                "left-3 top-[35%] border-cyan-500 bg-cyan-100 text-cyan-800",
+                "left-3 top-[35%] border-cyan-500 bg-cyan-100/65 text-cyan-800",
         },
         {
             name: "Node",
             short: "JS",
             className:
-                "right-3 top-[42%] border-emerald-500 bg-emerald-100 text-emerald-800",
+                "right-3 top-[42%] border-emerald-500 bg-emerald-100/65 text-emerald-800",
         },
         {
             name: "Git",
             short: "Git",
             className:
-                "left-2 top-[56%] border-orange-500 bg-orange-100 text-orange-800",
+                "left-2 top-[56%] border-orange-500 bg-orange-100/65 text-orange-800",
         },
         {
             name: "TypeScript",
             short: "TS",
             className:
-                "right-2 top-[63%] border-blue-500 bg-blue-100 text-blue-800",
+                "right-2 top-[63%] border-blue-500 bg-blue-100/65 text-blue-800",
         },
         {
             name: "PostgreSQL",
             short: "PG",
             className:
-                "left-3 top-[76%] border-indigo-500 bg-indigo-100 text-indigo-800",
+                "left-3 top-[76%] border-indigo-500 bg-indigo-100/65 text-indigo-800",
         },
         {
             name: "Docker",
             short: "DK",
             className:
-                "right-3 top-[82%] border-sky-500 bg-sky-100 text-sky-800",
+                "right-3 top-[82%] border-sky-500 bg-sky-100/65 text-sky-800",
         },
     ];
 
@@ -1397,52 +1096,52 @@ function InformationTechnologyWatermark() {
             className:
                 "left-[22%] top-[22%] h-24 w-24 sm:h-32 sm:w-32",
             rotate: "-8deg",
-            opacity: 0.28,
+            opacity: 0.22,
         },
         {
             className:
                 "right-[22%] top-[25%] h-20 w-20 sm:h-28 sm:w-28",
             rotate: "8deg",
-            opacity: 0.24,
+            opacity: 0.18,
         },
         {
             className:
                 "left-[18%] top-[55%] h-20 w-20 sm:h-28 sm:w-28",
             rotate: "-5deg",
-            opacity: 0.24,
+            opacity: 0.18,
         },
         {
             className:
                 "right-[18%] top-[58%] h-24 w-24 sm:h-32 sm:w-32",
             rotate: "6deg",
-            opacity: 0.28,
+            opacity: 0.22,
         },
         {
             className:
                 "left-1/2 top-[74%] h-28 w-28 -translate-x-1/2 sm:h-40 sm:w-40",
             rotate: "0deg",
-            opacity: 0.24,
+            opacity: 0.18,
         },
     ];
 
     return (
         <div
-            className="pointer-events-none absolute inset-0 z-[1] overflow-hidden select-none"
+            className="pointer-events-none absolute inset-0 z-[1] overflow-hidden opacity-[0.14] select-none"
             aria-hidden="true"
         >
             {/* Lưới công nghệ */}
             <div className="absolute inset-0 bg-[linear-gradient(rgba(37,99,235,0.075)_1px,transparent_1px),linear-gradient(90deg,rgba(37,99,235,0.075)_1px,transparent_1px)] bg-[size:34px_34px]" />
 
             {/* Các dải chữ công nghệ */}
-            <div className="it-watermark-slide absolute left-[-5%] top-[8%] w-[110%] overflow-hidden whitespace-nowrap font-mono text-[11px] font-black tracking-[0.28em] text-blue-800 opacity-[0.24] sm:text-sm">
+            <div className="absolute left-[-5%] top-[8%] w-[110%] overflow-hidden whitespace-nowrap font-mono text-[11px] font-black tracking-[0.28em] text-blue-800 opacity-[0.16] sm:text-sm">
                 AI • SQL • REACT • NODE.JS • GIT • JAVASCRIPT • TYPESCRIPT • POSTGRESQL • DOCKER
             </div>
 
-            <div className="it-watermark-slide absolute left-[-5%] top-[47%] w-[110%] overflow-hidden whitespace-nowrap font-mono text-[10px] font-black tracking-[0.26em] text-amber-700 opacity-[0.22] sm:text-xs">
+            <div className="absolute left-[-5%] top-[47%] w-[110%] overflow-hidden whitespace-nowrap font-mono text-[10px] font-black tracking-[0.26em] text-amber-700 opacity-[0.14] sm:text-xs">
                 API • DATABASE • CLOUD • SERVER • CLIENT • NETWORK • SECURITY • FULLSTACK • UTC
             </div>
 
-            <div className="it-watermark-slide absolute bottom-[5%] left-[-5%] w-[110%] overflow-hidden whitespace-nowrap font-mono text-[10px] font-black tracking-[0.25em] text-blue-800 opacity-[0.20] sm:text-xs">
+            <div className="absolute bottom-[5%] left-[-5%] w-[110%] overflow-hidden whitespace-nowrap font-mono text-[10px] font-black tracking-[0.25em] text-blue-800 opacity-[0.12] sm:text-xs">
                 01000001 01001001 00100000 01010011 01010001 01001100 00100000 01010010 01000101 01000001 01000011 01010100
             </div>
 
@@ -1450,14 +1149,12 @@ function InformationTechnologyWatermark() {
             {utcMarks.map((item, index) => (
                 <div
                     key={`utc-mark-${index}`}
-                    className={`it-watermark-float absolute ${item.className}`}
+                    className={` absolute ${item.className}`}
                     style={{
-                        "--wm-rotate": item.rotate,
-                        animationDelay: `${index * 0.55}s`,
                         opacity: item.opacity,
                     }}
                 >
-                    <div className="h-full w-full rounded-full bg-white/80 p-1 shadow-[0_12px_30px_rgba(37,99,235,0.15)] backdrop-blur-sm">
+                    <div className="h-full w-full rounded-full bg-white/55 p-1 shadow-[0_8px_20px_rgba(37,99,235,0.08)] grayscale-[20%] blur-[0.15px]">
                         <img
                             src="/images/UTC.png"
                             alt=""
@@ -1472,11 +1169,9 @@ function InformationTechnologyWatermark() {
                 {desktopTechnologies.map((item, index) => (
                     <div
                         key={item.name}
-                        className={`it-watermark-float absolute flex min-w-[116px] flex-col items-center rounded-3xl border-2 px-4 py-3 shadow-[0_12px_30px_rgba(15,23,42,0.12)] ${item.className}`}
+                        className={` absolute flex min-w-[116px] flex-col items-center rounded-3xl border-2 px-4 py-3 shadow-[0_8px_20px_rgba(15,23,42,0.06)] ${item.className}`}
                         style={{
-                            "--wm-rotate": item.rotate,
-                            animationDelay: `${index * 0.35}s`,
-                            opacity: 0.62,
+                            opacity: 0.36,
                         }}
                     >
                         <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-current/30 bg-white/90 font-mono text-2xl font-black shadow-sm">
@@ -1490,31 +1185,27 @@ function InformationTechnologyWatermark() {
                 ))}
 
                 <div
-                    className="it-watermark-float absolute left-[36%] top-[39%] rounded-3xl border-2 border-blue-500 bg-blue-100/95 px-5 py-4 font-mono text-4xl font-black text-blue-800 shadow-lg"
+                    className="absolute left-[36%] top-[39%] rounded-3xl border-2 border-blue-500 bg-blue-100/65/60 px-5 py-4 font-mono text-4xl font-black text-blue-800 shadow-sm"
                     style={{
-                        "--wm-rotate": "-4deg",
-                        opacity: 0.5,
+                        opacity: 0.38,
                     }}
                 >
                     &lt;/&gt;
                 </div>
 
                 <div
-                    className="it-watermark-float absolute right-[35%] top-[42%] rounded-3xl border-2 border-amber-500 bg-amber-100/95 px-5 py-4 font-mono text-3xl font-black text-amber-800 shadow-lg"
+                    className="absolute right-[35%] top-[42%] rounded-3xl border-2 border-amber-500 bg-amber-100/65/60 px-5 py-4 font-mono text-3xl font-black text-amber-800 shadow-sm"
                     style={{
-                        "--wm-rotate": "4deg",
-                        opacity: 0.5,
-                        animationDelay: "0.7s",
+                        opacity: 0.38,
                     }}
                 >
                     {"{ }"}
                 </div>
 
                 <div
-                    className="it-watermark-chip it-watermark-float absolute left-1/2 top-[61%] flex h-24 w-24 -translate-x-1/2 items-center justify-center rounded-3xl border-2 border-indigo-500 bg-indigo-100/95 font-mono text-xl font-black text-indigo-800 shadow-lg"
+                    className="it-watermark-chip absolute left-1/2 top-[61%] flex h-24 w-24 -translate-x-1/2 items-center justify-center rounded-3xl border-2 border-indigo-500 bg-indigo-100/65/60 font-mono text-xl font-black text-indigo-800 shadow-sm"
                     style={{
-                        "--wm-rotate": "0deg",
-                        opacity: 0.48,
+                        opacity: 0.36,
                     }}
                 >
                     CPU
@@ -1526,11 +1217,9 @@ function InformationTechnologyWatermark() {
                 {mobileTechnologies.map((item, index) => (
                     <div
                         key={item.name}
-                        className={`it-watermark-float absolute flex min-w-[86px] flex-col items-center rounded-2xl border-2 px-3 py-2 shadow-[0_10px_24px_rgba(15,23,42,0.14)] ${item.className}`}
+                        className={` absolute flex min-w-[86px] flex-col items-center rounded-2xl border-2 px-3 py-2 shadow-[0_7px_18px_rgba(15,23,42,0.06)] ${item.className}`}
                         style={{
-                            "--wm-rotate": index % 2 === 0 ? "-5deg" : "5deg",
-                            animationDelay: `${index * 0.32}s`,
-                            opacity: 0.56,
+                            opacity: 0.42,
                         }}
                     >
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-current/30 bg-white/95 font-mono text-xl font-black">
@@ -1544,20 +1233,18 @@ function InformationTechnologyWatermark() {
                 ))}
 
                 <div
-                    className="it-watermark-float absolute left-1/2 top-[31%] -translate-x-1/2 rounded-2xl border-2 border-blue-500 bg-blue-100/95 px-4 py-3 font-mono text-3xl font-black text-blue-800 shadow-md"
+                    className="absolute left-1/2 top-[31%] -translate-x-1/2 rounded-2xl border-2 border-blue-500 bg-blue-100/65/60 px-4 py-3 font-mono text-3xl font-black text-blue-800 shadow-sm"
                     style={{
-                        "--wm-rotate": "0deg",
-                        opacity: 0.48,
+                        opacity: 0.36,
                     }}
                 >
                     &lt;/&gt;
                 </div>
 
                 <div
-                    className="it-watermark-float absolute left-1/2 top-[69%] -translate-x-1/2 rounded-2xl border-2 border-amber-500 bg-amber-100/95 px-4 py-3 font-mono text-lg font-black text-amber-800 shadow-md"
+                    className="absolute left-1/2 top-[69%] -translate-x-1/2 rounded-2xl border-2 border-amber-500 bg-amber-100/65/60 px-4 py-3 font-mono text-lg font-black text-amber-800 shadow-sm"
                     style={{
-                        "--wm-rotate": "0deg",
-                        opacity: 0.48,
+                        opacity: 0.36,
                     }}
                 >
                     API • DB • CLOUD
@@ -1579,12 +1266,12 @@ function MusicController({
     return (
         <div className="fixed bottom-4 right-4 z-[90] flex flex-col items-end gap-2 sm:bottom-6 sm:right-6">
             {playing && (
-                <div className="music-label-enter max-w-[220px] rounded-2xl border border-blue-200 bg-white/95 px-4 py-3 shadow-xl backdrop-blur-md">
+                <div className="max-w-[220px] rounded-2xl border border-blue-200 bg-white/95 px-4 py-3 shadow-xl backdrop-blur-md">
                     <div className="flex items-center gap-3">
                         <div className="flex h-8 items-end gap-1">
-                            <span className="music-bar-one w-1.5 rounded-full bg-blue-600" />
-                            <span className="music-bar-two w-1.5 rounded-full bg-amber-400" />
-                            <span className="music-bar-three w-1.5 rounded-full bg-blue-500" />
+                            <span className="w-1.5 rounded-full bg-blue-600" />
+                            <span className="w-1.5 rounded-full bg-amber-400" />
+                            <span className="w-1.5 rounded-full bg-blue-500" />
                         </div>
 
                         <div className="min-w-0 text-left">
@@ -1610,7 +1297,7 @@ function MusicController({
                 type="button"
                 onClick={onToggle}
                 disabled={loading}
-                className={`group flex h-14 w-14 items-center justify-center rounded-full border border-blue-200 bg-white/95 text-blue-700 shadow-[0_14px_35px_rgba(37,99,235,0.18)] backdrop-blur-md transition duration-300 hover:-translate-y-1 hover:scale-105 hover:bg-blue-50 disabled:cursor-wait disabled:opacity-70 sm:h-16 sm:w-16 ${playing ? "music-button-playing" : ""
+                className={`group flex h-14 w-14 items-center justify-center rounded-full border border-blue-200 bg-white/95 text-blue-700 shadow-[0_14px_35px_rgba(37,99,235,0.18)] backdrop-blur-md transition duration-300 hover:-translate-y-1 hover:scale-105 hover:bg-blue-50 disabled:cursor-wait disabled:opacity-70 sm:h-16 sm:w-16 ${playing ? "" : ""
                     }`}
                 aria-label={playing ? playingLabel : pausedLabel}
                 title={playing ? playingLabel : pausedLabel}
@@ -1690,7 +1377,7 @@ function CountdownItem({
             className={`px-1 py-5 text-center sm:px-4 sm:py-7 ${withBorder ? "border-l border-blue-100" : ""
                 }`}
         >
-            <p className="inv-number font-serif text-3xl font-black tabular-nums text-amber-600 sm:text-5xl">
+            <p className="font-serif text-3xl font-black tabular-nums text-amber-600 sm:text-5xl">
                 {String(value).padStart(2, "0")}
             </p>
 
