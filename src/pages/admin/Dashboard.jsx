@@ -11,6 +11,7 @@ import TodayAlbumViewsModal from "../../components/admin/TodayAlbumViewsModal";
 import DashboardStats from "../../components/admin/DashboardStats";
 import DashboardActions from "../../components/admin/DashboardActions";
 import AnnouncementManager from "../../components/admin/AnnouncementManager";
+import HomeMusicManager from "../../components/admin/HomeMusicManager";
 
 function Dashboard() {
   const [stats, setStats] = useState({
@@ -36,6 +37,11 @@ function Dashboard() {
   const [albumViewChart, setAlbumViewChart] = useState([]);
   const [chartDays, setChartDays] = useState(7);
   const [loadingTrafficChart, setLoadingTrafficChart] = useState(true);
+
+  const [
+    showHomeMusicManager,
+    setShowHomeMusicManager,
+  ] = useState(false);
 
   const [
     showAnnouncementManager,
@@ -488,6 +494,9 @@ function Dashboard() {
             onManageAnnouncement={() =>
               setShowAnnouncementManager(true)
             }
+            onManageMusic={() =>
+              setShowHomeMusicManager(true)
+            }
             onExportExcel={handleExportExcel}
             onAdd={handleAdd}
           />
@@ -609,6 +618,13 @@ function Dashboard() {
         open={showAnnouncementManager}
         onClose={() =>
           setShowAnnouncementManager(false)
+        }
+      />
+
+      <HomeMusicManager
+        open={showHomeMusicManager}
+        onClose={() =>
+          setShowHomeMusicManager(false)
         }
       />
     </Layout>

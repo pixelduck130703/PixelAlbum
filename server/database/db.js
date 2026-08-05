@@ -47,6 +47,9 @@ pool.on("error", (error) => {
 });
 
 async function initializeDatabase() {
+  /*
+   * Bảng người dùng / album.
+   */
   await pool.query(`
     CREATE TABLE IF NOT EXISTS people (
       id SERIAL PRIMARY KEY,
@@ -68,6 +71,9 @@ async function initializeDatabase() {
 
   console.log("✅ Bảng people đã sẵn sàng");
 
+  /*
+   * Bảng thông báo trang chủ.
+   */
   await pool.query(`
     CREATE TABLE IF NOT EXISTS announcements (
       id INTEGER PRIMARY KEY,
@@ -91,6 +97,66 @@ async function initializeDatabase() {
   `);
 
   console.log("✅ Bảng announcements đã sẵn sàng");
+
+  /*
+   * Danh sách bài hát được tải lên Cloudinary.
+   * File nhạc không lưu trực tiếp trong PostgreSQL.
+   * PostgreSQL chỉ lưu tên bài hát, URL và public_id.
+   */
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS music_tracks (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      music_url TEXT NOT NULL,
+      public_id TEXT NOT NULL UNIQUE,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  console.log("✅ Bảng music_tracks đã sẵn sàng");
+
+  /*
+   * Bảng lưu bài hát đang được chọn phát trên trang Home.
+   *
+   * Chỉ sử dụng một dòng có id = 1.
+   * track_id = NULL nghĩa là không phát nhạc.
+   */
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS home_music (
+      id INTEGER PRIMARY KEY,
+      track_id INTEGER,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+      CONSTRAINT home_music_single_row
+        CHECK (id = 1),
+
+      CONSTRAINT home_music_track_id_fkey
+        FOREIGN KEY (track_id)
+        REFERENCES music_tracks(id)
+        ON DELETE SET NULL
+    )
+  `);
+
+  /*
+   * Tạo cấu hình nhạc mặc định.
+   * NULL nghĩa là trang Home chưa phát bài hát nào.
+   */
+  await pool.query(`
+    INSERT INTO home_music (
+      id,
+      track_id,
+      updated_at
+    )
+    VALUES (
+      1,
+      NULL,
+      NOW()
+    )
+    ON CONFLICT (id) DO NOTHING
+  `);
+
+  console.log("✅ Bảng home_music đã sẵn sàng");
 }
 
 async function testDatabaseConnection() {

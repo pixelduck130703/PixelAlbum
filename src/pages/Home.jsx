@@ -17,6 +17,7 @@ import HomeStatistics from "../components/HomeStatistics";
 import DailyQuote from "../components/DailyQuote";
 import Announcement from "../components/Announcement";
 import ScrollReveal from "../components/ScrollReveal";
+import HomeMusicPlayer from "../components/HomeMusicPlayer";
 
 const today = new Date();
 
@@ -549,7 +550,7 @@ function Home() {
           </section>
         </ScrollReveal>
       </main>
-      
+      <HomeMusicPlayer />
       <Footer />
     </div>
   );
