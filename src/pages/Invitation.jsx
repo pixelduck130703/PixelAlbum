@@ -859,13 +859,7 @@ function Invitation() {
             </div>
 
             {/* Quay lại */}
-            <Link
-                to="/"
-                className="fixed left-3 top-3 z-50 inline-flex min-h-[44px] items-center gap-2 rounded-full border border-blue-200 bg-white/90 px-3 py-2 text-sm font-semibold text-blue-700 shadow-lg backdrop-blur-md transition hover:bg-blue-50 sm:left-6 sm:top-6 sm:px-4"
-            >
-                <span aria-hidden="true">←</span>
-                <span className="hidden sm:inline">{t.back}</span>
-            </Link>
+            
 
             {/* Chuyển ngôn ngữ */}
             <LanguageSwitcher
