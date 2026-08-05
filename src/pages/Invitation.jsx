@@ -9,7 +9,7 @@ const PHONE_NUMBER = "0353 463 942";
 const PHONE_DISPLAY = "0353 463 942";
 const MAP_URL = "https://maps.app.goo.gl/DZYdV7Dw1UVcMa3F8";
 const MUSIC_URL = "/music/graduation.mp3";
-const MUSIC_TITLE = "Graduation Music";
+const MUSIC_TITLE = "A LITTLE DREAM OF ME";
 
 
 const INVITATION_ANIMATIONS = `
