@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
-const GRADUATION_DATE = new Date("2026-09-15T08:00:00+07:00");
+const GRADUATION_DATE = new Date("2026-09-05T08:00:00+07:00");
 
 const GRADUATE_NAME = "NGUYỄN TUẤN HÙNG";
 const GRADUATE_IMAGE = "/images/graduation-avatar.jpg";
@@ -475,7 +475,7 @@ const TRANSLATIONS = {
         minute: "Phút",
         second: "Giây",
         eventDateLabel: "Ngày tổ chức",
-        eventDate: "Thứ Ba, 15/09/2026",
+        eventDate: "Thứ Bảy, 05/09/2026",
         eventTimeLabel: "Thời gian",
         eventTime: "08:00 sáng",
         locationLabel: "Địa điểm",
@@ -511,7 +511,7 @@ const TRANSLATIONS = {
         minute: "Minutes",
         second: "Seconds",
         eventDateLabel: "Date",
-        eventDate: "Tuesday, September 15, 2026",
+        eventDate: "Saturday, September 5, 2026",
         eventTimeLabel: "Time",
         eventTime: "8:00 AM",
         locationLabel: "Venue",
@@ -546,7 +546,7 @@ const TRANSLATIONS = {
         minute: "分钟",
         second: "秒",
         eventDateLabel: "日期",
-        eventDate: "2026年9月15日，星期二",
+        eventDate: "2026年9月5日，星期六",
         eventTimeLabel: "时间",
         eventTime: "上午8:00",
         locationLabel: "地点",
