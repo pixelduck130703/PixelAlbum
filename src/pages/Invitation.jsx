@@ -243,10 +243,21 @@ const INVITATION_ANIMATIONS = `
   .utc-card-light {
     position: relative;
     overflow: hidden;
-    background: rgba(255,255,255,0.9);
+    border: 1px solid rgba(255,255,255,0.72);
+    background:
+      linear-gradient(
+        135deg,
+        rgba(255,255,255,0.76),
+        rgba(239,246,255,0.54)
+      );
     box-shadow:
-      0 18px 45px rgba(30,64,175,0.10),
-      inset 0 1px 0 rgba(255,255,255,0.9);
+      0 18px 50px rgba(30,64,175,0.12),
+      inset 0 1px 0 rgba(255,255,255,0.95);
+    -webkit-backdrop-filter: blur(10px) saturate(125%);
+    backdrop-filter: blur(10px) saturate(125%);
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    will-change: transform, opacity;
   }
 
   .utc-card-light::after {
@@ -431,6 +442,298 @@ const INVITATION_ANIMATIONS = `
     opacity: 0.35;
   }
 
+
+  /* =========================
+     GLASSMORPHISM + 60 FPS
+     ========================= */
+
+  .glass-panel {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.72);
+    background:
+      linear-gradient(
+        135deg,
+        rgba(255,255,255,0.78),
+        rgba(239,246,255,0.56)
+      );
+    box-shadow:
+      0 18px 50px rgba(30,64,175,0.12),
+      inset 0 1px 0 rgba(255,255,255,0.95);
+    -webkit-backdrop-filter: blur(10px) saturate(125%);
+    backdrop-filter: blur(10px) saturate(125%);
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    will-change: transform, opacity;
+  }
+
+  .glass-panel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(
+        120deg,
+        rgba(255,255,255,0.5),
+        transparent 35%,
+        rgba(59,130,246,0.08) 68%,
+        transparent
+      );
+    transform: translate3d(-110%, 0, 0);
+    animation: glassSweep 8s cubic-bezier(.22,1,.36,1) infinite;
+  }
+
+  .glass-panel > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .glass-panel-hover {
+    transition:
+      transform 320ms cubic-bezier(.22,1,.36,1),
+      box-shadow 320ms cubic-bezier(.22,1,.36,1),
+      border-color 320ms ease;
+  }
+
+  .glass-panel-hover:hover {
+    transform: translate3d(0,-6px,0) scale(1.012);
+    border-color: rgba(245,158,11,0.52);
+    box-shadow:
+      0 26px 65px rgba(30,64,175,0.18),
+      inset 0 1px 0 rgba(255,255,255,0.96);
+  }
+
+  @keyframes glassSweep {
+    0%, 18% {
+      transform: translate3d(-115%, 0, 0);
+    }
+    56%, 100% {
+      transform: translate3d(115%, 0, 0);
+    }
+  }
+
+  /* Chỉ tăng tốc GPU cho các phần tử thực sự chuyển động liên tục */
+  .route-train,
+  .route-train-mobile,
+  .animated-rail-line,
+  .music-button-playing {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    will-change: transform, opacity;
+  }
+
+  @keyframes railDashMove {
+    from {
+      stroke-dashoffset: 0;
+    }
+    to {
+      stroke-dashoffset: -220;
+    }
+  }
+
+  @keyframes trainAlongRoute {
+    0% {
+      offset-distance: 0%;
+      opacity: 0;
+    }
+    6% {
+      opacity: 0.24;
+    }
+    92% {
+      opacity: 0.24;
+    }
+    100% {
+      offset-distance: 100%;
+      opacity: 0;
+    }
+  }
+
+  @keyframes trainLightBlink {
+    0%, 100% {
+      opacity: 0.35;
+      transform: scale(0.9);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.2);
+    }
+  }
+
+  @keyframes wheelSpin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .animated-rail-line {
+    stroke-dasharray: 18 14;
+    animation: railDashMove 10s linear infinite;
+    transform: translateZ(0);
+    will-change: stroke-dashoffset;
+  }
+
+  .route-train {
+    offset-path: path("M -120 135 C 110 40 260 210 470 118 S 830 40 1110 128 S 1390 210 1580 92");
+    offset-rotate: auto;
+    animation: trainAlongRoute 22s linear infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+    will-change: offset-distance, opacity;
+  }
+
+  .route-train-mobile {
+    offset-path: path("M -90 92 C 80 20 190 138 340 78 S 590 24 790 92");
+    offset-rotate: auto;
+    animation: trainAlongRoute 16s linear infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+    will-change: offset-distance, opacity;
+  }
+
+  .train-wheel {
+    transform-origin: center;
+    animation: wheelSpin 1.2s linear infinite;
+  }
+
+  .train-light {
+    animation: trainLightBlink 1.8s ease-in-out infinite;
+  }
+
+
+  /* =========================
+     MOBILE STABILITY MODE
+     Giảm nháy, giật và lỗi render trên Safari/Chrome mobile
+     ========================= */
+  @media (max-width: 767px) {
+    .glass-panel,
+    .utc-card-light {
+      -webkit-backdrop-filter: none !important;
+      backdrop-filter: none !important;
+      background:
+        linear-gradient(
+          135deg,
+          rgba(255,255,255,0.97),
+          rgba(239,246,255,0.94)
+        ) !important;
+      border-color: rgba(191,219,254,0.72) !important;
+      box-shadow:
+        0 12px 28px rgba(30,64,175,0.10),
+        inset 0 1px 0 rgba(255,255,255,0.95) !important;
+      transform: none !important;
+      backface-visibility: visible !important;
+      will-change: auto !important;
+      contain: none !important;
+    }
+
+    .glass-panel::before,
+    .utc-card-light::after {
+      display: none !important;
+      animation: none !important;
+    }
+
+    .glass-panel-hover,
+    .glass-panel-hover:hover {
+      transform: none !important;
+      box-shadow:
+        0 12px 28px rgba(30,64,175,0.10),
+        inset 0 1px 0 rgba(255,255,255,0.95) !important;
+    }
+
+    .inv-fade-up,
+    .inv-fade-down,
+    .inv-zoom-in {
+      animation-duration: 0.55s !important;
+      filter: none !important;
+      will-change: auto !important;
+    }
+
+    .inv-float,
+    .it-watermark-float,
+    .it-watermark-slide,
+    .utc-vehicle {
+      animation: none !important;
+      transform: none !important;
+      will-change: auto !important;
+    }
+
+    .inv-glow {
+      animation: none !important;
+      opacity: 0.18 !important;
+      filter: blur(18px) !important;
+      will-change: auto !important;
+    }
+
+    .inv-twinkle {
+      animation-duration: 7s !important;
+      will-change: auto !important;
+    }
+
+    .inv-number {
+      animation-duration: 4s !important;
+      will-change: auto !important;
+    }
+
+    .animated-rail-line {
+      animation-duration: 20s !important;
+      will-change: stroke-dashoffset !important;
+    }
+
+    .route-train {
+      display: none !important;
+    }
+
+    .route-train-mobile {
+      animation-duration: 24s !important;
+      will-change: offset-distance, opacity !important;
+    }
+
+    .train-wheel {
+      animation-duration: 2.8s !important;
+    }
+
+    .train-light {
+      animation-duration: 3.2s !important;
+    }
+
+    .network-line,
+    .network-node,
+    .circuit-path,
+    .data-packet,
+    .traffic-route,
+    .signal-light,
+    .background-train-desktop {
+      display: none !important;
+      animation: none !important;
+    }
+
+    .background-train-mobile {
+      animation-duration: 28s !important;
+      opacity: 0.11 !important;
+      will-change: transform, opacity !important;
+    }
+
+    .music-button-playing {
+      animation-duration: 4s !important;
+    }
+
+    .utc-road-pattern {
+      animation-duration: 24s !important;
+    }
+
+    /* Hạn chế số lớp trong suốt cùng lúc trên mobile */
+    .it-watermark-float {
+      opacity: 0.38 !important;
+    }
+
+    .it-watermark-slide {
+      opacity: 0.14 !important;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .inv-fade-up,
     .inv-fade-down,
@@ -451,7 +754,13 @@ const INVITATION_ANIMATIONS = `
     .music-bar-three,
     .music-label-enter,
     .it-watermark-float,
-    .it-watermark-slide {
+    .it-watermark-slide,
+    .glass-panel::before,
+    .animated-rail-line,
+    .route-train,
+    .route-train-mobile,
+    .train-wheel,
+    .train-light {
       animation: none !important;
     }
   }
@@ -861,6 +1170,9 @@ function Invitation() {
             {/* Quay lại */}
             
 
+            {/* Xe lửa chạy trên tuyến đường */}
+            <AnimatedRouteTrain />
+
             {/* Chuyển ngôn ngữ */}
             <LanguageSwitcher
                 language={language}
@@ -1036,7 +1348,7 @@ function Invitation() {
                 </section>
 
                 {/* Học vị */}
-                <section className="utc-card-light inv-fade-up inv-delay-3 mt-9 w-full max-w-3xl rounded-3xl border border-blue-200 p-5 sm:p-7">
+                <section className="utc-card-light glass-panel glass-panel-hover inv-fade-up inv-delay-3 mt-9 w-full max-w-3xl rounded-3xl border border-white/70 p-5 sm:p-7">
                     <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
                         <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-blue-200 bg-blue-50 text-3xl text-blue-700">
                             💻
@@ -1070,7 +1382,7 @@ function Invitation() {
                             </p>
                         </div>
                     ) : (
-                        <div className="utc-card-light mt-5 grid grid-cols-4 overflow-hidden rounded-3xl border border-blue-200">
+                        <div className="utc-card-light glass-panel mt-5 grid grid-cols-4 overflow-hidden rounded-3xl border border-white/70">
                             <CountdownItem
                                 value={countdown.days}
                                 label={t.day}
@@ -1178,7 +1490,7 @@ function Invitation() {
                     role="presentation"
                 >
                     <div
-                        className="inv-modal w-full max-w-sm rounded-3xl border border-blue-200 bg-white p-6 text-slate-900 shadow-2xl"
+                        className="inv-modal glass-panel w-full max-w-sm rounded-3xl border border-white/70 p-6 text-slate-900 shadow-2xl"
                         onClick={(event) => event.stopPropagation()}
                         role="dialog"
                         aria-modal="true"
@@ -1230,7 +1542,7 @@ function Invitation() {
                 <div
                     className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 p-4 backdrop-blur-md"
                 >
-                    <div className="inv-modal w-full max-w-md rounded-3xl bg-white p-7 text-center shadow-2xl">
+                    <div className="inv-modal glass-panel w-full max-w-md rounded-3xl border border-white/70 p-7 text-center shadow-2xl">
 
                         <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-blue-100 text-5xl">
                             🎵
@@ -1266,6 +1578,209 @@ function Invitation() {
 
 
 
+
+
+function AnimatedRouteTrain() {
+    return (
+        <div
+            className="pointer-events-none absolute inset-x-0 bottom-[2%] z-[4] h-[180px] overflow-hidden sm:h-[260px]"
+            aria-hidden="true"
+        >
+            {/* Desktop / tablet */}
+            <svg
+                className="hidden h-full w-full md:block"
+                viewBox="0 0 1440 240"
+                preserveAspectRatio="none"
+            >
+                <defs>
+                    <linearGradient id="railGradientDesktop" x1="0" x2="1">
+                        <stop offset="0%" stopColor="#2563eb" />
+                        <stop offset="55%" stopColor="#0ea5e9" />
+                        <stop offset="100%" stopColor="#f59e0b" />
+                    </linearGradient>
+
+                    <filter id="trainSoftGlowDesktop">
+                        <feGaussianBlur stdDeviation="2" result="blur" />
+                        <feMerge>
+                            <feMergeNode in="blur" />
+                            <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                    </filter>
+                </defs>
+
+                <path
+                    d="M -120 135 C 110 40 260 210 470 118 S 830 40 1110 128 S 1390 210 1580 92"
+                    fill="none"
+                    stroke="rgba(37,99,235,0.14)"
+                    strokeWidth="10"
+                />
+
+                <path
+                    className="animated-rail-line"
+                    d="M -120 135 C 110 40 260 210 470 118 S 830 40 1110 128 S 1390 210 1580 92"
+                    fill="none"
+                    stroke="url(#railGradientDesktop)"
+                    strokeWidth="3"
+                    filter="url(#trainSoftGlowDesktop)"
+                />
+
+                {[100, 330, 560, 790, 1030, 1260].map((cx, index) => (
+                    <g key={cx}>
+                        <circle
+                            cx={cx}
+                            cy={index % 2 === 0 ? 104 : 142}
+                            r="10"
+                            fill="rgba(255,255,255,0.92)"
+                            stroke={index % 2 === 0 ? "#2563eb" : "#f59e0b"}
+                            strokeWidth="4"
+                        />
+                        <circle
+                            className="train-light"
+                            cx={cx}
+                            cy={index % 2 === 0 ? 104 : 142}
+                            r="4"
+                            fill={index % 2 === 0 ? "#2563eb" : "#f59e0b"}
+                            style={{ animationDelay: `${index * 0.28}s` }}
+                        />
+                    </g>
+                ))}
+
+                <g className="route-train">
+                    <g transform="translate(-65,-30)">
+                        <rect
+                            x="0"
+                            y="0"
+                            width="130"
+                            height="50"
+                            rx="18"
+                            fill="rgba(255,255,255,0.82)"
+                            stroke="#2563eb"
+                            strokeWidth="3"
+                        />
+                        <path
+                            d="M98 0 H130 V50 H110 Z"
+                            fill="rgba(245,158,11,0.32)"
+                        />
+                        {[16, 44, 72].map((x) => (
+                            <rect
+                                key={x}
+                                x={x}
+                                y="13"
+                                width="18"
+                                height="14"
+                                rx="4"
+                                fill="rgba(37,99,235,0.22)"
+                                stroke="rgba(37,99,235,0.45)"
+                            />
+                        ))}
+                        <circle
+                            className="train-light"
+                            cx="119"
+                            cy="17"
+                            r="5"
+                            fill="#f59e0b"
+                        />
+                        <circle
+                            className="train-wheel"
+                            cx="30"
+                            cy="52"
+                            r="8"
+                            fill="white"
+                            stroke="#1e3a8a"
+                            strokeWidth="4"
+                        />
+                        <circle
+                            className="train-wheel"
+                            cx="98"
+                            cy="52"
+                            r="8"
+                            fill="white"
+                            stroke="#1e3a8a"
+                            strokeWidth="4"
+                        />
+                    </g>
+                </g>
+            </svg>
+
+            {/* Mobile */}
+            <svg
+                className="h-full w-full opacity-70 md:hidden"
+                viewBox="0 0 720 160"
+                preserveAspectRatio="none"
+            >
+                <defs>
+                    <linearGradient id="railGradientMobile" x1="0" x2="1">
+                        <stop offset="0%" stopColor="#2563eb" />
+                        <stop offset="100%" stopColor="#f59e0b" />
+                    </linearGradient>
+                </defs>
+
+                <path
+                    d="M -90 92 C 80 20 190 138 340 78 S 590 24 790 92"
+                    fill="none"
+                    stroke="rgba(37,99,235,0.14)"
+                    strokeWidth="8"
+                />
+
+                <path
+                    className="animated-rail-line"
+                    d="M -90 92 C 80 20 190 138 340 78 S 590 24 790 92"
+                    fill="none"
+                    stroke="url(#railGradientMobile)"
+                    strokeWidth="2.5"
+                />
+
+                <g className="route-train-mobile">
+                    <g transform="translate(-45,-20)">
+                        <rect
+                            x="0"
+                            y="0"
+                            width="90"
+                            height="34"
+                            rx="13"
+                            fill="rgba(255,255,255,0.86)"
+                            stroke="#2563eb"
+                            strokeWidth="2.5"
+                        />
+                        <path
+                            d="M68 0 H90 V34 H76 Z"
+                            fill="rgba(245,158,11,0.32)"
+                        />
+                        {[12, 32, 52].map((x) => (
+                            <rect
+                                key={x}
+                                x={x}
+                                y="9"
+                                width="12"
+                                height="10"
+                                rx="3"
+                                fill="rgba(37,99,235,0.25)"
+                            />
+                        ))}
+                        <circle
+                            className="train-wheel"
+                            cx="22"
+                            cy="36"
+                            r="6"
+                            fill="white"
+                            stroke="#1e3a8a"
+                            strokeWidth="3"
+                        />
+                        <circle
+                            className="train-wheel"
+                            cx="68"
+                            cy="36"
+                            r="6"
+                            fill="white"
+                            stroke="#1e3a8a"
+                            strokeWidth="3"
+                        />
+                    </g>
+                </g>
+            </svg>
+        </div>
+    );
+}
 
 function InformationTechnologyWatermark() {
     const desktopTechnologies = [
@@ -1707,7 +2222,7 @@ function InvitationInfo({
     value,
 }) {
     return (
-        <div className="utc-card-light flex min-h-[160px] flex-col items-center justify-center rounded-3xl border border-blue-200 p-5 text-center transition hover:-translate-y-1 hover:border-amber-300">
+        <div className="utc-card-light glass-panel glass-panel-hover flex min-h-[160px] flex-col items-center justify-center rounded-3xl border border-white/70 p-5 text-center">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-blue-200 bg-blue-50 text-3xl">
                 {icon}
             </div>
