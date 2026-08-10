@@ -49,8 +49,8 @@ function SearchBox({
           <span className="sm:hidden">TÔI LƯU VỀ BẠN</span>
         </h1>
 
-        <p className="mx-auto mt-3 text-lg leading-6 text-slate-500">
-          Tìm theo ngày sinh hoặc họ tên, chỉ chọn một cách.
+        <p className="mx-auto mt-4 text-lg leading-6 text-slate-500">
+          Tìm theo ngày sinh hoặc họ tên, chọn 1 trong 2 cách.
         </p>
       </div>
 

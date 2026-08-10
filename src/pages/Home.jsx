@@ -192,14 +192,17 @@ function Home() {
     };
   }, []);
 
-  const normalizeText = (value) => {
-    return String(value || "")
-      .trim()
+  function normalizeText(text) {
+    return String(text || "")
       .toLowerCase()
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
-      .replace(/\s+/g, " ");
-  };
+      .replace(/đ/g, "d")
+      // Bỏ tất cả ký tự đặc biệt
+      .replace(/[^a-z0-9\s]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
 
   const results = useMemo(() => {
     if (!hasSearched) {
