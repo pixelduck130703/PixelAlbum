@@ -131,7 +131,7 @@ function PersonTable({
                         <div className="min-w-0 flex-1">
                           <p
                             title={person.name || "Chưa cập nhật"}
-                            className="truncate text-[15px] font-semibold text-slate-800 transition group-hover:text-blue-700"
+                            className="truncate text-[18px] font-bold text-slate-800 transition group-hover:text-blue-700"
                           >
                             {person.name || "Chưa cập nhật"}
                           </p>

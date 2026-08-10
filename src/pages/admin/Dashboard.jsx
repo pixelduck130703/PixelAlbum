@@ -281,6 +281,25 @@ function Dashboard() {
     setLoadingTodayAlbumViews,
   ] = useState(false);
 
+  const getTodayVietnam = () => {
+    return new Intl.DateTimeFormat(
+      "en-CA",
+      {
+        timeZone: "Asia/Ho_Chi_Minh",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }
+    ).format(new Date());
+  };
+
+  const [
+    albumViewDate,
+    setAlbumViewDate,
+  ] = useState(
+    getTodayVietnam()
+  );
+
   const loadPeople = async () => {
     try {
       setLoading(true);
@@ -334,19 +353,22 @@ function Dashboard() {
   const [birthdayMonthPeople, setBirthdayMonthPeople] =
     useState([]);
 
-  const handleShowTodayAlbumViews = async () => {
-    if (loadingTodayAlbumViews) {
-      return;
-    }
-
+  const loadAlbumViewsByDate = async (date) => {
     try {
       setLoadingTodayAlbumViews(true);
 
       const response = await api.get(
-        "/admin/today-album-views"
+        "/admin/album-views",
+        {
+          params: {
+            date,
+          },
+        }
       );
 
-      const list = Array.isArray(response.data?.data)
+      const list = Array.isArray(
+        response.data?.data
+      )
         ? response.data.data
         : [];
 
@@ -354,18 +376,65 @@ function Dashboard() {
 
       setTodayAlbumViewSummary({
         totalAlbums:
-          Number(response.data?.totalAlbums) || 0,
+          Number(
+            response.data?.totalAlbums
+          ) || 0,
 
         totalViews:
-          Number(response.data?.totalViews) || 0,
+          Number(
+            response.data?.totalViews
+          ) || 0,
+      });
+    } catch (error) {
+      console.error(
+        "Lỗi tải lịch sử xem album:",
+        error
+      );
+
+      setTodayAlbumViews([]);
+
+      setTodayAlbumViewSummary({
+        totalAlbums: 0,
+        totalViews: 0,
       });
 
-      setShowTodayAlbumViewsModal(true);
-    } catch (error) {
-      //xóa thông báo
+      toast.error(
+        "Không thể tải lịch sử xem album."
+      );
     } finally {
       setLoadingTodayAlbumViews(false);
     }
+  };
+
+  const handleShowTodayAlbumViews = async () => {
+    if (loadingTodayAlbumViews) {
+      return;
+    }
+
+    const today =
+      getTodayVietnam();
+
+    setAlbumViewDate(today);
+
+    setShowTodayAlbumViewsModal(true);
+
+    await loadAlbumViewsByDate(
+      today
+    );
+  };
+
+  const handleAlbumViewDateChange = async (
+    date
+  ) => {
+    if (!date) {
+      return;
+    }
+
+    setAlbumViewDate(date);
+
+    await loadAlbumViewsByDate(
+      date
+    );
   };
 
   const handleAdd = () => {
@@ -606,11 +675,34 @@ function Dashboard() {
       />
 
       <TodayAlbumViewsModal
-        open={showTodayAlbumViewsModal}
-        people={todayAlbumViews}
-        summary={todayAlbumViewSummary}
+        open={
+          showTodayAlbumViewsModal
+        }
+
+        people={
+          todayAlbumViews
+        }
+
+        summary={
+          todayAlbumViewSummary
+        }
+
+        selectedDate={
+          albumViewDate
+        }
+
+        loading={
+          loadingTodayAlbumViews
+        }
+
+        onDateChange={
+          handleAlbumViewDateChange
+        }
+
         onClose={() =>
-          setShowTodayAlbumViewsModal(false)
+          setShowTodayAlbumViewsModal(
+            false
+          )
         }
       />
 

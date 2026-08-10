@@ -2395,79 +2395,141 @@ app.use((error, req, res, next) => {
 ========================== */
 
 app.get(
-  "/api/admin/today-album-views",
+  "/api/admin/album-views",
   verifyAdminToken,
   async (req, res) => {
     try {
-      const result = await pool.query(`
-        SELECT
-          p.id,
-          p."publicId",
-          p.name,
-          p.avatar,
-          p.birthday,
-          p.album,
-          p."albumViews",
+      /*
+       * Nếu frontend không gửi date
+       * thì mặc định lấy ngày hôm nay.
+       */
+      const requestedDate =
+        String(req.query.date || "").trim();
 
-          daily.views AS "todayViews",
-          daily.last_viewed_at AS "lastViewedAt",
-          daily.view_times AS "viewTimes",
-          daily.view_details AS "viewDetails"
+      let selectedDate =
+        requestedDate;
 
-        FROM album_view_by_person_daily daily
+      /*
+       * Kiểm tra YYYY-MM-DD
+       */
+      if (
+        !/^\d{4}-\d{2}-\d{2}$/.test(
+          selectedDate
+        )
+      ) {
+        const todayResult =
+          await pool.query(`
+            SELECT
+              TO_CHAR(
+                NOW()
+                AT TIME ZONE 'Asia/Ho_Chi_Minh',
+                'YYYY-MM-DD'
+              ) AS date
+          `);
 
-        INNER JOIN people p
-          ON p.id = daily.person_id
+        selectedDate =
+          todayResult.rows[0].date;
+      }
 
-        WHERE daily.view_date =
-          (
-            NOW()
-            AT TIME ZONE 'Asia/Ho_Chi_Minh'
-          )::date
+      /*
+       * Lấy danh sách album được xem
+       * trong ngày được chọn.
+       */
+      const result =
+        await pool.query(
+          `
+            SELECT
+              p.id,
+              p."publicId",
+              p.name,
+              p.avatar,
+              p.birthday,
+              p.album,
+              p."albumViews",
 
-        ORDER BY
-          daily.last_viewed_at DESC,
-          daily.views DESC,
-          p.name ASC
-      `);
+              daily.views
+                AS "todayViews",
 
-      const data = result.rows.map((person) => ({
-        ...person,
+              daily.last_viewed_at
+                AS "lastViewedAt",
 
-        todayViews:
-          Number(person.todayViews) || 0,
+              daily.view_times
+                AS "viewTimes",
 
-        viewTimes:
-          Array.isArray(person.viewTimes)
-            ? person.viewTimes
-            : [],
+              daily.view_details
+                AS "viewDetails"
 
-        viewDetails:
-          Array.isArray(person.viewDetails)
-            ? person.viewDetails
-            : [],
-      }));
+            FROM album_view_by_person_daily daily
 
-      const totalViews = data.reduce(
-        (total, person) =>
-          total + person.todayViews,
-        0
-      );
+            INNER JOIN people p
+              ON p.id = daily.person_id
+
+            WHERE
+              daily.view_date = $1::date
+
+            ORDER BY
+              daily.last_viewed_at DESC,
+              daily.views DESC,
+              p.name ASC
+          `,
+          [selectedDate]
+        );
+
+      const data =
+        result.rows.map(
+          (person) => ({
+            ...person,
+
+            todayViews:
+              Number(
+                person.todayViews
+              ) || 0,
+
+            viewTimes:
+              Array.isArray(
+                person.viewTimes
+              )
+                ? person.viewTimes
+                : [],
+
+            viewDetails:
+              Array.isArray(
+                person.viewDetails
+              )
+                ? person.viewDetails
+                : [],
+          })
+        );
+
+      const totalViews =
+        data.reduce(
+          (total, person) =>
+            total +
+            Number(
+              person.todayViews || 0
+            ),
+          0
+        );
 
       return res.json({
-        totalAlbums: data.length,
+        date: selectedDate,
+
+        totalAlbums:
+          data.length,
+
         totalViews,
+
         data,
       });
     } catch (error) {
       console.error(
-        "Lỗi lấy album được xem hôm nay:",
+        "Lỗi lấy lịch sử xem album:",
         error
       );
 
       return res.status(500).json({
         message:
-          "Không thể tải danh sách album được xem hôm nay.",
+          "Không thể tải lịch sử xem album.",
       });
     }
   }
