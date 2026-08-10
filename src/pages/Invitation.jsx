@@ -172,6 +172,7 @@ const TRANSLATIONS = {
         degree: "Cử nhân Công nghệ Thông tin",
         course: "Khóa học 2022 – 2026",
         ceremonyStarted: "Lễ tốt nghiệp đã bắt đầu!",
+        countdownTitle: "Đếm ngược đến lễ tốt nghiệp",
         day: "Ngày",
         hour: "Giờ",
         minute: "Phút",
@@ -208,6 +209,7 @@ const TRANSLATIONS = {
         degree: "Information of Technology",
         course: "Academic years 2022 – 2026",
         ceremonyStarted: "The graduation ceremony has begun!",
+        countdownTitle: "Countdown to graduation",
         day: "Days",
         hour: "Hours",
         minute: "Minutes",
@@ -243,6 +245,7 @@ const TRANSLATIONS = {
         degree: "信息技术学士",
         course: "2022—2026学年",
         ceremonyStarted: "毕业典礼已经开始！",
+        countdownTitle: "毕业典礼倒计时",
         day: "天",
         hour: "小时",
         minute: "分钟",
@@ -269,6 +272,7 @@ const TRANSLATIONS = {
 };
 
 function Invitation() {
+    const [showCampusMap, setShowCampusMap] = useState(false);
     const [currentTime, setCurrentTime] = useState(new Date());
     const [showPhone, setShowPhone] = useState(false);
     const audioRef = useRef(null);
@@ -510,27 +514,178 @@ function Invitation() {
                 <GraduationSash side="right" />
             </div>
 
+            {/* =========================
+    SASH MINI MOBILE / TABLET
+========================= */}
+
+            {/* Sash trái */}
+            <div className="inv-sash-left pointer-events-none fixed left-0 top-[118px] z-[2] xl:hidden">
+                <div className="relative h-[350px] w-[38px] sm:w-[42px]">
+                    <div
+                        className="absolute inset-x-0 top-0 h-[326px] overflow-hidden bg-gradient-to-b from-blue-950 via-blue-700 to-blue-800 shadow-[0_14px_32px_rgba(30,64,175,0.22)]"
+                        style={{
+                            clipPath:
+                                "polygon(6% 0,94% 0,100% 90%,50% 100%,0 90%)",
+                        }}
+                    >
+                        {/* Vân vải */}
+                        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.13),transparent_24%,rgba(255,255,255,0.04)_52%,transparent_76%,rgba(0,0,0,0.09))]" />
+
+                        <div className="absolute inset-0 bg-[repeating-linear-gradient(180deg,transparent_0px,transparent_18px,rgba(255,255,255,0.035)_19px)]" />
+
+                        {/* Viền ngoài */}
+                        <div
+                            className="absolute inset-[3px] border border-amber-300/80"
+                            style={{
+                                clipPath:
+                                    "polygon(6% 0,94% 0,100% 90%,50% 100%,0 90%)",
+                            }}
+                        />
+
+                        {/* Viền trong */}
+                        <div
+                            className="absolute inset-[6px] border border-white/20"
+                            style={{
+                                clipPath:
+                                    "polygon(6% 0,94% 0,100% 90%,50% 100%,0 90%)",
+                            }}
+                        />
+
+                        {/* Logo UTC */}
+                        <div className="absolute inset-x-0 top-5 flex justify-center">
+                            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-sm">
+                                <img
+                                    src="/images/UTC.png"
+                                    alt=""
+                                    className="h-6 w-6 rounded-full object-contain"
+                                />
+                            </div>
+                        </div>
+
+                        {/* K63 */}
+                        <div className="absolute inset-x-0 top-[62px] text-center">
+                            <p className="text-[8px] font-black tracking-[0.12em] text-amber-300">
+                                K63
+                            </p>
+                        </div>
+
+                        {/* Chữ dọc */}
+                        <p className="absolute left-1/2 top-[92px] -translate-x-1/2 [writing-mode:vertical-rl] rotate-180 whitespace-nowrap text-[7px] font-black uppercase tracking-[0.16em] text-white">
+                            Đại học Giao thông Vận tải
+                        </p>
+
+                        {/* 2026 */}
+                        <div className="absolute inset-x-0 bottom-[58px] text-center">
+                            <div className="mx-auto mb-2 h-px w-4 bg-amber-300/80" />
+
+                            <p className="text-[6px] font-black uppercase tracking-[0.12em] text-amber-300">
+                                Class
+                            </p>
+
+                            <p className="mt-1 text-[11px] font-black leading-none text-white">
+                                2026
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Sash phải */}
+            <div className="inv-sash-right pointer-events-none fixed right-0 top-[148px] z-[2] xl:hidden">
+                <div className="relative h-[330px] w-[36px] sm:w-[40px]">
+                    <div
+                        className="absolute inset-x-0 top-0 h-[306px] overflow-hidden bg-gradient-to-b from-white via-blue-50 to-blue-100 shadow-[0_14px_30px_rgba(30,64,175,0.18)]"
+                        style={{
+                            clipPath:
+                                "polygon(6% 0,94% 0,100% 90%,50% 100%,0 90%)",
+                        }}
+                    >
+                        {/* Vân sáng */}
+                        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.95),transparent_34%,rgba(37,99,235,0.03)_66%,rgba(37,99,235,0.08))]" />
+
+                        <div className="absolute inset-0 bg-[repeating-linear-gradient(180deg,transparent_0px,transparent_18px,rgba(37,99,235,0.035)_19px)]" />
+
+                        {/* Viền ngoài */}
+                        <div
+                            className="absolute inset-[3px] border border-blue-700/80"
+                            style={{
+                                clipPath:
+                                    "polygon(6% 0,94% 0,100% 90%,50% 100%,0 90%)",
+                            }}
+                        />
+
+                        {/* Viền trong */}
+                        <div
+                            className="absolute inset-[6px] border border-amber-300/55"
+                            style={{
+                                clipPath:
+                                    "polygon(6% 0,94% 0,100% 90%,50% 100%,0 90%)",
+                            }}
+                        />
+
+                        {/* Tiêu đề nhỏ */}
+                        <div className="absolute inset-x-0 top-5 text-center">
+                            <p className="text-[7px] font-black uppercase tracking-[0.08em] text-blue-900">
+                                IT
+                            </p>
+                        </div>
+
+                        {/* Chữ dọc */}
+                        <p className="absolute left-1/2 top-[58px] -translate-x-1/2 [writing-mode:vertical-rl] whitespace-nowrap text-[12px] font-black uppercase tracking-[0.13em] text-blue-900">
+                            Graduation UTC
+                        </p>
+
+                        {/* Năm */}
+                        <div className="absolute inset-x-0 bottom-[58px] text-center">
+                            <p className="text-[6px] font-black uppercase tracking-[0.08em] text-amber-600">
+                                TUAN
+                            </p>
+
+                            <p className="text-[6px] font-black uppercase tracking-[0.08em] text-amber-600">
+                                HUNG
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {/* Nền trang trí */}
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.10),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.10),transparent_32%)]" />
-            <div className="pointer-events-none absolute -left-40 top-36 h-[500px] w-[500px] rounded-full bg-blue-300/20 blur-3xl" />
-            <div className="pointer-events-none absolute -right-40 bottom-20 h-[500px] w-[500px] rounded-full bg-amber-300/20 blur-3xl" />
+            <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.15),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.14),transparent_34%)]" />
 
-            <div className="pointer-events-none absolute inset-0 opacity-10">
-                <div className="absolute left-[8%] top-[12%] text-4xl text-amber-600">
+                <div className="absolute -left-28 top-20 h-72 w-72 rounded-full bg-blue-300/20 blur-3xl sm:h-[500px] sm:w-[500px]" />
+                <div className="absolute -right-24 top-[38%] h-64 w-64 rounded-full bg-amber-300/20 blur-3xl sm:h-[500px] sm:w-[500px]" />
+
+                <div className="absolute -right-16 top-[620px] h-44 w-44 rounded-full border border-blue-300/30 sm:h-64 sm:w-64">
+                    <div className="absolute left-1/2 top-0 h-full w-px bg-blue-300/20" />
+                    <div className="absolute left-0 top-1/2 h-px w-full bg-blue-300/20" />
+                    <div className="absolute left-1/2 top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-white bg-amber-400 shadow" />
+                </div>
+
+                <div className="absolute left-[-80px] top-[900px] h-[180px] w-[320px] rotate-[-10deg] rounded-[50%] border-b-2 border-blue-200/40 sm:w-[500px]" />
+                <div className="absolute right-[-130px] top-[1280px] h-[200px] w-[360px] rotate-[12deg] rounded-[50%] border-t-2 border-amber-300/40" />
+
+                <div
+                    className="absolute inset-0 opacity-[0.16]"
+                    style={{
+                        backgroundImage:
+                            "radial-gradient(circle, rgba(37,99,235,0.35) 1px, transparent 1px)",
+                        backgroundSize: "28px 28px",
+                    }}
+                />
+
+                <span className="absolute left-[9%] top-[420px] text-3xl text-blue-500/15">
                     ◆
-                </div>
-
-                <div className="absolute right-[12%] top-[8%] text-3xl text-amber-600">
+                </span>
+                <span className="absolute right-[10%] top-[760px] text-3xl text-amber-500/20">
+                    ✦
+                </span>
+                <span className="absolute left-[12%] top-[1180px] text-4xl text-blue-500/10">
+                    ✦
+                </span>
+                <span className="absolute right-[11%] top-[1550px] text-3xl text-amber-500/15">
                     ◆
-                </div>
-
-                <div className="absolute left-[15%] top-[35%] text-2xl text-amber-600">
-                    ✦
-                </div>
-
-                <div className="absolute right-[18%] top-[32%] text-3xl text-amber-600">
-                    ✦
-                </div>
+                </span>
             </div>
 
             {/* Watermark Công nghệ thông tin */}
@@ -561,7 +716,7 @@ function Invitation() {
             </div>
 
             {/* Quay lại */}
-            
+
 
             {/* Chuyển ngôn ngữ */}
             <LanguageSwitcher
@@ -670,14 +825,13 @@ function Invitation() {
                 {/* Ảnh đại diện */}
                 <section className="mt-10 text-center">
                     <div className="relative mx-auto w-fit">
+                        {/* Halo phía sau */}
+                        <div className="absolute left-1/2 top-1/2 h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-blue-300/30 sm:h-[355px] sm:w-[355px]" />
+                        <div className="absolute left-1/2 top-1/2 h-[330px] w-[330px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-amber-300/20 sm:h-[385px] sm:w-[385px]" />
 
                         {/* Vòng ngoài */}
-                        <div className="relative h-60 w-60 rounded-full bg-gradient-to-br from-blue-700 via-blue-500 to-amber-400 p-[5px] shadow-[0_20px_60px_rgba(37,99,235,0.25)] sm:h-80 sm:w-80">
-
-                            {/* Vòng trắng */}
+                        <div className="relative h-[270px] w-[270px] rounded-full bg-gradient-to-br from-blue-800 via-blue-500 to-amber-400 p-[5px] shadow-[0_25px_70px_rgba(37,99,235,0.30)] sm:h-80 sm:w-80">
                             <div className="flex h-full w-full items-center justify-center rounded-full bg-white">
-
-                                {/* Ảnh */}
                                 <div className="relative h-[94%] w-[94%] overflow-hidden rounded-full">
                                     <img
                                         src={GRADUATE_IMAGE}
@@ -690,18 +844,15 @@ function Invitation() {
                                         }}
                                     />
 
-                                    {/* Overlay */}
                                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900/25 via-transparent to-transparent" />
                                 </div>
                             </div>
                         </div>
 
-                        {/* Icon tốt nghiệp */}
-                        <div className="absolute bottom-3 right-3 flex h-16 w-16 items-center justify-center rounded-full border-4 border-white bg-gradient-to-br from-amber-400 to-yellow-500 text-3xl shadow-xl">
+                        <div className="absolute bottom-2 right-2 flex h-16 w-16 items-center justify-center rounded-full border-4 border-white bg-gradient-to-br from-amber-400 to-yellow-500 text-3xl shadow-xl sm:bottom-3 sm:right-3">
                             🎓
                         </div>
 
-                        {/* Chấm trang trí */}
                         <div className="absolute left-3 top-6 h-3 w-3 rounded-full bg-blue-500 shadow-lg" />
                         <div className="absolute right-6 top-10 h-2.5 w-2.5 rounded-full bg-amber-400 shadow-lg" />
                         <div className="absolute bottom-8 left-6 h-2.5 w-2.5 rounded-full bg-blue-300 shadow-lg" />
@@ -719,31 +870,30 @@ function Invitation() {
 
                     <div className="mx-auto mt-5 flex max-w-sm items-center gap-3">
                         <div className="h-[2px] flex-1 bg-gradient-to-r from-transparent via-blue-500 to-amber-400" />
-
                         <span className="text-xl text-amber-500">✦</span>
-
                         <span className="text-xl text-blue-600">◆</span>
-
                         <span className="text-xl text-amber-500">✦</span>
-
                         <div className="h-[2px] flex-1 bg-gradient-to-l from-transparent via-blue-500 to-amber-400" />
                     </div>
                 </section>
 
                 {/* Học vị */}
-                <section className="utc-card-light mt-9 w-full max-w-3xl rounded-3xl border border-blue-200 p-5 sm:p-7">
-                    <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
-                        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-blue-200 bg-blue-50 text-3xl text-blue-700">
+                <section className="utc-card-light relative mt-9 w-full max-w-3xl overflow-hidden rounded-3xl border border-blue-200 p-5 sm:p-7">
+                    <div className="absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b from-blue-600 via-blue-500 to-amber-400" />
+                    <div className="absolute right-[-25px] top-[-25px] h-28 w-28 rounded-full border-[18px] border-blue-100/50" />
+
+                    <div className="relative flex items-center gap-4 sm:gap-5">
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-blue-800 text-2xl text-white shadow-lg sm:h-16 sm:w-16 sm:text-3xl">
                             💻
                         </div>
 
-                        <div>
-                            <h3 className="mt-1 whitespace-nowrap text-center text-[clamp(14px,4vw,30px)] font-black uppercase text-amber-600"
-                            >
+                        <div className="min-w-0 flex-1 text-left">
+
+                            <h3 className="mt-1 text-[15px] font-black uppercase leading-6 text-amber-600 sm:text-2xl">
                                 {t.degree}
                             </h3>
 
-                            <p className="mt-2 text-sm font-medium uppercase tracking-[0.08em] text-slate-600 sm:text-base sm:tracking-[0.12em]">
+                            <p className="mt-1 text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 sm:text-base">
                                 {t.course}
                             </p>
                         </div>
@@ -793,30 +943,32 @@ function Invitation() {
                 </section>
 
                 {/* Thông tin lễ */}
-                <section className="mt-10 grid w-full max-w-5xl grid-cols-1 gap-4 sm:grid-cols-3">
-                    <InvitationInfo
-                        icon="📅"
-                        label={t.eventDateLabel}
-                        value={t.eventDate}
-                    />
+                <section className="utc-card-light mt-10 w-full max-w-4xl overflow-hidden rounded-3xl border border-blue-200">
+                    <div className="divide-y divide-blue-100 sm:grid sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+                        <MobileInfoRow
+                            icon="📅"
+                            label={t.eventDateLabel}
+                            value={t.eventDate}
+                        />
 
-                    <InvitationInfo
-                        icon="🕗"
-                        label={t.eventTimeLabel}
-                        value={t.eventTime}
-                    />
+                        <MobileInfoRow
+                            icon="🕗"
+                            label={t.eventTimeLabel}
+                            value={t.eventTime}
+                        />
 
-                    <InvitationInfo
-                        icon="📍"
-                        label={t.locationLabel}
-                        value={
-                            <>
-                                {t.locationLine1}
-                                <br />
-                                {t.locationLine2}
-                            </>
-                        }
-                    />
+                        <MobileInfoRow
+                            icon="📍"
+                            label={t.locationLabel}
+                            value={
+                                <>
+                                    {t.locationLine1}
+                                    <br />
+                                    {t.locationLine2}
+                                </>
+                            }
+                        />
+                    </div>
                 </section>
 
                 {/* Chữ ký */}
@@ -837,7 +989,7 @@ function Invitation() {
                 </section>
 
                 {/* Nút chức năng */}
-                <div className="mt-10 grid w-full max-w-xl grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="mt-10 grid w-full max-w-3xl grid-cols-1 gap-4 sm:grid-cols-3">
                     <a
                         href={MAP_URL}
                         target="_blank"
@@ -847,6 +999,15 @@ function Invitation() {
                         <span className="text-xl">📍</span>
                         <span>{t.viewMap}</span>
                     </a>
+
+                    <button
+                        type="button"
+                        onClick={() => setShowCampusMap(true)}
+                        className="flex min-h-[56px] items-center justify-center gap-3 rounded-2xl border border-blue-300 bg-white px-6 py-4 font-bold text-blue-700 shadow-xl transition hover:-translate-y-1 hover:scale-[1.02]"
+                    >
+                        <span className="text-xl">🗺️</span>
+                        <span>Sơ đồ trường</span>
+                    </button>
 
                     <button
                         type="button"
@@ -864,6 +1025,36 @@ function Invitation() {
                     </p>
                 </footer>
             </main>
+
+            {showCampusMap && (
+                <div
+                    className="fixed inset-0 z-[110] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+                    onClick={() => setShowCampusMap(false)}
+                >
+                    <div
+                        className="relative inline-block overflow-hidden rounded-3xl bg-white shadow-2xl"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Nút đóng */}
+                        <button
+                            type="button"
+                            onClick={() => setShowCampusMap(false)}
+                            className="absolute right-3 top-3 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-lg transition hover:bg-red-500 hover:text-white"
+                        >
+                            ✕
+                        </button>
+
+                        {/* Ảnh */}
+                        <div className="flex items-center justify-center bg-slate-100 p-2">
+                            <img
+                                src="/images/campus-map.png"
+                                alt="Sơ đồ trường"
+                                className="block h-auto max-h-[92vh] w-auto max-w-[95vw] rounded-xl shadow-xl"
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Popup liên hệ */}
             {showPhone && (
@@ -1041,49 +1232,49 @@ function InformationTechnologyWatermark() {
             name: "AI",
             short: "AI",
             className:
-                "left-2 top-[16%] border-blue-500 bg-blue-100/65 text-blue-800",
+                "left-5 top-[14%] border-blue-400 bg-white/75 text-blue-700",
         },
         {
             name: "SQL",
             short: "SQL",
             className:
-                "right-2 top-[22%] border-amber-500 bg-amber-100/65 text-amber-800",
+                "right-5 top-[20%] border-amber-400 bg-white/75 text-amber-700",
         },
         {
             name: "React",
             short: "⚛",
             className:
-                "left-3 top-[35%] border-cyan-500 bg-cyan-100/65 text-cyan-800",
+                "left-6 top-[33%] border-cyan-400 bg-white/75 text-cyan-700",
         },
         {
             name: "Node",
             short: "JS",
             className:
-                "right-3 top-[42%] border-emerald-500 bg-emerald-100/65 text-emerald-800",
+                "right-6 top-[40%] border-emerald-400 bg-white/75 text-emerald-700",
         },
         {
             name: "Git",
             short: "Git",
             className:
-                "left-2 top-[56%] border-orange-500 bg-orange-100/65 text-orange-800",
+                "left-5 top-[55%] border-orange-400 bg-white/75 text-orange-700",
         },
         {
-            name: "TypeScript",
+            name: "TS",
             short: "TS",
             className:
-                "right-2 top-[63%] border-blue-500 bg-blue-100/65 text-blue-800",
+                "right-5 top-[62%] border-blue-400 bg-white/75 text-blue-700",
         },
         {
             name: "PostgreSQL",
             short: "PG",
             className:
-                "left-3 top-[76%] border-indigo-500 bg-indigo-100/65 text-indigo-800",
+                "left-6 top-[76%] border-indigo-400 bg-white/75 text-indigo-700",
         },
         {
             name: "Docker",
             short: "DK",
             className:
-                "right-3 top-[82%] border-sky-500 bg-sky-100/65 text-sky-800",
+                "right-6 top-[83%] border-sky-400 bg-white/75 text-sky-700",
         },
     ];
 
@@ -1210,40 +1401,51 @@ function InformationTechnologyWatermark() {
 
             {/* Mobile */}
             <div className="md:hidden">
-                {mobileTechnologies.map((item, index) => (
+                <div className="absolute left-1/2 top-[8%] h-28 w-28 -translate-x-1/2 opacity-[0.12]">
+                    <img
+                        src="/images/UTC.png"
+                        alt=""
+                        className="h-full w-full rounded-full object-contain"
+                    />
+                </div>
+
+                <div className="absolute left-1/2 top-[27%] h-32 w-32 -translate-x-1/2 rounded-full border border-blue-500/30">
+                    <div className="absolute left-1/2 top-0 h-full w-px bg-blue-500/20" />
+                    <div className="absolute left-0 top-1/2 h-px w-full bg-blue-500/20" />
+                    <div className="absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-2xl border border-blue-400 bg-white/80 font-mono text-xl font-black text-blue-700">
+                        &lt;/&gt;
+                    </div>
+                </div>
+
+                {mobileTechnologies.map((item) => (
                     <div
                         key={item.name}
-                        className={` absolute flex min-w-[86px] flex-col items-center rounded-2xl border-2 px-3 py-2 shadow-[0_7px_18px_rgba(15,23,42,0.06)] ${item.className}`}
+                        className={`absolute flex min-w-[74px] flex-col items-center rounded-2xl border px-2.5 py-2 shadow-[0_8px_22px_rgba(15,23,42,0.08)] backdrop-blur-sm ${item.className}`}
                         style={{
-                            opacity: 0.42,
+                            opacity: 0.46,
                         }}
                     >
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-current/30 bg-white/95 font-mono text-xl font-black">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-current/20 bg-white/90 font-mono text-lg font-black">
                             {item.short}
                         </div>
 
-                        <p className="mt-1 whitespace-nowrap font-mono text-[10px] font-black uppercase tracking-[0.07em]">
+                        <p className="mt-1 whitespace-nowrap font-mono text-[9px] font-black uppercase tracking-[0.06em]">
                             {item.name}
                         </p>
                     </div>
                 ))}
 
                 <div
-                    className="absolute left-1/2 top-[31%] -translate-x-1/2 rounded-2xl border-2 border-blue-500 bg-blue-100/65/60 px-4 py-3 font-mono text-3xl font-black text-blue-800 shadow-sm"
+                    className="absolute left-1/2 top-[69%] -translate-x-1/2 rounded-2xl border border-amber-400 bg-white/80 px-4 py-3 font-mono text-[11px] font-black tracking-wider text-amber-700 shadow-sm"
                     style={{
-                        opacity: 0.36,
-                    }}
-                >
-                    &lt;/&gt;
-                </div>
-
-                <div
-                    className="absolute left-1/2 top-[69%] -translate-x-1/2 rounded-2xl border-2 border-amber-500 bg-amber-100/65/60 px-4 py-3 font-mono text-lg font-black text-amber-800 shadow-sm"
-                    style={{
-                        opacity: 0.36,
+                        opacity: 0.45,
                     }}
                 >
                     API • DB • CLOUD
+                </div>
+
+                <div className="absolute bottom-[8%] left-1/2 w-[85%] -translate-x-1/2 overflow-hidden whitespace-nowrap text-center font-mono text-[7px] font-bold tracking-[0.18em] text-blue-800 opacity-[0.18]">
+                    01001001 • 01010100 • 00100000 • UTC • 2026
                 </div>
             </div>
         </div>
@@ -1384,24 +1586,26 @@ function CountdownItem({
     );
 }
 
-function InvitationInfo({
+function MobileInfoRow({
     icon,
     label,
     value,
 }) {
     return (
-        <div className="utc-card-light flex min-h-[160px] flex-col items-center justify-center rounded-3xl border border-blue-200 p-5 text-center transition hover:-translate-y-1 hover:border-amber-300">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-blue-200 bg-blue-50 text-3xl">
+        <div className="flex items-center gap-4 px-4 py-4 sm:flex-col sm:justify-center sm:px-5 sm:py-6 sm:text-center">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-2xl shadow-sm sm:h-14 sm:w-14 sm:text-3xl">
                 {icon}
             </div>
 
-            <p className="mt-4 text-xs font-bold uppercase tracking-wide text-slate-500">
-                {label}
-            </p>
+            <div className="min-w-0 sm:mt-2">
+                <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-400 sm:text-xs">
+                    {label}
+                </p>
 
-            <p className="mt-2 font-bold leading-6 text-amber-600">
-                {value}
-            </p>
+                <p className="mt-1 text-sm font-bold leading-5 text-amber-600 sm:text-base">
+                    {value}
+                </p>
+            </div>
         </div>
     );
 }
