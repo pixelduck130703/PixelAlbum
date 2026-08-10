@@ -48,7 +48,9 @@ pool.on("error", (error) => {
 
 async function initializeDatabase() {
   /*
-   * Bảng người dùng / album.
+   * ==========================
+   * BẢNG PEOPLE
+   * ==========================
    */
   await pool.query(`
     CREATE TABLE IF NOT EXISTS people (
@@ -72,7 +74,9 @@ async function initializeDatabase() {
   console.log("✅ Bảng people đã sẵn sàng");
 
   /*
-   * Bảng thông báo trang chủ.
+   * ==========================
+   * BẢNG THÔNG BÁO
+   * ==========================
    */
   await pool.query(`
     CREATE TABLE IF NOT EXISTS announcements (
@@ -99,9 +103,9 @@ async function initializeDatabase() {
   console.log("✅ Bảng announcements đã sẵn sàng");
 
   /*
-   * Danh sách bài hát được tải lên Cloudinary.
-   * File nhạc không lưu trực tiếp trong PostgreSQL.
-   * PostgreSQL chỉ lưu tên bài hát, URL và public_id.
+   * ==========================
+   * BẢNG NHẠC
+   * ==========================
    */
   await pool.query(`
     CREATE TABLE IF NOT EXISTS music_tracks (
@@ -117,10 +121,9 @@ async function initializeDatabase() {
   console.log("✅ Bảng music_tracks đã sẵn sàng");
 
   /*
-   * Bảng lưu bài hát đang được chọn phát trên trang Home.
-   *
-   * Chỉ sử dụng một dòng có id = 1.
-   * track_id = NULL nghĩa là không phát nhạc.
+   * ==========================
+   * BẢNG NHẠC TRANG HOME
+   * ==========================
    */
   await pool.query(`
     CREATE TABLE IF NOT EXISTS home_music (
@@ -138,10 +141,6 @@ async function initializeDatabase() {
     )
   `);
 
-  /*
-   * Tạo cấu hình nhạc mặc định.
-   * NULL nghĩa là trang Home chưa phát bài hát nào.
-   */
   await pool.query(`
     INSERT INTO home_music (
       id,
@@ -157,12 +156,106 @@ async function initializeDatabase() {
   `);
 
   console.log("✅ Bảng home_music đã sẵn sàng");
+
+  /*
+   * ==========================
+   * BẢNG THỐNG KÊ LƯỢT XEM ALBUM THEO NGÀY
+   * ==========================
+   *
+   * Mỗi người chỉ có 1 dòng / ngày.
+   *
+   * views:
+   *   Tổng số lượt mở album trong ngày.
+   *
+   * last_viewed_at:
+   *   Thời điểm mở gần nhất.
+   *
+   * view_times:
+   *   Danh sách toàn bộ thời điểm mở album trong ngày.
+   */
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS album_view_by_person_daily (
+      person_id INTEGER NOT NULL,
+      view_date DATE NOT NULL,
+
+      views INTEGER NOT NULL DEFAULT 0,
+
+      last_viewed_at TIMESTAMPTZ,
+
+      view_times TIMESTAMPTZ[]
+        NOT NULL
+        DEFAULT '{}',
+
+      PRIMARY KEY (
+        person_id,
+        view_date
+      ),
+
+      CONSTRAINT album_view_by_person_daily_person_fkey
+        FOREIGN KEY (person_id)
+        REFERENCES people(id)
+        ON DELETE CASCADE
+    )
+  `);
+
+  /*
+   * Nếu bảng đã tồn tại từ trước,
+   * CREATE TABLE IF NOT EXISTS sẽ không thêm cột mới.
+   *
+   * Vì vậy cần ALTER TABLE để bổ sung view_times.
+   */
+  await pool.query(`
+    ALTER TABLE album_view_by_person_daily
+    ADD COLUMN IF NOT EXISTS
+      view_times TIMESTAMPTZ[]
+      NOT NULL
+      DEFAULT '{}'
+  `);
+
+  console.log(
+    "✅ Bảng album_view_by_person_daily đã sẵn sàng"
+  );
+
+  /*
+   * ==========================
+   * INDEX
+   * ==========================
+   *
+   * Tăng tốc truy vấn album được xem trong ngày.
+   */
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS
+      idx_album_view_by_person_daily_date
+    ON album_view_by_person_daily (
+      view_date DESC
+    )
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS
+      idx_album_view_by_person_daily_last_viewed
+    ON album_view_by_person_daily (
+      last_viewed_at DESC
+    )
+  `);
+
+  console.log(
+    "✅ Index album_view_by_person_daily đã sẵn sàng"
+  );
 }
 
+/*
+ * ==========================
+ * TEST DATABASE
+ * ==========================
+ */
 async function testDatabaseConnection() {
-  const result = await pool.query(
-    "SELECT NOW() AS current_time"
-  );
+  const result = await pool.query(`
+    SELECT
+      NOW() AS current_time,
+      current_database() AS database_name,
+      current_user AS database_user
+  `);
 
   return result.rows[0];
 }

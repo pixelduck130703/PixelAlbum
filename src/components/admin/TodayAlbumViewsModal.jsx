@@ -1,3 +1,12 @@
+import {
+  FaEye,
+  FaClock,
+  FaTimes,
+} from "react-icons/fa";
+
+const FALLBACK_AVATAR =
+  "https://placehold.co/160x160?text=Avatar";
+
 function TodayAlbumViewsModal({
   open,
   people = [],
@@ -7,156 +16,225 @@ function TodayAlbumViewsModal({
   },
   onClose,
 }) {
-  if (!open) return null;
+  if (!open) {
+    return null;
+  }
+
+  const safePeople = Array.isArray(people)
+    ? people
+    : [];
+
+  const formatTime = (value) => {
+    if (!value) {
+      return "--:--:--";
+    }
+
+    try {
+      return new Date(value).toLocaleTimeString(
+        "vi-VN",
+        {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+          timeZone: "Asia/Ho_Chi_Minh",
+        }
+      );
+    } catch {
+      return "--:--:--";
+    }
+  };
+
+  const handleImageError = (event) => {
+    event.currentTarget.onerror = null;
+    event.currentTarget.src = FALLBACK_AVATAR;
+  };
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/60 p-3 backdrop-blur-sm sm:p-5"
       onClick={onClose}
     >
       <div
-        className="max-h-[90vh] w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl sm:max-w-2xl"
-        onClick={(event) => event.stopPropagation()}
+        className="flex max-h-[92dvh] w-full max-w-3xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl"
+        onClick={(event) =>
+          event.stopPropagation()
+        }
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-violet-600 via-fuchsia-600 to-pink-500 px-5 py-5 text-white sm:px-6 sm:py-6">
-          <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0">
-              <h2 className="text-xl font-bold sm:text-2xl">
-                Album được xem hôm nay
-              </h2>
+        <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 py-4 sm:px-6">
+          <div>
+            <h2 className="text-lg font-bold text-slate-800 sm:text-xl">
+              🔥 Album xem hôm nay
+            </h2>
 
-              <p className="mt-1 text-sm text-white/80">
-                Theo dõi những album vừa có lượt xem mới
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15 text-xl text-white transition hover:bg-white/25"
-              aria-label="Đóng"
-            >
-              ✕
-            </button>
+            <p className="mt-1 text-xs text-slate-500 sm:text-sm">
+              Theo dõi các album đã được mở trong ngày
+            </p>
           </div>
 
-          {/* Thống kê nhanh */}
-          <div className="mt-5 grid grid-cols-2 gap-3">
-            <div className="rounded-2xl bg-white/15 px-4 py-3 backdrop-blur">
-              <p className="text-xs font-medium uppercase tracking-wide text-white/75">
-                Số album
-              </p>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-red-100 hover:text-red-600"
+            aria-label="Đóng"
+          >
+            <FaTimes />
+          </button>
+        </div>
 
-              <p className="mt-1 text-2xl font-bold">
-                {Number(
-                  summary.totalAlbums || 0
-                ).toLocaleString("vi-VN")}
-              </p>
-            </div>
+        {/* Tổng quan */}
+        <div className="grid shrink-0 grid-cols-2 gap-3 border-b border-slate-100 bg-slate-50 px-4 py-4 sm:px-6">
+          <div className="rounded-2xl bg-white p-4 shadow-sm">
+            <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">
+              Album đã xem
+            </p>
 
-            <div className="rounded-2xl bg-white/15 px-4 py-3 backdrop-blur">
-              <p className="text-xs font-medium uppercase tracking-wide text-white/75">
-                Số lượt mở
-              </p>
+            <p className="mt-1 text-2xl font-black text-blue-600">
+              {Number(
+                summary.totalAlbums || 0
+              ).toLocaleString("vi-VN")}
+            </p>
+          </div>
 
-              <p className="mt-1 text-2xl font-bold">
-                {Number(
-                  summary.totalViews || 0
-                ).toLocaleString("vi-VN")}
-              </p>
-            </div>
+          <div className="rounded-2xl bg-white p-4 shadow-sm">
+            <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">
+              Tổng lượt mở
+            </p>
+
+            <p className="mt-1 text-2xl font-black text-indigo-600">
+              {Number(
+                summary.totalViews || 0
+              ).toLocaleString("vi-VN")}
+            </p>
           </div>
         </div>
 
         {/* Nội dung */}
-        <div className="p-4 sm:p-6">
-          {people.length === 0 ? (
-            <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-5 py-10 text-center">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-violet-100 text-3xl">
+        <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
+          {safePeople.length === 0 ? (
+            <div className="flex min-h-[280px] flex-col items-center justify-center text-center">
+              <div className="text-5xl">
                 👀
               </div>
 
               <h3 className="mt-4 text-lg font-bold text-slate-800">
-                Chưa có album nào được xem
+                Chưa có lượt xem hôm nay
               </h3>
 
-              <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-slate-500">
-                Danh sách sẽ xuất hiện khi người dùng mở album trong hôm nay.
+              <p className="mt-2 text-sm text-slate-500">
+                Khi có người mở album, dữ liệu sẽ xuất hiện ở đây.
               </p>
             </div>
           ) : (
-            <div className="max-h-[55vh] space-y-3 overflow-y-auto pr-1">
-              {people.map((person, index) => (
-                <a
-                  key={person.id}
-                  href={`/person/${person.publicId}`}
-                  className="group flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 transition hover:-translate-y-0.5 hover:border-violet-300 hover:bg-violet-50 hover:shadow-md sm:gap-4 sm:p-4"
-                >
-                  {/* Thứ hạng */}
-                  <div className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-500 sm:flex">
-                    {index + 1}
-                  </div>
+            <div className="space-y-4">
+              {safePeople.map((person) => {
+                const viewTimes =
+                  Array.isArray(
+                    person.viewTimes
+                  )
+                    ? person.viewTimes
+                    : [];
 
-                  {/* Avatar */}
-                  <div className="relative shrink-0">
-                    <img
-                      src={
-                        person.avatar ||
-                        "https://placehold.co/100x100?text=Avatar"
-                      }
-                      alt={person.name || "Avatar"}
-                      className="h-16 w-16 rounded-full border-2 border-white object-cover shadow-sm sm:h-14 sm:w-14"
-                      onError={(event) => {
-                        event.currentTarget.onerror = null;
-                        event.currentTarget.src =
-                          "https://placehold.co/100x100?text=Avatar";
-                      }}
-                    />
-                  </div>
+                return (
+                  <article
+                    key={person.id}
+                    className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+                  >
+                    {/* Thông tin người */}
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={
+                          person.avatar ||
+                          FALLBACK_AVATAR
+                        }
+                        alt={
+                          person.name ||
+                          "Avatar"
+                        }
+                        onError={
+                          handleImageError
+                        }
+                        className="h-14 w-14 shrink-0 rounded-full border border-slate-200 object-cover shadow-sm"
+                      />
 
-                  {/* Thông tin */}
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-bold text-slate-800 group-hover:text-violet-700">
-                      {person.name}
-                    </p>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="truncate font-bold text-slate-800">
+                          {person.name ||
+                            "Chưa cập nhật"}
+                        </h3>
 
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      <span className="rounded-full bg-violet-100 px-2.5 py-1 text-xs font-semibold text-violet-700">
-                        {Number(
-                          person.todayViews || 0
-                        ).toLocaleString("vi-VN")}{" "}
-                        lượt hôm nay
-                      </span>
+                        <div className="mt-1 flex items-center gap-2 text-sm text-indigo-600">
+                          <FaEye />
 
-                      <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
-                        Tổng: {" "}
-                        {Number(
-                          person.albumViews || 0
-                        ).toLocaleString("vi-VN")} lượt xem
-                      </span>
+                          <span className="font-semibold">
+                            {Number(
+                              person.todayViews ||
+                                0
+                            ).toLocaleString(
+                              "vi-VN"
+                            )}{" "}
+                            lượt xem hôm nay
+                          </span>
+                        </div>
+                      </div>
                     </div>
 
-                    {person.lastViewedAt && (
-                      <p className="mt-2 text-xs text-slate-400">
-                        Xem gần nhất lúc{" "}
-                        {new Date(
-                          person.lastViewedAt
-                        ).toLocaleTimeString("vi-VN", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </p>
-                    )}
-                  </div>
+                    {/* Các thời gian mở */}
+                    <div className="mt-4 border-t border-slate-100 pt-4">
+                      <div className="mb-3 flex items-center gap-2">
+                        <FaClock className="text-blue-500" />
 
-                  <span className="shrink-0 text-xl text-slate-300 transition group-hover:translate-x-1 group-hover:text-violet-500">
-                    →
-                  </span>
-                </a>
-              ))}
+                        <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                          Thời gian mở
+                        </p>
+                      </div>
+
+                      {viewTimes.length ===
+                      0 ? (
+                        <p className="text-sm text-slate-400">
+                          Chưa có dữ liệu thời gian.
+                        </p>
+                      ) : (
+                        <div className="flex flex-wrap gap-2">
+                          {[...viewTimes]
+                            .reverse()
+                            .map(
+                              (
+                                viewedAt,
+                                index
+                              ) => (
+                                <span
+                                  key={`${person.id}-${viewedAt}-${index}`}
+                                  className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700"
+                                >
+                                  <FaClock className="text-[10px]" />
+
+                                  {formatTime(
+                                    viewedAt
+                                  )}
+                                </span>
+                              )
+                            )}
+                        </div>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           )}
+        </div>
+
+        {/* Footer */}
+        <div className="shrink-0 border-t border-slate-200 bg-white p-4 sm:px-6">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex min-h-[48px] w-full items-center justify-center rounded-xl bg-slate-100 px-5 font-semibold text-slate-700 transition hover:bg-slate-200"
+          >
+            Đóng
+          </button>
         </div>
       </div>
     </div>

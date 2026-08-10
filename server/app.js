@@ -1723,18 +1723,34 @@ app.post(
             person_id,
             view_date,
             views,
-            last_viewed_at
+            last_viewed_at,
+            view_times
           )
           VALUES (
             $1,
             (NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh')::date,
             1,
-            NOW()
+            NOW(),
+            ARRAY[NOW()]::timestamptz[]
           )
+
           ON CONFLICT (person_id, view_date)
+
           DO UPDATE SET
-            views = album_view_by_person_daily.views + 1,
-            last_viewed_at = NOW()
+            views =
+              album_view_by_person_daily.views + 1,
+
+            last_viewed_at =
+              NOW(),
+
+            view_times =
+              array_append(
+                COALESCE(
+                  album_view_by_person_daily.view_times,
+                  '{}'::timestamptz[]
+                ),
+                NOW()
+              )
         `,
         [person.id]
       );
@@ -1857,7 +1873,8 @@ app.get(
           p."albumViews",
 
           daily.views AS "todayViews",
-          daily.last_viewed_at AS "lastViewedAt"
+          daily.last_viewed_at AS "lastViewedAt",
+          daily.view_times AS "viewTimes"
 
         FROM album_view_by_person_daily daily
 
@@ -1865,7 +1882,10 @@ app.get(
           ON p.id = daily.person_id
 
         WHERE daily.view_date =
-          (NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh')::date
+          (
+            NOW()
+            AT TIME ZONE 'Asia/Ho_Chi_Minh'
+          )::date
 
         ORDER BY
           daily.last_viewed_at DESC,
@@ -1873,17 +1893,28 @@ app.get(
           p.name ASC
       `);
 
-      const totalViews = result.rows.reduce(
-        (total, person) => {
-          return total + Number(person.todayViews || 0);
-        },
+      const data = result.rows.map((person) => ({
+        ...person,
+
+        todayViews:
+          Number(person.todayViews) || 0,
+
+        viewTimes:
+          Array.isArray(person.viewTimes)
+            ? person.viewTimes
+            : [],
+      }));
+
+      const totalViews = data.reduce(
+        (total, person) =>
+          total + person.todayViews,
         0
       );
 
       return res.json({
-        totalAlbums: result.rows.length,
+        totalAlbums: data.length,
         totalViews,
-        data: result.rows,
+        data,
       });
     } catch (error) {
       console.error(
