@@ -17,8 +17,8 @@ import HomeStatistics from "../components/HomeStatistics";
 import DailyQuote from "../components/DailyQuote";
 import Announcement from "../components/Announcement";
 import ScrollReveal from "../components/ScrollReveal";
-import HomeMusicPlayer from "../components/HomeMusicPlayer";
 import WelcomePopup from "../components/WelcomePopup";
+import HomePartners from "../components/HomePartners";
 
 const today = new Date();
 
@@ -552,9 +552,18 @@ function Home() {
           <DonateCard />
         </section>
       </ScrollReveal>
-    </main>
 
-    <HomeMusicPlayer />
+      {/* Đồng hàng cùng tôi */}
+      <ScrollReveal
+        direction="up"
+        delay={120}
+        className="mt-8"
+      >
+        <HomePartners />
+      </ScrollReveal>
+      
+
+    </main>
 
     <Footer />
   </div>
