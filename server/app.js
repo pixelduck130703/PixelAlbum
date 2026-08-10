@@ -7,6 +7,7 @@ const bcrypt = require("bcryptjs");
 const ExcelJS = require("exceljs");
 const multer = require("multer");
 const cloudinary = require("./config/cloudinary");
+const { UAParser } = require("ua-parser-js");
 
 const musicUpload = multer({
   storage: multer.memoryStorage(),
@@ -138,66 +139,6 @@ function normalizeOptionalDate(value) {
   return value ? String(value).slice(0, 10) : null;
 }
 
-// ==========================
-// NHẬN DIỆN TRÌNH DUYỆT
-// ==========================
-
-function detectBrowser(userAgent = "") {
-  const ua = String(userAgent).toLowerCase();
-
-  if (ua.includes("edg/")) {
-    return "Microsoft Edge";
-  }
-
-  if (
-    ua.includes("opr/") ||
-    ua.includes("opera")
-  ) {
-    return "Opera";
-  }
-
-  if (ua.includes("firefox/")) {
-    return "Mozilla Firefox";
-  }
-
-  if (
-    ua.includes("chrome/") &&
-    !ua.includes("edg/") &&
-    !ua.includes("opr/")
-  ) {
-    return "Google Chrome";
-  }
-
-  if (
-    ua.includes("safari/") &&
-    !ua.includes("chrome/")
-  ) {
-    return "Safari";
-  }
-
-  return "Khác";
-}
-
-function detectDevice(userAgent = "") {
-  const ua = String(userAgent).toLowerCase();
-
-  if (
-    ua.includes("ipad") ||
-    ua.includes("tablet")
-  ) {
-    return "Tablet";
-  }
-
-  if (
-    ua.includes("iphone") ||
-    ua.includes("android") ||
-    ua.includes("mobile")
-  ) {
-    return "Mobile";
-  }
-
-  return "Desktop";
-}
 
 /* ==========================
    Trang chủ
@@ -1721,11 +1662,110 @@ app.post(
       const userAgent =
         req.headers["user-agent"] || "";
 
-      const browser =
-        detectBrowser(userAgent);
+      const parser =
+        new UAParser(userAgent);
 
-      const device =
-        detectDevice(userAgent);
+      const browserInfo =
+        parser.getBrowser();
+
+      const deviceInfo =
+        parser.getDevice();
+
+      const osInfo =
+        parser.getOS();
+
+      const cpuInfo =
+        parser.getCPU();
+
+      /*
+* ==========================
+* CHUẨN HÓA THÔNG TIN THIẾT BỊ
+* ==========================
+*/
+
+      // Trình duyệt
+      const browser =
+        browserInfo.name ||
+        "Không xác định";
+
+      const browserVersion =
+        browserInfo.version ||
+        "";
+
+      // Loại thiết bị
+      const deviceType =
+        deviceInfo.type ||
+        "desktop";
+
+      // Hãng thiết bị
+      const deviceVendor =
+        deviceInfo.vendor ||
+        "";
+
+      // Model thiết bị
+      const deviceModel =
+        deviceInfo.model ||
+        "";
+
+      // Hệ điều hành
+      const os =
+        osInfo.name ||
+        "Không xác định";
+
+      const osVersion =
+        osInfo.version ||
+        "";
+
+      // Kiến trúc CPU
+      const cpu =
+        cpuInfo.architecture ||
+        "";
+
+      let deviceName = "";
+
+      if (deviceVendor && deviceModel) {
+        deviceName =
+          `${deviceVendor} ${deviceModel}`;
+      } else if (deviceModel) {
+        deviceName =
+          deviceModel;
+      } else if (deviceVendor) {
+        deviceName =
+          deviceVendor;
+      } else if (deviceType === "desktop") {
+        deviceName =
+          `${os} PC`;
+      } else {
+        deviceName =
+          deviceType;
+      }
+
+      let deviceTypeText;
+
+      switch (String(deviceType).toLowerCase()) {
+        case "mobile":
+          deviceTypeText = "Điện thoại";
+          break;
+
+        case "tablet":
+          deviceTypeText = "Máy tính bảng";
+          break;
+
+        case "smarttv":
+          deviceTypeText = "Smart TV";
+          break;
+
+        case "wearable":
+          deviceTypeText = "Thiết bị đeo";
+          break;
+
+        case "console":
+          deviceTypeText = "Máy chơi game";
+          break;
+
+        default:
+          deviceTypeText = "Máy tính";
+      }
 
       await client.query("BEGIN");
 
@@ -1819,7 +1859,19 @@ app.post(
        */
       const viewDetail = {
         browser,
-        device,
+        browserVersion,
+
+        deviceType,
+        deviceTypeText,
+        deviceVendor,
+        deviceModel,
+        deviceName,
+
+        os,
+        osVersion,
+
+        cpu,
+
         userAgent,
       };
 
@@ -1834,80 +1886,158 @@ app.post(
        */
       await client.query(
         `
-          INSERT INTO album_view_by_person_daily (
-            person_id,
-            view_date,
-            views,
-            last_viewed_at,
-            view_times,
-            view_details
-          )
+    INSERT INTO album_view_by_person_daily (
+      person_id,
+      view_date,
+      views,
+      last_viewed_at,
+      view_times,
+      view_details
+    )
 
-          VALUES (
-            $1,
+    VALUES (
+      $1,
 
-            (
-              NOW()
-              AT TIME ZONE 'Asia/Ho_Chi_Minh'
-            )::date,
+      (
+        NOW()
+        AT TIME ZONE 'Asia/Ho_Chi_Minh'
+      )::date,
 
-            1,
+      1,
 
+      NOW(),
+
+      ARRAY[NOW()]::timestamptz[],
+
+      jsonb_build_array(
+        jsonb_build_object(
+          'viewedAt',
+          NOW(),
+
+          'browser',
+          $2::text,
+
+          'browserVersion',
+          $3::text,
+
+          'deviceType',
+          $4::text,
+
+          'deviceTypeText',
+          $5::text,
+
+          'deviceVendor',
+          $6::text,
+
+          'deviceModel',
+          $7::text,
+
+          'deviceName',
+          $8::text,
+
+          'os',
+          $9::text,
+
+          'osVersion',
+          $10::text,
+
+          'cpu',
+          $11::text,
+
+          'userAgent',
+          $12::text
+        )
+      )
+    )
+
+    ON CONFLICT (
+      person_id,
+      view_date
+    )
+
+    DO UPDATE SET
+
+      views =
+        album_view_by_person_daily.views + 1,
+
+      last_viewed_at =
+        NOW(),
+
+      view_times =
+        array_append(
+          COALESCE(
+            album_view_by_person_daily.view_times,
+            '{}'::timestamptz[]
+          ),
+          NOW()
+        ),
+
+      view_details =
+        COALESCE(
+          album_view_by_person_daily.view_details,
+          '[]'::jsonb
+        )
+
+        ||
+
+        jsonb_build_array(
+          jsonb_build_object(
+            'viewedAt',
             NOW(),
 
-            ARRAY[NOW()]::timestamptz[],
+            'browser',
+            $2::text,
 
-            jsonb_build_array(
-              jsonb_build_object(
-                'viewedAt', NOW(),
-                'browser', $2::text,
-                'device', $3::text,
-                'userAgent', $4::text
-              )
-            )
+            'browserVersion',
+            $3::text,
+
+            'deviceType',
+            $4::text,
+
+            'deviceTypeText',
+            $5::text,
+
+            'deviceVendor',
+            $6::text,
+
+            'deviceModel',
+            $7::text,
+
+            'deviceName',
+            $8::text,
+
+            'os',
+            $9::text,
+
+            'osVersion',
+            $10::text,
+
+            'cpu',
+            $11::text,
+
+            'userAgent',
+            $12::text
           )
-
-          ON CONFLICT (
-            person_id,
-            view_date
-          )
-
-          DO UPDATE SET
-
-            views =
-              album_view_by_person_daily.views + 1,
-
-            last_viewed_at =
-              NOW(),
-
-            view_times =
-              array_append(
-                COALESCE(
-                  album_view_by_person_daily.view_times,
-                  '{}'::timestamptz[]
-                ),
-                NOW()
-              ),
-
-            view_details =
-              COALESCE(
-                album_view_by_person_daily.view_details,
-                '[]'::jsonb
-              )
-              ||
-              jsonb_build_array(
-                jsonb_build_object(
-                  'viewedAt', NOW(),
-                  'browser', $2::text,
-                  'device', $3::text,
-                  'userAgent', $4::text
-                )
-              )
-        `,
+        )
+  `,
         [
           person.id,
+
           viewDetail.browser,
-          viewDetail.device,
+          viewDetail.browserVersion,
+
+          viewDetail.deviceType,
+          viewDetail.deviceTypeText,
+
+          viewDetail.deviceVendor,
+          viewDetail.deviceModel,
+          viewDetail.deviceName,
+
+          viewDetail.os,
+          viewDetail.osVersion,
+
+          viewDetail.cpu,
+
           viewDetail.userAgent,
         ]
       );
