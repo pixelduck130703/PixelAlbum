@@ -62,10 +62,6 @@ function TrafficChart({
           <h2 className="text-base font-bold text-slate-800 sm:text-lg md:text-xl">
             Thống kê lượt truy cập
           </h2>
-
-          <p className="mt-1 text-xs leading-5 text-slate-500 sm:text-sm">
-            So sánh lượt truy cập website và lượt mở album theo ngày
-          </p>
         </div>
 
         <select

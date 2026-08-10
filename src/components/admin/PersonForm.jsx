@@ -471,7 +471,7 @@ function PersonForm({
                       <img
                         src={form.avatar}
                         alt="Ảnh đại diện xem trước"
-                        className="h-24 w-24 shrink-0 rounded-2xl border-2 border-white object-cover shadow-md"
+                        className="h-24 w-24 shrink-0 rounded-full border-2 border-white object-cover shadow-md"
                         onError={(event) => {
                           event.currentTarget.onerror = null;
                           event.currentTarget.src =

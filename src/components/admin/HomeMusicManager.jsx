@@ -336,6 +336,37 @@ function HomeMusicManager({
             </button>
           </form>
 
+          <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+            <label
+              htmlFor="selected-home-music"
+              className="mb-2 block font-bold text-slate-800"
+            >
+              Nhạc phát trên trang Home
+            </label>
+
+            <select
+              id="selected-home-music"
+              value={selectedTrackId}
+              onChange={(event) =>
+                setSelectedTrackId(event.target.value)
+              }
+              className="h-12 w-full rounded-xl border border-slate-300 bg-white px-4 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+            >
+              <option value="">
+                Không phát nhạc
+              </option>
+
+              {tracks.map((track) => (
+                <option
+                  key={track.id}
+                  value={track.id}
+                >
+                  {track.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div className="mt-6">
             <h3 className="font-bold text-slate-800">
               Danh sách bài hát
@@ -405,36 +436,7 @@ function HomeMusicManager({
             )}
           </div>
 
-          <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-            <label
-              htmlFor="selected-home-music"
-              className="mb-2 block font-bold text-slate-800"
-            >
-              Nhạc phát trên trang Home
-            </label>
-
-            <select
-              id="selected-home-music"
-              value={selectedTrackId}
-              onChange={(event) =>
-                setSelectedTrackId(event.target.value)
-              }
-              className="h-12 w-full rounded-xl border border-slate-300 bg-white px-4 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-            >
-              <option value="">
-                Không phát nhạc
-              </option>
-
-              {tracks.map((track) => (
-                <option
-                  key={track.id}
-                  value={track.id}
-                >
-                  {track.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          
 
           <audio
             ref={audioRef}
