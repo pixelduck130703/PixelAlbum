@@ -7,7 +7,7 @@ const bcrypt = require("bcryptjs");
 const ExcelJS = require("exceljs");
 const multer = require("multer");
 const cloudinary = require("./config/cloudinary");
-const { UAParser } = require("ua-parser-js");
+const DeviceDetector = require("device-detector-js");
 
 const musicUpload = multer({
   storage: multer.memoryStorage(),
@@ -85,6 +85,7 @@ const {
 const verifyAdminToken = require("./middleware/auth");
 
 const app = express();
+const deviceDetector = new DeviceDetector();
 
 /* ==========================
    Middleware
@@ -1664,37 +1665,33 @@ app.post(
       const userAgent =
         req.headers["user-agent"] || "";
 
-      /*
-       * Client Hints được frontend gửi lên.
-       * Nếu trình duyệt không hỗ trợ thì {}
-       */
       const clientHints =
         req.body?.clientHints &&
-          typeof req.body.clientHints === "object"
+        typeof req.body.clientHints === "object"
           ? req.body.clientHints
           : {};
 
       /*
-       * Parse User-Agent bằng UAParser
+       * ========================================
+       * 2. DEVICE DETECTOR
+       * ========================================
        */
-      const parser =
-        new UAParser(userAgent);
+
+      const detected =
+        deviceDetector.parse(userAgent);
 
       const browserInfo =
-        parser.getBrowser();
+        detected?.client || {};
 
       const deviceInfo =
-        parser.getDevice();
+        detected?.device || {};
 
       const osInfo =
-        parser.getOS();
-
-      const cpuInfo =
-        parser.getCPU();
+        detected?.os || {};
 
       /*
        * ========================================
-       * 2. TRÌNH DUYỆT
+       * 3. TRÌNH DUYỆT
        * ========================================
        */
 
@@ -1702,9 +1699,6 @@ app.post(
         browserInfo.name ||
         "Không xác định";
 
-      /*
-       * Ưu tiên phiên bản lấy từ Client Hints.
-       */
       const browserVersion =
         clientHints.uaFullVersion ||
         browserInfo.version ||
@@ -1712,63 +1706,70 @@ app.post(
 
       /*
        * ========================================
-       * 3. THIẾT BỊ
+       * 4. LOẠI THIẾT BỊ
        * ========================================
        */
 
-      const deviceType =
+      let deviceType =
         deviceInfo.type ||
         (
           clientHints.mobile === true
-            ? "mobile"
+            ? "smartphone"
             : "desktop"
         );
 
-      const deviceVendor =
-        deviceInfo.vendor ||
-        "";
+      deviceType =
+        String(deviceType || "")
+          .trim()
+          .toLowerCase();
 
       /*
-       * Client Hints thường lấy model Android
-       * tốt hơn User-Agent.
+       * device-detector-js dùng brand
+       * thay vì vendor.
+       */
+      const deviceVendor =
+        String(
+          deviceInfo.brand || ""
+        ).trim();
+
+      /*
+       * Ưu tiên model mà device-detector-js
+       * nhận diện được.
        *
-       * Ví dụ:
-       * SM-S928B
-       * 23127PN0CG
-       * CPH2581
+       * Nếu detector không nhận ra thì mới
+       * dùng model từ Client Hints.
        */
       const deviceModel =
         String(
-          clientHints.model ||
           deviceInfo.model ||
+          clientHints.model ||
           ""
         ).trim();
 
       /*
        * ========================================
-       * 4. HỆ ĐIỀU HÀNH
+       * 5. HỆ ĐIỀU HÀNH
        * ========================================
        */
 
       const os =
-        clientHints.platform ||
         osInfo.name ||
+        clientHints.platform ||
         "Không xác định";
 
       const osVersion =
-        clientHints.platformVersion ||
         osInfo.version ||
+        clientHints.platformVersion ||
         "";
 
       /*
        * ========================================
-       * 5. CPU
+       * 6. CPU
        * ========================================
        */
 
       const cpu =
         clientHints.architecture ||
-        cpuInfo.architecture ||
         "";
 
       const bitness =
@@ -1777,48 +1778,115 @@ app.post(
 
       /*
        * ========================================
-       * 6. TÊN THIẾT BỊ
+       * 7. LOẠI THIẾT BỊ TIẾNG VIỆT
        * ========================================
        */
 
-      let normalizedVendor =
-        deviceVendor || "";
+      let deviceTypeText;
 
-      if (!normalizedVendor && deviceModel) {
-        const modelLower =
-          deviceModel.toLowerCase();
+      switch (deviceType) {
+        case "smartphone":
+        case "mobile":
+          deviceTypeText =
+            "Điện thoại";
+          break;
 
-        if (modelLower.includes("pixel")) {
-          normalizedVendor = "Google";
-        } else if (
-          /^sm-/i.test(deviceModel)
-        ) {
-          normalizedVendor = "Samsung";
-        } else if (
-          /^cph/i.test(deviceModel)
-        ) {
-          normalizedVendor = "OPPO";
-        } else if (
-          /^v\d+/i.test(deviceModel)
-        ) {
-          normalizedVendor = "Vivo";
-        }
+        case "tablet":
+          deviceTypeText =
+            "Máy tính bảng";
+          break;
+
+        case "smarttv":
+        case "tv":
+          deviceTypeText =
+            "Smart TV";
+          break;
+
+        case "wearable":
+          deviceTypeText =
+            "Thiết bị đeo";
+          break;
+
+        case "console":
+          deviceTypeText =
+            "Máy chơi game";
+          break;
+
+        case "car browser":
+          deviceTypeText =
+            "Màn hình ô tô";
+          break;
+
+        case "camera":
+          deviceTypeText =
+            "Máy ảnh";
+          break;
+
+        case "portable media player":
+          deviceTypeText =
+            "Thiết bị đa phương tiện";
+          break;
+
+        case "feature phone":
+          deviceTypeText =
+            "Điện thoại phổ thông";
+          break;
+
+        default:
+          deviceTypeText =
+            "Máy tính";
       }
+
+      /*
+       * ========================================
+       * 8. TẠO TÊN THIẾT BỊ
+       * ========================================
+       */
 
       let deviceName = "";
 
       if (
-        normalizedVendor &&
+        deviceVendor &&
         deviceModel
       ) {
-        deviceName =
-          `${normalizedVendor} ${deviceModel}`;
+        /*
+         * Nếu model đã chứa tên hãng thì không
+         * ghép hãng lần nữa.
+         *
+         * Ví dụ:
+         * Samsung Galaxy S24 Ultra
+         */
+        if (
+          deviceModel
+            .toLowerCase()
+            .includes(
+              deviceVendor.toLowerCase()
+            )
+        ) {
+          deviceName =
+            deviceModel;
+        } else {
+          deviceName =
+            `${deviceVendor} ${deviceModel}`;
+        }
       } else if (deviceModel) {
+        /*
+         * Pixel thường có model:
+         * Pixel 7
+         * Pixel 8 Pro
+         */
+        if (
+          /^pixel/i.test(deviceModel)
+        ) {
+          deviceName =
+            `Google ${deviceModel}`;
+        } else {
+          deviceName =
+            deviceModel;
+        }
+      } else if (deviceVendor) {
         deviceName =
-          deviceModel;
-      } else if (normalizedVendor) {
-        deviceName =
-          normalizedVendor;
+          deviceVendor;
       } else if (
         /iphone/i.test(userAgent)
       ) {
@@ -1836,53 +1904,12 @@ app.post(
           `${os} PC`;
       } else {
         deviceName =
-          "Điện thoại";
+          deviceTypeText;
       }
 
       /*
        * ========================================
-       * 7. LOẠI THIẾT BỊ TIẾNG VIỆT
-       * ========================================
-       */
-
-      let deviceTypeText;
-
-      switch (
-      String(deviceType).toLowerCase()
-      ) {
-        case "mobile":
-          deviceTypeText =
-            "Điện thoại";
-          break;
-
-        case "tablet":
-          deviceTypeText =
-            "Máy tính bảng";
-          break;
-
-        case "smarttv":
-          deviceTypeText =
-            "Smart TV";
-          break;
-
-        case "wearable":
-          deviceTypeText =
-            "Thiết bị đeo";
-          break;
-
-        case "console":
-          deviceTypeText =
-            "Máy chơi game";
-          break;
-
-        default:
-          deviceTypeText =
-            "Máy tính";
-      }
-
-      /*
-       * ========================================
-       * 8. TẠO THÔNG TIN LƯỢT MỞ
+       * 9. DỮ LIỆU CHI TIẾT LƯỢT MỞ
        * ========================================
        */
 
@@ -1910,13 +1937,26 @@ app.post(
 
       /*
        * Debug.
-       * Sau khi test xong có thể xóa.
+       * Sau khi test ổn có thể xóa.
        */
       console.log(
         "========== ALBUM DEVICE =========="
       );
 
-      console.log(viewDetail);
+      console.log(
+        "DEVICE DETECTOR:",
+        detected
+      );
+
+      console.log(
+        "CLIENT HINTS:",
+        clientHints
+      );
+
+      console.log(
+        "FINAL DEVICE:",
+        viewDetail
+      );
 
       console.log(
         "=================================="
@@ -1924,15 +1964,18 @@ app.post(
 
       /*
        * ========================================
-       * 9. BẮT ĐẦU TRANSACTION
+       * 10. BẮT ĐẦU TRANSACTION
        * ========================================
        */
 
       await client.query("BEGIN");
 
       /*
-       * Tìm người / album.
+       * ========================================
+       * 11. TÌM ALBUM
+       * ========================================
        */
+
       const personResult =
         await client.query(
           `
@@ -1982,7 +2025,7 @@ app.post(
 
       /*
        * ========================================
-       * 10. TĂNG TỔNG LƯỢT XEM ALBUM
+       * 12. TĂNG TỔNG LƯỢT XEM CỦA ALBUM
        * ========================================
        */
 
@@ -2007,7 +2050,7 @@ app.post(
 
       /*
        * ========================================
-       * 11. TĂNG LƯỢT MỞ TOÀN WEBSITE THEO NGÀY
+       * 13. TĂNG TỔNG LƯỢT MỞ TRONG NGÀY
        * ========================================
        */
 
@@ -2039,7 +2082,7 @@ app.post(
 
       /*
        * ========================================
-       * 12. LƯU CHI TIẾT LƯỢT MỞ ALBUM
+       * 14. LƯU CHI TIẾT THEO ALBUM
        * ========================================
        */
 
@@ -2139,7 +2182,6 @@ app.post(
                   album_view_by_person_daily.view_times,
                   '{}'::timestamptz[]
                 ),
-
                 NOW()
               ),
 
@@ -2233,7 +2275,7 @@ app.post(
 
       /*
        * ========================================
-       * 13. COMMIT
+       * 15. COMMIT
        * ========================================
        */
 
@@ -2256,7 +2298,7 @@ app.post(
           "ROLLBACK"
         );
       } catch {
-        // Không cần xử lý lỗi rollback.
+        // Bỏ qua lỗi rollback.
       }
 
       console.error(
@@ -2275,7 +2317,6 @@ app.post(
     }
   }
 );
-
 /* ==========================
    API lấy số lượt truy cập album
 ========================== */
