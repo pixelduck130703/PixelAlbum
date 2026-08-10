@@ -1,28 +1,83 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import api from "../services/api";
 
-function HomeMusicPlayer() {
-  const audioRef = useRef(null);
+/*
+ * Một Audio duy nhất cho toàn bộ ứng dụng.
+ * Không bị tạo lại khi Home -> Detail.
+ */
+let globalAudio = null;
+let globalTrack = null;
+let musicLoaded = false;
 
-  const [track, setTrack] = useState(null);
-  const [playing, setPlaying] = useState(false);
+function getAudio() {
+  if (!globalAudio) {
+    globalAudio = new Audio();
+    globalAudio.loop = true;
+    globalAudio.preload = "metadata";
+  }
 
+  return globalAudio;
+}
+
+function HomeMusicPlayer({ visible = true }) {
+  const [track, setTrack] = useState(globalTrack);
+  const [playing, setPlaying] = useState(() => {
+    return globalAudio
+      ? !globalAudio.paused
+      : false;
+  });
+
+  const [loading, setLoading] = useState(!musicLoaded);
+
+  /*
+   * Lấy bài hát.
+   * Chỉ gọi API một lần trong vòng đời ứng dụng.
+   */
   useEffect(() => {
     let cancelled = false;
 
-    const loadHomeMusic = async () => {
+    const loadMusic = async () => {
+      if (musicLoaded && globalTrack) {
+        setTrack(globalTrack);
+        setLoading(false);
+        return;
+      }
+
       try {
+        setLoading(true);
+
         const response = await api.get("/home-music");
 
         if (cancelled) return;
 
-        if (
+        const newTrack =
           response.data?.enabled &&
           response.data?.track?.musicUrl
-        ) {
-          setTrack(response.data.track);
-        } else {
-          setTrack(null);
+            ? response.data.track
+            : null;
+
+        globalTrack = newTrack;
+        musicLoaded = true;
+
+        setTrack(newTrack);
+
+        if (newTrack) {
+          const audio = getAudio();
+
+          /*
+           * Chỉ gán src nếu thực sự là bài khác.
+           * Không gán lại src khi chuyển route.
+           */
+          const currentUrl = audio.src;
+          const newUrl = new URL(
+            newTrack.musicUrl,
+            window.location.href
+          ).href;
+
+          if (currentUrl !== newUrl) {
+            audio.src = newTrack.musicUrl;
+            audio.load();
+          }
         }
       } catch (error) {
         console.error(
@@ -33,78 +88,125 @@ function HomeMusicPlayer() {
         if (!cancelled) {
           setTrack(null);
         }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
 
-    loadHomeMusic();
+    loadMusic();
 
     return () => {
       cancelled = true;
-      audioRef.current?.pause();
+
+      /*
+       * QUAN TRỌNG:
+       * Không pause audio khi component unmount.
+       */
+    };
+  }, []);
+
+  /*
+   * Đồng bộ trạng thái nút loa với Audio global.
+   */
+  useEffect(() => {
+    const audio = getAudio();
+
+    const handlePlay = () => {
+      setPlaying(true);
+    };
+
+    const handlePause = () => {
+      setPlaying(false);
+    };
+
+    const handleEnded = () => {
+      setPlaying(false);
+    };
+
+    audio.addEventListener("play", handlePlay);
+    audio.addEventListener("pause", handlePause);
+    audio.addEventListener("ended", handleEnded);
+
+    setPlaying(!audio.paused);
+
+    return () => {
+      audio.removeEventListener("play", handlePlay);
+      audio.removeEventListener("pause", handlePause);
+      audio.removeEventListener("ended", handleEnded);
     };
   }, []);
 
   const toggleMusic = async () => {
-    const audio = audioRef.current;
+    if (!track?.musicUrl) return;
 
-    if (!audio) return;
+    const audio = getAudio();
 
-    if (playing) {
+    if (!audio.src) {
+      audio.src = track.musicUrl;
+      audio.load();
+    }
+
+    if (!audio.paused) {
       audio.pause();
-      setPlaying(false);
       return;
     }
 
     try {
       await audio.play();
-      setPlaying(true);
     } catch (error) {
-      console.error("Không thể phát nhạc:", error);
+      console.error(
+        "Không thể phát nhạc:",
+        error
+      );
     }
   };
 
-  if (!track) {
+  if (loading || !track) {
+    return null;
+  }
+
+  /*
+   * Chỉ ẩn giao diện.
+   * Audio global vẫn tiếp tục chạy.
+   */
+  if (!visible) {
     return null;
   }
 
   return (
-    <>
-      <audio
-        ref={audioRef}
-        src={track.musicUrl}
-        loop
-        preload="metadata"
-        onPause={() => setPlaying(false)}
-        onPlay={() => setPlaying(true)}
-      />
+    <div className="fixed bottom-5 right-5 z-[9999] flex items-center gap-3">
+      {playing && (
+        <div className="hidden max-w-[220px] rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 shadow-xl backdrop-blur sm:block">
+          <p className="text-xs font-semibold text-slate-500">
+            Đang phát
+          </p>
 
-      <div className="fixed bottom-5 right-5 z-40 flex items-center gap-3">
-        {playing && (
-          <div className="hidden max-w-[220px] rounded-2xl bg-white/95 px-4 py-3 shadow-xl backdrop-blur sm:block">
-            <p className="text-xs font-semibold text-slate-500">
-              Đang phát
-            </p>
+          <p className="truncate font-bold text-slate-800">
+            {track.name}
+          </p>
+        </div>
+      )}
 
-            <p className="truncate font-bold text-slate-800">
-              {track.name}
-            </p>
-          </div>
-        )}
-
-        <button
-          type="button"
-          onClick={toggleMusic}
-          className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-2xl text-white shadow-xl transition hover:scale-105 hover:bg-blue-700"
-          title={
-            playing
-              ? "Tạm dừng nhạc"
-              : `Phát: ${track.name}`
-          }
-        >
-          {playing ? "🔊" : "🔇"}
-        </button>
-      </div>
-    </>
+      <button
+        type="button"
+        onClick={toggleMusic}
+        className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-2xl text-white shadow-xl transition hover:scale-105 hover:bg-blue-700"
+        title={
+          playing
+            ? "Tạm dừng nhạc"
+            : `Phát: ${track.name}`
+        }
+        aria-label={
+          playing
+            ? "Tạm dừng nhạc"
+            : "Phát nhạc"
+        }
+      >
+        {playing ? "🔊" : "🔇"}
+      </button>
+    </div>
   );
 }
 
