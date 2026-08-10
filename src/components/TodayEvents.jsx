@@ -187,10 +187,6 @@ function TodayEvents({
                                         <div className="animate-bounce text-6xl">
                                             🎁🎉
                                         </div>
-
-                                        <p className="mt-2 text-xs font-semibold text-pink-500">
-                                            Sinh nhật vui vẻ
-                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -258,10 +254,6 @@ function TodayEvents({
                                         <div className="animate-bounce text-6xl">
                                             🕯️🎗︎
                                         </div>
-
-                                        <p className="mt-1 text-xs font-semibold text-amber-600">
-                                            Thành kính tưởng nhớ
-                                        </p>
                                     </div>
                                 </div>
                             </div>

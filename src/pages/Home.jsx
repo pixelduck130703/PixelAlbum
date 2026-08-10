@@ -18,6 +18,7 @@ import DailyQuote from "../components/DailyQuote";
 import Announcement from "../components/Announcement";
 import ScrollReveal from "../components/ScrollReveal";
 import HomeMusicPlayer from "../components/HomeMusicPlayer";
+import WelcomePopup from "../components/WelcomePopup";
 
 const today = new Date();
 
@@ -420,6 +421,8 @@ function Home() {
   return (
     <div className="flex min-h-screen flex-col bg-slate-100">
       <Navbar />
+
+       <WelcomePopup />
 
       <ScrollReveal direction="up">
         <section>
