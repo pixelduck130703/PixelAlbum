@@ -879,7 +879,6 @@ function Invitation() {
 
                 {/* Học vị */}
                 <section className="utc-card-light relative mt-9 w-full max-w-3xl overflow-hidden rounded-3xl border border-blue-200 p-5 sm:p-7">
-                    <div className="absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b from-blue-600 via-blue-500 to-amber-400" />
                     <div className="absolute right-[-25px] top-[-25px] h-28 w-28 rounded-full border-[18px] border-blue-100/50" />
 
                     <div className="relative flex items-center gap-4 sm:gap-5">
@@ -888,7 +887,6 @@ function Invitation() {
                         </div>
 
                         <div className="min-w-0 flex-1 text-left">
-
                             <h3 className="mt-1 text-[15px] font-black uppercase leading-6 text-amber-600 sm:text-2xl">
                                 {t.degree}
                             </h3>

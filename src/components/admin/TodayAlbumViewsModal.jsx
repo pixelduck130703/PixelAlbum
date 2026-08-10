@@ -20,64 +20,37 @@ const FALLBACK_AVATAR =
 
 function TodayAlbumViewsModal({
   open,
-
   people = [],
-
   summary = {
     totalAlbums: 0,
     totalViews: 0,
   },
-
   selectedDate = "",
-
   loading = false,
-
   onDateChange,
-
   onClose,
 }) {
   if (!open) {
     return null;
   }
 
-  const safePeople =
-    Array.isArray(people)
-      ? people
-      : [];
-
-  /*
-   * ==========================
-   * FORMAT NGÀY
-   * ==========================
-   */
+  const safePeople = Array.isArray(people)
+    ? people
+    : [];
 
   const formatDate = (value) => {
     if (!value) {
       return "";
     }
 
-    const [
-      year,
-      month,
-      day,
-    ] = value.split("-");
+    const [year, month, day] = value.split("-");
 
-    if (
-      !year ||
-      !month ||
-      !day
-    ) {
+    if (!year || !month || !day) {
       return value;
     }
 
     return `${day}/${month}/${year}`;
   };
-
-  /*
-   * ==========================
-   * FORMAT GIỜ
-   * ==========================
-   */
 
   const formatTime = (value) => {
     if (!value) {
@@ -85,29 +58,20 @@ function TodayAlbumViewsModal({
     }
 
     try {
-      return new Date(
-        value
-      ).toLocaleTimeString(
+      return new Date(value).toLocaleTimeString(
         "vi-VN",
         {
           hour: "2-digit",
           minute: "2-digit",
           second: "2-digit",
           hour12: false,
-          timeZone:
-            "Asia/Ho_Chi_Minh",
+          timeZone: "Asia/Ho_Chi_Minh",
         }
       );
     } catch {
       return "--:--:--";
     }
   };
-
-  /*
-   * ==========================
-   * NGÀY HÔM NAY
-   * ==========================
-   */
 
   const getTodayString = () => {
     const formatter =
@@ -116,7 +80,6 @@ function TodayAlbumViewsModal({
         {
           timeZone:
             "Asia/Ho_Chi_Minh",
-
           year: "numeric",
           month: "2-digit",
           day: "2-digit",
@@ -128,14 +91,7 @@ function TodayAlbumViewsModal({
     );
   };
 
-  const today =
-    getTodayString();
-
-  /*
-   * ==========================
-   * ĐỔI NGÀY
-   * ==========================
-   */
+  const today = getTodayString();
 
   const changeDate = (
     numberOfDays
@@ -144,20 +100,16 @@ function TodayAlbumViewsModal({
       return;
     }
 
-    const [
-      year,
-      month,
-      day,
-    ] = selectedDate
-      .split("-")
-      .map(Number);
+    const [year, month, day] =
+      selectedDate
+        .split("-")
+        .map(Number);
 
-    const date =
-      new Date(
-        year,
-        month - 1,
-        day
-      );
+    const date = new Date(
+      year,
+      month - 1,
+      day
+    );
 
     date.setDate(
       date.getDate() +
@@ -182,12 +134,6 @@ function TodayAlbumViewsModal({
     );
   };
 
-  /*
-   * ==========================
-   * ICON TRÌNH DUYỆT
-   * ==========================
-   */
-
   const getBrowserIcon = (
     browser = ""
   ) => {
@@ -197,9 +143,7 @@ function TodayAlbumViewsModal({
       ).toLowerCase();
 
     if (
-      value.includes(
-        "chrome"
-      )
+      value.includes("chrome")
     ) {
       return (
         <FaChrome className="text-blue-600" />
@@ -207,9 +151,7 @@ function TodayAlbumViewsModal({
     }
 
     if (
-      value.includes(
-        "firefox"
-      )
+      value.includes("firefox")
     ) {
       return (
         <FaFirefoxBrowser className="text-orange-500" />
@@ -217,9 +159,7 @@ function TodayAlbumViewsModal({
     }
 
     if (
-      value.includes(
-        "safari"
-      )
+      value.includes("safari")
     ) {
       return (
         <FaSafari className="text-sky-500" />
@@ -227,9 +167,7 @@ function TodayAlbumViewsModal({
     }
 
     if (
-      value.includes(
-        "edge"
-      )
+      value.includes("edge")
     ) {
       return (
         <FaEdge className="text-cyan-600" />
@@ -241,12 +179,6 @@ function TodayAlbumViewsModal({
     );
   };
 
-  /*
-   * ==========================
-   * ICON THIẾT BỊ
-   * ==========================
-   */
-
   const getDeviceIcon = (
     device = ""
   ) => {
@@ -256,12 +188,8 @@ function TodayAlbumViewsModal({
       ).toLowerCase();
 
     if (
-      value.includes(
-        "mobile"
-      ) ||
-      value.includes(
-        "smartphone"
-      )
+      value.includes("mobile") ||
+      value.includes("smartphone")
     ) {
       return (
         <FaMobileAlt className="text-violet-600" />
@@ -269,9 +197,7 @@ function TodayAlbumViewsModal({
     }
 
     if (
-      value.includes(
-        "tablet"
-      )
+      value.includes("tablet")
     ) {
       return (
         <FaTabletAlt className="text-violet-600" />
@@ -295,26 +221,27 @@ function TodayAlbumViewsModal({
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/60 p-3 backdrop-blur-sm sm:p-5"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/60 p-2 backdrop-blur-sm sm:p-5"
       onClick={onClose}
     >
       <div
-        className="flex max-h-[94dvh] w-full max-w-4xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl"
+        className="flex max-h-[96dvh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl sm:max-h-[94dvh] sm:rounded-3xl"
         onClick={(event) =>
           event.stopPropagation()
         }
       >
         {/* ==========================
             HEADER
+            Mobile: compact
+            Desktop: giữ nguyên
         ========================== */}
-
-        <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 py-4 sm:px-6">
+        <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-white px-3 py-2.5 sm:px-6 sm:py-4">
           <div className="min-w-0">
-            <h2 className="text-lg font-black text-slate-800 sm:text-xl">
+            <h2 className="text-base font-black text-slate-800 sm:text-xl">
               👁️ Lịch sử xem album
             </h2>
 
-            <p className="mt-1 text-xs text-slate-500 sm:text-sm">
+            <p className="mt-0.5 text-[10px] text-slate-500 sm:mt-1 sm:text-sm">
               Xem lượt mở album theo từng ngày
             </p>
           </div>
@@ -322,7 +249,7 @@ function TodayAlbumViewsModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-red-100 hover:text-red-600"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm text-slate-500 transition hover:bg-red-100 hover:text-red-600 sm:h-10 sm:w-10 sm:text-base"
             aria-label="Đóng"
           >
             <FaTimes />
@@ -331,10 +258,77 @@ function TodayAlbumViewsModal({
 
         {/* ==========================
             CHỌN NGÀY
+            MOBILE COMPACT
         ========================== */}
+        <div className="shrink-0 border-b border-slate-200 bg-slate-50 px-3 py-2.5 sm:hidden">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() =>
+                changeDate(-1)
+              }
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-sm text-slate-600 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600"
+              title="Ngày trước"
+            >
+              <FaChevronLeft />
+            </button>
 
-        <div className="shrink-0 border-b border-slate-200 bg-slate-50 px-4 py-4 sm:px-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="relative min-w-0 flex-1">
+              <FaCalendarAlt className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-blue-500" />
+
+              <input
+                type="date"
+                value={selectedDate}
+                max={today}
+                onChange={(event) =>
+                  onDateChange?.(
+                    event.target.value
+                  )
+                }
+                className="h-9 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-2 text-xs font-bold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={() =>
+                changeDate(1)
+              }
+              disabled={
+                selectedDate >= today
+              }
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-sm text-slate-600 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-30"
+              title="Ngày sau"
+            >
+              <FaChevronRight />
+            </button>
+          </div>
+
+          <div className="mt-1.5 flex items-center justify-between">
+
+            {selectedDate !==
+              today && (
+              <button
+                type="button"
+                onClick={() =>
+                  onDateChange?.(
+                    today
+                  )
+                }
+                className="text-[10px] font-bold text-blue-600"
+              >
+                Về hôm nay
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* ==========================
+            CHỌN NGÀY
+            DESKTOP GIỮ NGUYÊN
+        ========================== */}
+        <div className="hidden shrink-0 border-b border-slate-200 bg-slate-50 px-6 py-4 sm:block">
+          <div className="flex flex-row items-center justify-between gap-3">
             <div>
               <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
                 Ngày thống kê
@@ -348,7 +342,6 @@ function TodayAlbumViewsModal({
             </div>
 
             <div className="flex items-center gap-2">
-              {/* Ngày trước */}
               <button
                 type="button"
                 onClick={() =>
@@ -360,37 +353,29 @@ function TodayAlbumViewsModal({
                 <FaChevronLeft />
               </button>
 
-              {/* Chọn ngày */}
-              <div className="relative min-w-0 flex-1 sm:w-[185px]">
+              <div className="relative w-[185px] min-w-0">
                 <FaCalendarAlt className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-blue-500" />
 
                 <input
                   type="date"
-                  value={
-                    selectedDate
-                  }
+                  value={selectedDate}
                   max={today}
-                  onChange={(
-                    event
-                  ) =>
+                  onChange={(event) =>
                     onDateChange?.(
-                      event.target
-                        .value
+                      event.target.value
                     )
                   }
                   className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3 text-sm font-bold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                 />
               </div>
 
-              {/* Ngày sau */}
               <button
                 type="button"
                 onClick={() =>
                   changeDate(1)
                 }
                 disabled={
-                  selectedDate >=
-                  today
+                  selectedDate >= today
                 }
                 className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-30"
                 title="Ngày sau"
@@ -400,7 +385,6 @@ function TodayAlbumViewsModal({
             </div>
           </div>
 
-          {/* Hôm nay */}
           {selectedDate !==
             today && (
             <button
@@ -419,11 +403,59 @@ function TodayAlbumViewsModal({
 
         {/* ==========================
             TỔNG QUAN
+            MOBILE COMPACT
         ========================== */}
+        <div className="grid shrink-0 grid-cols-2 gap-2 border-b border-slate-100 bg-white px-3 py-2.5 sm:hidden">
+          <div className="flex min-w-0 items-center justify-between rounded-xl border border-blue-100 bg-blue-50 px-3 py-2">
+            <div className="min-w-0">
+              <p className="truncate text-[9px] font-bold uppercase tracking-wide text-blue-500">
+                Album đã xem
+              </p>
 
-        <div className="grid shrink-0 grid-cols-2 gap-3 border-b border-slate-100 bg-white px-4 py-4 sm:px-6">
+              <p className="mt-0.5 text-lg font-black leading-none text-blue-700">
+                {Number(
+                  summary.totalAlbums ||
+                    0
+                ).toLocaleString(
+                  "vi-VN"
+                )}
+              </p>
+            </div>
+
+            <div className="ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-sm text-blue-600">
+              <FaEye />
+            </div>
+          </div>
+
+          <div className="flex min-w-0 items-center justify-between rounded-xl border border-violet-100 bg-violet-50 px-3 py-2">
+            <div className="min-w-0">
+              <p className="truncate text-[9px] font-bold uppercase tracking-wide text-violet-500">
+                Tổng lượt mở
+              </p>
+
+              <p className="mt-0.5 text-lg font-black leading-none text-violet-700">
+                {Number(
+                  summary.totalViews ||
+                    0
+                ).toLocaleString(
+                  "vi-VN"
+                )}
+              </p>
+            </div>
+
+            <div className="ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-sm text-violet-600">
+              <FaClock />
+            </div>
+          </div>
+        </div>
+
+        {/* ==========================
+            TỔNG QUAN
+            DESKTOP GIỮ NGUYÊN
+        ========================== */}
+        <div className="hidden shrink-0 grid-cols-2 gap-3 border-b border-slate-100 bg-white px-6 py-4 sm:grid">
           <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-blue-500 sm:text-[11px]">
+            <p className="text-[11px] font-bold uppercase tracking-wide text-blue-500">
               Album đã xem
             </p>
 
@@ -438,7 +470,7 @@ function TodayAlbumViewsModal({
           </div>
 
           <div className="rounded-2xl border border-violet-100 bg-violet-50 p-4">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-violet-500 sm:text-[11px]">
+            <p className="text-[11px] font-bold uppercase tracking-wide text-violet-500">
               Tổng lượt mở
             </p>
 
@@ -456,33 +488,27 @@ function TodayAlbumViewsModal({
         {/* ==========================
             NỘI DUNG
         ========================== */}
-
-        <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
-          {/* Loading */}
-
+        <div className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-6">
           {loading ? (
-            <div className="flex min-h-[280px] flex-col items-center justify-center">
-              <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600" />
+            <div className="flex min-h-[220px] flex-col items-center justify-center sm:min-h-[280px]">
+              <div className="h-9 w-9 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600 sm:h-10 sm:w-10" />
 
-              <p className="mt-4 text-sm font-semibold text-slate-500">
+              <p className="mt-3 text-xs font-semibold text-slate-500 sm:mt-4 sm:text-sm">
                 Đang tải dữ liệu...
               </p>
             </div>
           ) : safePeople.length ===
             0 ? (
-            /*
-             * Không có dữ liệu
-             */
-            <div className="flex min-h-[280px] flex-col items-center justify-center text-center">
-              <div className="text-5xl">
+            <div className="flex min-h-[220px] flex-col items-center justify-center text-center sm:min-h-[280px]">
+              <div className="text-4xl sm:text-5xl">
                 👀
               </div>
 
-              <h3 className="mt-4 text-lg font-bold text-slate-800">
+              <h3 className="mt-3 text-base font-bold text-slate-800 sm:mt-4 sm:text-lg">
                 Không có lượt xem
               </h3>
 
-              <p className="mt-2 text-sm text-slate-500">
+              <p className="mt-1.5 text-xs text-slate-500 sm:mt-2 sm:text-sm">
                 Không có album nào được mở ngày{" "}
                 <strong>
                   {formatDate(
@@ -493,10 +519,7 @@ function TodayAlbumViewsModal({
               </p>
             </div>
           ) : (
-            /*
-             * Có dữ liệu
-             */
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {safePeople.map(
                 (person) => {
                   const viewDetails =
@@ -515,14 +538,11 @@ function TodayAlbumViewsModal({
 
                   return (
                     <article
-                      key={
-                        person.id
-                      }
-                      className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+                      key={person.id}
+                      className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm sm:rounded-2xl"
                     >
                       {/* Người */}
-
-                      <div className="flex items-center gap-3 p-4">
+                      <div className="flex items-center gap-3 p-3 sm:p-4">
                         <img
                           src={
                             person.avatar ||
@@ -535,16 +555,16 @@ function TodayAlbumViewsModal({
                           onError={
                             handleImageError
                           }
-                          className="h-14 w-14 shrink-0 rounded-full border border-slate-200 object-cover shadow-sm"
+                          className="h-11 w-11 shrink-0 rounded-full border border-slate-200 object-cover shadow-sm sm:h-14 sm:w-14"
                         />
 
                         <div className="min-w-0 flex-1">
-                          <h3 className="truncate font-bold text-slate-800">
+                          <h3 className="truncate text-sm font-bold text-slate-800 sm:text-base">
                             {person.name ||
                               "Chưa cập nhật"}
                           </h3>
 
-                          <div className="mt-1 flex items-center gap-2 text-sm text-indigo-600">
+                          <div className="mt-0.5 flex items-center gap-1.5 text-xs text-indigo-600 sm:mt-1 sm:gap-2 sm:text-sm">
                             <FaEye />
 
                             <span className="font-semibold">
@@ -561,12 +581,11 @@ function TodayAlbumViewsModal({
                       </div>
 
                       {/* Chi tiết */}
-
-                      <div className="border-t border-slate-100 bg-slate-50/60 p-4">
-                        <div className="mb-3 flex items-center gap-2">
+                      <div className="border-t border-slate-100 bg-slate-50/60 p-3 sm:p-4">
+                        <div className="mb-2 flex items-center gap-2 sm:mb-3">
                           <FaClock className="text-blue-500" />
 
-                          <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                          <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500 sm:text-xs">
                             Chi tiết lượt mở
                           </p>
                         </div>
@@ -608,22 +627,21 @@ function TodayAlbumViewsModal({
                                   return (
                                     <div
                                       key={`${person.id}-${viewedAt}-${index}`}
-                                      className="rounded-xl border border-slate-200 bg-white p-3"
+                                      className="rounded-lg border border-slate-200 bg-white p-2.5 sm:rounded-xl sm:p-3"
                                     >
-                                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                                         {/* Giờ */}
-
                                         <div className="flex items-center gap-2">
-                                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+                                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-sm text-blue-600 sm:h-9 sm:w-9 sm:text-base">
                                             <FaClock />
                                           </div>
 
                                           <div>
-                                            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                                            <p className="text-[9px] font-bold uppercase tracking-wide text-slate-400 sm:text-[10px]">
                                               Thời gian
                                             </p>
 
-                                            <p className="text-sm font-black text-slate-800">
+                                            <p className="text-xs font-black text-slate-800 sm:text-sm">
                                               {formatTime(
                                                 viewedAt
                                               )}
@@ -632,33 +650,28 @@ function TodayAlbumViewsModal({
                                         </div>
 
                                         {/* Thiết bị */}
-
-                                        <div className="flex flex-wrap gap-2">
-                                          <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-3 py-1.5 text-xs font-semibold text-blue-700">
+                                        <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                                          <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-1 text-[10px] font-semibold text-blue-700 sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-xs">
                                             {getBrowserIcon(
                                               browser
                                             )}
 
-                                            {
-                                              browser
-                                            }
+                                            {browser}
                                           </span>
 
-                                          <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-100 px-3 py-1.5 text-xs font-semibold text-violet-700">
+                                          <span className="inline-flex max-w-full items-center gap-1 rounded-full bg-violet-100 px-2 py-1 text-[10px] font-semibold text-violet-700 sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-xs">
                                             {getDeviceIcon(
                                               deviceType
                                             )}
 
-                                            {
-                                              deviceName
-                                            }
+                                            <span className="truncate">
+                                              {deviceName}
+                                            </span>
                                           </span>
 
                                           {os && (
-                                            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-semibold text-emerald-700">
-                                              {
-                                                os
-                                              }
+                                            <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-semibold text-emerald-700 sm:px-3 sm:py-1.5 sm:text-xs">
+                                              {os}
                                             </span>
                                           )}
                                         </div>
@@ -670,7 +683,7 @@ function TodayAlbumViewsModal({
                           </div>
                         ) : viewTimes.length >
                           0 ? (
-                          <div className="flex flex-wrap gap-2">
+                          <div className="flex flex-wrap gap-1.5 sm:gap-2">
                             {[
                               ...viewTimes,
                             ]
@@ -682,7 +695,7 @@ function TodayAlbumViewsModal({
                                 ) => (
                                   <span
                                     key={`${person.id}-${viewedAt}-${index}`}
-                                    className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700"
+                                    className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-1 text-[10px] font-semibold text-blue-700 sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-xs"
                                   >
                                     <FaClock />
 
@@ -694,7 +707,7 @@ function TodayAlbumViewsModal({
                               )}
                           </div>
                         ) : (
-                          <p className="text-sm text-slate-400">
+                          <p className="text-xs text-slate-400 sm:text-sm">
                             Chưa có dữ liệu chi tiết.
                           </p>
                         )}
@@ -709,13 +722,13 @@ function TodayAlbumViewsModal({
 
         {/* ==========================
             FOOTER
+            Mobile nhỏ hơn, desktop giữ nguyên
         ========================== */}
-
-        <div className="shrink-0 border-t border-slate-200 bg-white p-4 sm:px-6">
+        <div className="shrink-0 border-t border-slate-200 bg-white p-2.5 sm:p-4 sm:px-6">
           <button
             type="button"
             onClick={onClose}
-            className="flex min-h-[48px] w-full items-center justify-center rounded-xl bg-slate-100 px-5 font-semibold text-slate-700 transition hover:bg-slate-200"
+            className="flex h-10 w-full items-center justify-center rounded-lg bg-slate-100 px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-200 sm:min-h-[48px] sm:rounded-xl sm:px-5 sm:text-base"
           >
             Đóng
           </button>
