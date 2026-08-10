@@ -419,150 +419,146 @@ function Home() {
   }, [people]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-100">
-      <Navbar />
+  <div className="flex min-h-screen flex-col bg-slate-100">
+    <Navbar />
 
-       <WelcomePopup />
+    {/* Popup chào mừng */}
+    <WelcomePopup />
 
+    {/* Popup kết quả tìm kiếm */}
+    <SearchResult
+      loading={loading}
+      error={error}
+      hasSearched={hasSearched}
+      searchDescription={searchDescription}
+      results={results}
+      onClose={() => setHasSearched(false)}
+    />
+
+    <ScrollReveal direction="up">
+      <section>
+        <DateHeader
+          today={today}
+          weekdays={weekdays}
+          lunarToday={lunarToday}
+          monthText={monthText}
+          yearGan={yearGan}
+          yearZhi={yearZhi}
+        />
+      </section>
+    </ScrollReveal>
+
+    <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-8 pt-2 sm:px-6 sm:pb-10 sm:pt-4">
+      {/* Thống kê */}
       <ScrollReveal direction="up">
         <section>
-          <DateHeader
-            today={today}
-            weekdays={weekdays}
-            lunarToday={lunarToday}
-            monthText={monthText}
+          <HomeStatistics
+            visits={visits}
+            totalAlbums={homeStatistics.totalAlbums}
+            totalAlbumViews={homeStatistics.totalAlbumViews}
+            birthdaysThisMonth={homeStatistics.birthdaysThisMonth}
+          />
+        </section>
+      </ScrollReveal>
+
+      {/* Sự kiện hôm nay */}
+      <ScrollReveal
+        direction="up"
+        delay={80}
+        className="mt-5"
+      >
+        <section>
+          <TodayEvents
+            todayBirthdayPeople={todayBirthdayPeople}
+            todayDeathPeople={todayDeathPeople}
+            todayHolidays={todayHolidays}
+            formatDate={formatDate}
             yearGan={yearGan}
             yearZhi={yearZhi}
           />
         </section>
       </ScrollReveal>
 
-      <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-8 pt-2 sm:px-6 sm:pb-10 sm:pt-4">
-        {/* Thống kê */}
-        <ScrollReveal direction="up">
-          <section>
-            <HomeStatistics
-              visits={visits}
-              totalAlbums={homeStatistics.totalAlbums}
-              totalAlbumViews={homeStatistics.totalAlbumViews}
-              birthdaysThisMonth={homeStatistics.birthdaysThisMonth}
-            />
-          </section>
-        </ScrollReveal>
-
-        {/* Sự kiện hôm nay */}
-        <ScrollReveal
-          direction="up"
-          delay={80}
-          className="mt-5"
-        >
-          <section>
-            <TodayEvents
-              todayBirthdayPeople={todayBirthdayPeople}
-              todayDeathPeople={todayDeathPeople}
-              todayHolidays={todayHolidays}
-              formatDate={formatDate}
-              yearGan={yearGan}
-              yearZhi={yearZhi}
-            />
-          </section>
-        </ScrollReveal>
-
-        {/* Thông báo */}
-        {announcement.content?.trim() && (
-          <ScrollReveal
-            direction="up"
-            delay={100}
-            className="mt-6"
-          >
-            <section>
-              <Announcement
-                content={announcement.content}
-                updatedAt={announcement.updatedAt}
-              />
-            </section>
-          </ScrollReveal>
-        )}
-
-        {/* Tìm kiếm và giới thiệu */}
-        <ScrollReveal
-          direction="up"
-          delay={120}
-          className="mt-6"
-        >
-          <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
-            <div className="min-w-0">
-              <SearchBox
-                name={nameInput}
-                setName={setNameInput}
-                birthday={birthdayInput}
-                setBirthday={setBirthdayInput}
-                onSearch={handleSearch}
-                onClear={handleClear}
-              />
-            </div>
-
-            <div className="hidden min-w-0 lg:block">
-              <AboutMe />
-            </div>
-          </section>
-        </ScrollReveal>
-
-        {/* Kết quả tìm kiếm */}
+      {/* Thông báo */}
+      {announcement.content?.trim() && (
         <ScrollReveal
           direction="up"
           delay={100}
           className="mt-6"
         >
           <section>
-            <SearchResult
-              loading={loading}
-              error={error}
-              hasSearched={hasSearched}
-              searchDescription={searchDescription}
-              results={results}
+            <Announcement
+              content={announcement.content}
+              updatedAt={announcement.updatedAt}
             />
           </section>
         </ScrollReveal>
+      )}
 
-        {/* Câu nói */}
-        <ScrollReveal
-          direction="up"
-          delay={100}
-          className="mt-6"
-        >
-          <section>
-            <DailyQuote />
-          </section>
-        </ScrollReveal>
+      {/* Tìm kiếm và giới thiệu */}
+      <ScrollReveal
+        direction="up"
+        delay={120}
+        className="mt-6"
+      >
+        <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
+          <div className="min-w-0">
+            <SearchBox
+              name={nameInput}
+              setName={setNameInput}
+              birthday={birthdayInput}
+              setBirthday={setBirthdayInput}
+              onSearch={handleSearch}
+              onClear={handleClear}
+            />
+          </div>
 
-        {/* Giới thiệu trên mobile */}
-        <ScrollReveal
-          direction="up"
-          delay={100}
-          className="mt-6 lg:hidden"
-        >
-          <section>
+          <div className="hidden min-w-0 lg:block">
             <AboutMe />
-          </section>
-        </ScrollReveal>
+          </div>
+        </section>
+      </ScrollReveal>
 
-        {/* Góp ý và ủng hộ */}
-        <ScrollReveal
-          direction="up"
-          delay={120}
-          className="mt-8"
-        >
-          <section className="grid gap-6 lg:grid-cols-2">
-            <FeedbackForm />
-            <DonateCard />
-          </section>
-        </ScrollReveal>
-      </main>
-      <HomeMusicPlayer />
-      <Footer />
-    </div>
-  );
+      {/* Câu nói */}
+      <ScrollReveal
+        direction="up"
+        delay={100}
+        className="mt-6"
+      >
+        <section>
+          <DailyQuote />
+        </section>
+      </ScrollReveal>
+
+      {/* Giới thiệu mobile */}
+      <ScrollReveal
+        direction="up"
+        delay={100}
+        className="mt-6 lg:hidden"
+      >
+        <section>
+          <AboutMe />
+        </section>
+      </ScrollReveal>
+
+      {/* Góp ý và ủng hộ */}
+      <ScrollReveal
+        direction="up"
+        delay={120}
+        className="mt-8"
+      >
+        <section className="grid gap-6 lg:grid-cols-2">
+          <FeedbackForm />
+          <DonateCard />
+        </section>
+      </ScrollReveal>
+    </main>
+
+    <HomeMusicPlayer />
+
+    <Footer />
+  </div>
+);
 }
 
 function formatDate(value) {
