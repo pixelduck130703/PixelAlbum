@@ -717,10 +717,6 @@ function Invitation() {
                         {GRADUATE_NAME}
                     </h2>
 
-                    <p className="mt-2 text-lg font-semibold tracking-[0.35em] text-amber-500 uppercase">
-                        Information Technology
-                    </p>
-
                     <div className="mx-auto mt-5 flex max-w-sm items-center gap-3">
                         <div className="h-[2px] flex-1 bg-gradient-to-r from-transparent via-blue-500 to-amber-400" />
 

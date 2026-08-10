@@ -221,8 +221,11 @@ function Home() {
         const hasNoBirthday =
           !person.birthday || person.birthday.trim() === "";
 
-        const nameMatches = normalizeText(person.name).includes(
-          normalizedName
+        const personWords = normalizeText(person.name).split(" ");
+        const searchWords = normalizedName.split(" ");
+
+        const nameMatches = searchWords.every((word) =>
+          personWords.includes(word)
         );
 
         return hasNoBirthday && nameMatches;
