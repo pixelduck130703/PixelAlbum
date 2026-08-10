@@ -138,6 +138,67 @@ function normalizeOptionalDate(value) {
   return value ? String(value).slice(0, 10) : null;
 }
 
+// ==========================
+// NHẬN DIỆN TRÌNH DUYỆT
+// ==========================
+
+function detectBrowser(userAgent = "") {
+  const ua = String(userAgent).toLowerCase();
+
+  if (ua.includes("edg/")) {
+    return "Microsoft Edge";
+  }
+
+  if (
+    ua.includes("opr/") ||
+    ua.includes("opera")
+  ) {
+    return "Opera";
+  }
+
+  if (ua.includes("firefox/")) {
+    return "Mozilla Firefox";
+  }
+
+  if (
+    ua.includes("chrome/") &&
+    !ua.includes("edg/") &&
+    !ua.includes("opr/")
+  ) {
+    return "Google Chrome";
+  }
+
+  if (
+    ua.includes("safari/") &&
+    !ua.includes("chrome/")
+  ) {
+    return "Safari";
+  }
+
+  return "Khác";
+}
+
+function detectDevice(userAgent = "") {
+  const ua = String(userAgent).toLowerCase();
+
+  if (
+    ua.includes("ipad") ||
+    ua.includes("tablet")
+  ) {
+    return "Tablet";
+  }
+
+  if (
+    ua.includes("iphone") ||
+    ua.includes("android") ||
+    ua.includes("mobile")
+  ) {
+    return "Mobile";
+  }
+
+  return "Desktop";
+}
+
 /* ==========================
    Trang chủ
 ========================== */
@@ -1653,9 +1714,24 @@ app.post(
     try {
       const { publicId } = req.params;
 
+      /*
+       * Thông tin thiết bị lấy từ HTTP headers.
+       * Không cần frontend gửi lên.
+       */
+      const userAgent =
+        req.headers["user-agent"] || "";
+
+      const browser =
+        detectBrowser(userAgent);
+
+      const device =
+        detectDevice(userAgent);
+
       await client.query("BEGIN");
 
-      // Tìm người theo publicId
+      /*
+       * Tìm album.
+       */
       const personResult = await client.query(
         `
           SELECT
@@ -1678,45 +1754,84 @@ app.post(
         });
       }
 
-      const person = personResult.rows[0];
+      const person =
+        personResult.rows[0];
 
-      if (!person.album || !String(person.album).trim()) {
+      if (
+        !person.album ||
+        !String(person.album).trim()
+      ) {
         await client.query("ROLLBACK");
 
         return res.status(400).json({
-          message: "Người này chưa có liên kết album.",
+          message:
+            "Người này chưa có liên kết album.",
         });
       }
 
-      // 1. Tăng tổng lượt xem của chính album đó
-      const updatedPerson = await client.query(
-        `
-          UPDATE people
-          SET "albumViews" = COALESCE("albumViews", 0) + 1
-          WHERE id = $1
-          RETURNING "albumViews"
-        `,
-        [person.id]
-      );
+      /*
+       * 1. Tăng tổng lượt xem album.
+       */
+      const updatedPerson =
+        await client.query(
+          `
+            UPDATE people
 
-      // 2. Tăng tổng lượt mở của tất cả album trong ngày
-      await client.query(
-        `
-          INSERT INTO album_view_daily (
-            view_date,
-            views
-          )
-          VALUES (
-            (NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh')::date,
-            1
-          )
-          ON CONFLICT (view_date)
-          DO UPDATE SET
-            views = album_view_daily.views + 1
-        `
-      );
+            SET "albumViews" =
+              COALESCE("albumViews", 0) + 1
 
-      // 3. Ghi lượt mở theo từng album trong ngày
+            WHERE id = $1
+
+            RETURNING "albumViews"
+          `,
+          [person.id]
+        );
+
+      /*
+       * 2. Tăng tổng lượt mở album trong ngày.
+       */
+      await client.query(`
+        INSERT INTO album_view_daily (
+          view_date,
+          views
+        )
+
+        VALUES (
+          (
+            NOW()
+            AT TIME ZONE 'Asia/Ho_Chi_Minh'
+          )::date,
+          1
+        )
+
+        ON CONFLICT (view_date)
+
+        DO UPDATE SET
+          views =
+            album_view_daily.views + 1
+      `);
+
+      /*
+       * Dữ liệu chi tiết cho lần mở này.
+       *
+       * viewedAt được tạo bằng PostgreSQL bên dưới,
+       * không phụ thuộc đồng hồ trên máy người dùng.
+       */
+      const viewDetail = {
+        browser,
+        device,
+        userAgent,
+      };
+
+      /*
+       * 3. Ghi thống kê từng album.
+       *
+       * view_times:
+       * danh sách thời gian.
+       *
+       * view_details:
+       * thông tin tương ứng từng lần mở.
+       */
       await client.query(
         `
           INSERT INTO album_view_by_person_daily (
@@ -1724,19 +1839,41 @@ app.post(
             view_date,
             views,
             last_viewed_at,
-            view_times
+            view_times,
+            view_details
           )
+
           VALUES (
             $1,
-            (NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh')::date,
+
+            (
+              NOW()
+              AT TIME ZONE 'Asia/Ho_Chi_Minh'
+            )::date,
+
             1,
+
             NOW(),
-            ARRAY[NOW()]::timestamptz[]
+
+            ARRAY[NOW()]::timestamptz[],
+
+            jsonb_build_array(
+              jsonb_build_object(
+                'viewedAt', NOW(),
+                'browser', $2::text,
+                'device', $3::text,
+                'userAgent', $4::text
+              )
+            )
           )
 
-          ON CONFLICT (person_id, view_date)
+          ON CONFLICT (
+            person_id,
+            view_date
+          )
 
           DO UPDATE SET
+
             views =
               album_view_by_person_daily.views + 1,
 
@@ -1750,21 +1887,48 @@ app.post(
                   '{}'::timestamptz[]
                 ),
                 NOW()
+              ),
+
+            view_details =
+              COALESCE(
+                album_view_by_person_daily.view_details,
+                '[]'::jsonb
+              )
+              ||
+              jsonb_build_array(
+                jsonb_build_object(
+                  'viewedAt', NOW(),
+                  'browser', $2::text,
+                  'device', $3::text,
+                  'userAgent', $4::text
+                )
               )
         `,
-        [person.id]
+        [
+          person.id,
+          viewDetail.browser,
+          viewDetail.device,
+          viewDetail.userAgent,
+        ]
       );
 
       await client.query("COMMIT");
 
       return res.json({
-        message: "Đã ghi nhận lượt xem album.",
+        message:
+          "Đã ghi nhận lượt xem album.",
+
         albumViews: Number(
-          updatedPerson.rows[0]?.albumViews || 0
+          updatedPerson.rows[0]
+            ?.albumViews || 0
         ),
       });
     } catch (error) {
-      await client.query("ROLLBACK");
+      try {
+        await client.query("ROLLBACK");
+      } catch {
+        // Bỏ qua lỗi rollback.
+      }
 
       console.error(
         "Lỗi ghi nhận lượt xem album:",
@@ -1772,7 +1936,8 @@ app.post(
       );
 
       return res.status(500).json({
-        message: "Không thể ghi nhận lượt xem album.",
+        message:
+          "Không thể ghi nhận lượt xem album.",
       });
     } finally {
       client.release();
@@ -1874,7 +2039,8 @@ app.get(
 
           daily.views AS "todayViews",
           daily.last_viewed_at AS "lastViewedAt",
-          daily.view_times AS "viewTimes"
+          daily.view_times AS "viewTimes",
+          daily.view_details AS "viewDetails"
 
         FROM album_view_by_person_daily daily
 
@@ -1902,6 +2068,11 @@ app.get(
         viewTimes:
           Array.isArray(person.viewTimes)
             ? person.viewTimes
+            : [],
+
+        viewDetails:
+          Array.isArray(person.viewDetails)
+            ? person.viewDetails
             : [],
       }));
 

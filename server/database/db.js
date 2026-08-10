@@ -171,7 +171,14 @@ async function initializeDatabase() {
    *   Thời điểm mở gần nhất.
    *
    * view_times:
-   *   Danh sách toàn bộ thời điểm mở album trong ngày.
+   *   Danh sách toàn bộ thời điểm mở album.
+   *
+   * view_details:
+   *   Chi tiết từng lượt mở:
+   *   - viewedAt
+   *   - browser
+   *   - device
+   *   - userAgent
    */
   await pool.query(`
     CREATE TABLE IF NOT EXISTS album_view_by_person_daily (
@@ -186,6 +193,10 @@ async function initializeDatabase() {
         NOT NULL
         DEFAULT '{}',
 
+      view_details JSONB
+        NOT NULL
+        DEFAULT '[]'::jsonb,
+
       PRIMARY KEY (
         person_id,
         view_date
@@ -199,10 +210,8 @@ async function initializeDatabase() {
   `);
 
   /*
-   * Nếu bảng đã tồn tại từ trước,
-   * CREATE TABLE IF NOT EXISTS sẽ không thêm cột mới.
-   *
-   * Vì vậy cần ALTER TABLE để bổ sung view_times.
+   * Bảng có thể đã tồn tại từ trước,
+   * nên cần ALTER TABLE để bổ sung các cột mới.
    */
   await pool.query(`
     ALTER TABLE album_view_by_person_daily
@@ -210,6 +219,14 @@ async function initializeDatabase() {
       view_times TIMESTAMPTZ[]
       NOT NULL
       DEFAULT '{}'
+  `);
+
+  await pool.query(`
+    ALTER TABLE album_view_by_person_daily
+    ADD COLUMN IF NOT EXISTS
+      view_details JSONB
+      NOT NULL
+      DEFAULT '[]'::jsonb
   `);
 
   console.log(
@@ -220,8 +237,6 @@ async function initializeDatabase() {
    * ==========================
    * INDEX
    * ==========================
-   *
-   * Tăng tốc truy vấn album được xem trong ngày.
    */
   await pool.query(`
     CREATE INDEX IF NOT EXISTS

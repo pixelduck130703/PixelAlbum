@@ -2,6 +2,14 @@ import {
   FaEye,
   FaClock,
   FaTimes,
+  FaChrome,
+  FaFirefoxBrowser,
+  FaSafari,
+  FaEdge,
+  FaDesktop,
+  FaMobileAlt,
+  FaTabletAlt,
+  FaGlobe,
 } from "react-icons/fa";
 
 const FALLBACK_AVATAR =
@@ -45,9 +53,64 @@ function TodayAlbumViewsModal({
     }
   };
 
+  const getBrowserIcon = (browser = "") => {
+    const value =
+      String(browser).toLowerCase();
+
+    if (value.includes("chrome")) {
+      return (
+        <FaChrome className="text-blue-600" />
+      );
+    }
+
+    if (value.includes("firefox")) {
+      return (
+        <FaFirefoxBrowser className="text-orange-500" />
+      );
+    }
+
+    if (value.includes("safari")) {
+      return (
+        <FaSafari className="text-sky-500" />
+      );
+    }
+
+    if (value.includes("edge")) {
+      return (
+        <FaEdge className="text-cyan-600" />
+      );
+    }
+
+    return (
+      <FaGlobe className="text-slate-500" />
+    );
+  };
+
+  const getDeviceIcon = (device = "") => {
+    const value =
+      String(device).toLowerCase();
+
+    if (value.includes("mobile")) {
+      return (
+        <FaMobileAlt className="text-violet-600" />
+      );
+    }
+
+    if (value.includes("tablet")) {
+      return (
+        <FaTabletAlt className="text-violet-600" />
+      );
+    }
+
+    return (
+      <FaDesktop className="text-violet-600" />
+    );
+  };
+
   const handleImageError = (event) => {
     event.currentTarget.onerror = null;
-    event.currentTarget.src = FALLBACK_AVATAR;
+    event.currentTarget.src =
+      FALLBACK_AVATAR;
   };
 
   return (
@@ -56,7 +119,7 @@ function TodayAlbumViewsModal({
       onClick={onClose}
     >
       <div
-        className="flex max-h-[92dvh] w-full max-w-3xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl"
+        className="flex max-h-[92dvh] w-full max-w-4xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl"
         onClick={(event) =>
           event.stopPropagation()
         }
@@ -129,6 +192,13 @@ function TodayAlbumViewsModal({
           ) : (
             <div className="space-y-4">
               {safePeople.map((person) => {
+                const viewDetails =
+                  Array.isArray(
+                    person.viewDetails
+                  )
+                    ? person.viewDetails
+                    : [];
+
                 const viewTimes =
                   Array.isArray(
                     person.viewTimes
@@ -180,45 +250,128 @@ function TodayAlbumViewsModal({
                       </div>
                     </div>
 
-                    {/* Các thời gian mở */}
-                    <div className="mt-4 border-t border-slate-100 pt-4">
-                      <div className="mb-3 flex items-center gap-2">
-                        <FaClock className="text-blue-500" />
+                    {/* Có dữ liệu chi tiết mới */}
+                    {viewDetails.length >
+                    0 ? (
+                      <div className="mt-4 border-t border-slate-100 pt-4">
+                        <div className="mb-3 flex items-center gap-2">
+                          <FaClock className="text-blue-500" />
 
-                        <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-                          Thời gian mở
-                        </p>
-                      </div>
+                          <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                            Chi tiết lượt mở
+                          </p>
+                        </div>
 
-                      {viewTimes.length ===
-                      0 ? (
-                        <p className="text-sm text-slate-400">
-                          Chưa có dữ liệu thời gian.
-                        </p>
-                      ) : (
-                        <div className="flex flex-wrap gap-2">
-                          {[...viewTimes]
+                        <div className="space-y-2">
+                          {[...viewDetails]
                             .reverse()
                             .map(
                               (
-                                viewedAt,
+                                detail,
                                 index
-                              ) => (
-                                <span
-                                  key={`${person.id}-${viewedAt}-${index}`}
-                                  className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700"
-                                >
-                                  <FaClock className="text-[10px]" />
+                              ) => {
+                                const viewedAt =
+                                  detail?.viewedAt;
 
-                                  {formatTime(
-                                    viewedAt
-                                  )}
-                                </span>
-                              )
+                                const browser =
+                                  detail?.browser ||
+                                  "Không xác định";
+
+                                const device =
+                                  detail?.device ||
+                                  "Không xác định";
+
+                                return (
+                                  <div
+                                    key={`${person.id}-${viewedAt}-${index}`}
+                                    className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-3"
+                                  >
+                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                      {/* Thời gian */}
+                                      <div className="flex items-center gap-2">
+                                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+                                          <FaClock />
+                                        </div>
+
+                                        <div>
+                                          <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                                            Thời gian
+                                          </p>
+
+                                          <p className="text-sm font-bold text-slate-800">
+                                            {formatTime(
+                                              viewedAt
+                                            )}
+                                          </p>
+                                        </div>
+                                      </div>
+
+                                      {/* Browser + Device */}
+                                      <div className="flex flex-wrap gap-2">
+                                        <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-3 py-1.5 text-xs font-semibold text-blue-700">
+                                          {getBrowserIcon(
+                                            browser
+                                          )}
+
+                                          {browser}
+                                        </span>
+
+                                        <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-100 px-3 py-1.5 text-xs font-semibold text-violet-700">
+                                          {getDeviceIcon(
+                                            device
+                                          )}
+
+                                          {device}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              }
                             )}
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    ) : (
+                      /* Dữ liệu cũ chỉ có thời gian */
+                      <div className="mt-4 border-t border-slate-100 pt-4">
+                        <div className="mb-3 flex items-center gap-2">
+                          <FaClock className="text-blue-500" />
+
+                          <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                            Thời gian mở
+                          </p>
+                        </div>
+
+                        {viewTimes.length ===
+                        0 ? (
+                          <p className="text-sm text-slate-400">
+                            Chưa có dữ liệu thời gian.
+                          </p>
+                        ) : (
+                          <div className="flex flex-wrap gap-2">
+                            {[...viewTimes]
+                              .reverse()
+                              .map(
+                                (
+                                  viewedAt,
+                                  index
+                                ) => (
+                                  <span
+                                    key={`${person.id}-${viewedAt}-${index}`}
+                                    className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700"
+                                  >
+                                    <FaClock className="text-[10px]" />
+
+                                    {formatTime(
+                                      viewedAt
+                                    )}
+                                  </span>
+                                )
+                              )}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </article>
                 );
               })}
