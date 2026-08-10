@@ -41,7 +41,12 @@ function SearchBox({
     <section className="rounded-3xl bg-white p-5 shadow-xl sm:p-6">
       <div className="text-center">
         <h1 className="mx-auto max-w-5xl text-center text-2xl font-black leading-tight tracking-tight text-slate-800 sm:text-3xl lg:text-4xl lg:whitespace-nowrap">
-          🎞️ NHỮNG BỨC ẢNH TÔI LƯU VỀ BẠN
+          🎞️ NHỮNG BỨC ẢNH
+          <span className="hidden sm:inline"> TÔI LƯU VỀ BẠN</span>
+
+          <br className="sm:hidden" />
+
+          <span className="sm:hidden">TÔI LƯU VỀ BẠN</span>
         </h1>
 
         <p className="mx-auto mt-3 text-lg leading-6 text-slate-500">
@@ -53,18 +58,12 @@ function SearchBox({
 
       <form onSubmit={handleSubmit} className="mt-5 space-y-4">
         <div>
-          <div className="mb-2 flex items-center justify-between gap-3">
-            <label
-              htmlFor="birthday-search"
-              className="text-sm font-semibold text-slate-700"
-            >
-              Tìm theo ngày sinh (Ngày/Tháng/Năm)
-            </label>
-
-            <span className="rounded-full bg-blue-100 px-2.5 py-1 text-[10px] font-bold uppercase text-blue-700">
-              Khuyến khích
-            </span>
-          </div>
+          <label
+            htmlFor="birthday-search"
+            className="mb-2 block text-sm font-semibold text-slate-700"
+          >
+            Tìm theo ngày sinh (Ngày/Tháng/Năm)
+          </label>
 
           <div className="relative">
             <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2">
@@ -78,18 +77,31 @@ function SearchBox({
               value={birthday}
               onChange={handleBirthdayChange}
               disabled={isNameMode}
-              placeholder="DD/MM/YYYY"
-              className={`h-12 w-full rounded-xl border bg-white pl-11 pr-11 font-medium text-slate-800 outline-none transition ${isBirthdayMode
-                ? "border-blue-500 ring-4 ring-blue-100"
-                : "border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+              placeholder={
+                isNameMode
+                  ? "Xóa họ và tên để nhập"
+                  : "DD/MM/YYYY"
+              }
+              className={`h-12 w-full rounded-xl border bg-white pl-11 ${birthday ? "pr-11" : "pr-24"
+                } font-medium text-slate-800 outline-none transition ${isBirthdayMode
+                  ? "border-blue-500 ring-4 ring-blue-100"
+                  : "border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                 } disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400`}
             />
 
+            {/* Badge ưu tiên */}
+            {!birthday && (
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-blue-100 px-2.5 py-1 text-[10px] font-bold uppercase text-blue-700">
+                Ưu tiên
+              </span>
+            )}
+
+            {/* Nút xóa */}
             {birthday && (
               <button
                 type="button"
                 onClick={() => setBirthday("")}
-                className="absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-slate-100 text-xs text-slate-500 hover:bg-red-100 hover:text-red-600"
+                className="absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-slate-100 text-xs text-slate-500 transition hover:bg-red-100 hover:text-red-600"
               >
                 ✕
               </button>

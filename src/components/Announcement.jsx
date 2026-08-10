@@ -26,7 +26,7 @@ function Announcement({
       if (index >= normalizedContent.length) {
         clearInterval(timer);
       }
-    }, 25); // tốc độ gõ (ms/ký tự)
+    }, 20);
 
     return () => clearInterval(timer);
   }, [normalizedContent]);
@@ -46,44 +46,39 @@ function Announcement({
     : "";
 
   return (
-    <div className="overflow-hidden rounded-3xl border border-amber-300 bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50 shadow-lg">
+    <section className="overflow-hidden rounded-2xl border border-amber-200 bg-gradient-to-r from-yellow-50 via-white to-amber-50 shadow-md">
       {/* Header */}
-      <div className="flex items-center gap-3 border-b border-amber-200 bg-gradient-to-r from-amber-500 to-orange-500 px-5 py-3 text-white">
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/20 text-2xl shadow">
+      <div className="flex items-center gap-3 border-b border-amber-100 bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2.5 text-white">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/20 text-lg">
           📢
         </div>
 
-        <div>
-          <h2 className="text-lg font-bold uppercase tracking-wide">
-            Thông báo
-          </h2>
-        </div>
+        <h2 className="text-base font-bold uppercase tracking-wide">
+          Thông báo
+        </h2>
       </div>
 
       {/* Nội dung */}
-      <div className="px-5 py-5">
-        <div className="rounded-2xl border-l-4 border-amber-500 bg-white/80 p-5 shadow-sm">
-          <p className="whitespace-pre-wrap break-words text-[17px] font-medium leading-8 text-slate-800">
-            {displayText}
+      <div className="px-4 py-4">
+        <p className="whitespace-pre-wrap break-words text-[15px] leading-7 text-slate-700">
+          {displayText}
 
-            {/* Con trỏ nhấp nháy */}
-            <span className="ml-1 inline-block animate-pulse font-bold text-amber-600">
-              |
-            </span>
-          </p>
-        </div>
+          <span className="ml-0.5 animate-pulse font-bold text-amber-500">
+            |
+          </span>
+        </p>
 
         {formattedUpdatedAt && (
-          <div className="mt-4 flex items-center justify-end gap-2 text-xs text-slate-500">
+          <div className="mt-3 flex items-center justify-end gap-1 text-[11px] text-slate-400">
             <span>🕒</span>
 
             <span>
-              Cập nhật lúc <strong>{formattedUpdatedAt}</strong>
+              {formattedUpdatedAt}
             </span>
           </div>
         )}
       </div>
-    </div>
+    </section>
   );
 }
 
