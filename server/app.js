@@ -1656,12 +1656,27 @@ app.post(
       const { publicId } = req.params;
 
       /*
-       * Thông tin thiết bị lấy từ HTTP headers.
-       * Không cần frontend gửi lên.
+       * ========================================
+       * 1. USER AGENT + CLIENT HINTS
+       * ========================================
        */
+
       const userAgent =
         req.headers["user-agent"] || "";
 
+      /*
+       * Client Hints được frontend gửi lên.
+       * Nếu trình duyệt không hỗ trợ thì {}
+       */
+      const clientHints =
+        req.body?.clientHints &&
+          typeof req.body.clientHints === "object"
+          ? req.body.clientHints
+          : {};
+
+      /*
+       * Parse User-Agent bằng UAParser
+       */
       const parser =
         new UAParser(userAgent);
 
@@ -1678,119 +1693,271 @@ app.post(
         parser.getCPU();
 
       /*
-* ==========================
-* CHUẨN HÓA THÔNG TIN THIẾT BỊ
-* ==========================
-*/
+       * ========================================
+       * 2. TRÌNH DUYỆT
+       * ========================================
+       */
 
-      // Trình duyệt
       const browser =
         browserInfo.name ||
         "Không xác định";
 
+      /*
+       * Ưu tiên phiên bản lấy từ Client Hints.
+       */
       const browserVersion =
+        clientHints.uaFullVersion ||
         browserInfo.version ||
         "";
 
-      // Loại thiết bị
+      /*
+       * ========================================
+       * 3. THIẾT BỊ
+       * ========================================
+       */
+
       const deviceType =
         deviceInfo.type ||
-        "desktop";
+        (
+          clientHints.mobile === true
+            ? "mobile"
+            : "desktop"
+        );
 
-      // Hãng thiết bị
       const deviceVendor =
         deviceInfo.vendor ||
         "";
 
-      // Model thiết bị
+      /*
+       * Client Hints thường lấy model Android
+       * tốt hơn User-Agent.
+       *
+       * Ví dụ:
+       * SM-S928B
+       * 23127PN0CG
+       * CPH2581
+       */
       const deviceModel =
-        deviceInfo.model ||
-        "";
+        String(
+          clientHints.model ||
+          deviceInfo.model ||
+          ""
+        ).trim();
 
-      // Hệ điều hành
+      /*
+       * ========================================
+       * 4. HỆ ĐIỀU HÀNH
+       * ========================================
+       */
+
       const os =
+        clientHints.platform ||
         osInfo.name ||
         "Không xác định";
 
       const osVersion =
+        clientHints.platformVersion ||
         osInfo.version ||
         "";
 
-      // Kiến trúc CPU
+      /*
+       * ========================================
+       * 5. CPU
+       * ========================================
+       */
+
       const cpu =
+        clientHints.architecture ||
         cpuInfo.architecture ||
         "";
 
+      const bitness =
+        clientHints.bitness ||
+        "";
+
+      /*
+       * ========================================
+       * 6. TÊN THIẾT BỊ
+       * ========================================
+       */
+
+      let normalizedVendor =
+        deviceVendor || "";
+
+      if (!normalizedVendor && deviceModel) {
+        const modelLower =
+          deviceModel.toLowerCase();
+
+        if (modelLower.includes("pixel")) {
+          normalizedVendor = "Google";
+        } else if (
+          /^sm-/i.test(deviceModel)
+        ) {
+          normalizedVendor = "Samsung";
+        } else if (
+          /^cph/i.test(deviceModel)
+        ) {
+          normalizedVendor = "OPPO";
+        } else if (
+          /^v\d+/i.test(deviceModel)
+        ) {
+          normalizedVendor = "Vivo";
+        }
+      }
+
       let deviceName = "";
 
-      if (deviceVendor && deviceModel) {
+      if (
+        normalizedVendor &&
+        deviceModel
+      ) {
         deviceName =
-          `${deviceVendor} ${deviceModel}`;
+          `${normalizedVendor} ${deviceModel}`;
       } else if (deviceModel) {
         deviceName =
           deviceModel;
-      } else if (deviceVendor) {
+      } else if (normalizedVendor) {
         deviceName =
-          deviceVendor;
-      } else if (deviceType === "desktop") {
+          normalizedVendor;
+      } else if (
+        /iphone/i.test(userAgent)
+      ) {
+        deviceName =
+          "Apple iPhone";
+      } else if (
+        /ipad/i.test(userAgent)
+      ) {
+        deviceName =
+          "Apple iPad";
+      } else if (
+        deviceType === "desktop"
+      ) {
         deviceName =
           `${os} PC`;
       } else {
         deviceName =
-          deviceType;
+          "Điện thoại";
       }
+
+      /*
+       * ========================================
+       * 7. LOẠI THIẾT BỊ TIẾNG VIỆT
+       * ========================================
+       */
 
       let deviceTypeText;
 
-      switch (String(deviceType).toLowerCase()) {
+      switch (
+      String(deviceType).toLowerCase()
+      ) {
         case "mobile":
-          deviceTypeText = "Điện thoại";
+          deviceTypeText =
+            "Điện thoại";
           break;
 
         case "tablet":
-          deviceTypeText = "Máy tính bảng";
+          deviceTypeText =
+            "Máy tính bảng";
           break;
 
         case "smarttv":
-          deviceTypeText = "Smart TV";
+          deviceTypeText =
+            "Smart TV";
           break;
 
         case "wearable":
-          deviceTypeText = "Thiết bị đeo";
+          deviceTypeText =
+            "Thiết bị đeo";
           break;
 
         case "console":
-          deviceTypeText = "Máy chơi game";
+          deviceTypeText =
+            "Máy chơi game";
           break;
 
         default:
-          deviceTypeText = "Máy tính";
+          deviceTypeText =
+            "Máy tính";
       }
+
+      /*
+       * ========================================
+       * 8. TẠO THÔNG TIN LƯỢT MỞ
+       * ========================================
+       */
+
+      const viewDetail = {
+        browser,
+        browserVersion,
+
+        deviceType,
+        deviceTypeText,
+
+        deviceVendor,
+        deviceModel,
+        deviceName,
+
+        os,
+        osVersion,
+
+        cpu,
+        bitness,
+
+        clientHints,
+
+        userAgent,
+      };
+
+      /*
+       * Debug.
+       * Sau khi test xong có thể xóa.
+       */
+      console.log(
+        "========== ALBUM DEVICE =========="
+      );
+
+      console.log(viewDetail);
+
+      console.log(
+        "=================================="
+      );
+
+      /*
+       * ========================================
+       * 9. BẮT ĐẦU TRANSACTION
+       * ========================================
+       */
 
       await client.query("BEGIN");
 
       /*
-       * Tìm album.
+       * Tìm người / album.
        */
-      const personResult = await client.query(
-        `
-          SELECT
-            id,
-            name,
-            album,
-            "albumViews"
-          FROM people
-          WHERE "publicId" = $1
-          LIMIT 1
-        `,
-        [publicId]
-      );
+      const personResult =
+        await client.query(
+          `
+            SELECT
+              id,
+              name,
+              album,
+              "albumViews"
+            FROM people
+            WHERE "publicId" = $1
+            LIMIT 1
+          `,
+          [publicId]
+        );
 
-      if (personResult.rows.length === 0) {
-        await client.query("ROLLBACK");
+      if (
+        personResult.rows.length === 0
+      ) {
+        await client.query(
+          "ROLLBACK"
+        );
 
         return res.status(404).json({
-          message: "Không tìm thấy album.",
+          message:
+            "Không tìm thấy album.",
         });
       }
 
@@ -1799,9 +1966,13 @@ app.post(
 
       if (
         !person.album ||
-        !String(person.album).trim()
+        !String(
+          person.album
+        ).trim()
       ) {
-        await client.query("ROLLBACK");
+        await client.query(
+          "ROLLBACK"
+        );
 
         return res.status(400).json({
           message:
@@ -1810,26 +1981,36 @@ app.post(
       }
 
       /*
-       * 1. Tăng tổng lượt xem album.
+       * ========================================
+       * 10. TĂNG TỔNG LƯỢT XEM ALBUM
+       * ========================================
        */
+
       const updatedPerson =
         await client.query(
           `
             UPDATE people
 
             SET "albumViews" =
-              COALESCE("albumViews", 0) + 1
+              COALESCE(
+                "albumViews",
+                0
+              ) + 1
 
             WHERE id = $1
 
-            RETURNING "albumViews"
+            RETURNING
+              "albumViews"
           `,
           [person.id]
         );
 
       /*
-       * 2. Tăng tổng lượt mở album trong ngày.
+       * ========================================
+       * 11. TĂNG LƯỢT MỞ TOÀN WEBSITE THEO NGÀY
+       * ========================================
        */
+
       await client.query(`
         INSERT INTO album_view_daily (
           view_date,
@@ -1839,210 +2020,226 @@ app.post(
         VALUES (
           (
             NOW()
-            AT TIME ZONE 'Asia/Ho_Chi_Minh'
+            AT TIME ZONE
+              'Asia/Ho_Chi_Minh'
           )::date,
+
           1
         )
 
-        ON CONFLICT (view_date)
+        ON CONFLICT (
+          view_date
+        )
 
         DO UPDATE SET
+
           views =
             album_view_daily.views + 1
       `);
 
       /*
-       * Dữ liệu chi tiết cho lần mở này.
-       *
-       * viewedAt được tạo bằng PostgreSQL bên dưới,
-       * không phụ thuộc đồng hồ trên máy người dùng.
+       * ========================================
+       * 12. LƯU CHI TIẾT LƯỢT MỞ ALBUM
+       * ========================================
        */
-      const viewDetail = {
-        browser,
-        browserVersion,
 
-        deviceType,
-        deviceTypeText,
-        deviceVendor,
-        deviceModel,
-        deviceName,
-
-        os,
-        osVersion,
-
-        cpu,
-
-        userAgent,
-      };
-
-      /*
-       * 3. Ghi thống kê từng album.
-       *
-       * view_times:
-       * danh sách thời gian.
-       *
-       * view_details:
-       * thông tin tương ứng từng lần mở.
-       */
       await client.query(
         `
-    INSERT INTO album_view_by_person_daily (
-      person_id,
-      view_date,
-      views,
-      last_viewed_at,
-      view_times,
-      view_details
-    )
+          INSERT INTO album_view_by_person_daily (
+            person_id,
+            view_date,
+            views,
+            last_viewed_at,
+            view_times,
+            view_details
+          )
 
-    VALUES (
-      $1,
+          VALUES (
+            $1,
 
-      (
-        NOW()
-        AT TIME ZONE 'Asia/Ho_Chi_Minh'
-      )::date,
+            (
+              NOW()
+              AT TIME ZONE
+                'Asia/Ho_Chi_Minh'
+            )::date,
 
-      1,
+            1,
 
-      NOW(),
-
-      ARRAY[NOW()]::timestamptz[],
-
-      jsonb_build_array(
-        jsonb_build_object(
-          'viewedAt',
-          NOW(),
-
-          'browser',
-          $2::text,
-
-          'browserVersion',
-          $3::text,
-
-          'deviceType',
-          $4::text,
-
-          'deviceTypeText',
-          $5::text,
-
-          'deviceVendor',
-          $6::text,
-
-          'deviceModel',
-          $7::text,
-
-          'deviceName',
-          $8::text,
-
-          'os',
-          $9::text,
-
-          'osVersion',
-          $10::text,
-
-          'cpu',
-          $11::text,
-
-          'userAgent',
-          $12::text
-        )
-      )
-    )
-
-    ON CONFLICT (
-      person_id,
-      view_date
-    )
-
-    DO UPDATE SET
-
-      views =
-        album_view_by_person_daily.views + 1,
-
-      last_viewed_at =
-        NOW(),
-
-      view_times =
-        array_append(
-          COALESCE(
-            album_view_by_person_daily.view_times,
-            '{}'::timestamptz[]
-          ),
-          NOW()
-        ),
-
-      view_details =
-        COALESCE(
-          album_view_by_person_daily.view_details,
-          '[]'::jsonb
-        )
-
-        ||
-
-        jsonb_build_array(
-          jsonb_build_object(
-            'viewedAt',
             NOW(),
 
-            'browser',
-            $2::text,
+            ARRAY[
+              NOW()
+            ]::timestamptz[],
 
-            'browserVersion',
-            $3::text,
+            jsonb_build_array(
+              jsonb_build_object(
 
-            'deviceType',
-            $4::text,
+                'viewedAt',
+                NOW(),
 
-            'deviceTypeText',
-            $5::text,
+                'browser',
+                $2::text,
 
-            'deviceVendor',
-            $6::text,
+                'browserVersion',
+                $3::text,
 
-            'deviceModel',
-            $7::text,
+                'deviceType',
+                $4::text,
 
-            'deviceName',
-            $8::text,
+                'deviceTypeText',
+                $5::text,
 
-            'os',
-            $9::text,
+                'deviceVendor',
+                $6::text,
 
-            'osVersion',
-            $10::text,
+                'deviceModel',
+                $7::text,
 
-            'cpu',
-            $11::text,
+                'deviceName',
+                $8::text,
 
-            'userAgent',
-            $12::text
+                'os',
+                $9::text,
+
+                'osVersion',
+                $10::text,
+
+                'cpu',
+                $11::text,
+
+                'bitness',
+                $12::text,
+
+                'clientHints',
+                $13::jsonb,
+
+                'userAgent',
+                $14::text
+              )
+            )
           )
-        )
-  `,
+
+          ON CONFLICT (
+            person_id,
+            view_date
+          )
+
+          DO UPDATE SET
+
+            views =
+              album_view_by_person_daily.views
+              + 1,
+
+            last_viewed_at =
+              NOW(),
+
+            view_times =
+              array_append(
+                COALESCE(
+                  album_view_by_person_daily.view_times,
+                  '{}'::timestamptz[]
+                ),
+
+                NOW()
+              ),
+
+            view_details =
+              COALESCE(
+                album_view_by_person_daily.view_details,
+                '[]'::jsonb
+              )
+
+              ||
+
+              jsonb_build_array(
+                jsonb_build_object(
+
+                  'viewedAt',
+                  NOW(),
+
+                  'browser',
+                  $2::text,
+
+                  'browserVersion',
+                  $3::text,
+
+                  'deviceType',
+                  $4::text,
+
+                  'deviceTypeText',
+                  $5::text,
+
+                  'deviceVendor',
+                  $6::text,
+
+                  'deviceModel',
+                  $7::text,
+
+                  'deviceName',
+                  $8::text,
+
+                  'os',
+                  $9::text,
+
+                  'osVersion',
+                  $10::text,
+
+                  'cpu',
+                  $11::text,
+
+                  'bitness',
+                  $12::text,
+
+                  'clientHints',
+                  $13::jsonb,
+
+                  'userAgent',
+                  $14::text
+                )
+              )
+        `,
         [
           person.id,
 
           viewDetail.browser,
+
           viewDetail.browserVersion,
 
           viewDetail.deviceType,
+
           viewDetail.deviceTypeText,
 
           viewDetail.deviceVendor,
+
           viewDetail.deviceModel,
+
           viewDetail.deviceName,
 
           viewDetail.os,
+
           viewDetail.osVersion,
 
           viewDetail.cpu,
+
+          viewDetail.bitness,
+
+          JSON.stringify(
+            viewDetail.clientHints
+          ),
 
           viewDetail.userAgent,
         ]
       );
 
-      await client.query("COMMIT");
+      /*
+       * ========================================
+       * 13. COMMIT
+       * ========================================
+       */
+
+      await client.query(
+        "COMMIT"
+      );
 
       return res.json({
         message:
@@ -2055,9 +2252,11 @@ app.post(
       });
     } catch (error) {
       try {
-        await client.query("ROLLBACK");
+        await client.query(
+          "ROLLBACK"
+        );
       } catch {
-        // Bỏ qua lỗi rollback.
+        // Không cần xử lý lỗi rollback.
       }
 
       console.error(
@@ -2065,10 +2264,12 @@ app.post(
         error
       );
 
-      return res.status(500).json({
-        message:
-          "Không thể ghi nhận lượt xem album.",
-      });
+      return res
+        .status(500)
+        .json({
+          message:
+            "Không thể ghi nhận lượt xem album.",
+        });
     } finally {
       client.release();
     }

@@ -3,6 +3,67 @@ import { useNavigate, useParams } from "react-router-dom";
 import api from "../services/api";
 import { Solar, Lunar } from "lunar-javascript";
 
+async function getClientHints() {
+  if (!navigator.userAgentData) {
+    return null;
+  }
+
+  try {
+    const highEntropyValues =
+      await navigator.userAgentData.getHighEntropyValues([
+        "architecture",
+        "bitness",
+        "model",
+        "platform",
+        "platformVersion",
+        "uaFullVersion",
+        "fullVersionList",
+        "wow64",
+      ]);
+
+    return {
+      mobile:
+        navigator.userAgentData.mobile ?? false,
+
+      brands:
+        navigator.userAgentData.brands || [],
+
+      platform:
+        navigator.userAgentData.platform ||
+        highEntropyValues.platform ||
+        "",
+
+      architecture:
+        highEntropyValues.architecture || "",
+
+      bitness:
+        highEntropyValues.bitness || "",
+
+      model:
+        highEntropyValues.model || "",
+
+      platformVersion:
+        highEntropyValues.platformVersion || "",
+
+      uaFullVersion:
+        highEntropyValues.uaFullVersion || "",
+
+      fullVersionList:
+        highEntropyValues.fullVersionList || [],
+
+      wow64:
+        highEntropyValues.wow64 ?? false,
+    };
+  } catch (error) {
+    console.error(
+      "Không thể lấy Client Hints:",
+      error
+    );
+
+    return null;
+  }
+}
+
 function Detail() {
   const { publicId } = useParams();
   const navigate = useNavigate();
@@ -422,15 +483,26 @@ function Detail() {
     return `https://${normalizedUrl}`;
   };
 
-  const recordAlbumView = () => {
-    api
-      .post(`/people/public/${publicId}/album-view`)
-      .catch((error) => {
-        console.error("Lỗi tăng lượt xem album:", error);
-      });
+  const recordAlbumView = async () => {
+    try {
+      const clientHints =
+        await getClientHints();
+
+      await api.post(
+        `/people/public/${publicId}/album-view`,
+        {
+          clientHints,
+        }
+      );
+    } catch (error) {
+      console.error(
+        "Lỗi tăng lượt xem album:",
+        error
+      );
+    }
   };
 
-  const redirectToAlbum = (albumUrl) => {
+  const redirectToAlbum = async (albumUrl) => {
     const normalizedUrl = normalizeAlbumUrl(albumUrl);
 
     if (!normalizedUrl || openingAlbum) {
@@ -439,10 +511,8 @@ function Detail() {
 
     setOpeningAlbum(true);
 
-    // Ghi nhận lượt xem ở chế độ nền, không chờ phản hồi.
-    recordAlbumView();
+    await recordAlbumView();
 
-    // Mở trong tab hiện tại để Safari iPhone không chặn popup.
     window.location.assign(normalizedUrl);
   };
 
@@ -501,10 +571,8 @@ function Detail() {
       setVerifyAnswer("");
       setOpeningAlbum(true);
 
-      // Ghi nhận lượt xem ở chế độ nền.
-      recordAlbumView();
+      await recordAlbumView();
 
-      // Không dùng window.open để tránh Safari iPhone chặn popup.
       window.location.assign(albumUrl);
     } catch (error) {
       setVerifyError(
