@@ -188,6 +188,7 @@ const TRANSLATIONS = {
         viewMap: "Xem địa điểm",
         contact: "Liên hệ",
         contactTitle: "Liên hệ",
+        campusMap: "Sơ đồ trường",
         phoneLabel: "Số điện thoại",
         close: "Đóng",
         callNow: "Gọi ngay",
@@ -225,6 +226,7 @@ const TRANSLATIONS = {
         viewMap: "View location",
         contact: "Contact",
         contactTitle: "Contact",
+        campusMap: "Campus map",
         phoneLabel: "Phone number",
         close: "Close",
         callNow: "Call now",
@@ -261,6 +263,7 @@ const TRANSLATIONS = {
         viewMap: "查看地点",
         contact: "联系",
         contactTitle: "联系方式",
+        campusMap: "校园地图",
         phoneLabel: "电话号码",
         close: "关闭",
         callNow: "立即拨打",
@@ -972,7 +975,8 @@ function Invitation() {
                 {/* Chữ ký */}
                 <section className="mt-10 text-center">
                     <p
-                        className="text-3xl italic text-amber-600 sm:text-5xl"
+                        className={`text-3xl italic text-amber-600 sm:text-5xl ${language === "zh" ? "whitespace-nowrap text-2xl sm:text-4xl" : ""
+                            }`}
                         style={{
                             fontFamily:
                                 language === "zh"
@@ -1004,7 +1008,7 @@ function Invitation() {
                         className="flex min-h-[56px] items-center justify-center gap-3 rounded-2xl border border-blue-300 bg-white px-6 py-4 font-bold text-blue-700 shadow-xl transition hover:-translate-y-1 hover:scale-[1.02]"
                     >
                         <span className="text-xl">🗺️</span>
-                        <span>Sơ đồ trường</span>
+                        {t.campusMap}
                     </button>
 
                     <button
