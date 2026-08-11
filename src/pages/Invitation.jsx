@@ -190,7 +190,7 @@ const TRANSLATIONS = {
         contactTitle: "Liên hệ",
         campusMap: "Sơ đồ trường",
         parkingGuide: "Hướng dẫn gửi xe",
-        parkingInstruction: "Xe máy vui lòng gửi xe tại cổng 3 (1 cửa) hoặc cổng 2 (4 cửa) có nhiều chỗ để xe hơn. Cổng 1 chỉ dành cho ô tô",
+        parkingInstruction: "Xe máy vui lòng gửi xe tại cổng 3 hoặc cổng 2 (có nhiều chỗ để xe hơn). Cổng 1 chỉ dành cho ô tô",
         phoneLabel: "Số điện thoại",
         close: "Đóng",
         callNow: "Gọi ngay",
