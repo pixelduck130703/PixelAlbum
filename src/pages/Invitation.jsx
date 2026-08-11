@@ -189,6 +189,8 @@ const TRANSLATIONS = {
         contact: "Liên hệ",
         contactTitle: "Liên hệ",
         campusMap: "Sơ đồ trường",
+        parkingGuide: "Hướng dẫn gửi xe",
+        parkingInstruction: "Xe máy vui lòng gửi xe tại cổng 3 (1 cửa) hoặc cổng 2 (4 cửa) có nhiều chỗ để xe hơn. Cổng 1 chỉ dành cho ô tô",
         phoneLabel: "Số điện thoại",
         close: "Đóng",
         callNow: "Gọi ngay",
@@ -227,6 +229,8 @@ const TRANSLATIONS = {
         contact: "Contact",
         contactTitle: "Contact",
         campusMap: "Campus map",
+        parkingGuide: "Parking Instructions",
+        parkingInstruction: "Motorcycles are kindly requested to park at Gate 3 (1 entrance) or Gate 2 (4 entrances), which offer more parking space. Gate 1 is for cars only.",
         phoneLabel: "Phone number",
         close: "Close",
         callNow: "Call now",
@@ -264,6 +268,8 @@ const TRANSLATIONS = {
         contact: "联系",
         contactTitle: "联系方式",
         campusMap: "校园地图",
+        parkingGuide: "停车指南",
+        parkingInstruction: "摩托车请前往 3号门（1个入口）或2号门（4个入口）停车，这两个入口的停车位较多。1号门仅供汽车使用。",
         phoneLabel: "电话号码",
         close: "关闭",
         callNow: "立即拨打",
@@ -1061,9 +1067,33 @@ function Invitation() {
                         <div className="flex items-center justify-center bg-slate-100 p-2">
                             <img
                                 src="/images/campus-map.png"
-                                alt="Sơ đồ trường"
-                                className="block h-auto max-h-[92vh] w-auto max-w-[95vw] rounded-xl shadow-xl"
+                                alt={t.campusMap}
+                                className="block h-auto max-h-[82vh] w-auto max-w-[95vw] rounded-xl shadow-xl"
                             />
+                        </div>
+
+                        {/* Hướng dẫn gửi xe */}
+                        <div className="px-5 py-4 text-center">
+                            <p
+                                className="text-base font-bold text-amber-600 sm:text-lg"
+                                style={{
+                                    fontFamily:
+                                        language === "zh"
+                                            ? "'Noto Serif SC', serif"
+                                            : "'Cormorant Garamond', serif",
+                                }}
+                            >
+                                🅿️ {t.parkingGuide}
+                            </p>
+
+                            <p
+                                className="mx-auto mt-1 max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base"
+                                style={{
+                                    textWrap: "balance",
+                                }}
+                            >
+                                {t.parkingInstruction}
+                            </p>
                         </div>
                     </div>
                 </div>
