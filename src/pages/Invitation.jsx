@@ -626,11 +626,15 @@ function Invitation() {
                             }}
                         />
 
-                        {/* Tiêu đề nhỏ */}
-                        <div className="absolute inset-x-0 top-5 text-center">
-                            <p className="text-[7px] font-black uppercase tracking-[0.08em] text-blue-900">
-                                IT
-                            </p>
+                        {/* Logo UTC */}
+                        <div className="absolute inset-x-0 top-5 flex justify-center">
+                            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-sm">
+                                <img
+                                    src="/images/FIT-UTC.png"
+                                    alt=""
+                                    className="h-7 w-7 rounded-full object-contain"
+                                />
+                            </div>
                         </div>
 
                         {/* Chữ dọc */}
@@ -641,11 +645,19 @@ function Invitation() {
                         {/* Năm */}
                         <div className="absolute inset-x-0 bottom-[58px] text-center">
                             <p className="text-[6px] font-black uppercase tracking-[0.08em] text-amber-600">
-                                TUAN
+                                THE
                             </p>
 
                             <p className="text-[6px] font-black uppercase tracking-[0.08em] text-amber-600">
-                                HUNG
+                                WAY
+                            </p>
+
+                            <p className="text-[6px] font-black uppercase tracking-[0.08em] text-amber-600">
+                                TO
+                            </p>
+
+                            <p className="text-[6px] font-black uppercase tracking-[0.08em] text-amber-600">
+                                SUCCESS
                             </p>
                         </div>
                     </div>
@@ -903,9 +915,9 @@ function Invitation() {
 
                 {/* Đếm ngược */}
                 <section className="mt-10 w-full max-w-4xl text-center">
-                    <h3 className="text-base font-bold uppercase tracking-[0.1em] text-slate-600 sm:text-xl">
+                    {/*<h3 className="text-base font-bold uppercase tracking-[0.1em] text-slate-600 sm:text-xl">
                         {t.countdownTitle}
-                    </h3>
+                    </h3>*/}
 
                     {countdown.completed ? (
                         <div className="mt-5 rounded-3xl border border-amber-400 bg-blue-600/10 px-6 py-8 backdrop-blur">
@@ -973,15 +985,15 @@ function Invitation() {
                 </section>
 
                 {/* Chữ ký */}
-                <section className="mt-10 text-center">
+                <section className="mt-10 px-4 text-center">
                     <p
-                        className={`text-3xl italic text-amber-600 sm:text-5xl ${language === "zh" ? "whitespace-nowrap text-2xl sm:text-4xl" : ""
-                            }`}
+                        className="mx-auto text-3xl italic leading-relaxed text-amber-600 sm:text-5xl"
                         style={{
                             fontFamily:
                                 language === "zh"
                                     ? "'Noto Serif SC', serif"
                                     : "'Cormorant Garamond', serif",
+                            textWrap: "balance",
                         }}
                     >
                         {t.seeYou}
@@ -989,7 +1001,6 @@ function Invitation() {
 
                     <div className="mx-auto mt-5 h-px w-56 bg-gradient-to-r from-transparent via-amber-400 to-transparent" />
                 </section>
-
                 {/* Nút chức năng */}
                 <div className="mt-10 grid w-full max-w-3xl grid-cols-1 gap-4 sm:grid-cols-3">
                     <a
@@ -1648,16 +1659,18 @@ function GraduationSash({ side }) {
                 <div className="absolute inset-y-0 left-1/2 w-px bg-blue-600/10" />
 
                 <div className="relative z-10 flex h-full flex-col items-center px-2 py-5 text-center">
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center 2xl:h-16 2xl:w-16">
-                        <img
-                            src="/images/UTC.png"
-                            alt="UTC"
-                            className="h-full w-full object-contain drop-shadow-[0_4px_10px_rgba(251,191,36,0.35)]"
-                        />
-                    </div>
+
 
                     {isLeft ? (
                         <>
+                            <div className="flex h-14 w-14 shrink-0 items-center justify-center 2xl:h-16 2xl:w-16">
+                                <img
+                                    src="/images/UTC.png"
+                                    alt="UTC"
+                                    className="h-full w-full object-contain drop-shadow-[0_4px_10px_rgba(251,191,36,0.35)]"
+                                />
+                            </div>
+
                             <div className="mt-6 flex min-h-0 flex-1 items-center justify-center">
                                 <p
                                     className="[writing-mode:vertical-rl] rotate-180 text-[12px] font-black uppercase tracking-[0.18em] text-blue-900 2xl:text-[13px]"
@@ -1683,6 +1696,14 @@ function GraduationSash({ side }) {
                         </>
                     ) : (
                         <>
+                            <div className="flex h-14 w-14 shrink-0 items-center justify-center 2xl:h-16 2xl:w-16">
+                                <img
+                                    src="/images/FIT-UTC.png"
+                                    alt="UTC"
+                                    className="h-full w-full object-contain drop-shadow-[0_4px_10px_rgba(251,191,36,0.35)]"
+                                />
+                            </div>
+
                             <div className="mt-7 shrink-0">
                                 <p className="mt-2 text-[11px] font-black uppercase leading-[1.45] tracking-wide text-amber-600 2xl:text-[13px]">
                                     Information of
