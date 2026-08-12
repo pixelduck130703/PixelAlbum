@@ -11,30 +11,64 @@ const MAP_URL = "https://maps.app.goo.gl/DZYdV7Dw1UVcMa3F8";
 const MUSIC_URL = "/music/graduation.mp3";
 const MUSIC_TITLE = "A LITTLE DREAM OF ME";
 
-
 const INVITATION_ANIMATIONS = `
   /* ==========================
-     HIỆU ỨNG ĐUNG ĐƯA SASH
+     HIỆU ỨNG MỞ PHONG BÌ THƯ
   ========================== */
-
-  @keyframes swayLeft {
-    0%, 100% {
-      transform: rotate(0.8deg);
+  @keyframes flapOpen {
+    0% {
+      transform: rotateX(0deg);
     }
-
-    50% {
-      transform: rotate(-0.5deg);
+    100% {
+      transform: rotateX(180deg);
     }
   }
 
-  @keyframes swayRight {
-    0%, 100% {
-      transform: rotate(-0.8deg);
+  @keyframes cardSlideUp {
+    0% {
+      transform: translateY(0);
     }
+    100% {
+      transform: translateY(-110px);
+    }
+  }
 
-    50% {
-      transform: rotate(0.5deg);
+  @keyframes envelopeFadeOut {
+    0% {
+      opacity: 1;
+      transform: scale(1);
     }
+    100% {
+      opacity: 0;
+      transform: scale(1.08);
+      filter: blur(10px);
+    }
+  }
+
+  .envelope-flap-opening {
+    animation: flapOpen 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    transform-origin: top center;
+  }
+
+  .envelope-card-rising {
+    animation: cardSlideUp 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s forwards;
+  }
+
+  .envelope-fading {
+    animation: envelopeFadeOut 0.6s ease-in-out 1s forwards;
+  }
+
+  /* ==========================
+     HIỆU ỨNG ĐUNG ĐƯA SASH
+  ========================== */
+  @keyframes swayLeft {
+    0%, 100% { transform: rotate(0.8deg); }
+    50% { transform: rotate(-0.5deg); }
+  }
+
+  @keyframes swayRight {
+    0%, 100% { transform: rotate(-0.8deg); }
+    50% { transform: rotate(0.5deg); }
   }
 
   .inv-sash-left {
@@ -48,18 +82,15 @@ const INVITATION_ANIMATIONS = `
   }
 
   /* ==========================
-     HIỆU ỨNG CHUYỂN NGÔN NGỮ SANG TRỌNG (LUXURY TEXT TRANSITION)
+     HIỆU ỨNG CHUYỂN NGÔN NGỮ
   ========================== */
-
   @keyframes luxuryTextIn {
     0% {
       opacity: 0;
       transform: scale(0.96) translateY(4px);
       filter: blur(8px);
     }
-    60% {
-      filter: blur(0px);
-    }
+    60% { filter: blur(0px); }
     100% {
       opacity: 1;
       transform: scale(1) translateY(0);
@@ -94,7 +125,6 @@ const INVITATION_ANIMATIONS = `
   /* ==========================
      KIỂU TĨNH
   ========================== */
-
   .utc-light-page {
     background:
       radial-gradient(
@@ -185,6 +215,8 @@ const TRANSLATIONS = {
         guideTitle: "Chào mừng bạn",
         guideText: "Để có trải nghiệm tốt nhất khi xem thiệp mời, hãy mở bằng máy tính, thay đổi ngôn ngữ và nhấn vào biểu tượng 🔊 ở góc dưới bên phải để phát nhạc nền.",
         guideButton: "Đã hiểu",
+        openEnvelopeBtn: "Mở thiệp mời",
+        clickToOpen: "Nhấn vào đây để mở thiệp",
     },
 
     en: {
@@ -228,6 +260,8 @@ const TRANSLATIONS = {
         guideTitle: "Welcome",
         guideText: "For the best experience, please view on desktop, switch languages, and click the 🔊 icon at the bottom right to play background music.",
         guideButton: "Got it",
+        openEnvelopeBtn: "Open Invitation",
+        clickToOpen: "Click to open invitation",
     },
 
     de: {
@@ -271,6 +305,8 @@ const TRANSLATIONS = {
         guideTitle: "Willkommen",
         guideText: "Für das beste Erlebnis öffnen Sie die Einladung bitte auf dem PC, wechseln Sie die Sprache und klicken Sie unten rechts auf das 🔊 Symbol, um die Hintergrundmusik einzuschalten.",
         guideButton: "Verstanden",
+        openEnvelopeBtn: "Einladung öffnen",
+        clickToOpen: "Klicken Sie hier, um die Einladung zu öffnen",
     },
 
     zh: {
@@ -313,10 +349,21 @@ const TRANSLATIONS = {
         guideTitle: "欢迎",
         guideText: "为了获得最佳体验，请使用电脑打开，切换语言，并点击右下角的 🔊 图标播放背景音乐。",
         guideButton: "明白了",
+        openEnvelopeBtn: "开启邀请函",
+        clickToOpen: "点击此处开启邀请函",
     },
 };
 
 function Invitation() {
+    // Popup chào mừng hiển thị đầu tiên
+    const [showMusicGuide, setShowMusicGuide] = useState(() => {
+        return !sessionStorage.getItem("music-guide");
+    });
+
+    // Trạng thái mở phong bì
+    const [isOpened, setIsOpened] = useState(false);
+    const [isOpening, setIsOpening] = useState(false);
+
     const [showCampusMap, setShowCampusMap] = useState(false);
     const [currentTime, setCurrentTime] = useState(new Date());
     const [showPhone, setShowPhone] = useState(false);
@@ -332,13 +379,27 @@ function Invitation() {
 
     const t = TRANSLATIONS[language] || TRANSLATIONS.vi;
 
-    const [showMusicGuide, setShowMusicGuide] = useState(() => {
-        return !sessionStorage.getItem("music-guide");
-    });
-
+    // Đóng Popup chào mừng
     const closeMusicGuide = () => {
         sessionStorage.setItem("music-guide", "1");
         setShowMusicGuide(false);
+    };
+
+    // Hàm mở thiệp từ phong bì
+    const handleOpenEnvelope = () => {
+        if (isOpening || isOpened) return;
+        setIsOpening(true);
+
+        if (audioRef.current) {
+            audioRef.current.play().then(() => {
+                setMusicPlaying(true);
+            }).catch(() => { });
+        }
+
+        setTimeout(() => {
+            setIsOpened(true);
+            setIsOpening(false);
+        }, 1600);
     };
 
     useEffect(() => {
@@ -347,84 +408,6 @@ function Invitation() {
         }, 1000);
 
         return () => window.clearInterval(timer);
-    }, []);
-
-    useEffect(() => {
-        let started = false;
-
-        const startMusic = async () => {
-            if (started) return;
-
-            const audio = audioRef.current;
-            if (!audio) return;
-
-            started = true;
-
-            try {
-                await audio.play();
-                setMusicPlaying(true);
-            } catch {
-                started = false;
-            }
-        };
-
-        window.addEventListener("pointerdown", startMusic, { once: true });
-        window.addEventListener("keydown", startMusic, { once: true });
-
-        return () => {
-            window.removeEventListener("pointerdown", startMusic);
-            window.removeEventListener("keydown", startMusic);
-        };
-    }, []);
-
-    useEffect(() => {
-        let started = false;
-
-        const startMusic = async () => {
-            if (started) return;
-            started = true;
-
-            const audio = audioRef.current;
-
-            if (!audio) return;
-
-            try {
-                setMusicError("");
-                await audio.play();
-                setMusicPlaying(true);
-            } catch (error) {
-                console.error(error);
-                setMusicPlaying(false);
-            }
-
-            removeEvents();
-        };
-
-        const removeEvents = () => {
-            window.removeEventListener("pointerdown", startMusic);
-            window.removeEventListener("touchstart", startMusic);
-            window.removeEventListener("keydown", startMusic);
-            window.removeEventListener("scroll", startMusic);
-        };
-
-        window.addEventListener("pointerdown", startMusic, {
-            once: true,
-        });
-
-        window.addEventListener("touchstart", startMusic, {
-            once: true,
-        });
-
-        window.addEventListener("keydown", startMusic, {
-            once: true,
-        });
-
-        window.addEventListener("scroll", startMusic, {
-            once: true,
-            passive: true,
-        });
-
-        return removeEvents;
     }, []);
 
     useEffect(() => {
@@ -550,14 +533,276 @@ function Invitation() {
         };
     }, [currentTime]);
 
-    // Chuỗi Class áp dụng hiệu ứng chuyển đổi chữ mượt mà
     const textAnimClass = contentVisible ? "inv-text-enter" : "inv-text-leave";
 
     return (
         <div className="utc-light-page relative min-h-screen overflow-x-hidden text-slate-900">
             <style>{INVITATION_ANIMATIONS}</style>
-            
-            {/* Hai dải sash cố định hai bên màn hình (CỐ ĐỊNH TĨNH) */}
+
+            {/* BỘ CHUYỂN ĐỔI NGÔN NGỮ CỐ ĐỊNH Ở GÓC PHẢI TRÊN (LUÔN HIỂN THỊ TỪ ĐẦU, Z-INDEX 400 ĐỂ NẰM TRÊN CẢ POPUP & PHONG BÌ) */}
+            <LanguageSwitcher
+                language={language}
+                onChange={handleLanguageChange}
+                disabled={languageChanging}
+            />
+
+            {/* 1. POPUP HƯỚNG DẪN HIỂN THỊ ĐẦU TIÊN (Z-INDEX: 300) */}
+            {showMusicGuide && (
+                <div
+                    className="fixed inset-0 z-[300] flex items-center justify-center p-4 backdrop-blur-md transition-all"
+                >
+                    {/* Lớp nền Gradient Xanh nhạt - Trắng */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/90 via-blue-50/90 to-sky-100/90" />
+
+                    {/* Ánh sáng nhạt phía sau popup */}
+                    <div className="absolute left-1/2 top-1/2 h-[350px] w-[350px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-sky-200/50 blur-[90px]" />
+
+                    {/* Khối Popup chính */}
+                    <div className="relative z-10 w-full max-w-md rounded-3xl border border-blue-200/80 bg-white/90 p-7 text-center shadow-[0_20px_50px_rgba(30,64,175,0.15)] backdrop-blur-lg">
+
+                        {/* Viền trang trí màu vàng kim nhạt bên trong */}
+                        <div className="absolute inset-2 pointer-events-none rounded-2xl border border-amber-300/40" />
+
+                        {/* Logo UTC (Đã thay thế icon 🎵) */}
+                        <div className="mx-auto flex h-25 w-25 items-center justify-center rounded-full border border-amber-300/60 bg-gradient-to-br from-blue-50 to-sky-100 p-2 shadow-sm">
+                            <img
+                                src="/images/graduation-avatar.jpg"
+                                alt="Avatar"
+                                className="h-full w-full rounded-full object-contain"
+                            />
+                        </div>
+
+                        {/* Tiêu đề */}
+                        <h2 className={`mt-5 font-serif text-2xl font-bold text-blue-900 ${textAnimClass}`}>
+                            {t.guideTitle}
+                        </h2>
+
+                        {/* Nội dung */}
+                        <p className={`mt-4 leading-7 text-slate-600 sm:text-base ${textAnimClass}`}>
+                            {t.guideText}
+                        </p>
+
+                        {/* Nút Đã hiểu */}
+                        <div className="mt-6 flex justify-center">
+                            <button
+                                onClick={closeMusicGuide}
+                                className={`rounded-2xl border border-amber-400 bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-400 px-8 py-3 text-sm font-bold uppercase tracking-wider text-blue-950 shadow-md transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] active:scale-95 ${textAnimClass}`}
+                            >
+                                {t.guideButton}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* 2. PHONG BÌ THƯ MỜI (HIỂN THỊ SAU KHI ĐÓNG POPUP HƯỚNG DẪN) */}
+            {!showMusicGuide && !isOpened && (
+                <div
+                    className={`fixed inset-0 z-[200] flex flex-col items-center justify-center overflow-hidden px-4 transition-all duration-700 ${isOpening ? "envelope-fading" : ""
+                        }`}
+                >
+                    <div className="absolute inset-0 bg-gradient-to-br from-white via-blue-50 to-sky-100" />
+                    <div className="absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-sky-200/40 blur-[100px]" />
+                    <div className="absolute left-[15%] top-[15%] h-[220px] w-[220px] rounded-full bg-amber-100/50 blur-[80px]" />
+                    <div className="absolute bottom-[10%] right-[10%] h-[250px] w-[250px] rounded-full bg-blue-100/60 blur-[90px]" />
+
+                    {/* Hạt sáng */}
+                    <div className="absolute left-[15%] top-[20%] h-1.5 w-1.5 animate-pulse rounded-full bg-amber-400/70" />
+                    <div className="absolute right-[18%] top-[28%] h-2 w-2 animate-pulse rounded-full bg-sky-400/50 [animation-delay:700ms]" />
+                    <div className="absolute bottom-[25%] left-[22%] h-1.5 w-1.5 animate-pulse rounded-full bg-amber-300/70 [animation-delay:1200ms]" />
+                    <div className="absolute bottom-[20%] right-[25%] h-2 w-2 animate-pulse rounded-full bg-blue-300/60 [animation-delay:500ms]" />
+
+                    <div
+                        className={`relative z-10 flex flex-col items-center transition-all duration-700 ${isOpening
+                            ? "scale-105 opacity-0"
+                            : "scale-100 opacity-100"
+                            }`}
+                    >
+                        {/* Tiêu đề */}
+                        <div className="mb-7 text-center">
+                            <div className="flex items-center justify-center gap-3">
+                                <div className="h-px w-10 bg-gradient-to-r from-transparent to-amber-400 sm:w-16" />
+                                <span className={`text-xs font-semibold uppercase tracking-[0.3em] text-blue-800 sm:text-sm ${textAnimClass}`}>
+                                    {t.invitation}
+                                </span>
+                                <div className="h-px w-10 bg-gradient-to-l from-transparent to-amber-400 sm:w-16" />
+                            </div>
+                            <div className="mt-3 text-amber-500">✦</div>
+                        </div>
+
+                        {/* Phong bì */}
+                        <div
+                            onClick={handleOpenEnvelope}
+                            className="group relative cursor-pointer [perspective:1200px]"
+                            title={t.clickToOpen}
+                        >
+                            <div className="absolute -bottom-7 left-1/2 h-8 w-[75%] -translate-x-1/2 rounded-[50%] bg-blue-900/15 blur-xl" />
+
+                            <div
+                                className="
+                                relative
+                                h-[225px]
+                                w-[320px]
+                                overflow-visible
+                                rounded-2xl
+                                border
+                                border-blue-200
+                                bg-gradient-to-br
+                                from-white
+                                via-blue-50
+                                to-sky-100
+                                shadow-[0_25px_60px_rgba(30,64,175,0.18)]
+                                transition-all
+                                duration-500
+                                group-hover:-translate-y-2
+                                group-hover:shadow-[0_30px_70px_rgba(30,64,175,0.22)]
+                                sm:h-[270px]
+                                sm:w-[390px]
+                            "
+                            >
+                                <div className="absolute inset-2 rounded-xl border border-amber-300/40" />
+
+                                {/* Lá thiệp bên trong */}
+                                <div
+                                    className={`absolute left-1/2 top-4 z-[5] h-[190px] w-[86%] -translate-x-1/2 rounded-xl bg-gradient-to-b from-white via-white to-blue-50 p-3 shadow-[0_8px_25px_rgba(30,64,175,0.12)] transition-all duration-1000 sm:h-[225px] ${isOpening
+                                        ? "-translate-y-[150px] opacity-100 sm:-translate-y-[180px]"
+                                        : "translate-y-0"
+                                        }`}
+                                >
+                                    <div className="flex h-full flex-col items-center justify-center rounded-lg border border-amber-300/60 text-center">
+                                        <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-full border border-amber-300/70 bg-white shadow-sm">
+                                            <img
+                                                src="/images/UTC.png"
+                                                alt="UTC"
+                                                className="h-9 w-9 rounded-full object-contain"
+                                            />
+                                        </div>
+
+                                        <div className="absolute top-3 right-3 text-sm text-amber-400">
+                                            ✦
+                                        </div>
+
+                                        <p className={`text-[9px] font-semibold uppercase tracking-[0.25em] text-amber-600 sm:text-[10px] ${textAnimClass}`}>
+                                            {t.invitation}
+                                        </p>
+
+                                        <p className="mt-2 px-3 font-serif text-lg font-semibold text-blue-900 sm:text-xl">
+                                            {GRADUATE_NAME}
+                                        </p>
+
+                                        <div className="mt-2 flex items-center gap-2">
+                                            <div className="h-px w-8 bg-amber-300" />
+                                            <span className="text-xs text-amber-500">✦</span>
+                                            <div className="h-px w-8 bg-amber-300" />
+                                        </div>
+
+                                        <p className={`mt-2 px-2 text-[9px] uppercase tracking-widest text-blue-500 sm:text-[10px] ${textAnimClass}`}>
+                                            {t.graduationCeremony}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Mặt trước phong bì */}
+                                <div
+                                    className="absolute inset-0 z-10 rounded-2xl bg-gradient-to-br from-blue-100 via-sky-100 to-blue-200"
+                                    style={{
+                                        clipPath:
+                                            "polygon(0 38%, 50% 68%, 100% 38%, 100% 100%, 0 100%)",
+                                    }}
+                                />
+
+                                <div
+                                    className="absolute inset-0 z-[11] rounded-2xl"
+                                    style={{
+                                        clipPath:
+                                            "polygon(0 38%, 50% 68%, 100% 38%, 100% 100%, 0 100%)",
+                                        background:
+                                            "linear-gradient(135deg, transparent 49.6%, rgba(245,158,11,.35) 50%, transparent 50.4%)",
+                                    }}
+                                />
+
+                                {/* Nắp phong bì */}
+                                <div
+                                    className={`absolute left-0 top-0 z-20 h-[125px] w-full rounded-t-2xl border-b border-amber-300/60 bg-gradient-to-br from-white via-blue-50 to-sky-100 shadow-sm transition-transform duration-1000 [transform-origin:top_center] sm:h-[150px] ${isOpening
+                                        ? "[transform:rotateX(-150deg)]"
+                                        : ""
+                                        }`}
+                                    style={{
+                                        clipPath:
+                                            "polygon(0 0, 100% 0, 50% 100%)",
+                                    }}
+                                >
+                                    <div
+                                        className="absolute inset-0"
+                                        style={{
+                                            clipPath:
+                                                "polygon(0 0, 100% 0, 50% 100%)",
+                                            borderBottom:
+                                                "1px solid rgba(245,158,11,0.4)",
+                                        }}
+                                    />
+                                </div>
+
+                                {/* Con dấu sáp */}
+                                <div
+                                    className={`absolute left-1/2 top-[108px] z-30 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-amber-200 bg-gradient-to-br from-amber-300 via-yellow-400 to-amber-500 shadow-[0_5px_20px_rgba(245,158,11,0.28)] transition-all duration-500 sm:top-[125px] sm:h-16 sm:w-16 ${isOpening
+                                        ? "scale-75 opacity-0"
+                                        : "group-hover:scale-110"
+                                        }`}
+                                >
+                                    <div className="absolute inset-1 rounded-full border border-white/60" />
+                                    <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-white p-0.5 shadow-sm sm:h-12 sm:w-12">
+                                        <img
+                                            src="/images/UTC.png"
+                                            alt="UTC"
+                                            className="h-full w-full rounded-full object-contain"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Dòng chữ hướng dẫn */}
+                        <p
+                            className={`mt-9 text-center text-xs tracking-wide text-blue-900/55 transition-all duration-500 sm:text-sm ${isOpening
+                                ? "opacity-0"
+                                : "opacity-100"
+                                } ${textAnimClass}`}
+                        >
+                            {t.clickToOpen}
+                        </p>
+
+                        {/* Nút mở thiệp */}
+                        <button
+                            type="button"
+                            onClick={handleOpenEnvelope}
+                            disabled={isOpening}
+                            className={`group mt-4 flex items-center gap-2 rounded-full border border-amber-400 bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-400 px-7 py-3 text-xs font-bold uppercase tracking-[0.2em] text-blue-950 shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-[0_0_30px_rgba(245,158,11,0.25)] active:scale-95 disabled:pointer-events-none sm:px-8 sm:py-3.5 sm:text-sm ${isOpening
+                                ? "scale-90 opacity-0"
+                                : ""
+                                }`}
+                        >
+                            <span className="text-base transition-transform duration-300 group-hover:-rotate-6">
+                                ✉
+                            </span>
+                            <span className={textAnimClass}>
+                                {t.openEnvelopeBtn}
+                            </span>
+                            <span className="text-base transition-transform duration-300 group-hover:translate-x-1">
+                                →
+                            </span>
+                        </button>
+                    </div>
+
+                    <div className="absolute bottom-5 left-0 right-0 z-10 text-center">
+                        <p className="text-[9px] uppercase tracking-[0.3em] text-blue-900/30 sm:text-[10px]">
+                            UTC · 2026
+                        </p>
+                    </div>
+                </div>
+            )}
+
+            {/* Hai dải sash cố định hai bên màn hình */}
             <div className="inv-sash-left pointer-events-none fixed inset-y-0 left-0 z-20 hidden w-[128px] xl:block 2xl:w-[148px]">
                 <GraduationSash side="left" />
             </div>
@@ -566,7 +811,7 @@ function Invitation() {
                 <GraduationSash side="right" />
             </div>
 
-            {/* SASH MINI MOBILE / TABLET (CỐ ĐỊNH TĨNH) */}
+            {/* SASH MINI MOBILE / TABLET */}
             <div className="inv-sash-left pointer-events-none fixed left-0 top-[118px] z-[2] xl:hidden">
                 <div className="relative h-[350px] w-[38px] sm:w-[42px]">
                     <div
@@ -688,7 +933,7 @@ function Invitation() {
                 </div>
             </div>
 
-            {/* Nền trang trí (CỐ ĐỊNH TĨNH) */}
+            {/* Nền trang trí */}
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.15),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.14),transparent_34%)]" />
 
@@ -727,10 +972,10 @@ function Invitation() {
                 </span>
             </div>
 
-            {/* Watermark Công nghệ thông tin (CỐ ĐỊNH TĨNH) */}
+            {/* Watermark Công nghệ thông tin */}
             <InformationTechnologyWatermark />
 
-            {/* Họa tiết giao thông (CỐ ĐỊNH TĨNH) */}
+            {/* Họa tiết giao thông */}
             <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-40">
                 <div className="absolute left-[4%] top-[20%] hidden text-5xl opacity-10 lg:block">
                     🚆
@@ -753,13 +998,6 @@ function Invitation() {
                     <div className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-400 shadow" />
                 </div>
             </div>
-
-            {/* Chuyển ngôn ngữ */}
-            <LanguageSwitcher
-                language={language}
-                onChange={handleLanguageChange}
-                disabled={languageChanging}
-            />
 
             <audio
                 ref={audioRef}
@@ -790,8 +1028,8 @@ function Invitation() {
                         language === "zh"
                             ? "'Noto Sans SC', 'Microsoft YaHei', 'PingFang SC', sans-serif"
                             : language === "de"
-                            ? "'Inter', 'Roboto', 'Segoe UI', sans-serif"
-                            : "Inter, Poppins, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                                ? "'Inter', 'Roboto', 'Segoe UI', sans-serif"
+                                : "Inter, Poppins, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
                 }}
             >
                 <div className="absolute left-4 top-16 hidden rotate-[-12deg] text-8xl opacity-90 lg:block">
@@ -864,7 +1102,7 @@ function Invitation() {
                     </div>
                 </section>
 
-                {/* Ảnh đại diện (CỐ ĐỊNH TĨNH) */}
+                {/* Ảnh đại diện */}
                 <section className="mt-10 text-center">
                     <div className="relative mx-auto w-fit">
                         <div className="absolute left-1/2 top-1/2 h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-blue-300/30 sm:h-[355px] sm:w-[355px]" />
@@ -1175,36 +1413,6 @@ function Invitation() {
                     </div>
                 </div>
             )}
-            {showMusicGuide && (
-                <div
-                    className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 p-4 backdrop-blur-md"
-                >
-                    <div className="w-full max-w-md rounded-3xl bg-white p-7 text-center shadow-2xl">
-
-                        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-blue-100 text-5xl">
-                            🎵
-                        </div>
-
-                        <h2 className={`mt-5 text-2xl font-bold text-slate-800 ${textAnimClass}`}>
-                            {t.guideTitle}
-                        </h2>
-
-                        <p className={`mt-4 leading-7 text-slate-600 ${textAnimClass}`}>
-                            {t.guideText}
-                        </p>
-
-                        <div className="mt-6 flex justify-center">
-                            <button
-                                onClick={closeMusicGuide}
-                                className={`rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-3 font-bold text-white transition hover:scale-105 ${textAnimClass}`}
-                            >
-                                {t.guideButton}
-                            </button>
-                        </div>
-
-                    </div>
-                </div>
-            )}
         </div>
     );
 }
@@ -1384,7 +1592,7 @@ function InformationTechnologyWatermark() {
             </div>
 
             <div className="absolute bottom-[5%] left-[-5%] w-[110%] overflow-hidden whitespace-nowrap font-mono text-[10px] font-black tracking-[0.25em] text-blue-800 opacity-[0.12] sm:text-xs">
-                01000001 01001001 00100000 01010011 01010001 01001100 00100000 01010010 01000101 01000001 01000011 01010100
+                01000001 01001001 00100000 01010011 01010001 01010100
             </div>
 
             {utcMarks.map((item, index) => (
@@ -1514,7 +1722,8 @@ function MusicController({
     onToggle,
 }) {
     return (
-        <div className="fixed bottom-4 right-4 z-[90] flex flex-col items-end gap-2 sm:bottom-6 sm:right-6">
+        /* Đã đổi z-[90] thành z-[400] để luôn nổi lên trên cùng ngay từ đầu */
+        <div className="fixed bottom-4 right-4 z-[400] flex flex-col items-end gap-2 sm:bottom-6 sm:right-6">
             {playing && (
                 <div className="max-w-[220px] rounded-2xl border border-blue-200 bg-white/95 px-4 py-3 shadow-xl backdrop-blur-md">
                     <div className="flex items-center gap-3">
@@ -1596,7 +1805,7 @@ function LanguageSwitcher({ language, onChange, disabled = false }) {
     ];
 
     return (
-        <div className="fixed right-3 top-3 z-50 flex overflow-hidden rounded-full border border-blue-200 bg-white/90 p-1 shadow-lg backdrop-blur-md sm:right-6 sm:top-6">
+        <div className="fixed right-3 top-3 z-[400] flex overflow-hidden rounded-full border border-blue-200 bg-white/90 p-1 shadow-lg backdrop-blur-md sm:right-6 sm:top-6">
             {languages.map((item) => {
                 const active = language === item.code;
 
@@ -1700,7 +1909,7 @@ function GraduationSash({ side }) {
                 />
 
                 <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent,rgba(37,99,235,0.07),transparent),repeating-linear-gradient(0deg,transparent_0px,transparent_30px,rgba(37,99,235,0.05)_31px)]" />
-                <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-white/10 to-transparent" />s
+                <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-white/10 to-transparent" />
 
                 <div className="relative z-10 flex h-full flex-col items-center px-2 py-5 text-center">
                     {isLeft ? (
