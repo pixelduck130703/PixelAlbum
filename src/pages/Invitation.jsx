@@ -48,14 +48,14 @@ const INVITATION_ANIMATIONS = `
   }
 
   /* ==========================
-     HIỆU ỨNG CHUYỂN NGÔN NGỮ
+     HIỆU ỨNG CHUYỂN NGÔN NGỮ (CHỈ DÀNH CHO TEXT)
   ========================== */
 
   @keyframes languageFadeIn {
     from {
       opacity: 0;
-      transform: translateY(12px);
-      filter: blur(6px);
+      transform: translateY(6px);
+      filter: blur(4px);
     }
 
     to {
@@ -74,17 +74,21 @@ const INVITATION_ANIMATIONS = `
 
     to {
       opacity: 0;
-      transform: translateY(-12px);
-      filter: blur(6px);
+      transform: translateY(-6px);
+      filter: blur(4px);
     }
   }
 
+  .inv-text-anim {
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+
   .inv-language-enter {
-    animation: languageFadeIn 0.45s cubic-bezier(.22,1,.36,1) both;
+    animation: languageFadeIn 0.35s cubic-bezier(.22,1,.36,1) both;
   }
 
   .inv-language-leave {
-    animation: languageFadeOut 0.25s ease both;
+    animation: languageFadeOut 0.2s ease both;
     pointer-events: none;
   }
 
@@ -536,9 +540,9 @@ function Invitation() {
 
                 window.setTimeout(() => {
                     setLanguageChanging(false);
-                }, 450);
+                }, 350);
             });
-        }, 250);
+        }, 200);
     };
 
     const countdown = useMemo(() => {
@@ -566,10 +570,14 @@ function Invitation() {
         };
     }, [currentTime]);
 
+    // Chuỗi class hiệu ứng riêng cho Text
+    const textAnimClass = contentVisible ? "inv-language-enter" : "inv-language-leave";
+
     return (
         <div className="utc-light-page utc-road-pattern relative min-h-screen overflow-x-hidden text-slate-900">
             <style>{INVITATION_ANIMATIONS}</style>
-            {/* Hai dải sash cố định hai bên màn hình */}
+            
+            {/* Hai dải sash cố định hai bên màn hình (HOÀN TOÀN ĐỨNG YÊN) */}
             <div className="inv-sash-left pointer-events-none fixed inset-y-0 left-0 z-20 hidden w-[128px] xl:block 2xl:w-[148px]">
                 <GraduationSash side="left" />
             </div>
@@ -578,11 +586,7 @@ function Invitation() {
                 <GraduationSash side="right" />
             </div>
 
-            {/* =========================
-    SASH MINI MOBILE / TABLET
-========================= */}
-
-            {/* Sash trái */}
+            {/* SASH MINI MOBILE / TABLET (HOÀN TOÀN ĐỨNG YÊN) */}
             <div className="inv-sash-left pointer-events-none fixed left-0 top-[118px] z-[2] xl:hidden">
                 <div className="relative h-[350px] w-[38px] sm:w-[42px]">
                     <div
@@ -592,12 +596,9 @@ function Invitation() {
                                 "polygon(6% 0,94% 0,100% 90%,50% 100%,0 90%)",
                         }}
                     >
-                        {/* Vân vải */}
                         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.13),transparent_24%,rgba(255,255,255,0.04)_52%,transparent_76%,rgba(0,0,0,0.09))]" />
-
                         <div className="absolute inset-0 bg-[repeating-linear-gradient(180deg,transparent_0px,transparent_18px,rgba(255,255,255,0.035)_19px)]" />
 
-                        {/* Viền ngoài */}
                         <div
                             className="absolute inset-[3px] border border-amber-300/80"
                             style={{
@@ -606,7 +607,6 @@ function Invitation() {
                             }}
                         />
 
-                        {/* Viền trong */}
                         <div
                             className="absolute inset-[6px] border border-white/20"
                             style={{
@@ -615,7 +615,6 @@ function Invitation() {
                             }}
                         />
 
-                        {/* Logo UTC */}
                         <div className="absolute inset-x-0 top-5 flex justify-center">
                             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-sm">
                                 <img
@@ -626,26 +625,21 @@ function Invitation() {
                             </div>
                         </div>
 
-                        {/* K63 */}
                         <div className="absolute inset-x-0 top-[62px] text-center">
                             <p className="text-[8px] font-black tracking-[0.12em] text-amber-300">
                                 K63
                             </p>
                         </div>
 
-                        {/* Chữ dọc */}
                         <p className="absolute left-1/2 top-[92px] -translate-x-1/2 [writing-mode:vertical-rl] rotate-180 whitespace-nowrap text-[7px] font-black uppercase tracking-[0.16em] text-white">
                             Đại học Giao thông Vận tải
                         </p>
 
-                        {/* 2026 */}
                         <div className="absolute inset-x-0 bottom-[58px] text-center">
                             <div className="mx-auto mb-2 h-px w-4 bg-amber-300/80" />
-
                             <p className="text-[6px] font-black uppercase tracking-[0.12em] text-amber-300">
                                 Class
                             </p>
-
                             <p className="mt-1 text-[11px] font-black leading-none text-white">
                                 2026
                             </p>
@@ -654,7 +648,6 @@ function Invitation() {
                 </div>
             </div>
 
-            {/* Sash phải */}
             <div className="inv-sash-right pointer-events-none fixed right-0 top-[148px] z-[2] xl:hidden">
                 <div className="relative h-[330px] w-[36px] sm:w-[40px]">
                     <div
@@ -664,12 +657,9 @@ function Invitation() {
                                 "polygon(6% 0,94% 0,100% 90%,50% 100%,0 90%)",
                         }}
                     >
-                        {/* Vân sáng */}
                         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.95),transparent_34%,rgba(37,99,235,0.03)_66%,rgba(37,99,235,0.08))]" />
-
                         <div className="absolute inset-0 bg-[repeating-linear-gradient(180deg,transparent_0px,transparent_18px,rgba(37,99,235,0.035)_19px)]" />
 
-                        {/* Viền ngoài */}
                         <div
                             className="absolute inset-[3px] border border-blue-700/80"
                             style={{
@@ -678,7 +668,6 @@ function Invitation() {
                             }}
                         />
 
-                        {/* Viền trong */}
                         <div
                             className="absolute inset-[6px] border border-amber-300/55"
                             style={{
@@ -687,7 +676,6 @@ function Invitation() {
                             }}
                         />
 
-                        {/* Logo UTC */}
                         <div className="absolute inset-x-0 top-5 flex justify-center">
                             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-sm">
                                 <img
@@ -698,25 +686,20 @@ function Invitation() {
                             </div>
                         </div>
 
-                        {/* Chữ dọc */}
                         <p className="absolute left-1/2 top-[58px] -translate-x-1/2 [writing-mode:vertical-rl] whitespace-nowrap text-[12px] font-black uppercase tracking-[0.13em] text-blue-900">
                             Graduation UTC
                         </p>
 
-                        {/* Năm */}
                         <div className="absolute inset-x-0 bottom-[58px] text-center">
                             <p className="text-[6px] font-black uppercase tracking-[0.08em] text-amber-600">
                                 THE
                             </p>
-
                             <p className="text-[6px] font-black uppercase tracking-[0.08em] text-amber-600">
                                 WAY
                             </p>
-
                             <p className="text-[6px] font-black uppercase tracking-[0.08em] text-amber-600">
                                 TO
                             </p>
-
                             <p className="text-[6px] font-black uppercase tracking-[0.08em] text-amber-600">
                                 SUCCESS
                             </p>
@@ -725,7 +708,7 @@ function Invitation() {
                 </div>
             </div>
 
-            {/* Nền trang trí */}
+            {/* Nền trang trí (ĐỨNG YÊN) */}
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.15),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.14),transparent_34%)]" />
 
@@ -764,10 +747,10 @@ function Invitation() {
                 </span>
             </div>
 
-            {/* Watermark Công nghệ thông tin */}
+            {/* Watermark Công nghệ thông tin (ĐỨNG YÊN) */}
             <InformationTechnologyWatermark />
 
-            {/* Họa tiết giao thông */}
+            {/* Họa tiết giao thông (ĐỨNG YÊN) */}
             <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-40">
                 <div className="absolute left-[4%] top-[20%] hidden text-5xl opacity-10 lg:block">
                     🚆
@@ -817,12 +800,10 @@ function Invitation() {
                 onToggle={toggleMusic}
             />
 
+            {/* KHU VỰC CHÍNH: KHÔNG GẮN ANIMATION VÀO CONTAINER CHA */}
             <main
                 key={language}
-                className={`relative z-10 mx-auto flex min-h-screen w-full max-w-5xl flex-col items-center px-4 pb-14 pt-24 sm:px-6 sm:pb-20 sm:pt-20 xl:px-8 ${contentVisible
-                    ? "inv-language-enter"
-                    : "inv-language-leave"
-                    }`}
+                className="relative z-10 mx-auto flex min-h-screen w-full max-w-5xl flex-col items-center px-4 pb-14 pt-24 sm:px-6 sm:pb-20 sm:pt-20 xl:px-8"
                 aria-busy={languageChanging}
                 style={{
                     fontFamily:
@@ -849,42 +830,48 @@ function Invitation() {
                         </div>
                     </div>
 
-                    <p className="mt-5 text-sm font-bold uppercase tracking-[0.12em] text-amber-600 sm:text-lg sm:tracking-[0.2em]">
-                        {t.university}
-                    </p>
-
-                    {t.universityEnglish && (
-                        <p className="mt-2 text-[10px] uppercase tracking-[0.16em] text-slate-500 sm:text-sm sm:tracking-[0.25em]">
-                            {t.universityEnglish}
+                    {/* Chỉ gắn Animation cho phần Chữ */}
+                    <div className={textAnimClass}>
+                        <p className="mt-5 text-sm font-bold uppercase tracking-[0.12em] text-amber-600 sm:text-lg sm:tracking-[0.2em]">
+                            {t.university}
                         </p>
-                    )}
+
+                        {t.universityEnglish && (
+                            <p className="mt-2 text-[10px] uppercase tracking-[0.16em] text-slate-500 sm:text-sm sm:tracking-[0.25em]">
+                                {t.universityEnglish}
+                            </p>
+                        )}
+                    </div>
                 </section>
 
                 {/* Tiêu đề */}
                 <section className="mt-9 text-center">
-                    <p
-                        className="text-5xl font-black leading-[1.15] text-amber-600 drop-shadow-lg sm:text-7xl lg:text-8xl"
-                        style={{
-                            fontFamily:
-                                language === "zh"
-                                    ? "'Noto Serif SC', 'Songti SC', serif"
-                                    : "'Playfair Display', serif",
-                        }}
-                    >
-                        {t.invitation}
-                    </p>
+                    {/* Chỉ gắn Animation cho phần Chữ */}
+                    <div className={textAnimClass}>
+                        <p
+                            className="text-5xl font-black leading-[1.15] text-amber-600 drop-shadow-lg sm:text-7xl lg:text-8xl"
+                            style={{
+                                fontFamily:
+                                    language === "zh"
+                                        ? "'Noto Serif SC', 'Songti SC', serif"
+                                        : "'Playfair Display', serif",
+                            }}
+                        >
+                            {t.invitation}
+                        </p>
 
-                    <h1
-                        className="mt-3 text-3xl font-bold uppercase leading-[1.2] tracking-[0.04em] text-slate-800 sm:text-5xl lg:text-6xl"
-                        style={{
-                            fontFamily:
-                                language === "zh"
-                                    ? "'Noto Serif SC', 'Songti SC', serif"
-                                    : "'Playfair Display', serif",
-                        }}
-                    >
-                        {t.graduationCeremony}
-                    </h1>
+                        <h1
+                            className="mt-3 text-3xl font-bold uppercase leading-[1.2] tracking-[0.04em] text-slate-800 sm:text-5xl lg:text-6xl"
+                            style={{
+                                fontFamily:
+                                    language === "zh"
+                                        ? "'Noto Serif SC', 'Songti SC', serif"
+                                        : "'Playfair Display', serif",
+                            }}
+                        >
+                            {t.graduationCeremony}
+                        </h1>
+                    </div>
 
                     <div className="mx-auto mt-6 flex max-w-xl items-center gap-4">
                         <div className="h-px flex-1 bg-gradient-to-r from-transparent to-amber-400" />
@@ -892,19 +879,20 @@ function Invitation() {
                         <div className="h-px flex-1 bg-gradient-to-l from-transparent to-amber-400" />
                     </div>
 
-                    <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-slate-600 sm:text-lg sm:leading-8">
-                        {t.invitationText}
-                    </p>
+                    {/* Chỉ gắn Animation cho phần Chữ */}
+                    <div className={textAnimClass}>
+                        <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-slate-600 sm:text-lg sm:leading-8">
+                            {t.invitationText}
+                        </p>
+                    </div>
                 </section>
 
-                {/* Ảnh đại diện */}
+                {/* Ảnh đại diện (ĐỨNG YÊN) */}
                 <section className="mt-10 text-center">
                     <div className="relative mx-auto w-fit">
-                        {/* Halo phía sau */}
                         <div className="absolute left-1/2 top-1/2 h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-blue-300/30 sm:h-[355px] sm:w-[355px]" />
                         <div className="absolute left-1/2 top-1/2 h-[330px] w-[330px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-amber-300/20 sm:h-[385px] sm:w-[385px]" />
 
-                        {/* Vòng ngoài */}
                         <div className="relative h-[270px] w-[270px] rounded-full bg-gradient-to-br from-blue-800 via-blue-500 to-amber-400 p-[5px] shadow-[0_25px_70px_rgba(37,99,235,0.30)] sm:h-80 sm:w-80">
                             <div className="flex h-full w-full items-center justify-center rounded-full bg-white">
                                 <div className="relative h-[94%] w-[94%] overflow-hidden rounded-full">
@@ -961,7 +949,8 @@ function Invitation() {
                             💻
                         </div>
 
-                        <div className="min-w-0 flex-1 text-left">
+                        {/* Chỉ gắn Animation cho phần Chữ */}
+                        <div className={`min-w-0 flex-1 text-left ${textAnimClass}`}>
                             <h3 className="mt-1 text-[15px] font-black uppercase leading-6 text-amber-600 sm:text-2xl">
                                 {t.degree}
                             </h3>
@@ -979,7 +968,7 @@ function Invitation() {
                         <div className="mt-5 rounded-3xl border border-amber-400 bg-blue-600/10 px-6 py-8 backdrop-blur">
                             <p className="text-5xl">🎓🎉</p>
 
-                            <p className="mt-4 text-2xl font-black text-amber-600">
+                            <p className={`mt-4 text-2xl font-black text-amber-600 ${textAnimClass}`}>
                                 {t.ceremonyStarted}
                             </p>
                         </div>
@@ -988,24 +977,28 @@ function Invitation() {
                             <CountdownItem
                                 value={countdown.days}
                                 label={t.day}
+                                textAnimClass={textAnimClass}
                             />
 
                             <CountdownItem
                                 value={countdown.hours}
                                 label={t.hour}
                                 withBorder
+                                textAnimClass={textAnimClass}
                             />
 
                             <CountdownItem
                                 value={countdown.minutes}
                                 label={t.minute}
                                 withBorder
+                                textAnimClass={textAnimClass}
                             />
 
                             <CountdownItem
                                 value={countdown.seconds}
                                 label={t.second}
                                 withBorder
+                                textAnimClass={textAnimClass}
                             />
                         </div>
                     )}
@@ -1018,12 +1011,14 @@ function Invitation() {
                             icon="📅"
                             label={t.eventDateLabel}
                             value={t.eventDate}
+                            textAnimClass={textAnimClass}
                         />
 
                         <MobileInfoRow
                             icon="🕗"
                             label={t.eventTimeLabel}
                             value={t.eventTime}
+                            textAnimClass={textAnimClass}
                         />
 
                         <MobileInfoRow
@@ -1036,14 +1031,16 @@ function Invitation() {
                                     {t.locationLine2}
                                 </>
                             }
+                            textAnimClass={textAnimClass}
                         />
                     </div>
                 </section>
 
                 {/* Chữ ký */}
                 <section className="mt-10 px-4 text-center">
+                    {/* Chỉ gắn Animation cho phần Chữ */}
                     <p
-                        className="mx-auto text-3xl italic leading-relaxed text-amber-600 sm:text-5xl"
+                        className={`mx-auto text-3xl italic leading-relaxed text-amber-600 sm:text-5xl ${textAnimClass}`}
                         style={{
                             fontFamily:
                                 language === "zh"
@@ -1067,7 +1064,7 @@ function Invitation() {
                         className="flex min-h-[56px] items-center justify-center gap-3 rounded-2xl border border-amber-400 bg-gradient-to-r from-amber-300 to-yellow-400 px-6 py-4 font-bold text-blue-950 shadow-xl transition hover:-translate-y-1 hover:scale-[1.02]"
                     >
                         <span className="text-xl">📍</span>
-                        <span>{t.viewMap}</span>
+                        <span className={textAnimClass}>{t.viewMap}</span>
                     </a>
 
                     <button
@@ -1076,7 +1073,7 @@ function Invitation() {
                         className="flex min-h-[56px] items-center justify-center gap-3 rounded-2xl border border-blue-300 bg-white px-6 py-4 font-bold text-blue-700 shadow-xl transition hover:-translate-y-1 hover:scale-[1.02]"
                     >
                         <span className="text-xl">🗺️</span>
-                        {t.campusMap}
+                        <span className={textAnimClass}>{t.campusMap}</span>
                     </button>
 
                     <button
@@ -1085,12 +1082,12 @@ function Invitation() {
                         className="flex min-h-[56px] items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 font-bold text-white shadow-xl transition hover:-translate-y-1 hover:scale-[1.02] hover:shadow-2xl"
                     >
                         <span className="text-xl">📞</span>
-                        <span>{t.contact}</span>
+                        <span className={textAnimClass}>{t.contact}</span>
                     </button>
                 </div>
 
                 <footer className="mt-12 text-center">
-                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-400 sm:tracking-[0.2em]">
+                    <p className={`text-xs font-bold uppercase tracking-[0.12em] text-slate-400 sm:tracking-[0.2em] ${textAnimClass}`}>
                         {t.footer}
                     </p>
                 </footer>
@@ -1105,7 +1102,6 @@ function Invitation() {
                         className="relative inline-block overflow-hidden rounded-3xl bg-white shadow-2xl"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        {/* Nút đóng */}
                         <button
                             type="button"
                             onClick={() => setShowCampusMap(false)}
@@ -1114,7 +1110,6 @@ function Invitation() {
                             ✕
                         </button>
 
-                        {/* Ảnh */}
                         <div className="flex items-center justify-center bg-slate-100 p-2">
                             <img
                                 src="/images/campus-map.png"
@@ -1123,10 +1118,9 @@ function Invitation() {
                             />
                         </div>
 
-                        {/* Hướng dẫn gửi xe */}
                         <div className="px-5 py-4 text-center">
                             <p
-                                className="text-base font-bold text-amber-600 sm:text-lg"
+                                className={`text-base font-bold text-amber-600 sm:text-lg ${textAnimClass}`}
                                 style={{
                                     fontFamily:
                                         language === "zh"
@@ -1138,7 +1132,7 @@ function Invitation() {
                             </p>
 
                             <p
-                                className="mx-auto mt-1 max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base"
+                                className={`mx-auto mt-1 max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base ${textAnimClass}`}
                                 style={{
                                     textWrap: "balance",
                                 }}
@@ -1171,13 +1165,13 @@ function Invitation() {
 
                             <h2
                                 id="contact-dialog-title"
-                                className="mt-5 text-2xl font-bold text-slate-800"
+                                className={`mt-5 text-2xl font-bold text-slate-800 ${textAnimClass}`}
                             >
                                 {t.contactTitle}
                             </h2>
 
                             <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                <p className="text-sm text-slate-500">
+                                <p className={`text-sm text-slate-500 ${textAnimClass}`}>
                                     {t.phoneLabel}
                                 </p>
 
@@ -1190,14 +1184,14 @@ function Invitation() {
                                 <button
                                     type="button"
                                     onClick={() => setShowPhone(false)}
-                                    className="rounded-xl bg-slate-100 py-3 font-semibold text-slate-700 transition hover:bg-slate-200"
+                                    className={`rounded-xl bg-slate-100 py-3 font-semibold text-slate-700 transition hover:bg-slate-200 ${textAnimClass}`}
                                 >
                                     {t.close}
                                 </button>
 
                                 <a
                                     href={`tel:${PHONE_NUMBER}`}
-                                    className="rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 py-3 text-center font-semibold text-slate-900 transition hover:from-green-600 hover:to-emerald-700"
+                                    className={`rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 py-3 text-center font-semibold text-slate-900 transition hover:from-green-600 hover:to-emerald-700 ${textAnimClass}`}
                                 >
                                     {t.callNow}
                                 </a>
@@ -1216,18 +1210,18 @@ function Invitation() {
                             🎵
                         </div>
 
-                        <h2 className="mt-5 text-2xl font-bold text-slate-800">
+                        <h2 className={`mt-5 text-2xl font-bold text-slate-800 ${textAnimClass}`}>
                             {t.guideTitle}
                         </h2>
 
-                        <p className="mt-4 leading-7 text-slate-600">
+                        <p className={`mt-4 leading-7 text-slate-600 ${textAnimClass}`}>
                             {t.guideText}
                         </p>
 
                         <div className="mt-6 flex justify-center">
                             <button
                                 onClick={closeMusicGuide}
-                                className="rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-3 font-bold text-white transition hover:scale-105"
+                                className={`rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-3 font-bold text-white transition hover:scale-105 ${textAnimClass}`}
                             >
                                 {t.guideButton}
                             </button>
@@ -1404,10 +1398,8 @@ function InformationTechnologyWatermark() {
             className="pointer-events-none absolute inset-0 z-[1] overflow-hidden opacity-[0.14] select-none"
             aria-hidden="true"
         >
-            {/* Lưới công nghệ */}
             <div className="absolute inset-0 bg-[linear-gradient(rgba(37,99,235,0.075)_1px,transparent_1px),linear-gradient(90deg,rgba(37,99,235,0.075)_1px,transparent_1px)] bg-[size:34px_34px]" />
 
-            {/* Các dải chữ công nghệ */}
             <div className="absolute left-[-5%] top-[8%] w-[110%] overflow-hidden whitespace-nowrap font-mono text-[11px] font-black tracking-[0.28em] text-blue-800 opacity-[0.16] sm:text-sm">
                 AI • SQL • REACT • NODE.JS • GIT • JAVASCRIPT • TYPESCRIPT • POSTGRESQL • DOCKER
             </div>
@@ -1420,7 +1412,6 @@ function InformationTechnologyWatermark() {
                 01000001 01001001 00100000 01010011 01010001 01001100 00100000 01010010 01000101 01000001 01000011 01010100
             </div>
 
-            {/* Logo UTC rải rác */}
             {utcMarks.map((item, index) => (
                 <div
                     key={`utc-mark-${index}`}
@@ -1439,7 +1430,6 @@ function InformationTechnologyWatermark() {
                 </div>
             ))}
 
-            {/* Desktop và tablet */}
             <div className="hidden md:block">
                 {desktopTechnologies.map((item) => (
                     <div
@@ -1487,7 +1477,6 @@ function InformationTechnologyWatermark() {
                 </div>
             </div>
 
-            {/* Mobile */}
             <div className="md:hidden">
                 <div className="absolute left-1/2 top-[8%] h-28 w-28 -translate-x-1/2 opacity-[0.12]">
                     <img
@@ -1662,17 +1651,18 @@ function CountdownItem({
     value,
     label,
     withBorder = false,
+    textAnimClass = "",
 }) {
     return (
         <div
-            className={`px-1 py-5 text-center sm:px-4 sm:py-7 ${withBorder ? "border-l border-blue-100" : ""
-                }`}
+            className={`px-1 py-5 text-center sm:px-4 sm:py-7 ${withBorder ? "border-l border-blue-100" : ""}`}
         >
             <p className="font-serif text-3xl font-black tabular-nums text-amber-600 sm:text-5xl">
                 {String(value).padStart(2, "0")}
             </p>
 
-            <p className="mt-2 break-words text-[9px] font-bold uppercase tracking-wide text-slate-600 sm:text-sm">
+            {/* Chỉ nhãn thời gian đổi ngôn ngữ mới áp dụng animation */}
+            <p className={`mt-2 break-words text-[9px] font-bold uppercase tracking-wide text-slate-600 sm:text-sm ${textAnimClass}`}>
                 {label}
             </p>
         </div>
@@ -1683,6 +1673,7 @@ function MobileInfoRow({
     icon,
     label,
     value,
+    textAnimClass = "",
 }) {
     return (
         <div className="flex items-center gap-4 px-4 py-4 sm:flex-col sm:justify-center sm:px-5 sm:py-6 sm:text-center">
@@ -1690,7 +1681,8 @@ function MobileInfoRow({
                 {icon}
             </div>
 
-            <div className="min-w-0 sm:mt-2">
+            {/* Chỉ nhãn và giá trị dịch thuật mới áp dụng animation */}
+            <div className={`min-w-0 sm:mt-2 ${textAnimClass}`}>
                 <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-400 sm:text-xs">
                     {label}
                 </p>
@@ -1739,8 +1731,6 @@ function GraduationSash({ side }) {
                 <div className="absolute inset-y-0 left-1/2 w-px bg-blue-600/10" />
 
                 <div className="relative z-10 flex h-full flex-col items-center px-2 py-5 text-center">
-
-
                     {isLeft ? (
                         <>
                             <div className="flex h-14 w-14 shrink-0 items-center justify-center 2xl:h-16 2xl:w-16">
