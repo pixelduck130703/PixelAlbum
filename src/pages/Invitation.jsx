@@ -48,47 +48,46 @@ const INVITATION_ANIMATIONS = `
   }
 
   /* ==========================
-     HIỆU ỨNG CHUYỂN NGÔN NGỮ (CHỈ DÀNH CHO TEXT)
+     HIỆU ỨNG CHUYỂN NGÔN NGỮ SANG TRỌNG (LUXURY TEXT TRANSITION)
   ========================== */
 
-  @keyframes languageFadeIn {
-    from {
+  @keyframes luxuryTextIn {
+    0% {
       opacity: 0;
-      transform: translateY(6px);
-      filter: blur(4px);
+      transform: scale(0.96) translateY(4px);
+      filter: blur(8px);
     }
-
-    to {
+    60% {
+      filter: blur(0px);
+    }
+    100% {
       opacity: 1;
-      transform: translateY(0);
-      filter: blur(0);
+      transform: scale(1) translateY(0);
+      filter: blur(0px);
     }
   }
 
-  @keyframes languageFadeOut {
-    from {
+  @keyframes luxuryTextOut {
+    0% {
       opacity: 1;
-      transform: translateY(0);
-      filter: blur(0);
+      transform: scale(1) translateY(0);
+      filter: blur(0px);
     }
-
-    to {
+    100% {
       opacity: 0;
-      transform: translateY(-6px);
-      filter: blur(4px);
+      transform: scale(1.03) translateY(-4px);
+      filter: blur(8px);
     }
   }
 
-  .inv-text-anim {
-    transition: opacity 0.25s ease, transform 0.25s ease;
+  .inv-text-enter {
+    animation: luxuryTextIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: transform, opacity, filter;
   }
 
-  .inv-language-enter {
-    animation: languageFadeIn 0.35s cubic-bezier(.22,1,.36,1) both;
-  }
-
-  .inv-language-leave {
-    animation: languageFadeOut 0.2s ease both;
+  .inv-text-leave {
+    animation: luxuryTextOut 0.22s ease-in forwards;
+    will-change: transform, opacity, filter;
     pointer-events: none;
   }
 
@@ -156,8 +155,8 @@ const INVITATION_ANIMATIONS = `
   @media (prefers-reduced-motion: reduce) {
     .inv-sash-left,
     .inv-sash-right,
-    .inv-language-enter,
-    .inv-language-leave {
+    .inv-text-enter,
+    .inv-text-leave {
       animation: none !important;
     }
   }
@@ -540,9 +539,9 @@ function Invitation() {
 
                 window.setTimeout(() => {
                     setLanguageChanging(false);
-                }, 350);
+                }, 400);
             });
-        }, 200);
+        }, 220);
     };
 
     const countdown = useMemo(() => {
@@ -570,14 +569,14 @@ function Invitation() {
         };
     }, [currentTime]);
 
-    // Chuỗi class hiệu ứng riêng cho Text
-    const textAnimClass = contentVisible ? "inv-language-enter" : "inv-language-leave";
+    // Chuỗi Class áp dụng hiệu ứng chuyển đổi chữ mượt mà
+    const textAnimClass = contentVisible ? "inv-text-enter" : "inv-text-leave";
 
     return (
         <div className="utc-light-page utc-road-pattern relative min-h-screen overflow-x-hidden text-slate-900">
             <style>{INVITATION_ANIMATIONS}</style>
             
-            {/* Hai dải sash cố định hai bên màn hình (HOÀN TOÀN ĐỨNG YÊN) */}
+            {/* Hai dải sash cố định hai bên màn hình (CỐ ĐỊNH TĨNH) */}
             <div className="inv-sash-left pointer-events-none fixed inset-y-0 left-0 z-20 hidden w-[128px] xl:block 2xl:w-[148px]">
                 <GraduationSash side="left" />
             </div>
@@ -586,7 +585,7 @@ function Invitation() {
                 <GraduationSash side="right" />
             </div>
 
-            {/* SASH MINI MOBILE / TABLET (HOÀN TOÀN ĐỨNG YÊN) */}
+            {/* SASH MINI MOBILE / TABLET (CỐ ĐỊNH TĨNH) */}
             <div className="inv-sash-left pointer-events-none fixed left-0 top-[118px] z-[2] xl:hidden">
                 <div className="relative h-[350px] w-[38px] sm:w-[42px]">
                     <div
@@ -708,7 +707,7 @@ function Invitation() {
                 </div>
             </div>
 
-            {/* Nền trang trí (ĐỨNG YÊN) */}
+            {/* Nền trang trí (CỐ ĐỊNH TĨNH) */}
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.15),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.14),transparent_34%)]" />
 
@@ -747,10 +746,10 @@ function Invitation() {
                 </span>
             </div>
 
-            {/* Watermark Công nghệ thông tin (ĐỨNG YÊN) */}
+            {/* Watermark Công nghệ thông tin (CỐ ĐỊNH TĨNH) */}
             <InformationTechnologyWatermark />
 
-            {/* Họa tiết giao thông (ĐỨNG YÊN) */}
+            {/* Họa tiết giao thông (CỐ ĐỊNH TĨNH) */}
             <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-40">
                 <div className="absolute left-[4%] top-[20%] hidden text-5xl opacity-10 lg:block">
                     🚆
@@ -800,7 +799,7 @@ function Invitation() {
                 onToggle={toggleMusic}
             />
 
-            {/* KHU VỰC CHÍNH: KHÔNG GẮN ANIMATION VÀO CONTAINER CHA */}
+            {/* KHU VỰC NỘI DUNG CHÍNH */}
             <main
                 key={language}
                 className="relative z-10 mx-auto flex min-h-screen w-full max-w-5xl flex-col items-center px-4 pb-14 pt-24 sm:px-6 sm:pb-20 sm:pt-20 xl:px-8"
@@ -830,7 +829,6 @@ function Invitation() {
                         </div>
                     </div>
 
-                    {/* Chỉ gắn Animation cho phần Chữ */}
                     <div className={textAnimClass}>
                         <p className="mt-5 text-sm font-bold uppercase tracking-[0.12em] text-amber-600 sm:text-lg sm:tracking-[0.2em]">
                             {t.university}
@@ -846,7 +844,6 @@ function Invitation() {
 
                 {/* Tiêu đề */}
                 <section className="mt-9 text-center">
-                    {/* Chỉ gắn Animation cho phần Chữ */}
                     <div className={textAnimClass}>
                         <p
                             className="text-5xl font-black leading-[1.15] text-amber-600 drop-shadow-lg sm:text-7xl lg:text-8xl"
@@ -879,7 +876,6 @@ function Invitation() {
                         <div className="h-px flex-1 bg-gradient-to-l from-transparent to-amber-400" />
                     </div>
 
-                    {/* Chỉ gắn Animation cho phần Chữ */}
                     <div className={textAnimClass}>
                         <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-slate-600 sm:text-lg sm:leading-8">
                             {t.invitationText}
@@ -887,7 +883,7 @@ function Invitation() {
                     </div>
                 </section>
 
-                {/* Ảnh đại diện (ĐỨNG YÊN) */}
+                {/* Ảnh đại diện (CỐ ĐỊNH TĨNH) */}
                 <section className="mt-10 text-center">
                     <div className="relative mx-auto w-fit">
                         <div className="absolute left-1/2 top-1/2 h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-blue-300/30 sm:h-[355px] sm:w-[355px]" />
@@ -949,7 +945,6 @@ function Invitation() {
                             💻
                         </div>
 
-                        {/* Chỉ gắn Animation cho phần Chữ */}
                         <div className={`min-w-0 flex-1 text-left ${textAnimClass}`}>
                             <h3 className="mt-1 text-[15px] font-black uppercase leading-6 text-amber-600 sm:text-2xl">
                                 {t.degree}
@@ -1038,7 +1033,6 @@ function Invitation() {
 
                 {/* Chữ ký */}
                 <section className="mt-10 px-4 text-center">
-                    {/* Chỉ gắn Animation cho phần Chữ */}
                     <p
                         className={`mx-auto text-3xl italic leading-relaxed text-amber-600 sm:text-5xl ${textAnimClass}`}
                         style={{
@@ -1661,7 +1655,6 @@ function CountdownItem({
                 {String(value).padStart(2, "0")}
             </p>
 
-            {/* Chỉ nhãn thời gian đổi ngôn ngữ mới áp dụng animation */}
             <p className={`mt-2 break-words text-[9px] font-bold uppercase tracking-wide text-slate-600 sm:text-sm ${textAnimClass}`}>
                 {label}
             </p>
@@ -1681,7 +1674,6 @@ function MobileInfoRow({
                 {icon}
             </div>
 
-            {/* Chỉ nhãn và giá trị dịch thuật mới áp dụng animation */}
             <div className={`min-w-0 sm:mt-2 ${textAnimClass}`}>
                 <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-400 sm:text-xs">
                     {label}
