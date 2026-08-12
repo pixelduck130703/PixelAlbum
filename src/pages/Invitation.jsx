@@ -110,25 +110,6 @@ const INVITATION_ANIMATIONS = `
       );
   }
 
-  .utc-road-pattern {
-    background-image:
-      linear-gradient(
-        90deg,
-        transparent 0 44%,
-        rgba(37,99,235,0.08) 44% 56%,
-        transparent 56%
-      ),
-      repeating-linear-gradient(
-        90deg,
-        transparent 0 22px,
-        rgba(245,158,11,0.18) 22px 42px,
-        transparent 42px 72px
-      );
-    background-size: 100% 100%, 72px 3px;
-    background-repeat: no-repeat, repeat-x;
-    background-position: center, bottom 28px left;
-  }
-
   .utc-card-light {
     position: relative;
     overflow: hidden;
@@ -573,7 +554,7 @@ function Invitation() {
     const textAnimClass = contentVisible ? "inv-text-enter" : "inv-text-leave";
 
     return (
-        <div className="utc-light-page utc-road-pattern relative min-h-screen overflow-x-hidden text-slate-900">
+        <div className="utc-light-page relative min-h-screen overflow-x-hidden text-slate-900">
             <style>{INVITATION_ANIMATIONS}</style>
             
             {/* Hai dải sash cố định hai bên màn hình (CỐ ĐỊNH TĨNH) */}
@@ -1719,8 +1700,7 @@ function GraduationSash({ side }) {
                 />
 
                 <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent,rgba(37,99,235,0.07),transparent),repeating-linear-gradient(0deg,transparent_0px,transparent_30px,rgba(37,99,235,0.05)_31px)]" />
-                <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-white/10 to-transparent" />
-                <div className="absolute inset-y-0 left-1/2 w-px bg-blue-600/10" />
+                <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-white/10 to-transparent" />s
 
                 <div className="relative z-10 flex h-full flex-col items-center px-2 py-5 text-center">
                     {isLeft ? (
