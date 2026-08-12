@@ -198,6 +198,9 @@ const TRANSLATIONS = {
         musicOn: "Đang phát nhạc",
         musicOff: "Bật nhạc nền",
         musicPlayError: "Trình duyệt không thể phát nhạc.",
+        guideTitle: "Chào mừng bạn",
+        guideText: "Để có trải nghiệm tốt nhất khi xem thiệp mời, hãy mở bằng máy tính, thay đổi ngôn ngữ và nhấn vào biểu tượng 🔊 ở góc dưới bên phải để phát nhạc nền.",
+        guideButton: "Đã hiểu",
     },
 
     en: {
@@ -209,7 +212,7 @@ const TRANSLATIONS = {
         graduationCeremony: "GRADUATION CEREMONY",
         invitationText:
             "You are cordially invited to attend the university graduation ceremony of",
-        degree: "Information of Technology",
+        degree: "Information Technology",
         course: "Academic years 2022 – 2026",
         ceremonyStarted: "The graduation ceremony has begun!",
         countdownTitle: "Countdown to graduation",
@@ -238,6 +241,52 @@ const TRANSLATIONS = {
         musicOn: "Music playing",
         musicOff: "Play background music",
         musicPlayError: "The browser could not play the music.",
+        guideTitle: "Welcome",
+        guideText: "For the best experience, please view on desktop, switch languages, and click the 🔊 icon at the bottom right to play background music.",
+        guideButton: "Got it",
+    },
+
+    de: {
+        locale: "de-DE",
+        back: "Zurück zur Startseite",
+        university: "Universität für Verkehr und Kommunikation",
+        universityEnglish: "University of Transport and Communications",
+        invitation: "EINLADUNG",
+        graduationCeremony: "DIE ABSCHLUSSFEIER",
+        invitationText:
+            "Wir laden Sie herzlich zur akademischen Abschlussfeier ein von",
+        degree: "Informationstechnologie",
+        course: "Studienjahrgang 2022 – 2026",
+        ceremonyStarted: "Die Abschlussfeier hat begonnen!",
+        countdownTitle: "Countdown zur Abschlussfeier",
+        day: "Tage",
+        hour: "Stunden",
+        minute: "Minuten",
+        second: "Sekunden",
+        eventDateLabel: "Datum",
+        eventDate: "Samstag, 05. September 2026",
+        eventTimeLabel: "Uhrzeit",
+        eventTime: "08:00 Uhr",
+        locationLabel: "Ort",
+        locationLine1: "Großer Hörsaal",
+        locationLine2: "Universität für Verkehr und Kommunikation",
+        seeYou: "Wir freuen uns darauf, Sie bei der Feier zu begrüßen!",
+        viewMap: "Standort anzeigen",
+        contact: "Kontakt",
+        contactTitle: "Kontakt aufnehmen",
+        campusMap: "Campusplan",
+        parkingGuide: "Parkhinweise",
+        parkingInstruction: "Motorräder und Roller nutzen bitte Tor 2 oder Tor 3 zum Parken. Tor 1 ist ausschließlich für Dozentenfahrzeuge reserviert.",
+        phoneLabel: "Telefonnummer",
+        close: "Schließen",
+        callNow: "Jetzt anrufen",
+        footer: "UTC · Jahrgang 2026 · Abschlussfeier",
+        musicOn: "Musik läuft",
+        musicOff: "Hintergrundmusik abspielen",
+        musicPlayError: "Der Browser konnte die Musik nicht abspielen.",
+        guideTitle: "Willkommen",
+        guideText: "Für das beste Erlebnis öffnen Sie die Einladung bitte auf dem PC, wechseln Sie die Sprache und klicken Sie unten rechts auf das 🔊 Symbol, um die Hintergrundmusik einzuschalten.",
+        guideButton: "Verstanden",
     },
 
     zh: {
@@ -277,6 +326,9 @@ const TRANSLATIONS = {
         musicOn: "正在播放音乐",
         musicOff: "播放背景音乐",
         musicPlayError: "浏览器无法播放音乐。",
+        guideTitle: "欢迎",
+        guideText: "为了获得最佳体验，请使用电脑打开，切换语言，并点击右下角的 🔊 图标播放背景音乐。",
+        guideButton: "明白了",
     },
 };
 
@@ -393,7 +445,10 @@ function Invitation() {
 
     useEffect(() => {
         localStorage.setItem("invitationLanguage", language);
-        document.documentElement.lang = language === "zh" ? "zh-CN" : language;
+        let langAttr = language;
+        if (language === "zh") langAttr = "zh-CN";
+        if (language === "de") langAttr = "de-DE";
+        document.documentElement.lang = langAttr;
     }, [language]);
 
     useEffect(() => {
@@ -736,9 +791,6 @@ function Invitation() {
                 </div>
             </div>
 
-            {/* Quay lại */}
-
-
             {/* Chuyển ngôn ngữ */}
             <LanguageSwitcher
                 language={language}
@@ -776,6 +828,8 @@ function Invitation() {
                     fontFamily:
                         language === "zh"
                             ? "'Noto Sans SC', 'Microsoft YaHei', 'PingFang SC', sans-serif"
+                            : language === "de"
+                            ? "'Inter', 'Roboto', 'Segoe UI', sans-serif"
                             : "Inter, Poppins, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
                 }}
             >
@@ -921,10 +975,6 @@ function Invitation() {
 
                 {/* Đếm ngược */}
                 <section className="mt-10 w-full max-w-4xl text-center">
-                    {/*<h3 className="text-base font-bold uppercase tracking-[0.1em] text-slate-600 sm:text-xl">
-                        {t.countdownTitle}
-                    </h3>*/}
-
                     {countdown.completed ? (
                         <div className="mt-5 rounded-3xl border border-amber-400 bg-blue-600/10 px-6 py-8 backdrop-blur">
                             <p className="text-5xl">🎓🎉</p>
@@ -1007,6 +1057,7 @@ function Invitation() {
 
                     <div className="mx-auto mt-5 h-px w-56 bg-gradient-to-r from-transparent via-amber-400 to-transparent" />
                 </section>
+
                 {/* Nút chức năng */}
                 <div className="mt-10 grid w-full max-w-3xl grid-cols-1 gap-4 sm:grid-cols-3">
                     <a
@@ -1166,14 +1217,11 @@ function Invitation() {
                         </div>
 
                         <h2 className="mt-5 text-2xl font-bold text-slate-800">
-                            Chào mừng bạn
+                            {t.guideTitle}
                         </h2>
 
                         <p className="mt-4 leading-7 text-slate-600">
-                            Để có trải nghiệm tốt nhất khi xem thiệp mời,
-                            hãy mở bằng máy tính, thay đổi ngôn ngữ và nhấn vào biểu tượng
-                            <span className="mx-1 text-xl">🔊</span>
-                            ở góc dưới bên phải để phát nhạc nền.
+                            {t.guideText}
                         </p>
 
                         <div className="mt-6 flex justify-center">
@@ -1181,7 +1229,7 @@ function Invitation() {
                                 onClick={closeMusicGuide}
                                 className="rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-3 font-bold text-white transition hover:scale-105"
                             >
-                                Đã hiểu
+                                {t.guideButton}
                             </button>
                         </div>
 
@@ -1191,9 +1239,6 @@ function Invitation() {
         </div>
     );
 }
-
-
-
 
 
 function InformationTechnologyWatermark() {
@@ -1396,7 +1441,7 @@ function InformationTechnologyWatermark() {
 
             {/* Desktop và tablet */}
             <div className="hidden md:block">
-                {desktopTechnologies.map((item, index) => (
+                {desktopTechnologies.map((item) => (
                     <div
                         key={item.name}
                         className={` absolute flex min-w-[116px] flex-col items-center rounded-3xl border-2 px-4 py-3 shadow-[0_8px_20px_rgba(15,23,42,0.06)] ${item.className}`}
@@ -1538,8 +1583,7 @@ function MusicController({
                 type="button"
                 onClick={onToggle}
                 disabled={loading}
-                className={`group flex h-14 w-14 items-center justify-center rounded-full border border-blue-200 bg-white/95 text-blue-700 shadow-[0_14px_35px_rgba(37,99,235,0.18)] backdrop-blur-md transition duration-300 hover:-translate-y-1 hover:scale-105 hover:bg-blue-50 disabled:cursor-wait disabled:opacity-70 sm:h-16 sm:w-16 ${playing ? "" : ""
-                    }`}
+                className="group flex h-14 w-14 items-center justify-center rounded-full border border-blue-200 bg-white/95 text-blue-700 shadow-[0_14px_35px_rgba(37,99,235,0.18)] backdrop-blur-md transition duration-300 hover:-translate-y-1 hover:scale-105 hover:bg-blue-50 disabled:cursor-wait disabled:opacity-70 sm:h-16 sm:w-16"
                 aria-label={playing ? playingLabel : pausedLabel}
                 title={playing ? playingLabel : pausedLabel}
             >
@@ -1572,6 +1616,12 @@ function LanguageSwitcher({ language, onChange, disabled = false }) {
             shortLabel: "EN",
             flag: "🇬🇧",
             ariaLabel: "English",
+        },
+        {
+            code: "de",
+            shortLabel: "DE",
+            flag: "🇩🇪",
+            ariaLabel: "Deutsch",
         },
         {
             code: "zh",
