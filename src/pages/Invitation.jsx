@@ -1262,15 +1262,15 @@ function InformationTechnologyWatermark() {
             rotate: "-4deg",
         },
         {
-            name: "PostgreSQL",
-            short: "PG",
+            name: "Python",
+            short: "PY",
             className:
                 "right-[9%] top-[72%] border-indigo-500 bg-indigo-100/65/60 text-indigo-800",
             rotate: "4deg",
         },
         {
-            name: "Docker",
-            short: "DK",
+            name: "C++",
+            short: "C++",
             className:
                 "left-[28%] top-[82%] border-sky-500 bg-sky-100/65/60 text-sky-800",
             rotate: "-3deg",
@@ -1322,14 +1322,14 @@ function InformationTechnologyWatermark() {
                 "right-5 top-[62%] border-blue-400 bg-white/75 text-blue-700",
         },
         {
-            name: "PostgreSQL",
-            short: "PG",
+            name: "Python",
+            short: "PY",
             className:
                 "left-6 top-[76%] border-indigo-400 bg-white/75 text-indigo-700",
         },
         {
-            name: "Docker",
-            short: "DK",
+            name: "C++",
+            short: "C++",
             className:
                 "right-6 top-[83%] border-sky-400 bg-white/75 text-sky-700",
         },
