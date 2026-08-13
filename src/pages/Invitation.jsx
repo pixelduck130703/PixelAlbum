@@ -581,284 +581,77 @@ function Invitation() {
 
             {/* 2. PHONG BÌ THƯ MỜI */}
             {!showMusicGuide && !isOpened && (
-                <div
-                    className={`fixed inset-0 z-[200] flex flex-col items-center justify-center overflow-hidden px-4 transition-all duration-700 ${isOpening ? "envelope-fading" : ""
-                        }`}
-                >
-                    {/* ===================================================== */}
-                    {/* NỀN */}
-                    {/* ===================================================== */}
-
+                <div className={`fixed inset-0 z-[200] flex flex-col items-center justify-center overflow-hidden px-4 transition-all duration-700 ${isOpening ? "envelope-fading" : ""}`}>
                     <div className="absolute inset-0 bg-gradient-to-br from-white via-blue-50 to-sky-100" />
+                    <div className="absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-sky-200/40 blur-[100px]" />
+                    <div className="absolute left-[15%] top-[15%] h-[220px] w-[220px] rounded-full bg-amber-100/50 blur-[80px]" />
+                    <div className="absolute bottom-[10%] right-[10%] h-[250px] w-[250px] rounded-full bg-blue-100/60 blur-[90px]" />
 
-                    {/* Glow xanh */}
-                    <div className="pointer-events-none absolute left-1/2 top-1/2 h-[480px] w-[480px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-200/30 blur-[100px]" />
+                    <div className="absolute left-[15%] top-[20%] h-1.5 w-1.5 animate-pulse rounded-full bg-amber-400/70" />
+                    <div className="absolute right-[18%] top-[28%] h-2 w-2 animate-pulse rounded-full bg-sky-400/50 [animation-delay:700ms]" />
+                    <div className="absolute bottom-[25%] left-[22%] h-1.5 w-1.5 animate-pulse rounded-full bg-amber-300/70 [animation-delay:1200ms]" />
+                    <div className="absolute bottom-[20%] right-[25%] h-2 w-2 animate-pulse rounded-full bg-blue-300/60 [animation-delay:500ms]" />
 
-                    {/* Glow vàng */}
-                    <div className="pointer-events-none absolute left-[12%] top-[16%] h-40 w-40 rounded-full bg-amber-200/30 blur-[70px]" />
-
-                    <div className="pointer-events-none absolute bottom-[10%] right-[10%] h-48 w-48 rounded-full bg-sky-200/40 blur-[80px]" />
-
-                    {/* ===================================================== */}
-                    {/* HẠT TRANG TRÍ */}
-                    {/* ===================================================== */}
-
-                    <div className="pointer-events-none absolute left-[14%] top-[24%] h-1.5 w-1.5 rounded-full bg-amber-400/70" />
-
-                    <div className="pointer-events-none absolute right-[17%] top-[30%] h-2 w-2 rounded-full bg-blue-400/50" />
-
-                    <div className="pointer-events-none absolute bottom-[24%] left-[20%] h-1.5 w-1.5 rounded-full bg-amber-300/70" />
-
-                    <div className="pointer-events-none absolute bottom-[18%] right-[22%] h-2 w-2 rounded-full bg-blue-300/60" />
-
-                    {/* ===================================================== */}
-                    {/* NỘI DUNG */}
-                    {/* ===================================================== */}
-
-                    <div
-                        className={`relative z-10 flex flex-col items-center transition-all duration-700 ${isOpening
-                                ? "scale-[1.03] opacity-0"
-                                : "scale-100 opacity-100"
-                            }`}
-                    >
-                        {/* ================================================= */}
-                        {/* TIÊU ĐỀ */}
-                        {/* ================================================= */}
-
-                        <div className="mb-6 text-center">
+                    <div className={`relative z-10 flex flex-col items-center transition-all duration-700 ${isOpening ? "scale-105 opacity-0" : "scale-100 opacity-100"}`}>
+                        <div className="mb-7 text-center">
                             <div className="flex items-center justify-center gap-3">
-                                <div className="h-px w-12 bg-gradient-to-r from-transparent via-amber-400 to-amber-300 sm:w-20" />
-
-                                <span
-                                    className={`text-[11px] font-semibold uppercase tracking-[0.35em] text-blue-800 sm:text-sm ${textAnimClass}`}
-                                >
-                                    {t.invitation}
-                                </span>
-
-                                <div className="h-px w-12 bg-gradient-to-l from-transparent via-amber-400 to-amber-300 sm:w-20" />
+                                <div className="h-px w-10 bg-gradient-to-r from-transparent to-amber-400 sm:w-16" />
+                                <span className={`text-xs font-semibold uppercase tracking-[0.3em] text-blue-800 sm:text-sm ${textAnimClass}`}>{t.invitation}</span>
+                                <div className="h-px w-10 bg-gradient-to-l from-transparent to-amber-400 sm:w-16" />
                             </div>
-
-                            <div className="mt-2 text-lg text-amber-500">
-                                ✦
-                            </div>
+                            <div className="mt-3 text-amber-500">✦</div>
                         </div>
 
-                        {/* ================================================= */}
-                        {/* PHONG BÌ */}
-                        {/* ================================================= */}
+                        <div onClick={handleOpenEnvelope} className="group relative cursor-pointer [perspective:1200px]" title={t.clickToOpen}>
+                            <div className="absolute -bottom-7 left-1/2 h-8 w-[75%] -translate-x-1/2 rounded-[50%] bg-blue-900/15 blur-xl" />
 
-                        <div
-                            onClick={handleOpenEnvelope}
-                            className="group relative cursor-pointer [perspective:1200px]"
-                            title={t.clickToOpen}
-                        >
-                            {/* Bóng */}
-                            <div className="absolute -bottom-8 left-1/2 h-8 w-[72%] -translate-x-1/2 rounded-[50%] bg-blue-900/10 blur-xl" />
+                            <div className="liquid-glass-card relative h-[225px] w-[320px] overflow-visible rounded-2xl transition-all duration-500 group-hover:-translate-y-2 sm:h-[270px] sm:w-[390px]">
+                                <div className="absolute inset-2 rounded-xl border border-amber-300/40" />
 
-                            {/* Vỏ phong bì */}
-                            <div
-                                className="
-                        relative
-                        h-[230px]
-                        w-[325px]
-                        rounded-[22px]
-                        border
-                        border-white/80
-                        bg-gradient-to-br
-                        from-white
-                        via-blue-50
-                        to-sky-100
-                        shadow-[0_25px_70px_rgba(37,99,235,0.18)]
-                        transition-all
-                        duration-500
-                        group-hover:-translate-y-1.5
-                        sm:h-[275px]
-                        sm:w-[400px]
-                    "
-                            >
-                                {/* Viền kính bên ngoài */}
-                                <div className="pointer-events-none absolute inset-0 rounded-[22px] border border-white/90" />
-
-                                {/* Viền vàng bên trong */}
-                                <div className="pointer-events-none absolute inset-2 rounded-[19px] border border-amber-300/35" />
-
-                                {/* ================================================= */}
-                                {/* LÁ THIỆP */}
-                                {/* ================================================= */}
-
-                                <div
-                                    className={`absolute left-1/2 top-4 z-[5] h-[193px] w-[87%] -translate-x-1/2 rounded-2xl border border-white/90 bg-gradient-to-b from-white via-white to-blue-50 p-3 shadow-[0_10px_30px_rgba(37,99,235,0.12)] transition-all duration-700 sm:h-[228px] ${isOpening
-                                            ? "-translate-y-[145px] opacity-100 sm:-translate-y-[170px]"
-                                            : "translate-y-0"
-                                        }`}
-                                >
-                                    <div className="relative flex h-full flex-col items-center justify-center rounded-xl border border-amber-200/70 bg-white/65 text-center">
-                                        {/* Góc trang trí */}
-                                        <span className="absolute left-3 top-2 text-xs text-amber-400">
-                                            ✦
-                                        </span>
-
-                                        <span className="absolute right-3 top-2 text-xs text-amber-400">
-                                            ✦
-                                        </span>
-
-                                        {/* Logo UTC lớn */}
-                                        <div className="mb-2 flex h-16 w-16 items-center justify-center rounded-full border border-amber-300/70 bg-white p-1.5 shadow-sm sm:h-20 sm:w-20">
-                                            <img
-                                                src="/images/UTC.png"
-                                                alt="UTC"
-                                                className="h-full w-full rounded-full object-contain"
-                                            />
+                                <div className={`absolute left-1/2 top-4 z-[5] h-[190px] w-[86%] -translate-x-1/2 rounded-xl bg-gradient-to-b from-white via-white to-blue-50 p-3 shadow-[0_8px_25px_rgba(30,64,175,0.12)] transition-all duration-1000 sm:h-[225px] ${isOpening ? "envelope-card-rising" : "translate-y-0"}`}>
+                                    <div className="flex h-full flex-col items-center justify-center rounded-lg border border-amber-300/60 text-center">
+                                        <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-full border border-amber-300/70 bg-white shadow-sm">
+                                            <img src="/images/UTC.png" alt="UTC" className="h-9 w-9 rounded-full object-contain" />
                                         </div>
-
-                                        <p
-                                            className={`text-[9px] font-bold uppercase tracking-[0.28em] text-amber-600 sm:text-[10px] ${textAnimClass}`}
-                                        >
-                                            {t.invitation}
-                                        </p>
-
-                                        <p className="mt-2 px-4 font-serif text-lg font-semibold text-blue-900 sm:text-xl">
-                                            {GRADUATE_NAME}
-                                        </p>
-
+                                        <div className="absolute top-3 right-3 text-sm text-amber-400">✦</div>
+                                        <p className={`text-[9px] font-semibold uppercase tracking-[0.25em] text-amber-600 sm:text-[10px] ${textAnimClass}`}>{t.invitation}</p>
+                                        <p className="mt-2 px-3 font-serif text-lg font-semibold text-blue-900 sm:text-xl">{GRADUATE_NAME}</p>
                                         <div className="mt-2 flex items-center gap-2">
-                                            <div className="h-px w-9 bg-amber-300" />
-
-                                            <span className="text-xs text-amber-500">
-                                                ✦
-                                            </span>
-
-                                            <div className="h-px w-9 bg-amber-300" />
+                                            <div className="h-px w-8 bg-amber-300" />
+                                            <span className="text-xs text-amber-500">✦</span>
+                                            <div className="h-px w-8 bg-amber-300" />
                                         </div>
-
-                                        <p
-                                            className={`mt-2 px-2 text-[9px] font-semibold uppercase tracking-[0.18em] text-blue-500 sm:text-[10px] ${textAnimClass}`}
-                                        >
-                                            {t.graduationCeremony}
-                                        </p>
+                                        <p className={`mt-2 px-2 text-[9px] uppercase tracking-widest text-blue-500 sm:text-[10px] ${textAnimClass}`}>{t.graduationCeremony}</p>
                                     </div>
                                 </div>
 
-                                {/* ================================================= */}
-                                {/* MẶT TRƯỚC */}
-                                {/* ================================================= */}
+                                <div className="absolute inset-0 z-10 rounded-2xl bg-gradient-to-br from-white/40 via-sky-100/30 to-blue-200/40 backdrop-blur-sm" style={{ clipPath: "polygon(0 38%, 50% 68%, 100% 38%, 100% 100%, 0 100%)" }} />
+                                <div className="absolute inset-0 z-[11] rounded-2xl" style={{ clipPath: "polygon(0 38%, 50% 68%, 100% 38%, 100% 100%, 0 100%)", background: "linear-gradient(135deg, transparent 49.6%, rgba(245,158,11,.35) 50%, transparent 50.4%)" }} />
 
-                                <div
-                                    className="absolute inset-0 z-10 rounded-[22px] bg-gradient-to-br from-blue-100/95 via-sky-100/95 to-blue-200/95"
-                                    style={{
-                                        clipPath:
-                                            "polygon(0 39%, 50% 69%, 100% 39%, 100% 100%, 0 100%)",
-                                    }}
-                                />
-
-                                {/* Đường gấp */}
-                                <div
-                                    className="pointer-events-none absolute inset-0 z-[11] rounded-[22px]"
-                                    style={{
-                                        clipPath:
-                                            "polygon(0 39%, 50% 69%, 100% 39%, 100% 100%, 0 100%)",
-                                        background:
-                                            "linear-gradient(135deg, transparent 49.6%, rgba(245,158,11,.28) 50%, transparent 50.4%)",
-                                    }}
-                                />
-
-                                {/* ================================================= */}
-                                {/* NẮP PHONG BÌ */}
-                                {/* ================================================= */}
-
-                                <div
-                                    className={`absolute left-0 top-0 z-20 h-[128px] w-full rounded-t-[22px] border-b border-amber-300/50 bg-gradient-to-br from-white via-blue-50 to-sky-100 shadow-sm transition-transform duration-700 [transform-origin:top_center] sm:h-[153px] ${isOpening
-                                            ? "envelope-flap-opening"
-                                            : ""
-                                        }`}
-                                    style={{
-                                        clipPath:
-                                            "polygon(0 0, 100% 0, 50% 100%)",
-                                    }}
-                                >
-                                    {/* Shine */}
-                                    <div
-                                        className="pointer-events-none absolute inset-0 opacity-70"
-                                        style={{
-                                            clipPath:
-                                                "polygon(0 0, 100% 0, 50% 100%)",
-                                            background:
-                                                "linear-gradient(120deg, rgba(255,255,255,.9), transparent 45%, rgba(255,255,255,.35))",
-                                        }}
-                                    />
+                                <div className={`absolute left-0 top-0 z-20 h-[125px] w-full rounded-t-2xl border-b border-white/80 bg-white/60 shadow-sm backdrop-blur-md transition-transform duration-1000 [transform-origin:top_center] sm:h-[150px] ${isOpening ? "envelope-flap-opening" : ""}`} style={{ clipPath: "polygon(0 0, 100% 0, 50% 100%)" }}>
+                                    <div className="absolute inset-0" style={{ clipPath: "polygon(0 0, 100% 0, 50% 100%)", borderBottom: "1px solid rgba(245,158,11,0.4)" }} />
                                 </div>
 
-                                {/* ================================================= */}
-                                {/* SEAL */}
-                                {/* ================================================= */}
-
-                                <div
-                                    className={`absolute left-1/2 top-[110px] z-30 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white/90 bg-gradient-to-br from-amber-300 via-yellow-400 to-amber-500 shadow-[0_8px_24px_rgba(245,158,11,0.28)] transition-all duration-500 sm:top-[128px] sm:h-20 sm:w-20 ${isOpening
-                                            ? "scale-75 opacity-0"
-                                            : "group-hover:scale-105"
-                                        }`}
-                                >
-                                    <div className="absolute inset-1.5 rounded-full border border-white/70" />
-
-                                    <div className="relative flex h-12 w-12 items-center justify-center rounded-full bg-white p-1 shadow-sm sm:h-14 sm:w-14">
-                                        <img
-                                            src="/images/UTC.png"
-                                            alt="UTC"
-                                            className="h-full w-full rounded-full object-contain"
-                                        />
+                                <div className={`absolute left-1/2 top-[108px] z-30 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white/80 bg-gradient-to-br from-amber-300 via-yellow-400 to-amber-500 shadow-[0_8px_20px_rgba(245,158,11,0.35)] transition-all duration-500 sm:top-[125px] sm:h-16 sm:w-16 ${isOpening ? "scale-75 opacity-0" : "group-hover:scale-110"}`}>
+                                    <div className="absolute inset-1 rounded-full border border-white/60" />
+                                    <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-white p-0.5 shadow-sm sm:h-12 sm:w-12">
+                                        <img src="/images/UTC.png" alt="UTC" className="h-full w-full rounded-full object-contain" />
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* ================================================= */}
-                        {/* HƯỚNG DẪN */}
-                        {/* ================================================= */}
+                        <p className={`mt-9 text-center text-xs tracking-wide text-blue-900/60 transition-all duration-500 sm:text-sm ${isOpening ? "opacity-0" : "opacity-100"} ${textAnimClass}`}>{t.clickToOpen}</p>
 
-                        <p
-                            className={`mt-8 max-w-[90vw] text-center text-xs font-medium text-blue-900/60 transition-all duration-500 sm:text-sm ${isOpening ? "opacity-0" : "opacity-100"} ${textAnimClass}`}
-                            style={{
-                                textWrap: "balance",
-                            }}
-                        >
-                            {t.clickToOpen}
-                        </p>
-
-                        {/* ================================================= */}
-                        {/* NÚT MỞ */}
-                        {/* ================================================= */}
-
-                        <button
-                            type="button"
-                            onClick={handleOpenEnvelope}
-                            disabled={isOpening}
-                            className={`group mt-4 flex items-center gap-2 rounded-full border border-white/80 bg-white/55 px-7 py-3 text-xs font-bold uppercase tracking-[0.18em] text-blue-800 shadow-[0_10px_30px_rgba(37,99,235,0.14)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/75 hover:shadow-[0_15px_35px_rgba(37,99,235,0.18)] active:scale-95 disabled:pointer-events-none sm:px-8 sm:py-3.5 sm:text-sm ${isOpening
-                                    ? "scale-90 opacity-0"
-                                    : ""
-                                }`}
-                        >
-                            <span className="text-base text-amber-500 transition-transform duration-300 group-hover:-rotate-6">
-                                ✉
-                            </span>
-
-                            <span className={textAnimClass}>
-                                {t.openEnvelopeBtn}
-                            </span>
-
-                            <span className="text-base text-amber-500 transition-transform duration-300 group-hover:translate-x-1">
-                                →
-                            </span>
+                        <button type="button" onClick={handleOpenEnvelope} disabled={isOpening} className={`group mt-4 flex items-center gap-2 rounded-full border border-white/80 bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-400 px-7 py-3 text-xs font-bold uppercase tracking-[0.2em] text-blue-950 shadow-lg backdrop-blur-md transition-all duration-300 hover:scale-105 hover:shadow-[0_0_25px_rgba(245,158,11,0.35)] active:scale-95 disabled:pointer-events-none sm:px-8 sm:py-3.5 sm:text-sm ${isOpening ? "scale-90 opacity-0" : ""}`}>
+                            <span className="text-base transition-transform duration-300 group-hover:-rotate-6">✉</span>
+                            <span className={textAnimClass}>{t.openEnvelopeBtn}</span>
+                            <span className="text-base transition-transform duration-300 group-hover:translate-x-1">→</span>
                         </button>
                     </div>
 
-                    {/* ===================================================== */}
-                    {/* FOOTER */}
-                    {/* ===================================================== */}
-
                     <div className="absolute bottom-5 left-0 right-0 z-10 text-center">
-                        <p className="text-[9px] font-medium uppercase tracking-[0.3em] text-blue-900/35 sm:text-[10px]">
-                            UTC · 2026
-                        </p>
+                        <p className="text-[9px] uppercase tracking-[0.3em] text-blue-900/40 sm:text-[10px]">UTC · 2026</p>
                     </div>
                 </div>
             )}
@@ -1875,10 +1668,11 @@ function LanguageSwitcher({ language, onChange, disabled = false }) {
                         type="button"
                         onClick={() => onChange(item.code)}
                         disabled={disabled}
-                        className={`relative flex min-h-[38px] items-center gap-1.5 rounded-full px-3 text-xs font-bold transition-all duration-300 disabled:cursor-wait disabled:opacity-70 sm:text-sm ${active
+                        className={`relative flex min-h-[38px] items-center gap-1.5 rounded-full px-3 text-xs font-bold transition-all duration-300 disabled:cursor-wait disabled:opacity-70 sm:text-sm ${
+                            active
                                 ? "text-white shadow-[0_4px_16px_rgba(37,99,235,0.35)]"
                                 : "text-slate-700 hover:bg-white/40 hover:text-blue-900"
-                            }`}
+                        }`}
                         aria-label={item.ariaLabel}
                         aria-pressed={active}
                     >
@@ -1907,8 +1701,9 @@ function CountdownItem({
 }) {
     return (
         <div
-            className={`px-1 py-5 text-center sm:px-4 sm:py-7 ${withBorder ? "border-l border-blue-100/60" : ""
-                }`}
+            className={`px-1 py-5 text-center sm:px-4 sm:py-7 ${
+                withBorder ? "border-l border-blue-100/60" : ""
+            }`}
         >
             <p className="font-serif text-3xl font-black tabular-nums text-amber-600 sm:text-5xl">
                 {String(value).padStart(2, "0")}
@@ -1952,8 +1747,9 @@ function GraduationSash({ side }) {
     return (
         <div className="relative flex h-full items-center justify-center py-6">
             <div
-                className={`relative h-[88vh] min-h-[650px] w-[104px] overflow-hidden bg-gradient-to-b from-white via-blue-50 to-blue-100 shadow-[0_20px_60px_rgba(30,64,175,0.18)] 2xl:w-[118px] ${isLeft ? "rotate-[0.8deg]" : "-rotate-[0.8deg]"
-                    }`}
+                className={`relative h-[88vh] min-h-[650px] w-[104px] overflow-hidden bg-gradient-to-b from-white via-blue-50 to-blue-100 shadow-[0_20px_60px_rgba(30,64,175,0.18)] 2xl:w-[118px] ${
+                    isLeft ? "rotate-[0.8deg]" : "-rotate-[0.8deg]"
+                }`}
                 style={{
                     clipPath:
                         "polygon(0 0, 100% 0, 100% 92%, 50% 100%, 0 92%)",
