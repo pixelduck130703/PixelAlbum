@@ -11,37 +11,19 @@ const MUSIC_URL = "/music/graduation.mp3";
 const MUSIC_TITLE = "A LITTLE DREAM OF ME";
 
 const INVITATION_ANIMATIONS = `
-  /* ==========================
-     HIỆU ỨNG MỞ PHONG BÌ THƯ (TỐI ƯU GPU CHỐNG NHÁY)
-  ========================== */
   @keyframes flapOpen {
-    0% {
-      transform: rotateX(0deg);
-    }
-    100% {
-      transform: rotateX(180deg);
-    }
+    0% { transform: rotateX(0deg); }
+    100% { transform: rotateX(180deg); }
   }
 
   @keyframes cardSlideUp {
-    0% {
-      transform: translateY(0);
-    }
-    100% {
-      transform: translateY(-110px);
-    }
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-110px); }
   }
 
   @keyframes envelopeFadeOut {
-    0% {
-      opacity: 1;
-      transform: scale(1);
-    }
-    100% {
-      opacity: 0;
-      transform: scale(1.05);
-      filter: blur(6px);
-    }
+    0% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.05); filter: blur(6px); }
   }
 
   .envelope-flap-opening {
@@ -61,9 +43,6 @@ const INVITATION_ANIMATIONS = `
     will-change: transform, opacity, filter;
   }
 
-  /* ==========================
-     HIỆU ỨNG ĐUNG ĐƯA SASH
-  ========================== */
   @keyframes swayLeft {
     0%, 100% { transform: rotate(0.8deg); }
     50% { transform: rotate(-0.5deg); }
@@ -84,33 +63,14 @@ const INVITATION_ANIMATIONS = `
     animation: swayRight 5s ease-in-out infinite;
   }
 
-  /* ==========================
-     HIỆU ỨNG CHUYỂN NGÔN NGỮ
-  ========================== */
   @keyframes luxuryTextIn {
-    0% {
-      opacity: 0;
-      transform: scale(0.98) translateY(2px);
-      filter: blur(4px);
-    }
-    100% {
-      opacity: 1;
-      transform: scale(1) translateY(0);
-      filter: blur(0px);
-    }
+    0% { opacity: 0; transform: scale(0.98) translateY(2px); filter: blur(4px); }
+    100% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0px); }
   }
 
   @keyframes luxuryTextOut {
-    0% {
-      opacity: 1;
-      transform: scale(1) translateY(0);
-      filter: blur(0px);
-    }
-    100% {
-      opacity: 0;
-      transform: scale(1.01) translateY(-2px);
-      filter: blur(4px);
-    }
+    0% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0px); }
+    100% { opacity: 0; transform: scale(1.01) translateY(-2px); filter: blur(4px); }
   }
 
   .inv-text-enter {
@@ -124,9 +84,15 @@ const INVITATION_ANIMATIONS = `
     pointer-events: none;
   }
 
-  /* ==========================
-     KIỂU TĨNH
-  ========================== */
+  /* LIQUID GLASS DESIGN SYSTEM */
+  .liquid-glass-card {
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(14px) saturate(150%);
+    -webkit-backdrop-filter: blur(14px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    box-shadow: 0 18px 45px rgba(30, 64, 175, 0.10), inset 0 1px 1px rgba(255, 255, 255, 0.9);
+  }
+
   .utc-light-page {
     background:
       radial-gradient(
@@ -140,15 +106,6 @@ const INVITATION_ANIMATIONS = `
         #f8fbff 38%,
         #eef5ff 100%
       );
-  }
-
-  .utc-card-light {
-    position: relative;
-    overflow: hidden;
-    background: rgba(255,255,255,0.9);
-    box-shadow:
-      0 18px 45px rgba(30,64,175,0.10),
-      inset 0 1px 0 rgba(255,255,255,0.9);
   }
 
   .it-watermark-chip {
@@ -357,11 +314,9 @@ const TRANSLATIONS = {
 };
 
 function Invitation() {
-    // Khởi tạo trạng thái an toàn chống nháy màn hình ban đầu
     const [isClientReady, setIsClientReady] = useState(false);
     const [showMusicGuide, setShowMusicGuide] = useState(false);
 
-    // Trạng thái mở phong bì
     const [isOpened, setIsOpened] = useState(false);
     const [isOpening, setIsOpening] = useState(false);
 
@@ -376,7 +331,6 @@ function Invitation() {
     const [contentVisible, setContentVisible] = useState(true);
     const [languageChanging, setLanguageChanging] = useState(false);
 
-    // Đọc sessionStorage và localStorage ngay sau khi mount lên client
     useEffect(() => {
         const hasGuide = sessionStorage.getItem("music-guide");
         if (!hasGuide) {
@@ -391,13 +345,11 @@ function Invitation() {
 
     const t = TRANSLATIONS[language] || TRANSLATIONS.vi;
 
-    // Đóng Popup chào mừng
     const closeMusicGuide = () => {
         sessionStorage.setItem("music-guide", "1");
         setShowMusicGuide(false);
     };
 
-    // Hàm mở thiệp từ phong bì
     const handleOpenEnvelope = () => {
         if (isOpening || isOpened) return;
         setIsOpening(true);
@@ -464,10 +416,7 @@ function Invitation() {
     }, [language, isClientReady]);
 
     useEffect(() => {
-        if (!showPhone) {
-            return;
-        }
-
+        if (!showPhone) return;
         const handleKeyDown = (event) => {
             if (event.key === "Escape") {
                 setShowPhone(false);
@@ -485,7 +434,6 @@ function Invitation() {
 
     useEffect(() => {
         const audio = audioRef.current;
-
         return () => {
             if (audio) {
                 audio.pause();
@@ -495,7 +443,6 @@ function Invitation() {
 
     const toggleMusic = async () => {
         const audio = audioRef.current;
-
         if (!audio || musicLoading) return;
 
         setMusicError("");
@@ -530,12 +477,7 @@ function Invitation() {
     };
 
     const handleLanguageChange = (newLanguage) => {
-        if (
-            newLanguage === language ||
-            languageChanging
-        ) {
-            return;
-        }
+        if (newLanguage === language || languageChanging) return;
 
         setLanguageChanging(true);
         setContentVisible(false);
@@ -554,8 +496,7 @@ function Invitation() {
     };
 
     const countdown = useMemo(() => {
-        const difference =
-            GRADUATION_DATE.getTime() - currentTime.getTime();
+        const difference = GRADUATION_DATE.getTime() - currentTime.getTime();
 
         if (difference <= 0) {
             return {
@@ -580,7 +521,6 @@ function Invitation() {
 
     const textAnimClass = contentVisible ? "inv-text-enter" : "inv-text-leave";
 
-    // Chặn hoàn toàn khung render thô ban đầu bằng lớp phủ nền sạch sẽ
     if (!isClientReady) {
         return <div className="fixed inset-0 bg-[#f8fbff] z-[9999]" />;
     }
@@ -589,226 +529,278 @@ function Invitation() {
         <div className="utc-light-page relative min-h-screen overflow-x-hidden text-slate-900">
             <style>{INVITATION_ANIMATIONS}</style>
 
-            {/* BỘ CHUYỂN ĐỔI NGÔN NGỮ CỐ ĐỊNH Ở GÓC PHẢI TRÊN */}
             <LanguageSwitcher
                 language={language}
                 onChange={handleLanguageChange}
                 disabled={languageChanging}
             />
 
-            {/* 1. POPUP HƯỚNG DẪN HIỂN THỊ ĐẦU TIÊN (Z-INDEX: 300) */}
-{showMusicGuide && (
-    <div
-        className="fixed inset-0 z-[300] flex items-center justify-center p-4 transition-all"
-    >
-        {/* Lớp nền đặc đồng bộ hoàn toàn với màn hình phong bì */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white via-blue-50 to-sky-100" />
-
-        {/* Ánh sáng mờ phía sau */}
-        <div className="absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-sky-200/40 blur-[100px]" />
-        <div className="absolute left-[15%] top-[15%] h-[220px] w-[220px] rounded-full bg-amber-100/50 blur-[80px]" />
-        <div className="absolute bottom-[10%] right-[10%] h-[250px] w-[250px] rounded-full bg-blue-100/60 blur-[90px]" />
-
-        {/* Hạt sáng trang trí giống màn hình phong bì */}
-        <div className="absolute left-[15%] top-[20%] h-1.5 w-1.5 animate-pulse rounded-full bg-amber-400/70" />
-        <div className="absolute right-[18%] top-[28%] h-2 w-2 animate-pulse rounded-full bg-sky-400/50 [animation-delay:700ms]" />
-        <div className="absolute bottom-[25%] left-[22%] h-1.5 w-1.5 animate-pulse rounded-full bg-amber-300/70 [animation-delay:1200ms]" />
-        <div className="absolute bottom-[20%] right-[25%] h-2 w-2 animate-pulse rounded-full bg-blue-300/60 [animation-delay:500ms]" />
-
-        {/* Khối Popup chính */}
-        <div className="relative z-10 w-full max-w-md rounded-3xl border border-blue-200 bg-gradient-to-br from-white via-blue-50 to-sky-50 p-7 text-center shadow-[0_25px_60px_rgba(30,64,175,0.18)]">
-
-            {/* Viền trang trí màu vàng kim nhạt bên trong */}
-            <div className="absolute inset-2 pointer-events-none rounded-2xl border border-amber-300/40" />
-
-            {/* Logo Avatar */}
-            <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full border border-amber-300/60 bg-gradient-to-br from-blue-50 to-sky-100 p-2 shadow-sm">
-                <img
-                    src="/images/graduation-avatar.jpg"
-                    alt="Avatar"
-                    className="h-full w-full rounded-full object-cover"
-                />
-            </div>
-
-            {/* Tiêu đề */}
-            <h2 className={`mt-5 font-serif text-2xl font-bold text-blue-900 ${textAnimClass}`}>
-                {t.guideTitle}
-            </h2>
-
-            {/* Nội dung */}
-            <p className={`mt-4 leading-7 text-slate-600 sm:text-base ${textAnimClass}`}>
-                {t.guideText}
-            </p>
-
-            {/* Nút Đã hiểu */}
-            <div className="mt-6 flex justify-center">
-                <button
-                    onClick={closeMusicGuide}
-                    className={`rounded-2xl border border-amber-400 bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-400 px-8 py-3 text-sm font-bold uppercase tracking-wider text-blue-950 shadow-md transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] active:scale-95 ${textAnimClass}`}
-                >
-                    {t.guideButton}
-                </button>
-            </div>
-        </div>
-    </div>
-)}
-
-            {/* 2. PHONG BÌ THƯ MỜI (HIỂN THỊ SAU KHI ĐÓNG POPUP HƯỚNG DẪN) */}
-            {!showMusicGuide && !isOpened && (
-                <div
-                    className={`fixed inset-0 z-[200] flex flex-col items-center justify-center overflow-hidden px-4 transition-all duration-700 ${
-                        isOpening ? "envelope-fading" : ""
-                    }`}
-                >
+            {/* 1. POPUP HƯỚNG DẪN (LIQUID GLASS ĐỒNG BỘ) */}
+            {showMusicGuide && (
+                <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 transition-all">
                     <div className="absolute inset-0 bg-gradient-to-br from-white via-blue-50 to-sky-100" />
                     <div className="absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-sky-200/40 blur-[100px]" />
                     <div className="absolute left-[15%] top-[15%] h-[220px] w-[220px] rounded-full bg-amber-100/50 blur-[80px]" />
                     <div className="absolute bottom-[10%] right-[10%] h-[250px] w-[250px] rounded-full bg-blue-100/60 blur-[90px]" />
 
-                    {/* Hạt sáng */}
                     <div className="absolute left-[15%] top-[20%] h-1.5 w-1.5 animate-pulse rounded-full bg-amber-400/70" />
                     <div className="absolute right-[18%] top-[28%] h-2 w-2 animate-pulse rounded-full bg-sky-400/50 [animation-delay:700ms]" />
                     <div className="absolute bottom-[25%] left-[22%] h-1.5 w-1.5 animate-pulse rounded-full bg-amber-300/70 [animation-delay:1200ms]" />
                     <div className="absolute bottom-[20%] right-[25%] h-2 w-2 animate-pulse rounded-full bg-blue-300/60 [animation-delay:500ms]" />
 
-                    <div
-                        className={`relative z-10 flex flex-col items-center transition-all duration-700 ${
-                            isOpening ? "scale-105 opacity-0" : "scale-100 opacity-100"
-                        }`}
-                    >
-                        {/* Tiêu đề */}
-                        <div className="mb-7 text-center">
-                            <div className="flex items-center justify-center gap-3">
-                                <div className="h-px w-10 bg-gradient-to-r from-transparent to-amber-400 sm:w-16" />
-                                <span className={`text-xs font-semibold uppercase tracking-[0.3em] text-blue-800 sm:text-sm ${textAnimClass}`}>
-                                    {t.invitation}
-                                </span>
-                                <div className="h-px w-10 bg-gradient-to-l from-transparent to-amber-400 sm:w-16" />
-                            </div>
-                            <div className="mt-3 text-amber-500">✦</div>
+                    <div className="liquid-glass-card relative z-10 w-full max-w-md rounded-3xl p-7 text-center">
+                        <div className="absolute inset-2 pointer-events-none rounded-2xl border border-amber-300/40" />
+
+                        <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full border border-white/80 bg-white/50 p-2 shadow-inner backdrop-blur-md">
+                            <img
+                                src="/images/graduation-avatar.jpg"
+                                alt="Avatar"
+                                className="h-full w-full rounded-full object-cover shadow-sm"
+                            />
                         </div>
 
-                        {/* Phong bì */}
+                        <h2 className={`mt-5 font-serif text-2xl font-bold text-blue-900 ${textAnimClass}`}>
+                            {t.guideTitle}
+                        </h2>
+
+                        <p className={`mt-4 leading-7 text-slate-700 sm:text-base ${textAnimClass}`}>
+                            {t.guideText}
+                        </p>
+
+                        <div className="mt-6 flex justify-center">
+                            <button
+                                onClick={closeMusicGuide}
+                                className={`rounded-2xl border border-white/80 bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-400 px-8 py-3 text-sm font-bold uppercase tracking-wider text-blue-950 shadow-lg backdrop-blur-md transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_rgba(245,158,11,0.35)] active:scale-95 ${textAnimClass}`}
+                            >
+                                {t.guideButton}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* 2. PHONG BÌ THƯ MỜI */}
+            {!showMusicGuide && !isOpened && (
+                <div
+                    className={`fixed inset-0 z-[200] flex flex-col items-center justify-center overflow-hidden px-4 transition-all duration-700 ${isOpening ? "envelope-fading" : ""
+                        }`}
+                >
+                    {/* ===================================================== */}
+                    {/* NỀN */}
+                    {/* ===================================================== */}
+
+                    <div className="absolute inset-0 bg-gradient-to-br from-white via-blue-50 to-sky-100" />
+
+                    {/* Glow xanh */}
+                    <div className="pointer-events-none absolute left-1/2 top-1/2 h-[480px] w-[480px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-200/30 blur-[100px]" />
+
+                    {/* Glow vàng */}
+                    <div className="pointer-events-none absolute left-[12%] top-[16%] h-40 w-40 rounded-full bg-amber-200/30 blur-[70px]" />
+
+                    <div className="pointer-events-none absolute bottom-[10%] right-[10%] h-48 w-48 rounded-full bg-sky-200/40 blur-[80px]" />
+
+                    {/* ===================================================== */}
+                    {/* HẠT TRANG TRÍ */}
+                    {/* ===================================================== */}
+
+                    <div className="pointer-events-none absolute left-[14%] top-[24%] h-1.5 w-1.5 rounded-full bg-amber-400/70" />
+
+                    <div className="pointer-events-none absolute right-[17%] top-[30%] h-2 w-2 rounded-full bg-blue-400/50" />
+
+                    <div className="pointer-events-none absolute bottom-[24%] left-[20%] h-1.5 w-1.5 rounded-full bg-amber-300/70" />
+
+                    <div className="pointer-events-none absolute bottom-[18%] right-[22%] h-2 w-2 rounded-full bg-blue-300/60" />
+
+                    {/* ===================================================== */}
+                    {/* NỘI DUNG */}
+                    {/* ===================================================== */}
+
+                    <div
+                        className={`relative z-10 flex flex-col items-center transition-all duration-700 ${isOpening
+                                ? "scale-[1.03] opacity-0"
+                                : "scale-100 opacity-100"
+                            }`}
+                    >
+                        {/* ================================================= */}
+                        {/* TIÊU ĐỀ */}
+                        {/* ================================================= */}
+
+                        <div className="mb-6 text-center">
+                            <div className="flex items-center justify-center gap-3">
+                                <div className="h-px w-12 bg-gradient-to-r from-transparent via-amber-400 to-amber-300 sm:w-20" />
+
+                                <span
+                                    className={`text-[11px] font-semibold uppercase tracking-[0.35em] text-blue-800 sm:text-sm ${textAnimClass}`}
+                                >
+                                    {t.invitation}
+                                </span>
+
+                                <div className="h-px w-12 bg-gradient-to-l from-transparent via-amber-400 to-amber-300 sm:w-20" />
+                            </div>
+
+                            <div className="mt-2 text-lg text-amber-500">
+                                ✦
+                            </div>
+                        </div>
+
+                        {/* ================================================= */}
+                        {/* PHONG BÌ */}
+                        {/* ================================================= */}
+
                         <div
                             onClick={handleOpenEnvelope}
                             className="group relative cursor-pointer [perspective:1200px]"
                             title={t.clickToOpen}
                         >
-                            <div className="absolute -bottom-7 left-1/2 h-8 w-[75%] -translate-x-1/2 rounded-[50%] bg-blue-900/15 blur-xl" />
+                            {/* Bóng */}
+                            <div className="absolute -bottom-8 left-1/2 h-8 w-[72%] -translate-x-1/2 rounded-[50%] bg-blue-900/10 blur-xl" />
 
+                            {/* Vỏ phong bì */}
                             <div
                                 className="
-                                relative
-                                h-[225px]
-                                w-[320px]
-                                overflow-visible
-                                rounded-2xl
-                                border
-                                border-blue-200
-                                bg-gradient-to-br
-                                from-white
-                                via-blue-50
-                                to-sky-100
-                                shadow-[0_25px_60px_rgba(30,64,175,0.18)]
-                                transition-all
-                                duration-500
-                                group-hover:-translate-y-2
-                                group-hover:shadow-[0_30px_70px_rgba(30,64,175,0.22)]
-                                sm:h-[270px]
-                                sm:w-[390px]
-                            "
+                        relative
+                        h-[230px]
+                        w-[325px]
+                        rounded-[22px]
+                        border
+                        border-white/80
+                        bg-gradient-to-br
+                        from-white
+                        via-blue-50
+                        to-sky-100
+                        shadow-[0_25px_70px_rgba(37,99,235,0.18)]
+                        transition-all
+                        duration-500
+                        group-hover:-translate-y-1.5
+                        sm:h-[275px]
+                        sm:w-[400px]
+                    "
                             >
-                                <div className="absolute inset-2 rounded-xl border border-amber-300/40" />
+                                {/* Viền kính bên ngoài */}
+                                <div className="pointer-events-none absolute inset-0 rounded-[22px] border border-white/90" />
 
-                                {/* Lá thiệp bên trong */}
+                                {/* Viền vàng bên trong */}
+                                <div className="pointer-events-none absolute inset-2 rounded-[19px] border border-amber-300/35" />
+
+                                {/* ================================================= */}
+                                {/* LÁ THIỆP */}
+                                {/* ================================================= */}
+
                                 <div
-                                    className={`absolute left-1/2 top-4 z-[5] h-[190px] w-[86%] -translate-x-1/2 rounded-xl bg-gradient-to-b from-white via-white to-blue-50 p-3 shadow-[0_8px_25px_rgba(30,64,175,0.12)] transition-all duration-1000 sm:h-[225px] ${
-                                        isOpening ? "envelope-card-rising" : "translate-y-0"
-                                    }`}
+                                    className={`absolute left-1/2 top-4 z-[5] h-[193px] w-[87%] -translate-x-1/2 rounded-2xl border border-white/90 bg-gradient-to-b from-white via-white to-blue-50 p-3 shadow-[0_10px_30px_rgba(37,99,235,0.12)] transition-all duration-700 sm:h-[228px] ${isOpening
+                                            ? "-translate-y-[145px] opacity-100 sm:-translate-y-[170px]"
+                                            : "translate-y-0"
+                                        }`}
                                 >
-                                    <div className="flex h-full flex-col items-center justify-center rounded-lg border border-amber-300/60 text-center">
-                                        <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-full border border-amber-300/70 bg-white shadow-sm">
+                                    <div className="relative flex h-full flex-col items-center justify-center rounded-xl border border-amber-200/70 bg-white/65 text-center">
+                                        {/* Góc trang trí */}
+                                        <span className="absolute left-3 top-2 text-xs text-amber-400">
+                                            ✦
+                                        </span>
+
+                                        <span className="absolute right-3 top-2 text-xs text-amber-400">
+                                            ✦
+                                        </span>
+
+                                        {/* Logo UTC lớn */}
+                                        <div className="mb-2 flex h-16 w-16 items-center justify-center rounded-full border border-amber-300/70 bg-white p-1.5 shadow-sm sm:h-20 sm:w-20">
                                             <img
                                                 src="/images/UTC.png"
                                                 alt="UTC"
-                                                className="h-9 w-9 rounded-full object-contain"
+                                                className="h-full w-full rounded-full object-contain"
                                             />
                                         </div>
 
-                                        <div className="absolute top-3 right-3 text-sm text-amber-400">
-                                            ✦
-                                        </div>
-
-                                        <p className={`text-[9px] font-semibold uppercase tracking-[0.25em] text-amber-600 sm:text-[10px] ${textAnimClass}`}>
+                                        <p
+                                            className={`text-[9px] font-bold uppercase tracking-[0.28em] text-amber-600 sm:text-[10px] ${textAnimClass}`}
+                                        >
                                             {t.invitation}
                                         </p>
 
-                                        <p className="mt-2 px-3 font-serif text-lg font-semibold text-blue-900 sm:text-xl">
+                                        <p className="mt-2 px-4 font-serif text-lg font-semibold text-blue-900 sm:text-xl">
                                             {GRADUATE_NAME}
                                         </p>
 
                                         <div className="mt-2 flex items-center gap-2">
-                                            <div className="h-px w-8 bg-amber-300" />
-                                            <span className="text-xs text-amber-500">✦</span>
-                                            <div className="h-px w-8 bg-amber-300" />
+                                            <div className="h-px w-9 bg-amber-300" />
+
+                                            <span className="text-xs text-amber-500">
+                                                ✦
+                                            </span>
+
+                                            <div className="h-px w-9 bg-amber-300" />
                                         </div>
 
-                                        <p className={`mt-2 px-2 text-[9px] uppercase tracking-widest text-blue-500 sm:text-[10px] ${textAnimClass}`}>
+                                        <p
+                                            className={`mt-2 px-2 text-[9px] font-semibold uppercase tracking-[0.18em] text-blue-500 sm:text-[10px] ${textAnimClass}`}
+                                        >
                                             {t.graduationCeremony}
                                         </p>
                                     </div>
                                 </div>
 
-                                {/* Mặt trước phong bì */}
+                                {/* ================================================= */}
+                                {/* MẶT TRƯỚC */}
+                                {/* ================================================= */}
+
                                 <div
-                                    className="absolute inset-0 z-10 rounded-2xl bg-gradient-to-br from-blue-100 via-sky-100 to-blue-200"
+                                    className="absolute inset-0 z-10 rounded-[22px] bg-gradient-to-br from-blue-100/95 via-sky-100/95 to-blue-200/95"
                                     style={{
                                         clipPath:
-                                            "polygon(0 38%, 50% 68%, 100% 38%, 100% 100%, 0 100%)",
+                                            "polygon(0 39%, 50% 69%, 100% 39%, 100% 100%, 0 100%)",
                                     }}
                                 />
 
+                                {/* Đường gấp */}
                                 <div
-                                    className="absolute inset-0 z-[11] rounded-2xl"
+                                    className="pointer-events-none absolute inset-0 z-[11] rounded-[22px]"
                                     style={{
                                         clipPath:
-                                            "polygon(0 38%, 50% 68%, 100% 38%, 100% 100%, 0 100%)",
+                                            "polygon(0 39%, 50% 69%, 100% 39%, 100% 100%, 0 100%)",
                                         background:
-                                            "linear-gradient(135deg, transparent 49.6%, rgba(245,158,11,.35) 50%, transparent 50.4%)",
+                                            "linear-gradient(135deg, transparent 49.6%, rgba(245,158,11,.28) 50%, transparent 50.4%)",
                                     }}
                                 />
 
-                                {/* Nắp phong bì */}
+                                {/* ================================================= */}
+                                {/* NẮP PHONG BÌ */}
+                                {/* ================================================= */}
+
                                 <div
-                                    className={`absolute left-0 top-0 z-20 h-[125px] w-full rounded-t-2xl border-b border-amber-300/60 bg-gradient-to-br from-white via-blue-50 to-sky-100 shadow-sm transition-transform duration-1000 [transform-origin:top_center] sm:h-[150px] ${
-                                        isOpening ? "envelope-flap-opening" : ""
-                                    }`}
+                                    className={`absolute left-0 top-0 z-20 h-[128px] w-full rounded-t-[22px] border-b border-amber-300/50 bg-gradient-to-br from-white via-blue-50 to-sky-100 shadow-sm transition-transform duration-700 [transform-origin:top_center] sm:h-[153px] ${isOpening
+                                            ? "envelope-flap-opening"
+                                            : ""
+                                        }`}
                                     style={{
                                         clipPath:
                                             "polygon(0 0, 100% 0, 50% 100%)",
                                     }}
                                 >
+                                    {/* Shine */}
                                     <div
-                                        className="absolute inset-0"
+                                        className="pointer-events-none absolute inset-0 opacity-70"
                                         style={{
                                             clipPath:
                                                 "polygon(0 0, 100% 0, 50% 100%)",
-                                            borderBottom:
-                                                "1px solid rgba(245,158,11,0.4)",
+                                            background:
+                                                "linear-gradient(120deg, rgba(255,255,255,.9), transparent 45%, rgba(255,255,255,.35))",
                                         }}
                                     />
                                 </div>
 
-                                {/* Con dấu sáp */}
+                                {/* ================================================= */}
+                                {/* SEAL */}
+                                {/* ================================================= */}
+
                                 <div
-                                    className={`absolute left-1/2 top-[108px] z-30 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-amber-200 bg-gradient-to-br from-amber-300 via-yellow-400 to-amber-500 shadow-[0_5px_20px_rgba(245,158,11,0.28)] transition-all duration-500 sm:top-[125px] sm:h-16 sm:w-16 ${
-                                        isOpening
+                                    className={`absolute left-1/2 top-[110px] z-30 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white/90 bg-gradient-to-br from-amber-300 via-yellow-400 to-amber-500 shadow-[0_8px_24px_rgba(245,158,11,0.28)] transition-all duration-500 sm:top-[128px] sm:h-20 sm:w-20 ${isOpening
                                             ? "scale-75 opacity-0"
-                                            : "group-hover:scale-110"
-                                    }`}
+                                            : "group-hover:scale-105"
+                                        }`}
                                 >
-                                    <div className="absolute inset-1 rounded-full border border-white/60" />
-                                    <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-white p-0.5 shadow-sm sm:h-12 sm:w-12">
+                                    <div className="absolute inset-1.5 rounded-full border border-white/70" />
+
+                                    <div className="relative flex h-12 w-12 items-center justify-center rounded-full bg-white p-1 shadow-sm sm:h-14 sm:w-14">
                                         <img
                                             src="/images/UTC.png"
                                             alt="UTC"
@@ -819,45 +811,59 @@ function Invitation() {
                             </div>
                         </div>
 
-                        {/* Dòng chữ hướng dẫn */}
+                        {/* ================================================= */}
+                        {/* HƯỚNG DẪN */}
+                        {/* ================================================= */}
+
                         <p
-                            className={`mt-9 text-center text-xs tracking-wide text-blue-900/55 transition-all duration-500 sm:text-sm ${
-                                isOpening ? "opacity-0" : "opacity-100"
-                            } ${textAnimClass}`}
+                            className={`mt-8 max-w-[90vw] text-center text-xs font-medium text-blue-900/60 transition-all duration-500 sm:text-sm ${isOpening ? "opacity-0" : "opacity-100"} ${textAnimClass}`}
+                            style={{
+                                textWrap: "balance",
+                            }}
                         >
                             {t.clickToOpen}
                         </p>
 
-                        {/* Nút mở thiệp */}
+                        {/* ================================================= */}
+                        {/* NÚT MỞ */}
+                        {/* ================================================= */}
+
                         <button
                             type="button"
                             onClick={handleOpenEnvelope}
                             disabled={isOpening}
-                            className={`group mt-4 flex items-center gap-2 rounded-full border border-amber-400 bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-400 px-7 py-3 text-xs font-bold uppercase tracking-[0.2em] text-blue-950 shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-[0_0_30px_rgba(245,158,11,0.25)] active:scale-95 disabled:pointer-events-none sm:px-8 sm:py-3.5 sm:text-sm ${
-                                isOpening ? "scale-90 opacity-0" : ""
-                            }`}
+                            className={`group mt-4 flex items-center gap-2 rounded-full border border-white/80 bg-white/55 px-7 py-3 text-xs font-bold uppercase tracking-[0.18em] text-blue-800 shadow-[0_10px_30px_rgba(37,99,235,0.14)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/75 hover:shadow-[0_15px_35px_rgba(37,99,235,0.18)] active:scale-95 disabled:pointer-events-none sm:px-8 sm:py-3.5 sm:text-sm ${isOpening
+                                    ? "scale-90 opacity-0"
+                                    : ""
+                                }`}
                         >
-                            <span className="text-base transition-transform duration-300 group-hover:-rotate-6">
+                            <span className="text-base text-amber-500 transition-transform duration-300 group-hover:-rotate-6">
                                 ✉
                             </span>
+
                             <span className={textAnimClass}>
                                 {t.openEnvelopeBtn}
                             </span>
-                            <span className="text-base transition-transform duration-300 group-hover:translate-x-1">
+
+                            <span className="text-base text-amber-500 transition-transform duration-300 group-hover:translate-x-1">
                                 →
                             </span>
                         </button>
                     </div>
 
+                    {/* ===================================================== */}
+                    {/* FOOTER */}
+                    {/* ===================================================== */}
+
                     <div className="absolute bottom-5 left-0 right-0 z-10 text-center">
-                        <p className="text-[9px] uppercase tracking-[0.3em] text-blue-900/30 sm:text-[10px]">
+                        <p className="text-[9px] font-medium uppercase tracking-[0.3em] text-blue-900/35 sm:text-[10px]">
                             UTC · 2026
                         </p>
                     </div>
                 </div>
             )}
 
-            {/* Hai dải sash cố định hai bên màn hình */}
+            {/* DẢI SÁCH GIỮ NGUYÊN GỐC CHUẨN MÀU */}
             <div className="inv-sash-left pointer-events-none fixed inset-y-0 left-0 z-20 hidden w-[128px] xl:block 2xl:w-[148px]">
                 <GraduationSash side="left" />
             </div>
@@ -866,7 +872,7 @@ function Invitation() {
                 <GraduationSash side="right" />
             </div>
 
-            {/* SASH MINI MOBILE / TABLET */}
+            {/* SASH MOBILE */}
             <div className="inv-sash-left pointer-events-none fixed left-0 top-[118px] z-[2] xl:hidden">
                 <div className="relative h-[350px] w-[38px] sm:w-[42px]">
                     <div
@@ -1210,8 +1216,8 @@ function Invitation() {
                     </div>
                 </section>
 
-                {/* Học vị */}
-                <section className="utc-card-light relative mt-9 w-full max-w-3xl overflow-hidden rounded-3xl border border-blue-200 p-5 sm:p-7">
+                {/* Học vị (Liquid Glass) */}
+                <section className="liquid-glass-card relative mt-9 w-full max-w-3xl overflow-hidden rounded-3xl p-5 sm:p-7">
                     <div className="absolute right-[-25px] top-[-25px] h-28 w-28 rounded-full border-[18px] border-blue-100/50" />
 
                     <div className="relative flex items-center gap-4 sm:gap-5">
@@ -1231,10 +1237,10 @@ function Invitation() {
                     </div>
                 </section>
 
-                {/* Đếm ngược */}
+                {/* Đếm ngược (Liquid Glass) */}
                 <section className="mt-10 w-full max-w-4xl text-center">
                     {countdown.completed ? (
-                        <div className="mt-5 rounded-3xl border border-amber-400 bg-blue-600/10 px-6 py-8 backdrop-blur">
+                        <div className="liquid-glass-card mt-5 rounded-3xl border border-amber-400 px-6 py-8">
                             <p className="text-5xl">🎓🎉</p>
 
                             <p className={`mt-4 text-2xl font-black text-amber-600 ${textAnimClass}`}>
@@ -1242,7 +1248,7 @@ function Invitation() {
                             </p>
                         </div>
                     ) : (
-                        <div className="utc-card-light mt-5 grid grid-cols-4 overflow-hidden rounded-3xl border border-blue-200">
+                        <div className="liquid-glass-card mt-5 grid grid-cols-4 overflow-hidden rounded-3xl">
                             <CountdownItem
                                 value={countdown.days}
                                 label={t.day}
@@ -1273,9 +1279,9 @@ function Invitation() {
                     )}
                 </section>
 
-                {/* Thông tin lễ */}
-                <section className="utc-card-light mt-10 w-full max-w-4xl overflow-hidden rounded-3xl border border-blue-200">
-                    <div className="divide-y divide-blue-100 sm:grid sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+                {/* Thông tin lễ (Liquid Glass) */}
+                <section className="liquid-glass-card mt-10 w-full max-w-4xl overflow-hidden rounded-3xl">
+                    <div className="divide-y divide-blue-100/60 sm:grid sm:grid-cols-3 sm:divide-x sm:divide-y-0">
                         <MobileInfoRow
                             icon="📅"
                             label={t.eventDateLabel}
@@ -1323,13 +1329,13 @@ function Invitation() {
                     <div className="mx-auto mt-5 h-px w-56 bg-gradient-to-r from-transparent via-amber-400 to-transparent" />
                 </section>
 
-                {/* Nút chức năng */}
+                {/* Nút chức năng (Liquid Glass) */}
                 <div className="mt-10 grid w-full max-w-3xl grid-cols-1 gap-4 sm:grid-cols-3">
                     <a
                         href={MAP_URL}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex min-h-[56px] items-center justify-center gap-3 rounded-2xl border border-amber-400 bg-gradient-to-r from-amber-300 to-yellow-400 px-6 py-4 font-bold text-blue-950 shadow-xl transition hover:-translate-y-1 hover:scale-[1.02]"
+                        className="flex min-h-[56px] items-center justify-center gap-3 rounded-2xl border border-amber-400/80 bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-400 px-6 py-4 font-bold text-blue-950 shadow-xl backdrop-blur-md transition hover:-translate-y-1 hover:scale-[1.02]"
                     >
                         <span className="text-xl">📍</span>
                         <span className={textAnimClass}>{t.viewMap}</span>
@@ -1338,7 +1344,7 @@ function Invitation() {
                     <button
                         type="button"
                         onClick={() => setShowCampusMap(true)}
-                        className="flex min-h-[56px] items-center justify-center gap-3 rounded-2xl border border-blue-300 bg-white px-6 py-4 font-bold text-blue-700 shadow-xl transition hover:-translate-y-1 hover:scale-[1.02]"
+                        className="liquid-glass-card flex min-h-[56px] items-center justify-center gap-3 rounded-2xl px-6 py-4 font-bold text-blue-800 transition hover:-translate-y-1 hover:scale-[1.02]"
                     >
                         <span className="text-xl">🗺️</span>
                         <span className={textAnimClass}>{t.campusMap}</span>
@@ -1347,7 +1353,7 @@ function Invitation() {
                     <button
                         type="button"
                         onClick={() => setShowPhone(true)}
-                        className="flex min-h-[56px] items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 font-bold text-white shadow-xl transition hover:-translate-y-1 hover:scale-[1.02] hover:shadow-2xl"
+                        className="flex min-h-[56px] items-center justify-center gap-3 rounded-2xl border border-white/80 bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 px-6 py-4 font-bold text-white shadow-xl backdrop-blur-md transition hover:-translate-y-1 hover:scale-[1.02]"
                     >
                         <span className="text-xl">📞</span>
                         <span className={textAnimClass}>{t.contact}</span>
@@ -1361,28 +1367,29 @@ function Invitation() {
                 </footer>
             </main>
 
+            {/* Sơ đồ trường (Liquid Glass) */}
             {showCampusMap && (
                 <div
-                    className="fixed inset-0 z-[110] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+                    className="fixed inset-0 z-[110] flex items-center justify-center p-4 backdrop-blur-md transition-all"
                     onClick={() => setShowCampusMap(false)}
                 >
                     <div
-                        className="relative inline-block overflow-hidden rounded-3xl bg-white shadow-2xl"
+                        className="liquid-glass-card relative inline-block overflow-hidden rounded-3xl p-3 shadow-2xl"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <button
                             type="button"
                             onClick={() => setShowCampusMap(false)}
-                            className="absolute right-3 top-3 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-lg transition hover:bg-red-500 hover:text-white"
+                            className="absolute right-5 top-5 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-white/80 bg-white/80 shadow-lg backdrop-blur-md transition hover:bg-red-500 hover:text-white"
                         >
                             ✕
                         </button>
 
-                        <div className="flex items-center justify-center bg-slate-100 p-2">
+                        <div className="flex items-center justify-center overflow-hidden rounded-2xl bg-white/60 p-2">
                             <img
                                 src="/images/campus-map.png"
                                 alt={t.campusMap}
-                                className="block h-auto max-h-[82vh] w-auto max-w-[95vw] rounded-xl shadow-xl"
+                                className="block h-auto max-h-[75vh] w-auto max-w-[92vw] rounded-xl shadow-md"
                             />
                         </div>
 
@@ -1400,7 +1407,7 @@ function Invitation() {
                             </p>
 
                             <p
-                                className={`mx-auto mt-1 max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base ${textAnimClass}`}
+                                className={`mx-auto mt-1 max-w-2xl text-sm leading-relaxed text-slate-700 sm:text-base ${textAnimClass}`}
                                 style={{
                                     textWrap: "balance",
                                 }}
@@ -1412,33 +1419,33 @@ function Invitation() {
                 </div>
             )}
 
-            {/* Popup liên hệ */}
+            {/* Popup liên hệ (Liquid Glass) */}
             {showPhone && (
                 <div
-                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm"
+                    className="fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-md transition-all"
                     onClick={() => setShowPhone(false)}
                     role="presentation"
                 >
                     <div
-                        className="w-full max-w-sm rounded-3xl border border-blue-200 bg-white p-6 text-slate-900 shadow-2xl"
+                        className="liquid-glass-card w-full max-w-sm rounded-3xl p-6 text-slate-900 shadow-2xl"
                         onClick={(event) => event.stopPropagation()}
                         role="dialog"
                         aria-modal="true"
                         aria-labelledby="contact-dialog-title"
                     >
                         <div className="text-center">
-                            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100 text-5xl">
+                            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-white/80 bg-green-100/80 text-5xl shadow-inner backdrop-blur-md">
                                 📞
                             </div>
 
                             <h2
                                 id="contact-dialog-title"
-                                className={`mt-5 text-2xl font-bold text-slate-800 ${textAnimClass}`}
+                                className={`mt-5 text-2xl font-bold text-blue-900 ${textAnimClass}`}
                             >
                                 {t.contactTitle}
                             </h2>
 
-                            <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                            <div className="mt-6 rounded-2xl border border-white/80 bg-white/50 p-4 backdrop-blur-md">
                                 <p className={`text-sm text-slate-500 ${textAnimClass}`}>
                                     {t.phoneLabel}
                                 </p>
@@ -1452,14 +1459,14 @@ function Invitation() {
                                 <button
                                     type="button"
                                     onClick={() => setShowPhone(false)}
-                                    className={`rounded-xl bg-slate-100 py-3 font-semibold text-slate-700 transition hover:bg-slate-200 ${textAnimClass}`}
+                                    className={`rounded-xl border border-white/80 bg-white/60 py-3 font-semibold text-slate-700 transition hover:bg-white/90 ${textAnimClass}`}
                                 >
                                     {t.close}
                                 </button>
 
                                 <a
                                     href={`tel:${PHONE_NUMBER}`}
-                                    className={`rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 py-3 text-center font-semibold text-slate-900 transition hover:from-green-600 hover:to-emerald-700 ${textAnimClass}`}
+                                    className={`rounded-xl border border-white/80 bg-gradient-to-r from-green-500 to-emerald-600 py-3 text-center font-semibold text-white shadow-md transition hover:brightness-105 ${textAnimClass}`}
                                 >
                                     {t.callNow}
                                 </a>
@@ -1479,70 +1486,70 @@ function InformationTechnologyWatermark() {
             name: "AI",
             short: "AI",
             className:
-                "left-[3%] top-[14%] border-blue-500 bg-blue-100/65/60 text-blue-800",
+                "left-[3%] top-[14%] border-blue-500/60 bg-blue-100/40 text-blue-800",
             rotate: "-7deg",
         },
         {
             name: "SQL",
             short: "SQL",
             className:
-                "right-[3%] top-[17%] border-amber-500 bg-amber-100/65/60 text-amber-800",
+                "right-[3%] top-[17%] border-amber-500/60 bg-amber-100/40 text-amber-800",
             rotate: "7deg",
         },
         {
             name: "React",
             short: "⚛",
             className:
-                "left-[7%] top-[31%] border-cyan-500 bg-cyan-100/65/60 text-cyan-800",
+                "left-[7%] top-[31%] border-cyan-500/60 bg-cyan-100/40 text-cyan-800",
             rotate: "-5deg",
         },
         {
             name: "Node.js",
             short: "JS",
             className:
-                "right-[7%] top-[34%] border-emerald-500 bg-emerald-100/65/60 text-emerald-800",
+                "right-[7%] top-[34%] border-emerald-500/60 bg-emerald-100/40 text-emerald-800",
             rotate: "5deg",
         },
         {
             name: "Git",
             short: "Git",
             className:
-                "left-[3%] top-[50%] border-orange-500 bg-orange-100/65/60 text-orange-800",
+                "left-[3%] top-[50%] border-orange-500/60 bg-orange-100/40 text-orange-800",
             rotate: "-6deg",
         },
         {
             name: "JavaScript",
             short: "JS",
             className:
-                "right-[3%] top-[53%] border-yellow-500 bg-yellow-100/60 text-yellow-800",
+                "right-[3%] top-[53%] border-yellow-500/60 bg-yellow-100/40 text-yellow-800",
             rotate: "6deg",
         },
         {
             name: "TypeScript",
             short: "TS",
             className:
-                "left-[9%] top-[70%] border-blue-500 bg-blue-100/65/60 text-blue-800",
+                "left-[9%] top-[70%] border-blue-500/60 bg-blue-100/40 text-blue-800",
             rotate: "-4deg",
         },
         {
             name: "Python",
             short: "PY",
             className:
-                "right-[9%] top-[72%] border-indigo-500 bg-indigo-100/65/60 text-indigo-800",
+                "right-[9%] top-[72%] border-indigo-500/60 bg-indigo-100/40 text-indigo-800",
             rotate: "4deg",
         },
         {
             name: "C++",
             short: "C++",
             className:
-                "left-[28%] top-[82%] border-sky-500 bg-sky-100/65/60 text-sky-800",
+                "left-[28%] top-[82%] border-sky-500/60 bg-sky-100/40 text-sky-800",
             rotate: "-3deg",
         },
         {
             name: "API",
             short: "API",
             className:
-                "right-[28%] top-[83%] border-violet-500 bg-violet-100/60 text-violet-800",
+                "right-[28%] top-[83%] border-violet-500/60 bg-violet-100/40 text-violet-800",
             rotate: "3deg",
         },
     ];
@@ -1552,49 +1559,49 @@ function InformationTechnologyWatermark() {
             name: "AI",
             short: "AI",
             className:
-                "left-5 top-[14%] border-blue-400 bg-white/75 text-blue-700",
+                "left-5 top-[14%] border-blue-400/60 bg-white/60 text-blue-700",
         },
         {
             name: "SQL",
             short: "SQL",
             className:
-                "right-5 top-[20%] border-amber-400 bg-white/75 text-amber-700",
+                "right-5 top-[20%] border-amber-400/60 bg-white/60 text-amber-700",
         },
         {
             name: "React",
             short: "⚛",
             className:
-                "left-6 top-[33%] border-cyan-400 bg-white/75 text-cyan-700",
+                "left-6 top-[33%] border-cyan-400/60 bg-white/60 text-cyan-700",
         },
         {
             name: "Node",
             short: "JS",
             className:
-                "right-6 top-[40%] border-emerald-400 bg-white/75 text-emerald-700",
+                "right-6 top-[40%] border-emerald-400/60 bg-white/60 text-emerald-700",
         },
         {
             name: "Git",
             short: "Git",
             className:
-                "left-5 top-[55%] border-orange-400 bg-white/75 text-orange-700",
+                "left-5 top-[55%] border-orange-400/60 bg-white/60 text-orange-700",
         },
         {
             name: "TS",
             short: "TS",
             className:
-                "right-5 top-[62%] border-blue-400 bg-white/75 text-blue-700",
+                "right-5 top-[62%] border-blue-400/60 bg-white/60 text-blue-700",
         },
         {
             name: "Python",
             short: "PY",
             className:
-                "left-6 top-[76%] border-indigo-400 bg-white/75 text-indigo-700",
+                "left-6 top-[76%] border-indigo-400/60 bg-white/60 text-indigo-700",
         },
         {
             name: "C++",
             short: "C++",
             className:
-                "right-6 top-[83%] border-sky-400 bg-white/75 text-sky-700",
+                "right-6 top-[83%] border-sky-400/60 bg-white/60 text-sky-700",
         },
     ];
 
@@ -1672,12 +1679,12 @@ function InformationTechnologyWatermark() {
                 {desktopTechnologies.map((item) => (
                     <div
                         key={item.name}
-                        className={` absolute flex min-w-[116px] flex-col items-center rounded-3xl border-2 px-4 py-3 shadow-[0_8px_20px_rgba(15,23,42,0.06)] ${item.className}`}
+                        className={`absolute flex min-w-[116px] flex-col items-center rounded-3xl border-2 backdrop-blur-md px-4 py-3 shadow-sm ${item.className}`}
                         style={{
                             opacity: 0.36,
                         }}
                     >
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-current/30 bg-white/90 font-mono text-2xl font-black shadow-sm">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-current/30 bg-white/80 font-mono text-2xl font-black shadow-sm">
                             {item.short}
                         </div>
 
@@ -1688,7 +1695,7 @@ function InformationTechnologyWatermark() {
                 ))}
 
                 <div
-                    className="absolute left-[36%] top-[39%] rounded-3xl border-2 border-blue-500 bg-blue-100/65/60 px-5 py-4 font-mono text-4xl font-black text-blue-800 shadow-sm"
+                    className="absolute left-[36%] top-[39%] rounded-3xl border-2 border-blue-500/60 bg-blue-100/40 px-5 py-4 font-mono text-4xl font-black text-blue-800 shadow-sm backdrop-blur-md"
                     style={{
                         opacity: 0.38,
                     }}
@@ -1697,7 +1704,7 @@ function InformationTechnologyWatermark() {
                 </div>
 
                 <div
-                    className="absolute right-[35%] top-[42%] rounded-3xl border-2 border-amber-500 bg-amber-100/65/60 px-5 py-4 font-mono text-3xl font-black text-amber-800 shadow-sm"
+                    className="absolute right-[35%] top-[42%] rounded-3xl border-2 border-amber-500/60 bg-amber-100/40 px-5 py-4 font-mono text-3xl font-black text-amber-800 shadow-sm backdrop-blur-md"
                     style={{
                         opacity: 0.38,
                     }}
@@ -1706,7 +1713,7 @@ function InformationTechnologyWatermark() {
                 </div>
 
                 <div
-                    className="it-watermark-chip absolute left-1/2 top-[61%] flex h-24 w-24 -translate-x-1/2 items-center justify-center rounded-3xl border-2 border-indigo-500 bg-indigo-100/65/60 font-mono text-xl font-black text-indigo-800 shadow-sm"
+                    className="it-watermark-chip absolute left-1/2 top-[61%] flex h-24 w-24 -translate-x-1/2 items-center justify-center rounded-3xl border-2 border-indigo-500/60 bg-indigo-100/40 font-mono text-xl font-black text-indigo-800 shadow-sm backdrop-blur-md"
                     style={{
                         opacity: 0.36,
                     }}
@@ -1724,7 +1731,7 @@ function InformationTechnologyWatermark() {
                     />
                 </div>
 
-                <div className="absolute left-1/2 top-[27%] h-32 w-32 -translate-x-1/2 rounded-full border border-blue-500/30">
+                <div className="absolute left-1/2 top-[27%] h-32 w-32 -translate-x-1/2 rounded-full border border-blue-500/30 backdrop-blur-md">
                     <div className="absolute left-1/2 top-0 h-full w-px bg-blue-500/20" />
                     <div className="absolute left-0 top-1/2 h-px w-full bg-blue-500/20" />
                     <div className="absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-2xl border border-blue-400 bg-white/80 font-mono text-xl font-black text-blue-700">
@@ -1735,7 +1742,7 @@ function InformationTechnologyWatermark() {
                 {mobileTechnologies.map((item) => (
                     <div
                         key={item.name}
-                        className={`absolute flex min-w-[74px] flex-col items-center rounded-2xl border px-2.5 py-2 shadow-[0_8px_22px_rgba(15,23,42,0.08)] backdrop-blur-sm ${item.className}`}
+                        className={`absolute flex min-w-[74px] flex-col items-center rounded-2xl border px-2.5 py-2 shadow-sm backdrop-blur-md ${item.className}`}
                         style={{
                             opacity: 0.46,
                         }}
@@ -1751,7 +1758,7 @@ function InformationTechnologyWatermark() {
                 ))}
 
                 <div
-                    className="absolute left-1/2 top-[69%] -translate-x-1/2 rounded-2xl border border-amber-400 bg-white/80 px-4 py-3 font-mono text-[11px] font-black tracking-wider text-amber-700 shadow-sm"
+                    className="absolute left-1/2 top-[69%] -translate-x-1/2 rounded-2xl border border-amber-400/60 bg-white/70 px-4 py-3 font-mono text-[11px] font-black tracking-wider text-amber-700 shadow-sm backdrop-blur-md"
                     style={{
                         opacity: 0.45,
                     }}
@@ -1800,7 +1807,7 @@ function MusicController({
             </button>
 
             {playing && (
-                <div className="max-w-[170px] rounded-xl border border-white/80 bg-white/90 px-3 py-2 shadow-lg backdrop-blur-md sm:max-w-[220px] sm:rounded-2xl sm:px-4 sm:py-3 sm:shadow-xl">
+                <div className="liquid-glass-card max-w-[170px] rounded-xl px-3 py-2 sm:max-w-[220px] sm:rounded-2xl sm:px-4 sm:py-3">
                     <div className="flex items-center gap-2 sm:gap-3">
                         <div className="flex h-5 items-end gap-0.5 sm:h-8 sm:gap-1">
                             <span className="w-1 rounded-full bg-blue-600 sm:w-1.5" />
@@ -1812,7 +1819,7 @@ function MusicController({
                             <p className="truncate text-[10px] font-black uppercase tracking-wide text-blue-700 sm:text-xs">
                                 {playingLabel}
                             </p>
-                            <p className="truncate text-[10px] text-slate-500 sm:text-xs">
+                            <p className="truncate text-[10px] text-slate-600 sm:text-xs">
                                 {title}
                             </p>
                         </div>
@@ -1858,7 +1865,7 @@ function LanguageSwitcher({ language, onChange, disabled = false }) {
     ];
 
     return (
-        <div className="fixed right-3 top-3 z-[400] flex overflow-hidden rounded-full border border-blue-200 bg-white/90 p-1 shadow-lg backdrop-blur-md sm:right-6 sm:top-6">
+        <div className="fixed right-3 top-3 z-[400] flex items-center gap-1 rounded-full border border-white/80 bg-white/40 p-1.5 shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] backdrop-blur-xl backdrop-saturate-150 transition-all duration-300 hover:border-white hover:bg-white/50 sm:right-6 sm:top-6">
             {languages.map((item) => {
                 const active = language === item.code;
 
@@ -1868,16 +1875,23 @@ function LanguageSwitcher({ language, onChange, disabled = false }) {
                         type="button"
                         onClick={() => onChange(item.code)}
                         disabled={disabled}
-                        className={`flex min-h-[38px] items-center gap-1 rounded-full px-2.5 text-xs font-bold transition duration-300 disabled:cursor-wait disabled:opacity-70 sm:px-3 sm:text-sm ${
-                            active
-                                ? "bg-blue-600 text-white shadow"
-                                : "text-slate-600 hover:bg-blue-50"
-                        }`}
+                        className={`relative flex min-h-[38px] items-center gap-1.5 rounded-full px-3 text-xs font-bold transition-all duration-300 disabled:cursor-wait disabled:opacity-70 sm:text-sm ${active
+                                ? "text-white shadow-[0_4px_16px_rgba(37,99,235,0.35)]"
+                                : "text-slate-700 hover:bg-white/40 hover:text-blue-900"
+                            }`}
                         aria-label={item.ariaLabel}
                         aria-pressed={active}
                     >
-                        <span aria-hidden="true">{item.flag}</span>
-                        <span>{item.shortLabel}</span>
+                        {active && (
+                            <div className="absolute inset-0 -z-10 overflow-hidden rounded-full bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)]">
+                                <span className="absolute -left-1/2 -top-1/2 h-full w-full rotate-12 bg-white/20 blur-sm" />
+                            </div>
+                        )}
+
+                        <span className="text-sm transition-transform duration-300 active:scale-125" aria-hidden="true">
+                            {item.flag}
+                        </span>
+                        <span className="tracking-wide">{item.shortLabel}</span>
                     </button>
                 );
             })}
@@ -1893,9 +1907,8 @@ function CountdownItem({
 }) {
     return (
         <div
-            className={`px-1 py-5 text-center sm:px-4 sm:py-7 ${
-                withBorder ? "border-l border-blue-100" : ""
-            }`}
+            className={`px-1 py-5 text-center sm:px-4 sm:py-7 ${withBorder ? "border-l border-blue-100/60" : ""
+                }`}
         >
             <p className="font-serif text-3xl font-black tabular-nums text-amber-600 sm:text-5xl">
                 {String(value).padStart(2, "0")}
@@ -1916,7 +1929,7 @@ function MobileInfoRow({
 }) {
     return (
         <div className="flex items-center gap-4 px-4 py-4 sm:flex-col sm:justify-center sm:px-5 sm:py-6 sm:text-center">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-2xl shadow-sm sm:h-14 sm:w-14 sm:text-3xl">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/60 bg-blue-50/60 text-2xl shadow-sm backdrop-blur-md sm:h-14 sm:w-14 sm:text-3xl">
                 {icon}
             </div>
 
@@ -1939,9 +1952,8 @@ function GraduationSash({ side }) {
     return (
         <div className="relative flex h-full items-center justify-center py-6">
             <div
-                className={`relative h-[88vh] min-h-[650px] w-[104px] overflow-hidden bg-gradient-to-b from-white via-blue-50 to-blue-100 shadow-[0_20px_60px_rgba(30,64,175,0.18)] 2xl:w-[118px] ${
-                    isLeft ? "rotate-[0.8deg]" : "-rotate-[0.8deg]"
-                }`}
+                className={`relative h-[88vh] min-h-[650px] w-[104px] overflow-hidden bg-gradient-to-b from-white via-blue-50 to-blue-100 shadow-[0_20px_60px_rgba(30,64,175,0.18)] 2xl:w-[118px] ${isLeft ? "rotate-[0.8deg]" : "-rotate-[0.8deg]"
+                    }`}
                 style={{
                     clipPath:
                         "polygon(0 0, 100% 0, 100% 92%, 50% 100%, 0 92%)",
