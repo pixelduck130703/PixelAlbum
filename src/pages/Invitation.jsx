@@ -597,53 +597,61 @@ function Invitation() {
             />
 
             {/* 1. POPUP HƯỚNG DẪN HIỂN THỊ ĐẦU TIÊN (Z-INDEX: 300) */}
-            {showMusicGuide && (
-                <div
-                    className="fixed inset-0 z-[300] flex items-center justify-center p-4 backdrop-blur-md transition-all"
+{showMusicGuide && (
+    <div
+        className="fixed inset-0 z-[300] flex items-center justify-center p-4 transition-all"
+    >
+        {/* Lớp nền đặc đồng bộ hoàn toàn với màn hình phong bì */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white via-blue-50 to-sky-100" />
+
+        {/* Ánh sáng mờ phía sau */}
+        <div className="absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-sky-200/40 blur-[100px]" />
+        <div className="absolute left-[15%] top-[15%] h-[220px] w-[220px] rounded-full bg-amber-100/50 blur-[80px]" />
+        <div className="absolute bottom-[10%] right-[10%] h-[250px] w-[250px] rounded-full bg-blue-100/60 blur-[90px]" />
+
+        {/* Hạt sáng trang trí giống màn hình phong bì */}
+        <div className="absolute left-[15%] top-[20%] h-1.5 w-1.5 animate-pulse rounded-full bg-amber-400/70" />
+        <div className="absolute right-[18%] top-[28%] h-2 w-2 animate-pulse rounded-full bg-sky-400/50 [animation-delay:700ms]" />
+        <div className="absolute bottom-[25%] left-[22%] h-1.5 w-1.5 animate-pulse rounded-full bg-amber-300/70 [animation-delay:1200ms]" />
+        <div className="absolute bottom-[20%] right-[25%] h-2 w-2 animate-pulse rounded-full bg-blue-300/60 [animation-delay:500ms]" />
+
+        {/* Khối Popup chính */}
+        <div className="relative z-10 w-full max-w-md rounded-3xl border border-blue-200 bg-gradient-to-br from-white via-blue-50 to-sky-50 p-7 text-center shadow-[0_25px_60px_rgba(30,64,175,0.18)]">
+
+            {/* Viền trang trí màu vàng kim nhạt bên trong */}
+            <div className="absolute inset-2 pointer-events-none rounded-2xl border border-amber-300/40" />
+
+            {/* Logo Avatar */}
+            <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full border border-amber-300/60 bg-gradient-to-br from-blue-50 to-sky-100 p-2 shadow-sm">
+                <img
+                    src="/images/graduation-avatar.jpg"
+                    alt="Avatar"
+                    className="h-full w-full rounded-full object-cover"
+                />
+            </div>
+
+            {/* Tiêu đề */}
+            <h2 className={`mt-5 font-serif text-2xl font-bold text-blue-900 ${textAnimClass}`}>
+                {t.guideTitle}
+            </h2>
+
+            {/* Nội dung */}
+            <p className={`mt-4 leading-7 text-slate-600 sm:text-base ${textAnimClass}`}>
+                {t.guideText}
+            </p>
+
+            {/* Nút Đã hiểu */}
+            <div className="mt-6 flex justify-center">
+                <button
+                    onClick={closeMusicGuide}
+                    className={`rounded-2xl border border-amber-400 bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-400 px-8 py-3 text-sm font-bold uppercase tracking-wider text-blue-950 shadow-md transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] active:scale-95 ${textAnimClass}`}
                 >
-                    {/* Lớp nền Gradient Xanh nhạt - Trắng */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/90 via-blue-50/90 to-sky-100/90" />
-
-                    {/* Ánh sáng nhạt phía sau popup */}
-                    <div className="absolute left-1/2 top-1/2 h-[350px] w-[350px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-sky-200/50 blur-[90px]" />
-
-                    {/* Khối Popup chính */}
-                    <div className="relative z-10 w-full max-w-md rounded-3xl border border-blue-200/80 bg-white/90 p-7 text-center shadow-[0_20px_50px_rgba(30,64,175,0.15)] backdrop-blur-lg">
-
-                        {/* Viền trang trí màu vàng kim nhạt bên trong */}
-                        <div className="absolute inset-2 pointer-events-none rounded-2xl border border-amber-300/40" />
-
-                        {/* Logo UTC */}
-                        <div className="mx-auto flex h-25 w-25 items-center justify-center rounded-full border border-amber-300/60 bg-gradient-to-br from-blue-50 to-sky-100 p-2 shadow-sm">
-                            <img
-                                src="/images/graduation-avatar.jpg"
-                                alt="Avatar"
-                                className="h-full w-full rounded-full object-contain"
-                            />
-                        </div>
-
-                        {/* Tiêu đề */}
-                        <h2 className={`mt-5 font-serif text-2xl font-bold text-blue-900 ${textAnimClass}`}>
-                            {t.guideTitle}
-                        </h2>
-
-                        {/* Nội dung */}
-                        <p className={`mt-4 leading-7 text-slate-600 sm:text-base ${textAnimClass}`}>
-                            {t.guideText}
-                        </p>
-
-                        {/* Nút Đã hiểu */}
-                        <div className="mt-6 flex justify-center">
-                            <button
-                                onClick={closeMusicGuide}
-                                className={`rounded-2xl border border-amber-400 bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-400 px-8 py-3 text-sm font-bold uppercase tracking-wider text-blue-950 shadow-md transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] active:scale-95 ${textAnimClass}`}
-                            >
-                                {t.guideButton}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+                    {t.guideButton}
+                </button>
+            </div>
+        </div>
+    </div>
+)}
 
             {/* 2. PHONG BÌ THƯ MỜI (HIỂN THỊ SAU KHI ĐÓNG POPUP HƯỚNG DẪN) */}
             {!showMusicGuide && !isOpened && (
