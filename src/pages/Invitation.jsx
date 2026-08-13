@@ -1178,11 +1178,14 @@ function Invitation() {
                             ✕
                         </button>
 
-                        <div className="flex items-center justify-center overflow-hidden rounded-2xl bg-white/60 p-2">
+                        <div className="flex min-h-0 items-center justify-center overflow-auto rounded-2xl bg-white/60 p-1">
                             <img
                                 src="/images/campus-map.png"
                                 alt={t.campusMap}
-                                className="block h-auto max-h-[75vh] w-auto max-w-[92vw] rounded-xl shadow-md"
+                                className="block h-auto w-auto max-w-full rounded-xl object-contain shadow-md"
+                                style={{
+                                    maxHeight: "calc(100dvh - 180px)",
+                                }}
                             />
                         </div>
 
@@ -1668,11 +1671,10 @@ function LanguageSwitcher({ language, onChange, disabled = false }) {
                         type="button"
                         onClick={() => onChange(item.code)}
                         disabled={disabled}
-                        className={`relative flex min-h-[38px] items-center gap-1.5 rounded-full px-3 text-xs font-bold transition-all duration-300 disabled:cursor-wait disabled:opacity-70 sm:text-sm ${
-                            active
+                        className={`relative flex min-h-[38px] items-center gap-1.5 rounded-full px-3 text-xs font-bold transition-all duration-300 disabled:cursor-wait disabled:opacity-70 sm:text-sm ${active
                                 ? "text-white shadow-[0_4px_16px_rgba(37,99,235,0.35)]"
                                 : "text-slate-700 hover:bg-white/40 hover:text-blue-900"
-                        }`}
+                            }`}
                         aria-label={item.ariaLabel}
                         aria-pressed={active}
                     >
@@ -1701,9 +1703,8 @@ function CountdownItem({
 }) {
     return (
         <div
-            className={`px-1 py-5 text-center sm:px-4 sm:py-7 ${
-                withBorder ? "border-l border-blue-100/60" : ""
-            }`}
+            className={`px-1 py-5 text-center sm:px-4 sm:py-7 ${withBorder ? "border-l border-blue-100/60" : ""
+                }`}
         >
             <p className="font-serif text-3xl font-black tabular-nums text-amber-600 sm:text-5xl">
                 {String(value).padStart(2, "0")}
@@ -1747,9 +1748,8 @@ function GraduationSash({ side }) {
     return (
         <div className="relative flex h-full items-center justify-center py-6">
             <div
-                className={`relative h-[88vh] min-h-[650px] w-[104px] overflow-hidden bg-gradient-to-b from-white via-blue-50 to-blue-100 shadow-[0_20px_60px_rgba(30,64,175,0.18)] 2xl:w-[118px] ${
-                    isLeft ? "rotate-[0.8deg]" : "-rotate-[0.8deg]"
-                }`}
+                className={`relative h-[88vh] min-h-[650px] w-[104px] overflow-hidden bg-gradient-to-b from-white via-blue-50 to-blue-100 shadow-[0_20px_60px_rgba(30,64,175,0.18)] 2xl:w-[118px] ${isLeft ? "rotate-[0.8deg]" : "-rotate-[0.8deg]"
+                    }`}
                 style={{
                     clipPath:
                         "polygon(0 0, 100% 0, 100% 92%, 50% 100%, 0 92%)",
