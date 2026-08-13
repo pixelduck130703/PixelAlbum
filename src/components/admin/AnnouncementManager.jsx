@@ -147,13 +147,13 @@ function AnnouncementManager({
             >
                 {/* Header */}
                 <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 px-5 py-5 text-white sm:px-6 sm:py-6">
-                    <div className="flex items-start justify-between gap-4">
-                        <div className="min-w-0">
-                            <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-white/15 text-2xl backdrop-blur">
+                    <div className="flex items-center justify-between gap-4">
+                        <div className="flex min-w-0 items-center gap-3">
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-2xl backdrop-blur">
                                 📢
                             </div>
 
-                            <h2 className="text-xl font-bold sm:text-2xl">
+                            <h2 className="truncate text-xl font-bold sm:text-2xl">
                                 Thông báo trang chủ
                             </h2>
                         </div>

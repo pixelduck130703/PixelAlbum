@@ -17,14 +17,14 @@ function DashboardActions({
           type="button"
           onClick={onShowTodayAlbumViews}
           disabled={loadingTodayAlbumViews}
-          className={`${buttonClass} bg-violet-600 hover:bg-violet-700 md:w-auto md:flex-1`}
+          className={`${buttonClass} bg-green-600 hover:bg-green-700 md:w-auto md:flex-1`}
         >
           <span className="shrink-0 text-base">🔥</span>
 
           <span className="leading-5">
             {loadingTodayAlbumViews
               ? "Đang tải..."
-              : "Album xem hôm nay"}
+              : "Đã xem hôm nay"}
           </span>
         </button>
 
@@ -42,7 +42,7 @@ function DashboardActions({
         <button
           type="button"
           onClick={onManageMusic}
-          className={`${buttonClass} bg-indigo-600 hover:bg-indigo-700 md:w-auto md:flex-1`}
+          className={`${buttonClass} bg-violet-600 hover:bg-violet-700 md:w-auto md:flex-1`}
         >
           <span className="shrink-0 text-base">🎵</span>
           <span>Quản lý nhạc</span>
@@ -59,12 +59,13 @@ function DashboardActions({
         </button>
 
         {/* Thêm album */}
+        {/* Thêm album */}
         <button
           type="button"
           onClick={onAdd}
-          className={`${buttonClass} col-span-2 min-h-[56px] bg-blue-600 text-base hover:bg-blue-700 md:min-h-[50px] md:w-auto md:flex-1 md:text-sm`}
+          className={`${buttonClass} col-span-2 bg-blue-600 hover:bg-blue-700 md:col-span-1 md:w-auto md:flex-1`}
         >
-          <span className="shrink-0 text-lg md:text-base">➕</span>
+          <span className="shrink-0 text-base">➕</span>
           <span>Thêm Album</span>
         </button>
       </div>

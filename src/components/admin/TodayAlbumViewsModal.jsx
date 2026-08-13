@@ -43,7 +43,8 @@ function TodayAlbumViewsModal({
             return "";
         }
 
-        const [year, month, day] = value.split("-");
+        const [year, month, day] =
+            value.split("-");
 
         if (!year || !month || !day) {
             return value;
@@ -86,16 +87,12 @@ function TodayAlbumViewsModal({
                 }
             );
 
-        return formatter.format(
-            new Date()
-        );
+        return formatter.format(new Date());
     };
 
     const today = getTodayString();
 
-    const changeDate = (
-        numberOfDays
-    ) => {
+    const changeDate = (numberOfDays) => {
         if (!selectedDate) {
             return;
         }
@@ -112,22 +109,19 @@ function TodayAlbumViewsModal({
         );
 
         date.setDate(
-            date.getDate() +
-            numberOfDays
+            date.getDate() + numberOfDays
         );
 
         const nextYear =
             date.getFullYear();
 
-        const nextMonth =
-            String(
-                date.getMonth() + 1
-            ).padStart(2, "0");
+        const nextMonth = String(
+            date.getMonth() + 1
+        ).padStart(2, "0");
 
-        const nextDay =
-            String(
-                date.getDate()
-            ).padStart(2, "0");
+        const nextDay = String(
+            date.getDate()
+        ).padStart(2, "0");
 
         onDateChange?.(
             `${nextYear}-${nextMonth}-${nextDay}`
@@ -137,40 +131,31 @@ function TodayAlbumViewsModal({
     const getBrowserIcon = (
         browser = ""
     ) => {
-        const value =
-            String(
-                browser
-            ).toLowerCase();
+        const value = String(
+            browser
+        ).toLowerCase();
 
-        if (
-            value.includes("chrome")
-        ) {
+        if (value.includes("chrome")) {
             return (
-                <FaChrome className="text-blue-600" />
+                <FaChrome className="text-emerald-600" />
             );
         }
 
-        if (
-            value.includes("firefox")
-        ) {
+        if (value.includes("firefox")) {
             return (
-                <FaFirefoxBrowser className="text-orange-500" />
+                <FaFirefoxBrowser className="text-lime-600" />
             );
         }
 
-        if (
-            value.includes("safari")
-        ) {
+        if (value.includes("safari")) {
             return (
-                <FaSafari className="text-sky-500" />
+                <FaSafari className="text-teal-600" />
             );
         }
 
-        if (
-            value.includes("edge")
-        ) {
+        if (value.includes("edge")) {
             return (
-                <FaEdge className="text-cyan-600" />
+                <FaEdge className="text-green-600" />
             );
         }
 
@@ -182,99 +167,182 @@ function TodayAlbumViewsModal({
     const getDeviceIcon = (
         device = ""
     ) => {
-        const value =
-            String(
-                device
-            ).toLowerCase();
+        const value = String(
+            device
+        ).toLowerCase();
 
         if (
             value.includes("mobile") ||
             value.includes("smartphone")
         ) {
             return (
-                <FaMobileAlt className="text-violet-600" />
+                <FaMobileAlt className="text-emerald-600" />
             );
         }
 
-        if (
-            value.includes("tablet")
-        ) {
+        if (value.includes("tablet")) {
             return (
-                <FaTabletAlt className="text-violet-600" />
+                <FaTabletAlt className="text-lime-600" />
             );
         }
 
         return (
-            <FaDesktop className="text-violet-600" />
+            <FaDesktop className="text-green-600" />
         );
     };
 
-    const handleImageError = (
-        event
-    ) => {
-        event.currentTarget.onerror =
-            null;
-
+    const handleImageError = (event) => {
+        event.currentTarget.onerror = null;
         event.currentTarget.src =
             FALLBACK_AVATAR;
     };
 
     return (
         <div
-            className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/60 p-2 backdrop-blur-sm sm:p-5"
+            className="
+                fixed inset-0 z-[9999]
+                flex items-center justify-center
+                bg-slate-950/60
+                p-2
+                backdrop-blur-sm
+                sm:p-5
+            "
             onClick={onClose}
         >
             <div
-                className="flex max-h-[96dvh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl sm:max-h-[94dvh] sm:rounded-3xl"
+                className="
+                    flex max-h-[96dvh] w-full max-w-4xl
+                    flex-col overflow-hidden
+                    rounded-2xl
+                    bg-white
+                    shadow-2xl
+                    sm:max-h-[94dvh]
+                    sm:rounded-3xl
+                "
                 onClick={(event) =>
                     event.stopPropagation()
                 }
             >
-                {/* ==========================
-            HEADER
-            Mobile: compact
-            Desktop: giữ nguyên
-        ========================== */}
-                <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-white px-3 py-2.5 sm:px-6 sm:py-4">
-                    <div className="min-w-0">
-                        <h2 className="text-base font-black text-slate-800 sm:text-xl">
-                            👁️ Lịch sử xem album
-                        </h2>
+                {/* =====================================================
+                    HEADER
+                ====================================================== */}
+                <div
+                    className="
+                        shrink-0
+                        bg-gradient-to-r
+                        from-emerald-600
+                        via-green-600
+                        to-lime-600
+                        px-4 py-4
+                        text-white
+                        sm:px-6 sm:py-5
+                    "
+                >
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="flex min-w-0 items-center gap-3">
+                            <div
+                                className="
+                                    flex h-10 w-10 shrink-0
+                                    items-center justify-center
+                                    rounded-xl
+                                    bg-white/15
+                                    text-lg
+                                    backdrop-blur
+                                    sm:h-12 sm:w-12
+                                    sm:rounded-2xl
+                                    sm:text-xl
+                                "
+                            >
+                                <FaEye />
+                            </div>
 
-                        <p className="mt-0.5 text-[10px] text-slate-500 sm:mt-1 sm:text-sm">
-                            Xem lượt mở album theo từng ngày
-                        </p>
+                            <div className="min-w-0">
+                                <h2
+                                    className="
+                                        truncate
+                                        text-lg
+                                        font-black
+                                        sm:text-2xl
+                                    "
+                                >
+                                    Lịch sử xem album
+                                </h2>
+                            </div>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="
+                                flex h-9 w-9 shrink-0
+                                items-center justify-center
+                                rounded-full
+                                bg-white/15
+                                text-base
+                                text-white
+                                backdrop-blur
+                                transition
+                                hover:bg-white/25
+                                active:scale-95
+                                sm:h-10 sm:w-10
+                                sm:text-lg
+                            "
+                            aria-label="Đóng"
+                        >
+                            <FaTimes />
+                        </button>
                     </div>
-
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm text-slate-500 transition hover:bg-red-100 hover:text-red-600 sm:h-10 sm:w-10 sm:text-base"
-                        aria-label="Đóng"
-                    >
-                        <FaTimes />
-                    </button>
                 </div>
 
-                {/* ==========================
-            CHỌN NGÀY
-            MOBILE COMPACT
-        ========================== */}
-                <div className="shrink-0 border-b border-slate-200 bg-slate-50 px-3 py-2.5 sm:hidden">
-                    <div className="flex items-center gap-2">
+                {/* =====================================================
+                    CHỌN NGÀY - MOBILE
+                    Không hiển thị "Ngày thống kê"
+                ====================================================== */}
+                <div
+                    className="
+                        shrink-0
+                        border-b border-emerald-100
+                        bg-emerald-50/60
+                        px-3 py-2.5
+                        sm:hidden
+                    "
+                >
+                    <div className="flex w-full items-center gap-1.5">
+                        {/* Trước */}
                         <button
                             type="button"
                             onClick={() =>
                                 changeDate(-1)
                             }
-                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-sm text-slate-600 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600"
+                            className="
+                                flex h-10 w-10 shrink-0
+                                items-center justify-center
+                                rounded-xl
+                                border border-emerald-100
+                                bg-white
+                                text-slate-500
+                                shadow-sm
+                                transition
+                                hover:border-emerald-300
+                                hover:bg-emerald-50
+                                hover:text-emerald-600
+                                active:scale-95
+                            "
                             title="Ngày trước"
                         >
-                            <FaChevronLeft />
+                            <FaChevronLeft className="text-sm" />
                         </button>
 
+                        {/* Ngày */}
                         <div className="relative min-w-0 flex-1">
-                            <FaCalendarAlt className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-blue-500" />
+                            <FaCalendarAlt
+                                className="
+                                    pointer-events-none
+                                    absolute left-2.5 top-1/2
+                                    -translate-y-1/2
+                                    text-xs text-emerald-500
+                                "
+                            />
 
                             <input
                                 type="date"
@@ -285,10 +353,25 @@ function TodayAlbumViewsModal({
                                         event.target.value
                                     )
                                 }
-                                className="h-9 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-2 text-xs font-bold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                className="
+                                    h-10 w-full min-w-0
+                                    rounded-xl
+                                    border border-emerald-100
+                                    bg-white
+                                    pl-8 pr-1
+                                    text-[11px]
+                                    font-bold
+                                    text-slate-700
+                                    outline-none
+                                    transition
+                                    focus:border-emerald-500
+                                    focus:ring-4
+                                    focus:ring-emerald-100
+                                "
                             />
                         </div>
 
+                        {/* Sau */}
                         <button
                             type="button"
                             onClick={() =>
@@ -297,64 +380,148 @@ function TodayAlbumViewsModal({
                             disabled={
                                 selectedDate >= today
                             }
-                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-sm text-slate-600 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-30"
+                            className="
+                                flex h-10 w-10 shrink-0
+                                items-center justify-center
+                                rounded-xl
+                                border border-emerald-100
+                                bg-white
+                                text-slate-500
+                                shadow-sm
+                                transition
+                                hover:border-emerald-300
+                                hover:bg-emerald-50
+                                hover:text-emerald-600
+                                active:scale-95
+                                disabled:cursor-not-allowed
+                                disabled:opacity-30
+                            "
                             title="Ngày sau"
                         >
-                            <FaChevronRight />
+                            <FaChevronRight className="text-sm" />
                         </button>
-                    </div>
 
-                    <div className="mt-1.5 flex items-center justify-between">
-
-                        {selectedDate !==
-                            today && (
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        onDateChange?.(
-                                            today
-                                        )
-                                    }
-                                    className="text-[10px] font-bold text-blue-600"
-                                >
-                                    Về hôm nay
-                                </button>
-                            )}
+                        {/* Hôm nay */}
+                        {selectedDate !== today && (
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    onDateChange?.(
+                                        today
+                                    )
+                                }
+                                className="
+                                    h-10 shrink-0
+                                    whitespace-nowrap
+                                    rounded-xl
+                                    bg-emerald-600
+                                    px-2.5
+                                    text-[11px]
+                                    font-bold
+                                    text-white
+                                    shadow-sm
+                                    transition
+                                    hover:bg-emerald-700
+                                    active:scale-95
+                                "
+                            >
+                                Hôm nay
+                            </button>
+                        )}
                     </div>
                 </div>
 
-                {/* ==========================
-            CHỌN NGÀY
-            DESKTOP GIỮ NGUYÊN
-        ========================== */}
-                <div className="hidden shrink-0 border-b border-slate-200 bg-slate-50 px-6 py-4 sm:block">
-                    <div className="flex flex-row items-center justify-between gap-3">
-                        <div>
-                            <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
-                                Ngày thống kê
-                            </p>
+                {/* =====================================================
+                    CHỌN NGÀY - DESKTOP
+                ====================================================== */}
+                <div
+                    className="
+                        hidden shrink-0
+                        border-b border-slate-200
+                        bg-slate-50
+                        px-6 py-3
+                        sm:block
+                    "
+                >
+                    <div className="flex items-center justify-between gap-4">
+                        {/* Ngày đang xem */}
+                        <div className="flex min-w-0 items-center gap-3">
+                            <div
+                                className="
+                                    flex h-10 w-10 shrink-0
+                                    items-center justify-center
+                                    rounded-xl
+                                    bg-emerald-100
+                                    text-emerald-600
+                                "
+                            >
+                                <FaCalendarAlt className="text-base" />
+                            </div>
 
-                            <p className="mt-1 text-lg font-black text-slate-800">
-                                {formatDate(
-                                    selectedDate
-                                )}
-                            </p>
+                            <div className="min-w-0">
+                                <p
+                                    className="
+                                        text-[10px]
+                                        font-bold
+                                        uppercase
+                                        tracking-wider
+                                        text-slate-400
+                                    "
+                                >
+                                    Ngày thống kê
+                                </p>
+
+                                <p
+                                    className="
+                                        mt-0.5
+                                        text-base
+                                        font-black
+                                        text-slate-800
+                                    "
+                                >
+                                    {formatDate(
+                                        selectedDate
+                                    )}
+                                </p>
+                            </div>
                         </div>
 
+                        {/* Điều khiển */}
                         <div className="flex items-center gap-2">
                             <button
                                 type="button"
                                 onClick={() =>
                                     changeDate(-1)
                                 }
-                                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600"
+                                className="
+                                    flex h-10 w-10 shrink-0
+                                    items-center justify-center
+                                    rounded-xl
+                                    border border-slate-200
+                                    bg-white
+                                    text-slate-500
+                                    shadow-sm
+                                    transition
+                                    hover:border-emerald-300
+                                    hover:bg-emerald-50
+                                    hover:text-emerald-600
+                                    active:scale-95
+                                "
                                 title="Ngày trước"
                             >
-                                <FaChevronLeft />
+                                <FaChevronLeft className="text-sm" />
                             </button>
 
-                            <div className="relative w-[185px] min-w-0">
-                                <FaCalendarAlt className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-blue-500" />
+                            <div className="relative w-[170px]">
+                                <FaCalendarAlt
+                                    className="
+                                        pointer-events-none
+                                        absolute left-3 top-1/2
+                                        -translate-y-1/2
+                                        text-sm
+                                        text-emerald-500
+                                    "
+                                />
 
                                 <input
                                     type="date"
@@ -365,7 +532,21 @@ function TodayAlbumViewsModal({
                                             event.target.value
                                         )
                                     }
-                                    className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3 text-sm font-bold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                                    className="
+                                        h-10 w-full
+                                        rounded-xl
+                                        border border-slate-200
+                                        bg-white
+                                        pl-9 pr-3
+                                        text-sm
+                                        font-bold
+                                        text-slate-700
+                                        outline-none
+                                        transition
+                                        focus:border-emerald-500
+                                        focus:ring-4
+                                        focus:ring-emerald-100
+                                    "
                                 />
                             </div>
 
@@ -377,140 +558,266 @@ function TodayAlbumViewsModal({
                                 disabled={
                                     selectedDate >= today
                                 }
-                                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-30"
+                                className="
+                                    flex h-10 w-10 shrink-0
+                                    items-center justify-center
+                                    rounded-xl
+                                    border border-slate-200
+                                    bg-white
+                                    text-slate-500
+                                    shadow-sm
+                                    transition
+                                    hover:border-emerald-300
+                                    hover:bg-emerald-50
+                                    hover:text-emerald-600
+                                    active:scale-95
+                                    disabled:cursor-not-allowed
+                                    disabled:opacity-30
+                                "
                                 title="Ngày sau"
                             >
-                                <FaChevronRight />
+                                <FaChevronRight className="text-sm" />
                             </button>
-                        </div>
-                    </div>
 
-                    {selectedDate !==
-                        today && (
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    onDateChange?.(
-                                        today
-                                    )
-                                }
-                                className="mt-3 rounded-full bg-blue-100 px-3 py-1.5 text-xs font-bold text-blue-700 transition hover:bg-blue-200"
-                            >
-                                Quay về hôm nay
-                            </button>
-                        )}
-                </div>
-
-                {/* ==========================
-            TỔNG QUAN
-            MOBILE COMPACT
-        ========================== */}
-                <div className="grid shrink-0 grid-cols-2 gap-2 border-b border-slate-100 bg-white px-3 py-2.5 sm:hidden">
-                    <div className="flex min-w-0 items-center justify-between rounded-xl border border-blue-100 bg-blue-50 px-3 py-2">
-                        <div className="min-w-0">
-                            <p className="truncate text-[9px] font-bold uppercase tracking-wide text-blue-500">
-                                Album đã xem
-                            </p>
-
-                            <p className="mt-0.5 text-lg font-black leading-none text-blue-700">
-                                {Number(
-                                    summary.totalAlbums ||
-                                    0
-                                ).toLocaleString(
-                                    "vi-VN"
-                                )}
-                            </p>
-                        </div>
-
-                        <div className="ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-sm text-blue-600">
-                            <FaEye />
-                        </div>
-                    </div>
-
-                    <div className="flex min-w-0 items-center justify-between rounded-xl border border-violet-100 bg-violet-50 px-3 py-2">
-                        <div className="min-w-0">
-                            <p className="truncate text-[9px] font-bold uppercase tracking-wide text-violet-500">
-                                Tổng lượt mở
-                            </p>
-
-                            <p className="mt-0.5 text-lg font-black leading-none text-violet-700">
-                                {Number(
-                                    summary.totalViews ||
-                                    0
-                                ).toLocaleString(
-                                    "vi-VN"
-                                )}
-                            </p>
-                        </div>
-
-                        <div className="ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-sm text-violet-600">
-                            <FaClock />
+                            {selectedDate !== today && (
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        onDateChange?.(
+                                            today
+                                        )
+                                    }
+                                    className="
+                                        ml-1 h-10
+                                        rounded-xl
+                                        bg-emerald-600
+                                        px-4
+                                        text-xs
+                                        font-bold
+                                        text-white
+                                        shadow-sm
+                                        transition
+                                        hover:bg-emerald-700
+                                        active:scale-95
+                                    "
+                                >
+                                    Hôm nay
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
 
-                {/* ==========================
-            TỔNG QUAN
-            DESKTOP GIỮ NGUYÊN
-        ========================== */}
-                <div className="hidden shrink-0 grid-cols-2 gap-3 border-b border-slate-100 bg-white px-6 py-4 sm:grid">
-                    <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4">
-                        <p className="text-[11px] font-bold uppercase tracking-wide text-blue-500">
+                {/* =====================================================
+                    TỔNG QUAN
+                ====================================================== */}
+                <div
+                    className="
+                        grid shrink-0 grid-cols-2
+                        gap-2
+                        border-b border-emerald-100
+                        bg-white
+                        px-3 py-2.5
+                        sm:gap-3
+                        sm:px-6 sm:py-3
+                    "
+                >
+                    {/* Album */}
+                    <div
+                        className="
+                            flex min-w-0 items-center gap-2
+                            rounded-xl
+                            border border-emerald-100
+                            bg-emerald-50
+                            px-3 py-2
+                            sm:gap-2.5
+                            sm:rounded-2xl
+                            sm:px-4 sm:py-2.5
+                        "
+                    >
+                        <div
+                            className="
+                                flex h-8 w-8 shrink-0
+                                items-center justify-center
+                                rounded-lg
+                                bg-emerald-100
+                                text-emerald-600
+                                sm:h-9 sm:w-9
+                            "
+                        >
+                            <FaEye className="text-sm sm:text-base" />
+                        </div>
+
+                        <span
+                            className="
+                                truncate
+                                text-[10px]
+                                font-bold
+                                uppercase
+                                tracking-wide
+                                text-emerald-600
+                                sm:text-xs
+                            "
+                        >
                             Album đã xem
-                        </p>
+                        </span>
 
-                        <p className="mt-1 text-2xl font-black text-blue-700">
+                        <span
+                            className="
+                                ml-auto shrink-0
+                                text-base
+                                font-black
+                                leading-none
+                                text-emerald-700
+                                sm:text-xl
+                            "
+                        >
                             {Number(
-                                summary.totalAlbums ||
-                                0
-                            ).toLocaleString(
-                                "vi-VN"
-                            )}
-                        </p>
+                                summary.totalAlbums || 0
+                            ).toLocaleString("vi-VN")}
+                        </span>
                     </div>
 
-                    <div className="rounded-2xl border border-violet-100 bg-violet-50 p-4">
-                        <p className="text-[11px] font-bold uppercase tracking-wide text-violet-500">
-                            Tổng lượt mở
-                        </p>
+                    {/* Lượt mở */}
+                    <div
+                        className="
+                            flex min-w-0 items-center gap-2
+                            rounded-xl
+                            border border-lime-100
+                            bg-lime-50
+                            px-3 py-2
+                            sm:gap-2.5
+                            sm:rounded-2xl
+                            sm:px-4 sm:py-2.5
+                        "
+                    >
+                        <div
+                            className="
+                                flex h-8 w-8 shrink-0
+                                items-center justify-center
+                                rounded-lg
+                                bg-lime-100
+                                text-lime-600
+                                sm:h-9 sm:w-9
+                            "
+                        >
+                            <FaClock className="text-sm sm:text-base" />
+                        </div>
 
-                        <p className="mt-1 text-2xl font-black text-violet-700">
+                        <span
+                            className="
+                                truncate
+                                text-[10px]
+                                font-bold
+                                uppercase
+                                tracking-wide
+                                text-lime-600
+                                sm:text-xs
+                            "
+                        >
+                            Tổng lượt mở
+                        </span>
+
+                        <span
+                            className="
+                                ml-auto shrink-0
+                                text-base
+                                font-black
+                                leading-none
+                                text-lime-700
+                                sm:text-xl
+                            "
+                        >
                             {Number(
-                                summary.totalViews ||
-                                0
-                            ).toLocaleString(
-                                "vi-VN"
-                            )}
-                        </p>
+                                summary.totalViews || 0
+                            ).toLocaleString("vi-VN")}
+                        </span>
                     </div>
                 </div>
 
-                {/* ==========================
-            NỘI DUNG
-        ========================== */}
-                <div className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-6">
+                {/* =====================================================
+                    NỘI DUNG
+                ====================================================== */}
+                <div
+                    className="
+                        min-h-0 flex-1
+                        overflow-y-auto
+                        bg-slate-50/40
+                        p-3
+                        sm:p-6
+                    "
+                >
                     {loading ? (
-                        <div className="flex min-h-[220px] flex-col items-center justify-center sm:min-h-[280px]">
-                            <div className="h-9 w-9 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600 sm:h-10 sm:w-10" />
+                        <div
+                            className="
+                                flex min-h-[220px]
+                                flex-col
+                                items-center
+                                justify-center
+                                sm:min-h-[280px]
+                            "
+                        >
+                            <div
+                                className="
+                                    h-9 w-9
+                                    animate-spin
+                                    rounded-full
+                                    border-4
+                                    border-emerald-100
+                                    border-t-emerald-600
+                                    sm:h-10 sm:w-10
+                                "
+                            />
 
-                            <p className="mt-3 text-xs font-semibold text-slate-500 sm:mt-4 sm:text-sm">
+                            <p
+                                className="
+                                    mt-3
+                                    text-xs
+                                    font-semibold
+                                    text-slate-500
+                                    sm:mt-4 sm:text-sm
+                                "
+                            >
                                 Đang tải dữ liệu...
                             </p>
                         </div>
-                    ) : safePeople.length ===
-                        0 ? (
-                        <div className="flex min-h-[220px] flex-col items-center justify-center text-center sm:min-h-[280px]">
+                    ) : safePeople.length === 0 ? (
+                        <div
+                            className="
+                                flex min-h-[220px]
+                                flex-col
+                                items-center
+                                justify-center
+                                text-center
+                                sm:min-h-[280px]
+                            "
+                        >
                             <div className="text-4xl sm:text-5xl">
                                 👀
                             </div>
 
-                            <h3 className="mt-3 text-base font-bold text-slate-800 sm:mt-4 sm:text-lg">
+                            <h3
+                                className="
+                                    mt-3
+                                    text-base
+                                    font-bold
+                                    text-slate-800
+                                    sm:mt-4 sm:text-lg
+                                "
+                            >
                                 Không có lượt xem
                             </h3>
 
-                            <p className="mt-1.5 text-xs text-slate-500 sm:mt-2 sm:text-sm">
+                            <p
+                                className="
+                                    mt-1.5
+                                    text-xs
+                                    text-slate-500
+                                    sm:mt-2 sm:text-sm
+                                "
+                            >
                                 Không có album nào được mở ngày{" "}
-                                <strong>
+                                <strong className="text-emerald-600">
                                     {formatDate(
                                         selectedDate
                                     )}
@@ -538,11 +845,32 @@ function TodayAlbumViewsModal({
 
                                     return (
                                         <article
-                                            key={person.id}
-                                            className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm sm:rounded-2xl"
+                                            key={
+                                                person.id
+                                            }
+                                            className="
+                                                overflow-hidden
+                                                rounded-2xl
+                                                border
+                                                border-slate-200
+                                                bg-white
+                                                shadow-sm
+                                                transition
+                                                hover:border-emerald-200
+                                                hover:shadow-md
+                                            "
                                         >
                                             {/* Người */}
-                                            <div className="flex items-center gap-3 p-3 sm:p-4">
+                                            <div
+                                                className="
+                                                    flex
+                                                    items-center
+                                                    gap-3
+                                                    p-3
+                                                    sm:p-4
+                                                "
+                                            >
+                                                {/* Avatar - ĐÃ BỎ CHẤM XANH */}
                                                 <img
                                                     src={
                                                         person.avatar ||
@@ -555,37 +883,86 @@ function TodayAlbumViewsModal({
                                                     onError={
                                                         handleImageError
                                                     }
-                                                    className="h-11 w-11 shrink-0 rounded-full border border-slate-200 object-cover shadow-sm sm:h-14 sm:w-14"
+                                                    className="
+                                                        h-11 w-11
+                                                        shrink-0
+                                                        rounded-full
+                                                        border
+                                                        border-emerald-100
+                                                        object-cover
+                                                        shadow-sm
+                                                        sm:h-14 sm:w-14
+                                                    "
                                                 />
 
                                                 <div className="min-w-0 flex-1">
-                                                    <h3 className="truncate text-sm font-bold text-slate-800 sm:text-base">
+                                                    <h3
+                                                        className="
+                                                            truncate
+                                                            text-sm
+                                                            font-bold
+                                                            text-slate-800
+                                                            sm:text-base
+                                                        "
+                                                    >
                                                         {person.name ||
                                                             "Chưa cập nhật"}
                                                     </h3>
 
-                                                    <div className="mt-0.5 flex flex-wrap items-center gap-1.5 sm:mt-1 sm:gap-2">
-                                                        {/* Lượt mở hôm nay */}
-                                                        <div className="flex items-center gap-1.5 text-xs text-indigo-600 sm:gap-2 sm:text-sm">
+                                                    <div
+                                                        className="
+                                                            mt-1
+                                                            flex flex-wrap
+                                                            items-center
+                                                            gap-1.5
+                                                            sm:gap-2
+                                                        "
+                                                    >
+                                                        <div
+                                                            className="
+                                                                flex
+                                                                items-center
+                                                                gap-1.5
+                                                                text-xs
+                                                                text-emerald-600
+                                                                sm:gap-2
+                                                                sm:text-sm
+                                                            "
+                                                        >
                                                             <FaEye />
 
                                                             <span className="font-semibold">
                                                                 {Number(
-                                                                    person.todayViews || 0
-                                                                ).toLocaleString("vi-VN")}{" "}
+                                                                    person.todayViews ||
+                                                                        0
+                                                                ).toLocaleString(
+                                                                    "vi-VN"
+                                                                )}{" "}
                                                                 lượt mở hôm nay
                                                             </span>
                                                         </div>
 
-                                                        {/* Tổng lượt xem album */}
-                                                        <span className="flex font-semibold items-center gap-1.5 text-xs text-indigo-600 sm:gap-2 sm:text-sm">
+                                                        <span
+                                                            className="
+                                                                flex
+                                                                items-center
+                                                                gap-1.5
+                                                                text-xs
+                                                                font-semibold
+                                                                text-lime-600
+                                                                sm:gap-2
+                                                                sm:text-sm
+                                                            "
+                                                        >
                                                             - Tổng{" "}
                                                             {Number(
                                                                 person.totalViews ||
-                                                                person.albumViews ||
-                                                                person.viewCount ||
-                                                                0
-                                                            ).toLocaleString("vi-VN")}{" "}
+                                                                    person.albumViews ||
+                                                                    person.viewCount ||
+                                                                    0
+                                                            ).toLocaleString(
+                                                                "vi-VN"
+                                                            )}{" "}
                                                             lượt
                                                         </span>
                                                     </div>
@@ -593,17 +970,56 @@ function TodayAlbumViewsModal({
                                             </div>
 
                                             {/* Chi tiết */}
-                                            <div className="border-t border-slate-100 bg-slate-50/60 p-3 sm:p-4">
-                                                <div className="mb-2 flex items-center gap-2 sm:mb-3">
-                                                    <FaClock className="text-blue-500" />
+                                            <div
+                                                className="
+                                                    border-t
+                                                    border-emerald-100
+                                                    bg-gradient-to-r
+                                                    from-emerald-50/60
+                                                    via-white
+                                                    to-lime-50/50
+                                                    p-3
+                                                    sm:p-4
+                                                "
+                                            >
+                                                <div
+                                                    className="
+                                                        mb-2
+                                                        flex
+                                                        items-center
+                                                        gap-2
+                                                        sm:mb-3
+                                                    "
+                                                >
+                                                    <div
+                                                        className="
+                                                            flex h-7 w-7
+                                                            items-center
+                                                            justify-center
+                                                            rounded-lg
+                                                            bg-emerald-100
+                                                            text-emerald-600
+                                                        "
+                                                    >
+                                                        <FaClock className="text-xs" />
+                                                    </div>
 
-                                                    <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500 sm:text-xs">
+                                                    <p
+                                                        className="
+                                                            text-[10px]
+                                                            font-bold
+                                                            uppercase
+                                                            tracking-wide
+                                                            text-emerald-600
+                                                            sm:text-xs
+                                                        "
+                                                    >
                                                         Chi tiết lượt mở
                                                     </p>
                                                 </div>
 
                                                 {viewDetails.length >
-                                                    0 ? (
+                                                0 ? (
                                                     <div className="space-y-2">
                                                         {[
                                                             ...viewDetails,
@@ -639,21 +1055,78 @@ function TodayAlbumViewsModal({
                                                                     return (
                                                                         <div
                                                                             key={`${person.id}-${viewedAt}-${index}`}
-                                                                            className="rounded-lg border border-slate-200 bg-white p-2.5 sm:rounded-xl sm:p-3"
+                                                                            className="
+                                                                                rounded-xl
+                                                                                border
+                                                                                border-slate-200
+                                                                                bg-white
+                                                                                p-2.5
+                                                                                shadow-sm
+                                                                                sm:p-3
+                                                                            "
                                                                         >
-                                                                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-                                                                                {/* Giờ */}
-                                                                                <div className="flex items-center gap-2">
-                                                                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-sm text-blue-600 sm:h-9 sm:w-9 sm:text-base">
+                                                                            <div
+                                                                                className="
+                                                                                    flex
+                                                                                    flex-col
+                                                                                    gap-2
+                                                                                    sm:flex-row
+                                                                                    sm:items-center
+                                                                                    sm:justify-between
+                                                                                    sm:gap-3
+                                                                                "
+                                                                            >
+                                                                                {/* Thời gian */}
+                                                                                <div
+                                                                                    className="
+                                                                                        flex
+                                                                                        shrink-0
+                                                                                        items-center
+                                                                                        gap-1.5
+                                                                                        sm:gap-2
+                                                                                    "
+                                                                                >
+                                                                                    <div
+                                                                                        className="
+                                                                                            flex h-8 w-8
+                                                                                            shrink-0
+                                                                                            items-center
+                                                                                            justify-center
+                                                                                            rounded-lg
+                                                                                            bg-emerald-100
+                                                                                            text-sm
+                                                                                            text-emerald-600
+                                                                                            sm:h-9 sm:w-9
+                                                                                            sm:text-base
+                                                                                        "
+                                                                                    >
                                                                                         <FaClock />
                                                                                     </div>
 
                                                                                     <div>
-                                                                                        <p className="text-[9px] font-bold uppercase tracking-wide text-slate-400 sm:text-[10px]">
+                                                                                        <p
+                                                                                            className="
+                                                                                                hidden
+                                                                                                text-[9px]
+                                                                                                font-bold
+                                                                                                uppercase
+                                                                                                tracking-wide
+                                                                                                text-slate-400
+                                                                                                sm:block
+                                                                                                sm:text-[10px]
+                                                                                            "
+                                                                                        >
                                                                                             Thời gian
                                                                                         </p>
 
-                                                                                        <p className="text-xs font-black text-slate-800 sm:text-sm">
+                                                                                        <p
+                                                                                            className="
+                                                                                                text-xs
+                                                                                                font-black
+                                                                                                text-slate-800
+                                                                                                sm:text-sm
+                                                                                            "
+                                                                                        >
                                                                                             {formatTime(
                                                                                                 viewedAt
                                                                                             )}
@@ -662,28 +1135,103 @@ function TodayAlbumViewsModal({
                                                                                 </div>
 
                                                                                 {/* Thiết bị */}
-                                                                                <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                                                                                    <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-1 text-[10px] font-semibold text-blue-700 sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-xs">
+                                                                                <div
+                                                                                    className="
+                                                                                        flex
+                                                                                        min-w-0
+                                                                                        flex-wrap
+                                                                                        gap-1.5
+                                                                                        sm:flex-none
+                                                                                        sm:gap-2
+                                                                                    "
+                                                                                >
+                                                                                    {/* Browser */}
+                                                                                    <span
+                                                                                        className="
+                                                                                            inline-flex
+                                                                                            min-w-0
+                                                                                            items-center
+                                                                                            gap-1
+                                                                                            rounded-full
+                                                                                            bg-emerald-100
+                                                                                            px-2 py-1
+                                                                                            text-[10px]
+                                                                                            font-semibold
+                                                                                            text-emerald-700
+                                                                                            sm:gap-1.5
+                                                                                            sm:px-3
+                                                                                            sm:py-1.5
+                                                                                            sm:text-xs
+                                                                                        "
+                                                                                    >
                                                                                         {getBrowserIcon(
                                                                                             browser
                                                                                         )}
 
-                                                                                        {browser}
+                                                                                        <span className="truncate">
+                                                                                            {
+                                                                                                browser
+                                                                                            }
+                                                                                        </span>
                                                                                     </span>
 
-                                                                                    <span className="inline-flex max-w-full items-center gap-1 rounded-full bg-violet-100 px-2 py-1 text-[10px] font-semibold text-violet-700 sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-xs">
+                                                                                    {/* Device */}
+                                                                                    <span
+                                                                                        className="
+                                                                                            inline-flex
+                                                                                            min-w-0
+                                                                                            max-w-[150px]
+                                                                                            items-center
+                                                                                            gap-1
+                                                                                            rounded-full
+                                                                                            bg-lime-100
+                                                                                            px-2 py-1
+                                                                                            text-[10px]
+                                                                                            font-semibold
+                                                                                            text-lime-700
+                                                                                            sm:max-w-none
+                                                                                            sm:gap-1.5
+                                                                                            sm:px-3
+                                                                                            sm:py-1.5
+                                                                                            sm:text-xs
+                                                                                        "
+                                                                                    >
                                                                                         {getDeviceIcon(
                                                                                             deviceType
                                                                                         )}
 
                                                                                         <span className="truncate">
-                                                                                            {deviceName}
+                                                                                            {
+                                                                                                deviceName
+                                                                                            }
                                                                                         </span>
                                                                                     </span>
 
+                                                                                    {/* OS */}
                                                                                     {os && (
-                                                                                        <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-semibold text-emerald-700 sm:px-3 sm:py-1.5 sm:text-xs">
-                                                                                            {os}
+                                                                                        <span
+                                                                                            className="
+                                                                                                inline-flex
+                                                                                                min-w-0
+                                                                                                max-w-[100px]
+                                                                                                items-center
+                                                                                                rounded-full
+                                                                                                bg-teal-100
+                                                                                                px-2 py-1
+                                                                                                text-[10px]
+                                                                                                font-semibold
+                                                                                                text-teal-700
+                                                                                                sm:max-w-none
+                                                                                                sm:px-3
+                                                                                                sm:py-1.5
+                                                                                                sm:text-xs
+                                                                                            "
+                                                                                        >
+                                                                                            <span className="truncate">
+                                                                                                {
+                                                                                                    os
+                                                                                                }
+                                                                                            </span>
                                                                                         </span>
                                                                                     )}
                                                                                 </div>
@@ -694,7 +1242,7 @@ function TodayAlbumViewsModal({
                                                             )}
                                                     </div>
                                                 ) : viewTimes.length >
-                                                    0 ? (
+                                                  0 ? (
                                                     <div className="flex flex-wrap gap-1.5 sm:gap-2">
                                                         {[
                                                             ...viewTimes,
@@ -707,7 +1255,21 @@ function TodayAlbumViewsModal({
                                                                 ) => (
                                                                     <span
                                                                         key={`${person.id}-${viewedAt}-${index}`}
-                                                                        className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-1 text-[10px] font-semibold text-blue-700 sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-xs"
+                                                                        className="
+                                                                            inline-flex
+                                                                            items-center
+                                                                            gap-1
+                                                                            rounded-full
+                                                                            bg-emerald-50
+                                                                            px-2 py-1
+                                                                            text-[10px]
+                                                                            font-semibold
+                                                                            text-emerald-700
+                                                                            sm:gap-1.5
+                                                                            sm:px-3
+                                                                            sm:py-1.5
+                                                                            sm:text-xs
+                                                                        "
                                                                     >
                                                                         <FaClock />
 
@@ -719,7 +1281,13 @@ function TodayAlbumViewsModal({
                                                             )}
                                                     </div>
                                                 ) : (
-                                                    <p className="text-xs text-slate-400 sm:text-sm">
+                                                    <p
+                                                        className="
+                                                            text-xs
+                                                            text-slate-400
+                                                            sm:text-sm
+                                                        "
+                                                    >
                                                         Chưa có dữ liệu chi tiết.
                                                     </p>
                                                 )}
@@ -732,15 +1300,38 @@ function TodayAlbumViewsModal({
                     )}
                 </div>
 
-                {/* ==========================
-            FOOTER
-            Mobile nhỏ hơn, desktop giữ nguyên
-        ========================== */}
-                <div className="shrink-0 border-t border-slate-200 bg-white p-2.5 sm:p-4 sm:px-6">
+                {/* =====================================================
+                    FOOTER
+                ====================================================== */}
+                <div
+                    className="
+                        shrink-0
+                        border-t border-slate-200
+                        bg-white
+                        p-2.5
+                        sm:p-4 sm:px-6
+                    "
+                >
                     <button
                         type="button"
                         onClick={onClose}
-                        className="flex h-10 w-full items-center justify-center rounded-lg bg-slate-100 px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-200 sm:min-h-[48px] sm:rounded-xl sm:px-5 sm:text-base"
+                        className="
+                            flex h-10 w-full
+                            items-center justify-center
+                            rounded-xl
+                            bg-slate-100
+                            px-4
+                            text-sm
+                            font-semibold
+                            text-slate-700
+                            transition
+                            hover:bg-emerald-50
+                            hover:text-emerald-700
+                            active:scale-[0.99]
+                            sm:min-h-[48px]
+                            sm:px-5
+                            sm:text-base
+                        "
                     >
                         Đóng
                     </button>

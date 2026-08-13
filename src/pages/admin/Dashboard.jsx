@@ -12,6 +12,7 @@ import DashboardStats from "../../components/admin/DashboardStats";
 import DashboardActions from "../../components/admin/DashboardActions";
 import AnnouncementManager from "../../components/admin/AnnouncementManager";
 import HomeMusicManager from "../../components/admin/HomeMusicManager";
+import { exportExcel } from "../../components/admin/ExportExcel";
 
 function Dashboard() {
   const [stats, setStats] = useState({
@@ -202,63 +203,6 @@ function Dashboard() {
     }
   };
 
-  const handleExportExcel = async () => {
-    try {
-      const response = await api.get("/admin/export-excel", {
-        responseType: "blob",
-      });
-
-      const contentType = response.headers["content-type"] || "";
-
-      if (
-        !contentType.includes(
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
-      ) {
-        const errorText = await response.data.text();
-
-        console.error("Phản hồi không phải Excel:", errorText);
-
-        alert("Máy chủ không trả về file Excel hợp lệ.");
-        return;
-      }
-
-      const blob = new Blob([response.data], {
-        type: contentType,
-      });
-
-      const downloadUrl = window.URL.createObjectURL(blob);
-
-      const link = document.createElement("a");
-
-      link.href = downloadUrl;
-      link.download = `DanhSachAlbum-${new Date()
-        .toISOString()
-        .slice(0, 10)}.xlsx`;
-
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-
-      window.URL.revokeObjectURL(downloadUrl);
-    } catch (error) {
-      console.error("Lỗi xuất Excel:", error);
-
-      if (error.response?.data instanceof Blob) {
-        try {
-          const errorText = await error.response.data.text();
-          const errorData = JSON.parse(errorText);
-
-          alert(errorData.message || "Không thể xuất file Excel.");
-          return;
-        } catch {
-          // Bỏ qua nếu phản hồi không phải JSON.
-        }
-      }
-
-      alert("Không thể xuất file Excel. Vui lòng thử lại.");
-    }
-  };
 
   const [
     showTodayAlbumViewsModal,
@@ -566,7 +510,7 @@ function Dashboard() {
             onManageMusic={() =>
               setShowHomeMusicManager(true)
             }
-            onExportExcel={handleExportExcel}
+            onExportExcel={exportExcel}
             onAdd={handleAdd}
           />
         </div>
