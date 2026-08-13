@@ -870,7 +870,7 @@ function TodayAlbumViewsModal({
                                                     sm:p-4
                                                 "
                                             >
-                                                {/* Avatar - ĐÃ BỎ CHẤM XANH */}
+                                                {/* Avatar */}
                                                 <img
                                                     src={
                                                         person.avatar ||
@@ -1065,177 +1065,62 @@ function TodayAlbumViewsModal({
                                                                                 sm:p-3
                                                                             "
                                                                         >
-                                                                            <div
-                                                                                className="
-                                                                                    flex
-                                                                                    flex-col
-                                                                                    gap-2
-                                                                                    sm:flex-row
-                                                                                    sm:items-center
-                                                                                    sm:justify-between
-                                                                                    sm:gap-3
-                                                                                "
-                                                                            >
-                                                                                {/* Thời gian */}
-                                                                                <div
-                                                                                    className="
-                                                                                        flex
-                                                                                        shrink-0
-                                                                                        items-center
-                                                                                        gap-1.5
-                                                                                        sm:gap-2
-                                                                                    "
-                                                                                >
-                                                                                    <div
-                                                                                        className="
-                                                                                            flex h-8 w-8
-                                                                                            shrink-0
-                                                                                            items-center
-                                                                                            justify-center
-                                                                                            rounded-lg
-                                                                                            bg-emerald-100
-                                                                                            text-sm
-                                                                                            text-emerald-600
-                                                                                            sm:h-9 sm:w-9
-                                                                                            sm:text-base
-                                                                                        "
-                                                                                    >
-                                                                                        <FaClock />
-                                                                                    </div>
+                                                                            <div className="flex items-center justify-between gap-2 sm:gap-3">
+    {/* =========================
+        THỜI GIAN
+        MOBILE: chỉ icon + giờ
+        DESKTOP: icon + "Thời gian" + giờ
+    ========================= */}
+    <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-sm text-blue-600 sm:h-9 sm:w-9 sm:text-base">
+            <FaClock />
+        </div>
 
-                                                                                    <div>
-                                                                                        <p
-                                                                                            className="
-                                                                                                hidden
-                                                                                                text-[9px]
-                                                                                                font-bold
-                                                                                                uppercase
-                                                                                                tracking-wide
-                                                                                                text-slate-400
-                                                                                                sm:block
-                                                                                                sm:text-[10px]
-                                                                                            "
-                                                                                        >
-                                                                                            Thời gian
-                                                                                        </p>
+        <div>
+            {/* Chỉ ẩn chữ "Thời gian" trên mobile */}
+            <p className="hidden text-[9px] font-bold uppercase tracking-wide text-slate-400 sm:block sm:text-[10px]">
+                Thời gian
+            </p>
 
-                                                                                        <p
-                                                                                            className="
-                                                                                                text-xs
-                                                                                                font-black
-                                                                                                text-slate-800
-                                                                                                sm:text-sm
-                                                                                            "
-                                                                                        >
-                                                                                            {formatTime(
-                                                                                                viewedAt
-                                                                                            )}
-                                                                                        </p>
-                                                                                    </div>
-                                                                                </div>
+            <p className="text-xs font-black text-slate-800 sm:text-sm">
+                {formatTime(viewedAt)}
+            </p>
+        </div>
+    </div>
 
-                                                                                {/* Thiết bị */}
-                                                                                <div
-                                                                                    className="
-                                                                                        flex
-                                                                                        min-w-0
-                                                                                        flex-wrap
-                                                                                        gap-1.5
-                                                                                        sm:flex-none
-                                                                                        sm:gap-2
-                                                                                    "
-                                                                                >
-                                                                                    {/* Browser */}
-                                                                                    <span
-                                                                                        className="
-                                                                                            inline-flex
-                                                                                            min-w-0
-                                                                                            items-center
-                                                                                            gap-1
-                                                                                            rounded-full
-                                                                                            bg-emerald-100
-                                                                                            px-2 py-1
-                                                                                            text-[10px]
-                                                                                            font-semibold
-                                                                                            text-emerald-700
-                                                                                            sm:gap-1.5
-                                                                                            sm:px-3
-                                                                                            sm:py-1.5
-                                                                                            sm:text-xs
-                                                                                        "
-                                                                                    >
-                                                                                        {getBrowserIcon(
-                                                                                            browser
-                                                                                        )}
+    {/* =========================
+        THIẾT BỊ
+    ========================= */}
+    <div className="flex min-w-0 flex-1 justify-end gap-1.5 sm:flex-none sm:gap-2">
 
-                                                                                        <span className="truncate">
-                                                                                            {
-                                                                                                browser
-                                                                                            }
-                                                                                        </span>
-                                                                                    </span>
+        {/* TRÌNH DUYỆT */}
+        <span className="inline-flex min-w-0 items-center gap-1 rounded-full bg-blue-100 px-2 py-1 text-[10px] font-semibold text-blue-700 sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-xs">
+            {getBrowserIcon(browser)}
 
-                                                                                    {/* Device */}
-                                                                                    <span
-                                                                                        className="
-                                                                                            inline-flex
-                                                                                            min-w-0
-                                                                                            max-w-[150px]
-                                                                                            items-center
-                                                                                            gap-1
-                                                                                            rounded-full
-                                                                                            bg-lime-100
-                                                                                            px-2 py-1
-                                                                                            text-[10px]
-                                                                                            font-semibold
-                                                                                            text-lime-700
-                                                                                            sm:max-w-none
-                                                                                            sm:gap-1.5
-                                                                                            sm:px-3
-                                                                                            sm:py-1.5
-                                                                                            sm:text-xs
-                                                                                        "
-                                                                                    >
-                                                                                        {getDeviceIcon(
-                                                                                            deviceType
-                                                                                        )}
+            <span className="truncate">
+                {browser}
+            </span>
+        </span>
 
-                                                                                        <span className="truncate">
-                                                                                            {
-                                                                                                deviceName
-                                                                                            }
-                                                                                        </span>
-                                                                                    </span>
+        {/* THIẾT BỊ */}
+        <span className="inline-flex min-w-0 max-w-[140px] items-center gap-1 rounded-full bg-violet-100 px-2 py-1 text-[10px] font-semibold text-violet-700 sm:max-w-none sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-xs">
+            {getDeviceIcon(deviceType)}
 
-                                                                                    {/* OS */}
-                                                                                    {os && (
-                                                                                        <span
-                                                                                            className="
-                                                                                                inline-flex
-                                                                                                min-w-0
-                                                                                                max-w-[100px]
-                                                                                                items-center
-                                                                                                rounded-full
-                                                                                                bg-teal-100
-                                                                                                px-2 py-1
-                                                                                                text-[10px]
-                                                                                                font-semibold
-                                                                                                text-teal-700
-                                                                                                sm:max-w-none
-                                                                                                sm:px-3
-                                                                                                sm:py-1.5
-                                                                                                sm:text-xs
-                                                                                            "
-                                                                                        >
-                                                                                            <span className="truncate">
-                                                                                                {
-                                                                                                    os
-                                                                                                }
-                                                                                            </span>
-                                                                                        </span>
-                                                                                    )}
-                                                                                </div>
-                                                                            </div>
+            <span className="truncate">
+                {deviceName}
+            </span>
+        </span>
+
+        {/* HỆ ĐIỀU HÀNH */}
+        {os && (
+            <span className="inline-flex min-w-0 max-w-[90px] items-center rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-semibold text-emerald-700 sm:max-w-none sm:px-3 sm:py-1.5 sm:text-xs">
+                <span className="truncate">
+                    {os}
+                </span>
+            </span>
+        )}
+    </div>
+</div>
                                                                         </div>
                                                                     );
                                                                 }
