@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
 
 const GRADUATION_DATE = new Date("2026-09-05T08:00:00+07:00");
 
@@ -13,7 +12,7 @@ const MUSIC_TITLE = "A LITTLE DREAM OF ME";
 
 const INVITATION_ANIMATIONS = `
   /* ==========================
-     HIỆU ỨNG MỞ PHONG BÌ THƯ
+     HIỆU ỨNG MỞ PHONG BÌ THƯ (TỐI ƯU GPU CHỐNG NHÁY)
   ========================== */
   @keyframes flapOpen {
     0% {
@@ -40,22 +39,26 @@ const INVITATION_ANIMATIONS = `
     }
     100% {
       opacity: 0;
-      transform: scale(1.08);
-      filter: blur(10px);
+      transform: scale(1.05);
+      filter: blur(6px);
     }
   }
 
   .envelope-flap-opening {
     animation: flapOpen 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
     transform-origin: top center;
+    backface-visibility: hidden;
+    will-change: transform;
   }
 
   .envelope-card-rising {
     animation: cardSlideUp 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s forwards;
+    will-change: transform;
   }
 
   .envelope-fading {
     animation: envelopeFadeOut 0.6s ease-in-out 1s forwards;
+    will-change: transform, opacity, filter;
   }
 
   /* ==========================
@@ -87,10 +90,9 @@ const INVITATION_ANIMATIONS = `
   @keyframes luxuryTextIn {
     0% {
       opacity: 0;
-      transform: scale(0.96) translateY(4px);
-      filter: blur(8px);
+      transform: scale(0.98) translateY(2px);
+      filter: blur(4px);
     }
-    60% { filter: blur(0px); }
     100% {
       opacity: 1;
       transform: scale(1) translateY(0);
@@ -106,18 +108,18 @@ const INVITATION_ANIMATIONS = `
     }
     100% {
       opacity: 0;
-      transform: scale(1.03) translateY(-4px);
-      filter: blur(8px);
+      transform: scale(1.01) translateY(-2px);
+      filter: blur(4px);
     }
   }
 
   .inv-text-enter {
-    animation: luxuryTextIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: luxuryTextIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     will-change: transform, opacity, filter;
   }
 
   .inv-text-leave {
-    animation: luxuryTextOut 0.22s ease-in forwards;
+    animation: luxuryTextOut 0.2s ease-in forwards;
     will-change: transform, opacity, filter;
     pointer-events: none;
   }
@@ -411,6 +413,38 @@ function Invitation() {
     }, []);
 
     useEffect(() => {
+        let started = false;
+        const startMusic = async () => {
+            if (started) return;
+            const audio = audioRef.current;
+            if (!audio) return;
+            started = true;
+            try {
+                setMusicError("");
+                await audio.play();
+                setMusicPlaying(true);
+            } catch (error) {
+                setMusicPlaying(false);
+            }
+            removeEvents();
+        };
+
+        const removeEvents = () => {
+            window.removeEventListener("pointerdown", startMusic);
+            window.removeEventListener("touchstart", startMusic);
+            window.removeEventListener("keydown", startMusic);
+            window.removeEventListener("scroll", startMusic);
+        };
+
+        window.addEventListener("pointerdown", startMusic, { once: true });
+        window.addEventListener("touchstart", startMusic, { once: true });
+        window.addEventListener("keydown", startMusic, { once: true });
+        window.addEventListener("scroll", startMusic, { once: true, passive: true });
+
+        return removeEvents;
+    }, []);
+
+    useEffect(() => {
         localStorage.setItem("invitationLanguage", language);
         let langAttr = language;
         if (language === "zh") langAttr = "zh-CN";
@@ -563,7 +597,7 @@ function Invitation() {
                         {/* Viền trang trí màu vàng kim nhạt bên trong */}
                         <div className="absolute inset-2 pointer-events-none rounded-2xl border border-amber-300/40" />
 
-                        {/* Logo UTC (Đã thay thế icon 🎵) */}
+                        {/* Logo UTC */}
                         <div className="mx-auto flex h-25 w-25 items-center justify-center rounded-full border border-amber-300/60 bg-gradient-to-br from-blue-50 to-sky-100 p-2 shadow-sm">
                             <img
                                 src="/images/graduation-avatar.jpg"
@@ -665,7 +699,7 @@ function Invitation() {
                                 {/* Lá thiệp bên trong */}
                                 <div
                                     className={`absolute left-1/2 top-4 z-[5] h-[190px] w-[86%] -translate-x-1/2 rounded-xl bg-gradient-to-b from-white via-white to-blue-50 p-3 shadow-[0_8px_25px_rgba(30,64,175,0.12)] transition-all duration-1000 sm:h-[225px] ${isOpening
-                                        ? "-translate-y-[150px] opacity-100 sm:-translate-y-[180px]"
+                                        ? "envelope-card-rising"
                                         : "translate-y-0"
                                         }`}
                                 >
@@ -724,7 +758,7 @@ function Invitation() {
                                 {/* Nắp phong bì */}
                                 <div
                                     className={`absolute left-0 top-0 z-20 h-[125px] w-full rounded-t-2xl border-b border-amber-300/60 bg-gradient-to-br from-white via-blue-50 to-sky-100 shadow-sm transition-transform duration-1000 [transform-origin:top_center] sm:h-[150px] ${isOpening
-                                        ? "[transform:rotateX(-150deg)]"
+                                        ? "envelope-flap-opening"
                                         : ""
                                         }`}
                                     style={{
@@ -1417,7 +1451,6 @@ function Invitation() {
     );
 }
 
-
 function InformationTechnologyWatermark() {
     const desktopTechnologies = [
         {
@@ -1722,23 +1755,46 @@ function MusicController({
     onToggle,
 }) {
     return (
-        /* Đã đổi z-[90] thành z-[400] để luôn nổi lên trên cùng ngay từ đầu */
-        <div className="fixed bottom-4 right-4 z-[400] flex flex-col items-end gap-2 sm:bottom-6 sm:right-6">
+        /* Dùng flex-row-reverse để nút loa nằm bên phải, bảng tên bài hát nằm bên trái nút loa */
+        <div className="fixed bottom-3 right-3 z-[400] flex flex-row-reverse items-center gap-2.5 sm:bottom-6 sm:right-6 sm:gap-3">
+            
+            {/* Nút loa tròn */}
+            <button
+                type="button"
+                onClick={onToggle}
+                disabled={loading}
+                className="group relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/80 bg-white/95 text-blue-700 shadow-[0_8px_25px_rgba(37,99,235,0.2)] backdrop-blur-md transition duration-300 hover:scale-105 active:scale-95 disabled:cursor-wait disabled:opacity-70 sm:h-16 sm:w-16"
+                aria-label={playing ? playingLabel : pausedLabel}
+                title={playing ? playingLabel : pausedLabel}
+            >
+                {loading ? (
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-blue-200 border-t-blue-600 sm:h-6 sm:w-6 sm:border-[3px]" />
+                ) : (
+                    <span className="text-xl sm:text-3xl">
+                        {playing ? "🔊" : "🔇"}
+                    </span>
+                )}
+
+                <span className="pointer-events-none absolute bottom-[calc(100%+10px)] hidden whitespace-nowrap rounded-xl bg-blue-700 px-3 py-2 text-xs font-bold text-white opacity-0 shadow-lg transition group-hover:opacity-100 sm:block">
+                    {playing ? playingLabel : pausedLabel}
+                </span>
+            </button>
+
+            {/* Bảng hiển thị tên bài hát (nằm ngang bên trái nút loa) */}
             {playing && (
-                <div className="max-w-[220px] rounded-2xl border border-blue-200 bg-white/95 px-4 py-3 shadow-xl backdrop-blur-md">
-                    <div className="flex items-center gap-3">
-                        <div className="flex h-8 items-end gap-1">
-                            <span className="w-1.5 rounded-full bg-blue-600" />
-                            <span className="w-1.5 rounded-full bg-amber-400" />
-                            <span className="w-1.5 rounded-full bg-blue-500" />
+                <div className="max-w-[170px] rounded-xl border border-white/80 bg-white/90 px-3 py-2 shadow-lg backdrop-blur-md sm:max-w-[220px] sm:rounded-2xl sm:px-4 sm:py-3 sm:shadow-xl">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                        <div className="flex h-5 items-end gap-0.5 sm:h-8 sm:gap-1">
+                            <span className="w-1 rounded-full bg-blue-600 sm:w-1.5" />
+                            <span className="w-1 rounded-full bg-amber-400 sm:w-1.5" />
+                            <span className="w-1 rounded-full bg-blue-500 sm:w-1.5" />
                         </div>
 
                         <div className="min-w-0 text-left">
-                            <p className="truncate text-xs font-black uppercase tracking-wide text-blue-700">
+                            <p className="truncate text-[10px] font-black uppercase tracking-wide text-blue-700 sm:text-xs">
                                 {playingLabel}
                             </p>
-
-                            <p className="mt-0.5 truncate text-xs text-slate-500">
+                            <p className="truncate text-[10px] text-slate-500 sm:text-xs">
                                 {title}
                             </p>
                         </div>
@@ -1747,31 +1803,10 @@ function MusicController({
             )}
 
             {error && (
-                <div className="max-w-[240px] rounded-xl border border-red-200 bg-white/95 px-3 py-2 text-xs font-semibold text-red-600 shadow-lg backdrop-blur">
+                <div className="max-w-[200px] rounded-lg border border-red-200 bg-white/95 px-2.5 py-1.5 text-[11px] font-semibold text-red-600 shadow-md backdrop-blur sm:max-w-[240px] sm:rounded-xl sm:px-3 sm:py-2 sm:text-xs">
                     {error}
                 </div>
             )}
-
-            <button
-                type="button"
-                onClick={onToggle}
-                disabled={loading}
-                className="group flex h-14 w-14 items-center justify-center rounded-full border border-blue-200 bg-white/95 text-blue-700 shadow-[0_14px_35px_rgba(37,99,235,0.18)] backdrop-blur-md transition duration-300 hover:-translate-y-1 hover:scale-105 hover:bg-blue-50 disabled:cursor-wait disabled:opacity-70 sm:h-16 sm:w-16"
-                aria-label={playing ? playingLabel : pausedLabel}
-                title={playing ? playingLabel : pausedLabel}
-            >
-                {loading ? (
-                    <span className="h-6 w-6 animate-spin rounded-full border-[3px] border-blue-200 border-t-blue-600" />
-                ) : (
-                    <span className="text-2xl sm:text-3xl">
-                        {playing ? "🔊" : "🔇"}
-                    </span>
-                )}
-
-                <span className="pointer-events-none absolute right-[calc(100%+10px)] hidden whitespace-nowrap rounded-xl bg-blue-700 px-3 py-2 text-xs font-bold text-white opacity-0 shadow-lg transition group-hover:opacity-100 sm:block">
-                    {playing ? playingLabel : pausedLabel}
-                </span>
-            </button>
         </div>
     );
 }
