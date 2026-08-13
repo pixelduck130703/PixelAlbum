@@ -357,10 +357,9 @@ const TRANSLATIONS = {
 };
 
 function Invitation() {
-    // Popup chào mừng hiển thị đầu tiên
-    const [showMusicGuide, setShowMusicGuide] = useState(() => {
-        return !sessionStorage.getItem("music-guide");
-    });
+    // Khởi tạo trạng thái an toàn chống nháy màn hình ban đầu
+    const [isClientReady, setIsClientReady] = useState(false);
+    const [showMusicGuide, setShowMusicGuide] = useState(false);
 
     // Trạng thái mở phong bì
     const [isOpened, setIsOpened] = useState(false);
@@ -373,11 +372,22 @@ function Invitation() {
     const [musicPlaying, setMusicPlaying] = useState(false);
     const [musicLoading, setMusicLoading] = useState(false);
     const [musicError, setMusicError] = useState("");
-    const [language, setLanguage] = useState(() => {
-        return localStorage.getItem("invitationLanguage") || "vi";
-    });
+    const [language, setLanguage] = useState("vi");
     const [contentVisible, setContentVisible] = useState(true);
     const [languageChanging, setLanguageChanging] = useState(false);
+
+    // Đọc sessionStorage và localStorage ngay sau khi mount lên client
+    useEffect(() => {
+        const hasGuide = sessionStorage.getItem("music-guide");
+        if (!hasGuide) {
+            setShowMusicGuide(true);
+        }
+        const savedLang = localStorage.getItem("invitationLanguage");
+        if (savedLang && TRANSLATIONS[savedLang]) {
+            setLanguage(savedLang);
+        }
+        setIsClientReady(true);
+    }, []);
 
     const t = TRANSLATIONS[language] || TRANSLATIONS.vi;
 
@@ -445,12 +455,13 @@ function Invitation() {
     }, []);
 
     useEffect(() => {
+        if (!isClientReady) return;
         localStorage.setItem("invitationLanguage", language);
         let langAttr = language;
         if (language === "zh") langAttr = "zh-CN";
         if (language === "de") langAttr = "de-DE";
         document.documentElement.lang = langAttr;
-    }, [language]);
+    }, [language, isClientReady]);
 
     useEffect(() => {
         if (!showPhone) {
@@ -569,11 +580,16 @@ function Invitation() {
 
     const textAnimClass = contentVisible ? "inv-text-enter" : "inv-text-leave";
 
+    // Chặn hoàn toàn khung render thô ban đầu bằng lớp phủ nền sạch sẽ
+    if (!isClientReady) {
+        return <div className="fixed inset-0 bg-[#f8fbff] z-[9999]" />;
+    }
+
     return (
         <div className="utc-light-page relative min-h-screen overflow-x-hidden text-slate-900">
             <style>{INVITATION_ANIMATIONS}</style>
 
-            {/* BỘ CHUYỂN ĐỔI NGÔN NGỮ CỐ ĐỊNH Ở GÓC PHẢI TRÊN (LUÔN HIỂN THỊ TỪ ĐẦU, Z-INDEX 400 ĐỂ NẰM TRÊN CẢ POPUP & PHONG BÌ) */}
+            {/* BỘ CHUYỂN ĐỔI NGÔN NGỮ CỐ ĐỊNH Ở GÓC PHẢI TRÊN */}
             <LanguageSwitcher
                 language={language}
                 onChange={handleLanguageChange}
@@ -632,8 +648,9 @@ function Invitation() {
             {/* 2. PHONG BÌ THƯ MỜI (HIỂN THỊ SAU KHI ĐÓNG POPUP HƯỚNG DẪN) */}
             {!showMusicGuide && !isOpened && (
                 <div
-                    className={`fixed inset-0 z-[200] flex flex-col items-center justify-center overflow-hidden px-4 transition-all duration-700 ${isOpening ? "envelope-fading" : ""
-                        }`}
+                    className={`fixed inset-0 z-[200] flex flex-col items-center justify-center overflow-hidden px-4 transition-all duration-700 ${
+                        isOpening ? "envelope-fading" : ""
+                    }`}
                 >
                     <div className="absolute inset-0 bg-gradient-to-br from-white via-blue-50 to-sky-100" />
                     <div className="absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-sky-200/40 blur-[100px]" />
@@ -647,10 +664,9 @@ function Invitation() {
                     <div className="absolute bottom-[20%] right-[25%] h-2 w-2 animate-pulse rounded-full bg-blue-300/60 [animation-delay:500ms]" />
 
                     <div
-                        className={`relative z-10 flex flex-col items-center transition-all duration-700 ${isOpening
-                            ? "scale-105 opacity-0"
-                            : "scale-100 opacity-100"
-                            }`}
+                        className={`relative z-10 flex flex-col items-center transition-all duration-700 ${
+                            isOpening ? "scale-105 opacity-0" : "scale-100 opacity-100"
+                        }`}
                     >
                         {/* Tiêu đề */}
                         <div className="mb-7 text-center">
@@ -698,10 +714,9 @@ function Invitation() {
 
                                 {/* Lá thiệp bên trong */}
                                 <div
-                                    className={`absolute left-1/2 top-4 z-[5] h-[190px] w-[86%] -translate-x-1/2 rounded-xl bg-gradient-to-b from-white via-white to-blue-50 p-3 shadow-[0_8px_25px_rgba(30,64,175,0.12)] transition-all duration-1000 sm:h-[225px] ${isOpening
-                                        ? "envelope-card-rising"
-                                        : "translate-y-0"
-                                        }`}
+                                    className={`absolute left-1/2 top-4 z-[5] h-[190px] w-[86%] -translate-x-1/2 rounded-xl bg-gradient-to-b from-white via-white to-blue-50 p-3 shadow-[0_8px_25px_rgba(30,64,175,0.12)] transition-all duration-1000 sm:h-[225px] ${
+                                        isOpening ? "envelope-card-rising" : "translate-y-0"
+                                    }`}
                                 >
                                     <div className="flex h-full flex-col items-center justify-center rounded-lg border border-amber-300/60 text-center">
                                         <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-full border border-amber-300/70 bg-white shadow-sm">
@@ -757,10 +772,9 @@ function Invitation() {
 
                                 {/* Nắp phong bì */}
                                 <div
-                                    className={`absolute left-0 top-0 z-20 h-[125px] w-full rounded-t-2xl border-b border-amber-300/60 bg-gradient-to-br from-white via-blue-50 to-sky-100 shadow-sm transition-transform duration-1000 [transform-origin:top_center] sm:h-[150px] ${isOpening
-                                        ? "envelope-flap-opening"
-                                        : ""
-                                        }`}
+                                    className={`absolute left-0 top-0 z-20 h-[125px] w-full rounded-t-2xl border-b border-amber-300/60 bg-gradient-to-br from-white via-blue-50 to-sky-100 shadow-sm transition-transform duration-1000 [transform-origin:top_center] sm:h-[150px] ${
+                                        isOpening ? "envelope-flap-opening" : ""
+                                    }`}
                                     style={{
                                         clipPath:
                                             "polygon(0 0, 100% 0, 50% 100%)",
@@ -779,10 +793,11 @@ function Invitation() {
 
                                 {/* Con dấu sáp */}
                                 <div
-                                    className={`absolute left-1/2 top-[108px] z-30 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-amber-200 bg-gradient-to-br from-amber-300 via-yellow-400 to-amber-500 shadow-[0_5px_20px_rgba(245,158,11,0.28)] transition-all duration-500 sm:top-[125px] sm:h-16 sm:w-16 ${isOpening
-                                        ? "scale-75 opacity-0"
-                                        : "group-hover:scale-110"
-                                        }`}
+                                    className={`absolute left-1/2 top-[108px] z-30 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-amber-200 bg-gradient-to-br from-amber-300 via-yellow-400 to-amber-500 shadow-[0_5px_20px_rgba(245,158,11,0.28)] transition-all duration-500 sm:top-[125px] sm:h-16 sm:w-16 ${
+                                        isOpening
+                                            ? "scale-75 opacity-0"
+                                            : "group-hover:scale-110"
+                                    }`}
                                 >
                                     <div className="absolute inset-1 rounded-full border border-white/60" />
                                     <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-white p-0.5 shadow-sm sm:h-12 sm:w-12">
@@ -798,10 +813,9 @@ function Invitation() {
 
                         {/* Dòng chữ hướng dẫn */}
                         <p
-                            className={`mt-9 text-center text-xs tracking-wide text-blue-900/55 transition-all duration-500 sm:text-sm ${isOpening
-                                ? "opacity-0"
-                                : "opacity-100"
-                                } ${textAnimClass}`}
+                            className={`mt-9 text-center text-xs tracking-wide text-blue-900/55 transition-all duration-500 sm:text-sm ${
+                                isOpening ? "opacity-0" : "opacity-100"
+                            } ${textAnimClass}`}
                         >
                             {t.clickToOpen}
                         </p>
@@ -811,10 +825,9 @@ function Invitation() {
                             type="button"
                             onClick={handleOpenEnvelope}
                             disabled={isOpening}
-                            className={`group mt-4 flex items-center gap-2 rounded-full border border-amber-400 bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-400 px-7 py-3 text-xs font-bold uppercase tracking-[0.2em] text-blue-950 shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-[0_0_30px_rgba(245,158,11,0.25)] active:scale-95 disabled:pointer-events-none sm:px-8 sm:py-3.5 sm:text-sm ${isOpening
-                                ? "scale-90 opacity-0"
-                                : ""
-                                }`}
+                            className={`group mt-4 flex items-center gap-2 rounded-full border border-amber-400 bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-400 px-7 py-3 text-xs font-bold uppercase tracking-[0.2em] text-blue-950 shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-[0_0_30px_rgba(245,158,11,0.25)] active:scale-95 disabled:pointer-events-none sm:px-8 sm:py-3.5 sm:text-sm ${
+                                isOpening ? "scale-90 opacity-0" : ""
+                            }`}
                         >
                             <span className="text-base transition-transform duration-300 group-hover:-rotate-6">
                                 ✉
@@ -1451,6 +1464,7 @@ function Invitation() {
     );
 }
 
+
 function InformationTechnologyWatermark() {
     const desktopTechnologies = [
         {
@@ -1755,10 +1769,7 @@ function MusicController({
     onToggle,
 }) {
     return (
-        /* Dùng flex-row-reverse để nút loa nằm bên phải, bảng tên bài hát nằm bên trái nút loa */
-        <div className="fixed bottom-3 right-3 z-[400] flex flex-row-reverse items-center gap-2.5 sm:bottom-6 sm:right-6 sm:gap-3">
-            
-            {/* Nút loa tròn */}
+        <div className="fixed bottom-4 right-4 z-[400] flex flex-row-reverse items-center gap-2.5 sm:bottom-6 sm:right-6 sm:gap-3">
             <button
                 type="button"
                 onClick={onToggle}
@@ -1780,7 +1791,6 @@ function MusicController({
                 </span>
             </button>
 
-            {/* Bảng hiển thị tên bài hát (nằm ngang bên trái nút loa) */}
             {playing && (
                 <div className="max-w-[170px] rounded-xl border border-white/80 bg-white/90 px-3 py-2 shadow-lg backdrop-blur-md sm:max-w-[220px] sm:rounded-2xl sm:px-4 sm:py-3 sm:shadow-xl">
                     <div className="flex items-center gap-2 sm:gap-3">
@@ -1850,10 +1860,11 @@ function LanguageSwitcher({ language, onChange, disabled = false }) {
                         type="button"
                         onClick={() => onChange(item.code)}
                         disabled={disabled}
-                        className={`flex min-h-[38px] items-center gap-1 rounded-full px-2.5 text-xs font-bold transition duration-300 disabled:cursor-wait disabled:opacity-70 sm:px-3 sm:text-sm ${active
-                            ? "bg-blue-600 text-white shadow"
-                            : "text-slate-600 hover:bg-blue-50"
-                            }`}
+                        className={`flex min-h-[38px] items-center gap-1 rounded-full px-2.5 text-xs font-bold transition duration-300 disabled:cursor-wait disabled:opacity-70 sm:px-3 sm:text-sm ${
+                            active
+                                ? "bg-blue-600 text-white shadow"
+                                : "text-slate-600 hover:bg-blue-50"
+                        }`}
                         aria-label={item.ariaLabel}
                         aria-pressed={active}
                     >
@@ -1874,7 +1885,9 @@ function CountdownItem({
 }) {
     return (
         <div
-            className={`px-1 py-5 text-center sm:px-4 sm:py-7 ${withBorder ? "border-l border-blue-100" : ""}`}
+            className={`px-1 py-5 text-center sm:px-4 sm:py-7 ${
+                withBorder ? "border-l border-blue-100" : ""
+            }`}
         >
             <p className="font-serif text-3xl font-black tabular-nums text-amber-600 sm:text-5xl">
                 {String(value).padStart(2, "0")}
@@ -1918,8 +1931,9 @@ function GraduationSash({ side }) {
     return (
         <div className="relative flex h-full items-center justify-center py-6">
             <div
-                className={`relative h-[88vh] min-h-[650px] w-[104px] overflow-hidden bg-gradient-to-b from-white via-blue-50 to-blue-100 shadow-[0_20px_60px_rgba(30,64,175,0.18)] 2xl:w-[118px] ${isLeft ? "rotate-[0.8deg]" : "-rotate-[0.8deg]"
-                    }`}
+                className={`relative h-[88vh] min-h-[650px] w-[104px] overflow-hidden bg-gradient-to-b from-white via-blue-50 to-blue-100 shadow-[0_20px_60px_rgba(30,64,175,0.18)] 2xl:w-[118px] ${
+                    isLeft ? "rotate-[0.8deg]" : "-rotate-[0.8deg]"
+                }`}
                 style={{
                     clipPath:
                         "polygon(0 0, 100% 0, 100% 92%, 50% 100%, 0 92%)",
