@@ -863,12 +863,12 @@ function TodayAlbumViewsModal({
                                             {/* Người */}
                                             <div
                                                 className="
-                                                    flex
-                                                    items-center
-                                                    gap-3
-                                                    p-3
-                                                    sm:p-4
-                                                "
+        flex
+        items-center
+        gap-3
+        p-3
+        sm:p-4
+    "
                                             >
                                                 {/* Avatar */}
                                                 <img
@@ -884,87 +884,101 @@ function TodayAlbumViewsModal({
                                                         handleImageError
                                                     }
                                                     className="
-                                                        h-11 w-11
-                                                        shrink-0
-                                                        rounded-full
-                                                        border
-                                                        border-emerald-100
-                                                        object-cover
-                                                        shadow-sm
-                                                        sm:h-14 sm:w-14
-                                                    "
+            h-11 w-11
+            shrink-0
+            rounded-full
+            border
+            border-emerald-100
+            object-cover
+            shadow-sm
+            sm:h-14 sm:w-14
+        "
                                                 />
 
                                                 <div className="min-w-0 flex-1">
-                                                    <h3
-                                                        className="
-                                                            truncate
-                                                            text-sm
-                                                            font-bold
-                                                            text-slate-800
-                                                            sm:text-base
-                                                        "
-                                                    >
-                                                        {person.name ||
-                                                            "Chưa cập nhật"}
-                                                    </h3>
+                                                    {/* Hàng chứa Họ và tên (bên trái) và 2 Thẻ lượt mở (bên phải cùng hàng) */}
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <h3
+                                                            className="
+                    truncate
+                    text-sm
+                    font-bold
+                    text-slate-800
+                    sm:text-base
+                "
+                                                        >
+                                                            {person.name ||
+                                                                "Chưa cập nhật"}
+                                                        </h3>
 
-                                                    <div
-                                                        className="
-                                                            mt-1
-                                                            flex flex-wrap
-                                                            items-center
-                                                            gap-1.5
-                                                            sm:gap-2
-                                                        "
-                                                    >
+                                                        {/* 2 Thẻ badge Lượt mở hôm nay và Tổng lượt mở nằm cùng hàng với tên */}
                                                         <div
                                                             className="
-                                                                flex
-                                                                items-center
-                                                                gap-1.5
-                                                                text-xs
-                                                                text-emerald-600
-                                                                sm:gap-2
-                                                                sm:text-sm
-                                                            "
+                    flex
+                    shrink-0
+                    items-center
+                    gap-1.5
+                    sm:gap-2
+                "
                                                         >
-                                                            <FaEye />
-
-                                                            <span className="font-semibold">
-                                                                {Number(
-                                                                    person.todayViews ||
+                                                            {/* Lượt mở hôm nay */}
+                                                            <span
+                                                                className="
+                        inline-flex
+                        items-center
+                        gap-1
+                        rounded-full
+                        bg-emerald-100
+                        px-2 py-1
+                        text-[10px]
+                        font-semibold
+                        text-emerald-700
+                        sm:px-2.5
+                        sm:py-1
+                        sm:text-xs
+                    "
+                                                            >
+                                                                <FaEye />
+                                                                <span>
+                                                                    {Number(
+                                                                        person.todayViews ||
                                                                         0
-                                                                ).toLocaleString(
-                                                                    "vi-VN"
-                                                                )}{" "}
-                                                                lượt mở hôm nay
+                                                                    ).toLocaleString(
+                                                                        "vi-VN"
+                                                                    )}{" "}
+                                                                    lượt hôm nay
+                                                                </span>
+                                                            </span>
+
+                                                            {/* Tổng lượt mở */}
+                                                            <span
+                                                                className="
+                        inline-flex
+                        items-center
+                        rounded-full
+                        bg-lime-100
+                        px-2 py-1
+                        text-[10px]
+                        font-semibold
+                        text-lime-700
+                        sm:px-2.5
+                        sm:py-1
+                        sm:text-xs
+                    "
+                                                            >
+                                                                <span>
+                                                                    Tổng{" "}
+                                                                    {Number(
+                                                                        person.totalViews ||
+                                                                        person.albumViews ||
+                                                                        person.viewCount ||
+                                                                        0
+                                                                    ).toLocaleString(
+                                                                        "vi-VN"
+                                                                    )} lượt
+                                                                </span>
                                                             </span>
                                                         </div>
-
-                                                        <span
-                                                            className="
-                                                                flex
-                                                                items-center
-                                                                gap-1.5
-                                                                text-xs
-                                                                font-semibold
-                                                                text-lime-600
-                                                                sm:gap-2
-                                                                sm:text-sm
-                                                            "
-                                                        >
-                                                            - Tổng{" "}
-                                                            {Number(
-                                                                person.totalViews ||
-                                                                    person.albumViews ||
-                                                                    person.viewCount ||
-                                                                    0
-                                                            ).toLocaleString(
-                                                                "vi-VN"
-                                                            )}{" "}
-                                                            lượt
-                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1019,7 +1033,7 @@ function TodayAlbumViewsModal({
                                                 </div>
 
                                                 {viewDetails.length >
-                                                0 ? (
+                                                    0 ? (
                                                     <div className="space-y-2">
                                                         {[
                                                             ...viewDetails,
@@ -1066,68 +1080,68 @@ function TodayAlbumViewsModal({
                                                                             "
                                                                         >
                                                                             <div className="flex items-center justify-between gap-2 sm:gap-3">
-    {/* =========================
+                                                                                {/* =========================
         THỜI GIAN
         MOBILE: chỉ icon + giờ
         DESKTOP: icon + "Thời gian" + giờ
     ========================= */}
-    <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-sm text-blue-600 sm:h-9 sm:w-9 sm:text-base">
-            <FaClock />
-        </div>
+                                                                                <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+                                                                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-sm text-blue-600 sm:h-9 sm:w-9 sm:text-base">
+                                                                                        <FaClock />
+                                                                                    </div>
 
-        <div>
-            {/* Chỉ ẩn chữ "Thời gian" trên mobile */}
-            <p className="hidden text-[9px] font-bold uppercase tracking-wide text-slate-400 sm:block sm:text-[10px]">
-                Thời gian
-            </p>
+                                                                                    <div>
+                                                                                        {/* Chỉ ẩn chữ "Thời gian" trên mobile */}
+                                                                                        <p className="hidden text-[9px] font-bold uppercase tracking-wide text-slate-400 sm:block sm:text-[10px]">
+                                                                                            Thời gian
+                                                                                        </p>
 
-            <p className="text-xs font-black text-slate-800 sm:text-sm">
-                {formatTime(viewedAt)}
-            </p>
-        </div>
-    </div>
+                                                                                        <p className="text-xs font-black text-slate-800 sm:text-sm">
+                                                                                            {formatTime(viewedAt)}
+                                                                                        </p>
+                                                                                    </div>
+                                                                                </div>
 
-    {/* =========================
+                                                                                {/* =========================
         THIẾT BỊ
     ========================= */}
-    <div className="flex min-w-0 flex-1 justify-end gap-1.5 sm:flex-none sm:gap-2">
+                                                                                <div className="flex min-w-0 flex-1 justify-end gap-1.5 sm:flex-none sm:gap-2">
 
-        {/* TRÌNH DUYỆT */}
-        <span className="inline-flex min-w-0 items-center gap-1 rounded-full bg-blue-100 px-2 py-1 text-[10px] font-semibold text-blue-700 sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-xs">
-            {getBrowserIcon(browser)}
+                                                                                    {/* TRÌNH DUYỆT */}
+                                                                                    <span className="inline-flex min-w-0 items-center gap-1 rounded-full bg-blue-100 px-2 py-1 text-[10px] font-semibold text-blue-700 sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-xs">
+                                                                                        {getBrowserIcon(browser)}
 
-            <span className="truncate">
-                {browser}
-            </span>
-        </span>
+                                                                                        <span className="truncate">
+                                                                                            {browser}
+                                                                                        </span>
+                                                                                    </span>
 
-        {/* THIẾT BỊ */}
-        <span className="inline-flex min-w-0 max-w-[140px] items-center gap-1 rounded-full bg-violet-100 px-2 py-1 text-[10px] font-semibold text-violet-700 sm:max-w-none sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-xs">
-            {getDeviceIcon(deviceType)}
+                                                                                    {/* THIẾT BỊ */}
+                                                                                    <span className="inline-flex min-w-0 max-w-[140px] items-center gap-1 rounded-full bg-violet-100 px-2 py-1 text-[10px] font-semibold text-violet-700 sm:max-w-none sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-xs">
+                                                                                        {getDeviceIcon(deviceType)}
 
-            <span className="truncate">
-                {deviceName}
-            </span>
-        </span>
+                                                                                        <span className="truncate">
+                                                                                            {deviceName}
+                                                                                        </span>
+                                                                                    </span>
 
-        {/* HỆ ĐIỀU HÀNH */}
-        {os && (
-            <span className="inline-flex min-w-0 max-w-[90px] items-center rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-semibold text-emerald-700 sm:max-w-none sm:px-3 sm:py-1.5 sm:text-xs">
-                <span className="truncate">
-                    {os}
-                </span>
-            </span>
-        )}
-    </div>
-</div>
+                                                                                    {/* HỆ ĐIỀU HÀNH */}
+                                                                                    {os && (
+                                                                                        <span className="inline-flex min-w-0 max-w-[90px] items-center rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-semibold text-emerald-700 sm:max-w-none sm:px-3 sm:py-1.5 sm:text-xs">
+                                                                                            <span className="truncate">
+                                                                                                {os}
+                                                                                            </span>
+                                                                                        </span>
+                                                                                    )}
+                                                                                </div>
+                                                                            </div>
                                                                         </div>
                                                                     );
                                                                 }
                                                             )}
                                                     </div>
                                                 ) : viewTimes.length >
-                                                  0 ? (
+                                                    0 ? (
                                                     <div className="flex flex-wrap gap-1.5 sm:gap-2">
                                                         {[
                                                             ...viewTimes,
