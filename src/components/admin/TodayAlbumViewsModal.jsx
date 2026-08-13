@@ -946,7 +946,7 @@ function TodayAlbumViewsModal({
                                                                     ).toLocaleString(
                                                                         "vi-VN"
                                                                     )}{" "}
-                                                                    lượt hôm nay
+                                                                    lượt trong ngày
                                                                 </span>
                                                             </span>
 
