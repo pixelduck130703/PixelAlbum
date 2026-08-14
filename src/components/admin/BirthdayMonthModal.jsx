@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 function BirthdayMonthModal({
   open,
   selectedMonth,
@@ -6,6 +7,18 @@ function BirthdayMonthModal({
   onClose,
   formatDate,
 }) {
+  useEffect(() => {
+    if (!open) return;
+
+    const originalOverflow = document.body.style.overflow;
+
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [open]);
+
   if (!open) return null;
 
   return (

@@ -56,6 +56,18 @@ function HomeMusicManager({
   useEffect(() => {
     if (!open) return;
 
+    const originalOverflow = document.body.style.overflow;
+
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+
     loadMusic();
 
     return () => {

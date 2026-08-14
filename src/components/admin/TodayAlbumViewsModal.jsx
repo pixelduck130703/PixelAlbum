@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
     FaEye,
     FaClock,
@@ -26,6 +27,18 @@ function TodayAlbumViewsModal({
     onDateChange,
     onClose,
 }) {
+    useEffect(() => {
+        if (!open) return;
+
+        const originalOverflow = document.body.style.overflow;
+
+        document.body.style.overflow = "hidden";
+
+        return () => {
+            document.body.style.overflow = originalOverflow;
+        };
+    }, [open]);
+
     if (!open) return null;
 
     const safePeople = Array.isArray(people) ? people : [];
@@ -98,10 +111,11 @@ function TodayAlbumViewsModal({
         event.currentTarget.src = FALLBACK_AVATAR;
     };
 
+
     return (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/60 p-2 backdrop-blur-sm sm:p-5" onClick={onClose}>
             <div className="flex max-h-[96dvh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl sm:max-h-[94dvh] sm:rounded-3xl" onClick={(event) => event.stopPropagation()}>
-                
+
                 {/* HEADER */}
                 <div className="shrink-0 bg-gradient-to-r from-emerald-600 via-green-600 to-lime-600 px-4 py-4 text-white sm:px-6 sm:py-5">
                     <div className="flex items-center justify-between gap-3">

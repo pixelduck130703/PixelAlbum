@@ -102,6 +102,8 @@ function Dashboard() {
     }
   };
 
+  
+
   useEffect(() => {
     loadTrafficChart();
   }, [chartDays]);
