@@ -12,6 +12,7 @@ const quotes = [
   "Ký ức là kho báu mà thời gian không thể đánh cắp.",
   "Mỗi người chúng ta đều là một câu chuyện đáng để lưu giữ.",
   "Những bức ảnh sẽ ở lại khi tất cả rời đi.",
+
   "Có những khoảnh khắc chỉ cần nhìn lại là đủ mỉm cười.",
   "Mỗi ngày là một trang mới trong cuốn album cuộc đời.",
   "Đừng để những kỷ niệm đẹp chỉ còn trong trí nhớ.",
@@ -31,6 +32,7 @@ const quotes = [
   "Có những bức ảnh càng cũ lại càng quý giá.",
   "Đừng ngại chụp ảnh, hãy ngại việc không còn gì để nhớ.",
   "Thời gian không quay lại, nhưng kỷ niệm thì có.",
+
   "Gia đình là nơi bắt đầu của mọi kỷ niệm đẹp.",
   "Bạn bè là những người làm cho ký ức trở nên rực rỡ hơn.",
   "Mỗi chuyến đi đều đáng được lưu giữ.",
@@ -55,7 +57,7 @@ const quotes = [
   "Đừng quên lưu lại những ngày bình thường, vì một ngày nào đó chúng sẽ trở nên đặc biệt.",
   "Mỗi khoảnh khắc đều có giá trị khi được sẻ chia.",
   "Những điều giản đơn thường tạo nên những ký ức đẹp nhất.",
-  "Album không chỉ lưu ảnh, mà còn lưu cả một quãng đời.",
+  "Album không chỉ lưu ảnh, mà còn lưu cả một quãng đời."
 ];
 
 export default function DailyQuote() {
@@ -64,17 +66,15 @@ export default function DailyQuote() {
   }, []);
 
   return (
-    <div className="relative mt-4 transform-gpu overflow-hidden rounded-2xl border border-white/80 border-t-white/95 bg-gradient-to-r from-sky-500/20 via-indigo-500/20 to-purple-500/20 p-[1px] shadow-[inset_0_1.5px_2px_rgba(255,255,255,0.95),_0_12px_32px_rgba(0,0,0,0.06)] backdrop-blur-2xl backdrop-saturate-150">
-      {/* Vệt sáng phản quang trên cùng */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90" />
-
-      <div className="flex items-center gap-3 rounded-2xl bg-white/50 px-4 py-3 backdrop-blur-md">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/60 bg-gradient-to-br from-yellow-400 to-orange-500 text-lg shadow-md shadow-orange-500/25">
+    <div className="mt-4 rounded-2xl bg-gradient-to-r from-sky-500 via-indigo-500 to-purple-500 p-[1px] shadow-md">
+      <div className="flex items-center gap-3 rounded-2xl bg-white/95 px-4 py-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 text-lg">
           ✨
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="text-sm italic font-medium leading-6 text-slate-800">
+
+          <p className="text-sm italic leading-6 text-slate-700">
             “{quote}”
           </p>
         </div>

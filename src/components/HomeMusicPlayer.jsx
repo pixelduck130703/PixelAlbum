@@ -178,7 +178,7 @@ function HomeMusicPlayer({ visible = true }) {
   return (
     <div className="fixed bottom-5 right-5 z-[9999] flex items-center gap-3">
       {playing && (
-        <div className="hidden max-w-[220px] rounded-2xl border border-white/80 border-t-white/95 bg-white/45 px-4 py-3 shadow-[inset_0_1.5px_2px_rgba(255,255,255,0.95),_0_12px_32px_rgba(0,0,0,0.08)] backdrop-blur-2xl sm:block">
+        <div className="hidden max-w-[220px] rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 shadow-xl backdrop-blur sm:block">
           <p className="text-xs font-semibold text-slate-500">
             Đang phát
           </p>
@@ -192,7 +192,7 @@ function HomeMusicPlayer({ visible = true }) {
       <button
         type="button"
         onClick={toggleMusic}
-        className="flex h-14 w-14 items-center justify-center rounded-full border border-white/80 border-t-white/95 bg-blue-600/90 text-2xl text-white shadow-[inset_0_1.5px_2px_rgba(255,255,255,0.95),_0_12px_32px_rgba(37,99,235,0.3)] backdrop-blur-2xl transition hover:scale-105 hover:bg-blue-600 active:scale-95"
+        className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-2xl text-white shadow-xl transition hover:scale-105 hover:bg-blue-700"
         title={
           playing
             ? "Tạm dừng nhạc"
