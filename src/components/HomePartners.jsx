@@ -25,7 +25,7 @@ import {
 
 function HomePartners() {
   return (
-    <section className="mt-8 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+    <section className="mt-8 overflow-hidden rounded-3xl border border-white/80 border-t-white/95 bg-white/45 shadow-[inset_0_1.5px_2px_rgba(255,255,255,0.95),_0_20px_50px_rgba(0,0,0,0.08)] backdrop-blur-2xl backdrop-saturate-150">
       <div className="px-4 py-6 sm:px-6 sm:py-8">
 
         {/* =========================
