@@ -604,8 +604,8 @@ function HomeMusicManager({
                         "
                       >
                         {previewTrackId === track.id
-                          ? "⏸ Dừng"
-                          : "▶ Nghe"}
+                          ? "⏸"
+                          : "▶"}
                       </button>
 
                       {/* SỬA */}
@@ -625,7 +625,7 @@ function HomeMusicManager({
                           hover:bg-fuchsia-100
                         "
                       >
-                        ✏️ Sửa
+                        ✏️
                       </button>
 
                       {/* XÓA */}
@@ -645,7 +645,7 @@ function HomeMusicManager({
                           hover:bg-rose-100
                         "
                       >
-                        🗑️ Xóa
+                        🗑️
                       </button>
                     </div>
                   </div>

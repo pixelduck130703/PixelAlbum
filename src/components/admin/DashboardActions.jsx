@@ -24,7 +24,7 @@ function DashboardActions({
           <span className="leading-5">
             {loadingTodayAlbumViews
               ? "Đang tải..."
-              : "Đã xem hôm nay"}
+              : "Lịch sử xem"}
           </span>
         </button>
 

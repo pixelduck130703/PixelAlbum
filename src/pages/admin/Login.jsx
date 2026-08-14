@@ -60,24 +60,32 @@ function Login() {
 
       setError(message);
       toast.error(message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-xl p-8">
+    <div className="relative min-h-screen w-full overflow-hidden bg-slate-50 flex items-center justify-center p-4">
+      {/* Các khối màu pastel phía sau tạo hiệu ứng khúc xạ kính lỏng sáng */}
+      <div className="pointer-events-none absolute -top-28 -left-28 h-96 w-96 rounded-full bg-blue-300/40 blur-[110px]" />
+      <div className="pointer-events-none absolute -bottom-28 -right-28 h-96 w-96 rounded-full bg-cyan-300/35 blur-[120px]" />
+      <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-80 w-80 rounded-full bg-emerald-200/40 blur-[100px]" />
+
+      {/* Card Liquid Glass trên nền sáng */}
+      <div className="relative w-full max-w-md rounded-3xl border border-white/70 bg-white/50 p-8 shadow-[0_20px_50px_rgba(0,0,0,0.06)] backdrop-blur-2xl backdrop-saturate-150">
         <div className="text-center">
           <div>
             <Link to="/" className="inline-block">
               <img
                 src="/images/Memories.png"
                 alt="memories"
-                className="h-20 w-auto cursor-pointer object-contain"
+                className="h-20 w-auto cursor-pointer object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.08)] transition hover:scale-105 active:scale-95"
               />
             </Link>
           </div>
 
-          <h1 className="mt-4 text-2xl font-bold text-slate-800">
+          <h1 className="mt-4 text-2xl font-bold text-slate-800 drop-shadow-sm">
             TRANG QUẢN TRỊ VIÊN
           </h1>
 
@@ -98,7 +106,7 @@ function Login() {
               value={form.username}
               onChange={handleChange}
               placeholder="Nhập tài khoản"
-              className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+              className="w-full rounded-xl border border-white/80 bg-white/60 px-4 py-3 text-slate-800 placeholder-slate-400 shadow-inner backdrop-blur-md outline-none transition focus:border-blue-500/80 focus:bg-white/80 focus:ring-4 focus:ring-blue-400/20"
             />
           </div>
 
@@ -114,13 +122,13 @@ function Login() {
                 value={form.password}
                 onChange={handleChange}
                 placeholder="Nhập mật khẩu"
-                className="w-full rounded-xl border border-slate-300 px-4 py-3 pr-12 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                className="w-full rounded-xl border border-white/80 bg-white/60 px-4 py-3 pr-12 text-slate-800 placeholder-slate-400 shadow-inner backdrop-blur-md outline-none transition focus:border-blue-500/80 focus:bg-white/80 focus:ring-4 focus:ring-blue-400/20"
               />
 
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-slate-500 transition hover:text-blue-600"
+                className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-slate-400 transition hover:text-blue-600"
               >
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
               </button>
@@ -128,7 +136,7 @@ function Login() {
           </div>
 
           {error && (
-            <div className="rounded-xl bg-red-50 p-3 text-sm text-red-600">
+            <div className="rounded-xl border border-red-200/80 bg-red-50/70 p-3 text-sm text-red-600 backdrop-blur-md">
               {error}
             </div>
           )}
@@ -138,7 +146,7 @@ function Login() {
               type="button"
               onClick={() => navigate("/")}
               disabled={loading}
-              className="w-full rounded-xl bg-slate-200 py-3 font-semibold text-slate-700 transition hover:bg-slate-300 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-xl border border-white/80 bg-white/60 py-3 font-semibold text-slate-700 shadow-sm backdrop-blur-md transition hover:border-slate-200 hover:bg-white/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
             >
               Hủy
             </button>
@@ -146,7 +154,7 @@ function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-xl bg-blue-600 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-xl border border-blue-400/30 bg-blue-600/90 py-3 font-semibold text-white shadow-lg shadow-blue-500/25 backdrop-blur-md transition hover:bg-blue-600 hover:shadow-blue-500/35 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? "Đang đăng nhập..." : "Đăng nhập"}
             </button>

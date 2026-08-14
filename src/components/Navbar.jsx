@@ -14,7 +14,7 @@ function Navbar() {
 
   return (
     <nav className="border-b border-slate-200 bg-white shadow-sm">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4 sm:px-5">
+      <div className="relative mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4 sm:px-5">
         {/* Logo */}
         <div className="min-w-0">
           <Link to="/" className="inline-block">
@@ -31,8 +31,14 @@ function Navbar() {
         </div>
 
         {/* Đồng hồ */}
-        <div className="hidden text-center sm:block">
-          <p className="text-2xl font-bold text-slate-800">
+        <div
+          className="
+            absolute left-1/2 top-1/2
+            -translate-x-1/2 -translate-y-1/2
+            text-center
+          "
+        >
+          <p className="text-base font-bold text-slate-800 sm:text-2xl">
             {currentTime.toLocaleTimeString("vi-VN")}
           </p>
         </div>
@@ -45,7 +51,8 @@ function Navbar() {
             className="rounded-xl bg-pink-500 px-3 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-pink-600 hover:shadow-md sm:px-5"
           >
             💌 Thiệp mời
-          </Link> */}
+          </Link>
+          */}
 
           <Link
             to="/admin/login"
