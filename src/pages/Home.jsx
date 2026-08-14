@@ -4,7 +4,6 @@ import api from "../services/api";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import SearchBox from "../components/SearchBox";
-import PersonCard from "../components/PersonCard";
 import AboutMe from "../components/AboutMe";
 import FeedbackForm from "../components/FeedbackForm";
 import DonateCard from "../components/DonateCard";
@@ -16,7 +15,6 @@ import { getTodayVietnamHolidays } from "../utils/vietnamHolidays";
 import HomeStatistics from "../components/HomeStatistics";
 import DailyQuote from "../components/DailyQuote";
 import Announcement from "../components/Announcement";
-import ScrollReveal from "../components/ScrollReveal";
 import WelcomePopup from "../components/WelcomePopup";
 import HomePartners from "../components/HomePartners";
 
@@ -39,13 +37,32 @@ const solarToday = Solar.fromYmd(
   today.getDate()
 );
 
-
 const heavenlyStems = {
-  "甲": "Giáp", "乙": "Ất", "丙": "Bính", "丁": "Đinh", "戊": "Mậu", "己": "Kỷ", "庚": "Canh", "辛": "Tân", "壬": "Nhâm", "癸": "Quý",
+  甲: "Giáp",
+  乙: "Ất",
+  丙: "Bính",
+  丁: "Đinh",
+  戊: "Mậu",
+  己: "Kỷ",
+  庚: "Canh",
+  辛: "Tân",
+  壬: "Nhâm",
+  癸: "Quý",
 };
 
 const earthlyBranches = {
-  "子": "Tý", "丑": "Sửu", "寅": "Dần", "卯": "Mão", "辰": "Thìn", "巳": "Tỵ", "午": "Ngọ", "未": "Mùi", "申": "Thân", "酉": "Dậu", "戌": "Tuất", "亥": "Hợi",
+  子: "Tý",
+  丑: "Sửu",
+  寅: "Dần",
+  卯: "Mão",
+  辰: "Thìn",
+  巳: "Tỵ",
+  午: "Ngọ",
+  未: "Mùi",
+  申: "Thân",
+  酉: "Dậu",
+  戌: "Tuất",
+  亥: "Hợi",
 };
 
 const lunarMonth = Math.abs(lunarToday.getMonth());
@@ -64,7 +81,15 @@ const yearGanZhi = lunarToday.getYearInGanZhi();
 const yearGan = heavenlyStems[lunarToday.getYearGan()];
 const yearZhi = earthlyBranches[lunarToday.getYearZhi()];
 
-const weekdays = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
+const weekdays = [
+  "Chủ Nhật",
+  "Thứ Hai",
+  "Thứ Ba",
+  "Thứ Tư",
+  "Thứ Năm",
+  "Thứ Sáu",
+  "Thứ Bảy",
+];
 
 function Home() {
   const [people, setPeople] = useState([]);
@@ -87,6 +112,11 @@ function Home() {
     updatedAt: null,
   });
 
+  /*
+   * ============================
+   * TẢI THÔNG BÁO
+   * ============================
+   */
   useEffect(() => {
     const loadAnnouncement = async () => {
       try {
@@ -109,29 +139,50 @@ function Home() {
     loadAnnouncement();
   }, []);
 
+  /*
+   * ============================
+   * LƯỢT TRUY CẬP WEBSITE
+   * ============================
+   */
   useEffect(() => {
     const loadVisits = async () => {
-      const visited = sessionStorage.getItem("websiteVisited");
+      const visited = sessionStorage.getItem(
+        "websiteVisited"
+      );
 
       try {
         if (!visited) {
-          // Đánh dấu trước khi gọi API để tránh React gọi POST 2 lần
-          sessionStorage.setItem("websiteVisited", "true");
+          // Đánh dấu trước khi gọi API
+          // để tránh React gọi POST 2 lần
+          sessionStorage.setItem(
+            "websiteVisited",
+            "true"
+          );
 
           const response = await api.post("/visits");
 
-          setVisits(Number(response.data.visits) || 0);
+          setVisits(
+            Number(response.data.visits) || 0
+          );
         } else {
           const response = await api.get("/visits");
 
-          setVisits(Number(response.data.visits) || 0);
+          setVisits(
+            Number(response.data.visits) || 0
+          );
         }
       } catch (error) {
-        console.error("Lỗi tải lượt truy cập:", error);
+        console.error(
+          "Lỗi tải lượt truy cập:",
+          error
+        );
 
-        // Nếu POST lỗi thì cho phép thử lại khi tải lại trang
+        // Nếu POST lỗi thì cho phép thử lại
+        // khi tải lại trang
         if (!visited) {
-          sessionStorage.removeItem("websiteVisited");
+          sessionStorage.removeItem(
+            "websiteVisited"
+          );
         }
 
         setVisits(0);
@@ -141,7 +192,11 @@ function Home() {
     loadVisits();
   }, []);
 
-
+  /*
+   * ============================
+   * TẢI DANH SÁCH ALBUM
+   * ============================
+   */
   useEffect(() => {
     let retryTimer;
     let cancelled = false;
@@ -155,19 +210,25 @@ function Home() {
           timeout: 90000,
         });
 
-        if (cancelled) return;
+        if (cancelled) {
+          return;
+        }
 
         setPeople(response.data);
         setLoading(false);
 
-        // Thành công thì không gọi lại nữa
         if (retryTimer) {
           clearTimeout(retryTimer);
         }
       } catch (requestError) {
-        if (cancelled) return;
+        if (cancelled) {
+          return;
+        }
 
-        console.error("Lỗi tải dữ liệu:", requestError);
+        console.error(
+          "Lỗi tải dữ liệu:",
+          requestError
+        );
 
         setError(
           "Máy chủ đang khởi động. Website sẽ tự thử lại sau 5 giây."
@@ -175,7 +236,6 @@ function Home() {
 
         setLoading(true);
 
-        // Thất bại thì thử lại sau 5 giây
         retryTimer = setTimeout(() => {
           loadPeople();
         }, 5000);
@@ -193,44 +253,63 @@ function Home() {
     };
   }, []);
 
+  /*
+   * ============================
+   * CHUẨN HÓA TEXT
+   * ============================
+   */
   function normalizeText(text) {
     return String(text || "")
       .toLowerCase()
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
       .replace(/đ/g, "d")
-      // Bỏ tất cả ký tự đặc biệt
       .replace(/[^a-z0-9\s]/g, " ")
       .replace(/\s+/g, " ")
       .trim();
   }
 
+  /*
+   * ============================
+   * KẾT QUẢ TÌM KIẾM
+   * ============================
+   */
   const results = useMemo(() => {
     if (!hasSearched) {
       return [];
     }
 
-    // Có ngày sinh: chỉ tìm theo ngày sinh, toàn không dùng tên.
+    // Có ngày sinh:
+    // chỉ tìm theo ngày sinh
     if (searchBirthday) {
       return people.filter(
-        (person) => person.birthday === searchBirthday
+        (person) =>
+          person.birthday === searchBirthday
       );
     }
 
-    // Không có ngày sinh: mới được tìm theo tên.
-    const normalizedName = normalizeText(searchName);
+    // Không có ngày sinh:
+    // mới được tìm theo tên
+    const normalizedName =
+      normalizeText(searchName);
 
     if (normalizedName) {
       return people.filter((person) => {
         const hasNoBirthday =
-          !person.birthday || person.birthday.trim() === "";
+          !person.birthday ||
+          person.birthday.trim() === "";
 
-        const personWords = normalizeText(person.name).split(" ");
-        const searchWords = normalizedName.split(" ");
+        const personWords = normalizeText(
+          person.name
+        ).split(" ");
 
-        const nameMatches = searchWords.every((word) =>
-          personWords.includes(word)
-        );
+        const searchWords =
+          normalizedName.split(" ");
+
+        const nameMatches =
+          searchWords.every((word) =>
+            personWords.includes(word)
+          );
 
         return hasNoBirthday && nameMatches;
       });
@@ -244,10 +323,22 @@ function Home() {
     hasSearched,
   ]);
 
-  const convertBirthdayToDatabaseFormat = (value) => {
-    if (!value) return "";
+  /*
+   * ============================
+   * CHUYỂN NGÀY SINH
+   * ============================
+   */
+  const convertBirthdayToDatabaseFormat = (
+    value
+  ) => {
+    if (!value) {
+      return "";
+    }
 
-    const normalized = value.trim().replace(/-/g, "/");
+    const normalized = value
+      .trim()
+      .replace(/-/g, "/");
+
     const parts = normalized.split("/");
 
     if (parts.length !== 3) {
@@ -260,20 +351,37 @@ function Home() {
       return value.trim();
     }
 
-    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+    return `${year}-${month.padStart(
+      2,
+      "0"
+    )}-${day.padStart(2, "0")}`;
   };
 
+  /*
+   * ============================
+   * TÌM KIẾM
+   * ============================
+   */
   const handleSearch = () => {
-    if (!birthdayInput && !nameInput.trim()) {
-      alert("Vui lòng nhập họ tên hoặc chọn ngày sinh.");
+    if (
+      !birthdayInput &&
+      !nameInput.trim()
+    ) {
+      alert(
+        "Vui lòng nhập họ tên hoặc chọn ngày sinh."
+      );
+
       return;
     }
 
     if (birthdayInput) {
-      // Ngày sinh luôn được ưu tiên.
+      // Ngày sinh luôn được ưu tiên
       setSearchBirthday(
-        convertBirthdayToDatabaseFormat(birthdayInput)
+        convertBirthdayToDatabaseFormat(
+          birthdayInput
+        )
       );
+
       setSearchName("");
     } else {
       setSearchBirthday("");
@@ -283,47 +391,81 @@ function Home() {
     setHasSearched(true);
   };
 
+  /*
+   * ============================
+   * XÓA TÌM KIẾM
+   * ============================
+   */
   const handleClear = () => {
     setNameInput("");
     setBirthdayInput("");
+
     setSearchName("");
     setSearchBirthday("");
+
     setHasSearched(false);
   };
 
+  /*
+   * ============================
+   * MÔ TẢ KẾT QUẢ
+   * ============================
+   */
   const searchDescription = searchBirthday
-    ? `Kết quả theo ngày sinh: ${formatDate(searchBirthday)}`
+    ? `Kết quả theo ngày sinh: ${formatDate(
+        searchBirthday
+      )}`
     : searchName
       ? `Kết quả theo tên: “${searchName}”`
       : "";
 
+  /*
+   * ============================
+   * SINH NHẬT HÔM NAY
+   * ============================
+   */
   const todayBirthdayPeople = useMemo(() => {
     const today = new Date();
 
-    const month = String(today.getMonth() + 1).padStart(2, "0");
-    const day = String(today.getDate()).padStart(2, "0");
+    const month = String(
+      today.getMonth() + 1
+    ).padStart(2, "0");
+
+    const day = String(
+      today.getDate()
+    ).padStart(2, "0");
 
     return people.filter((person) => {
       if (!person.birthday) {
         return false;
       }
 
-      return person.birthday.substring(5) === `${month}-${day}`;
+      return (
+        person.birthday.substring(5) ===
+        `${month}-${day}`
+      );
     });
   }, [people]);
 
+  /*
+   * ============================
+   * NGÀY GIỖ HÔM NAY
+   * ============================
+   */
   const todayDeathPeople = useMemo(() => {
     const today = new Date();
 
-    // Chuyển ngày hôm nay sang âm lịch
     const todayLunar = Solar.fromYmd(
       today.getFullYear(),
       today.getMonth() + 1,
       today.getDate()
     ).getLunar();
 
-    const todayLunarMonth = todayLunar.getMonth();
-    const todayLunarDay = todayLunar.getDay();
+    const todayLunarMonth =
+      todayLunar.getMonth();
+
+    const todayLunarDay =
+      todayLunar.getDay();
 
     return people
       .filter((person) => {
@@ -332,29 +474,39 @@ function Home() {
         }
 
         try {
-          // Hỗ trợ cả YYYY-MM-DD và ISO từ PostgreSQL
-          const normalizedDeathDate = String(
-            person.deathDate
-          ).slice(0, 10);
+          const normalizedDeathDate =
+            String(
+              person.deathDate
+            ).slice(0, 10);
 
-          const [year, month, day] = normalizedDeathDate
+          const [
+            year,
+            month,
+            day,
+          ] = normalizedDeathDate
             .split("-")
             .map(Number);
 
-          if (!year || !month || !day) {
+          if (
+            !year ||
+            !month ||
+            !day
+          ) {
             return false;
           }
 
-          // Chuyển ngày mất dương lịch sang âm lịch
-          const deathLunar = Solar.fromYmd(
-            year,
-            month,
-            day
-          ).getLunar();
+          const deathLunar =
+            Solar.fromYmd(
+              year,
+              month,
+              day
+            ).getLunar();
 
           return (
-            deathLunar.getMonth() === todayLunarMonth &&
-            deathLunar.getDay() === todayLunarDay
+            deathLunar.getMonth() ===
+              todayLunarMonth &&
+            deathLunar.getDay() ===
+              todayLunarDay
           );
         } catch (error) {
           console.error(
@@ -366,50 +518,88 @@ function Home() {
         }
       })
       .map((person) => {
-        const normalizedDeathDate = String(
-          person.deathDate
-        ).slice(0, 10);
+        const normalizedDeathDate =
+          String(
+            person.deathDate
+          ).slice(0, 10);
 
-        const [year, month, day] = normalizedDeathDate
+        const [
+          year,
+          month,
+          day,
+        ] = normalizedDeathDate
           .split("-")
           .map(Number);
 
-        const deathLunar = Solar.fromYmd(
-          year,
-          month,
-          day
-        ).getLunar();
+        const deathLunar =
+          Solar.fromYmd(
+            year,
+            month,
+            day
+          ).getLunar();
 
         return {
           ...person,
           deathLunarDate: `${String(
             deathLunar.getDay()
-          ).padStart(2, "0")}/${String(
-            Math.abs(deathLunar.getMonth())
+          ).padStart(
+            2,
+            "0"
+          )}/${String(
+            Math.abs(
+              deathLunar.getMonth()
+            )
           ).padStart(2, "0")}`,
         };
       });
   }, [people]);
 
+  /*
+   * ============================
+   * THỐNG KÊ TRANG CHỦ
+   * ============================
+   */
   const homeStatistics = useMemo(() => {
-    const currentMonth = new Date().getMonth() + 1;
+    const currentMonth =
+      new Date().getMonth() + 1;
 
-    const totalAlbums = people.length;
+    const totalAlbums =
+      people.length;
 
-    const totalAlbumViews = people.reduce((total, person) => {
-      return total + (Number(person.albumViews) || 0);
-    }, 0);
+    const totalAlbumViews =
+      people.reduce(
+        (total, person) => {
+          return (
+            total +
+            (Number(
+              person.albumViews
+            ) || 0)
+          );
+        },
+        0
+      );
 
-    const birthdaysThisMonth = people.filter((person) => {
-      if (!person.birthday) {
-        return false;
-      }
+    const birthdaysThisMonth =
+      people.filter((person) => {
+        if (!person.birthday) {
+          return false;
+        }
 
-      const normalizedBirthday = String(person.birthday).slice(0, 10);
-      const [, month] = normalizedBirthday.split("-");
+        const normalizedBirthday =
+          String(
+            person.birthday
+          ).slice(0, 10);
 
-      return Number(month) === currentMonth;
-    }).length;
+        const [, month] =
+          normalizedBirthday.split(
+            "-"
+          );
+
+        return (
+          Number(month) ===
+          currentMonth
+        );
+      }).length;
 
     return {
       totalAlbums,
@@ -418,24 +608,32 @@ function Home() {
     };
   }, [people]);
 
+  /*
+   * ============================
+   * GIAO DIỆN
+   * ============================
+   */
   return (
-  <div className="flex min-h-screen flex-col bg-slate-100">
-    <Navbar />
+    <div className="flex min-h-screen flex-col bg-slate-100">
+      {/* Navbar */}
+      <Navbar />
 
-    {/* Popup chào mừng */}
-    <WelcomePopup />
+      {/* Popup chào mừng */}
+      <WelcomePopup />
 
-    {/* Popup kết quả tìm kiếm */}
-    <SearchResult
-      loading={loading}
-      error={error}
-      hasSearched={hasSearched}
-      searchDescription={searchDescription}
-      results={results}
-      onClose={() => setHasSearched(false)}
-    />
+      {/* Popup kết quả tìm kiếm */}
+      <SearchResult
+        loading={loading}
+        error={error}
+        hasSearched={hasSearched}
+        searchDescription={searchDescription}
+        results={results}
+        onClose={() =>
+          setHasSearched(false)
+        }
+      />
 
-    <ScrollReveal direction="up">
+      {/* Ngày hiện tại */}
       <section>
         <DateHeader
           today={today}
@@ -446,136 +644,143 @@ function Home() {
           yearZhi={yearZhi}
         />
       </section>
-    </ScrollReveal>
 
-    <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-8 pt-2 sm:px-6 sm:pb-10 sm:pt-4">
-      {/* Thống kê */}
-      <ScrollReveal direction="up">
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-8 pt-2 sm:px-6 sm:pb-10 sm:pt-4">
+        {/* ============================
+            THỐNG KÊ
+        ============================ */}
         <section>
           <HomeStatistics
             visits={visits}
-            totalAlbums={homeStatistics.totalAlbums}
-            totalAlbumViews={homeStatistics.totalAlbumViews}
-            birthdaysThisMonth={homeStatistics.birthdaysThisMonth}
+            totalAlbums={
+              homeStatistics.totalAlbums
+            }
+            totalAlbumViews={
+              homeStatistics.totalAlbumViews
+            }
+            birthdaysThisMonth={
+              homeStatistics.birthdaysThisMonth
+            }
           />
         </section>
-      </ScrollReveal>
 
-      {/* Sự kiện hôm nay */}
-      <ScrollReveal
-        direction="up"
-        delay={80}
-        className="mt-5"
-      >
-        <section>
+        {/* ============================
+            SỰ KIỆN HÔM NAY
+        ============================ */}
+        <section className="mt-5">
           <TodayEvents
-            todayBirthdayPeople={todayBirthdayPeople}
-            todayDeathPeople={todayDeathPeople}
-            todayHolidays={todayHolidays}
+            todayBirthdayPeople={
+              todayBirthdayPeople
+            }
+            todayDeathPeople={
+              todayDeathPeople
+            }
+            todayHolidays={
+              todayHolidays
+            }
             formatDate={formatDate}
             yearGan={yearGan}
             yearZhi={yearZhi}
           />
         </section>
-      </ScrollReveal>
 
-      {/* Thông báo */}
-      {announcement.content?.trim() && (
-        <ScrollReveal
-          direction="up"
-          delay={100}
-          className="mt-6"
-        >
-          <section>
+        {/* ============================
+            THÔNG BÁO
+        ============================ */}
+        {announcement.content?.trim() && (
+          <section className="mt-6">
             <Announcement
-              content={announcement.content}
-              updatedAt={announcement.updatedAt}
+              content={
+                announcement.content
+              }
+              updatedAt={
+                announcement.updatedAt
+              }
             />
           </section>
-        </ScrollReveal>
-      )}
+        )}
 
-      {/* Tìm kiếm và giới thiệu */}
-      <ScrollReveal
-        direction="up"
-        delay={120}
-        className="mt-6"
-      >
-        <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
+        {/* ============================
+            TÌM KIẾM + GIỚI THIỆU
+        ============================ */}
+        <section className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
+          {/* Tìm kiếm */}
           <div className="min-w-0">
             <SearchBox
               name={nameInput}
               setName={setNameInput}
               birthday={birthdayInput}
-              setBirthday={setBirthdayInput}
+              setBirthday={
+                setBirthdayInput
+              }
               onSearch={handleSearch}
               onClear={handleClear}
             />
           </div>
 
+          {/* Giới thiệu desktop */}
           <div className="hidden min-w-0 lg:block">
             <AboutMe />
           </div>
         </section>
-      </ScrollReveal>
 
-      {/* Câu nói */}
-      <ScrollReveal
-        direction="up"
-        delay={100}
-        className="mt-6"
-      >
-        <section>
+        {/* ============================
+            CÂU NÓI
+        ============================ */}
+        <section className="mt-6">
           <DailyQuote />
         </section>
-      </ScrollReveal>
 
-      {/* Giới thiệu mobile */}
-      <ScrollReveal
-        direction="up"
-        delay={100}
-        className="mt-6 lg:hidden"
-      >
-        <section>
+        {/* ============================
+            GIỚI THIỆU MOBILE
+        ============================ */}
+        <section className="mt-6 lg:hidden">
           <AboutMe />
         </section>
-      </ScrollReveal>
 
-      {/* Góp ý và ủng hộ */}
-      <ScrollReveal
-        direction="up"
-        delay={120}
-        className="mt-8"
-      >
-        <section className="grid gap-6 lg:grid-cols-2">
+        {/* ============================
+            GÓP Ý + ỦNG HỘ
+        ============================ */}
+        <section className="mt-8 grid gap-6 lg:grid-cols-2">
           <FeedbackForm />
           <DonateCard />
         </section>
-      </ScrollReveal>
 
-      {/* Đồng hàng cùng tôi */}
-      <ScrollReveal
-        direction="up"
-        delay={120}
-        className="mt-8"
-      >
-        <HomePartners />
-      </ScrollReveal>
-      
+        {/* ============================
+            ĐỒNG HÀNH CÙNG TÔI
+        ============================ */}
+        <section className="mt-8">
+          <HomePartners />
+        </section>
+      </main>
 
-    </main>
-
-    <Footer />
-  </div>
-);
+      {/* Footer */}
+      <Footer />
+    </div>
+  );
 }
 
+/*
+ * ============================
+ * FORMAT NGÀY
+ * ============================
+ */
 function formatDate(value) {
-  if (!value) return "";
+  if (!value) {
+    return "";
+  }
 
-  const [year, month, day] = value.split("-");
+  const [
+    year,
+    month,
+    day,
+  ] = value.split("-");
 
-  if (!year || !month || !day) {
+  if (
+    !year ||
+    !month ||
+    !day
+  ) {
     return value;
   }
 
