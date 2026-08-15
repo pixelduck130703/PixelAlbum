@@ -3,6 +3,7 @@ function DashboardActions({
   onShowTodayAlbumViews,
   onManageAnnouncement,
   onManageMusic,
+  onManageEvents,
   onExportExcel,
   onAdd,
 }) {
@@ -58,7 +59,15 @@ function DashboardActions({
           <span>Xuất Excel</span>
         </button>
 
-        {/* Thêm album */}
+        {/* Quản lý sự kiện */}
+        <button
+          type="button"
+          onClick={onManageEvents}
+          className={`${buttonClass} col-span-2 bg-blue-600 hover:bg-blue-700 md:col-span-1 md:w-auto md:flex-1`}
+        >
+          📅 Thêm sự kiện
+        </button>
+
         {/* Thêm album */}
         <button
           type="button"

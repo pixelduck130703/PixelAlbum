@@ -13,6 +13,7 @@ import DashboardActions from "../../components/admin/DashboardActions";
 import AnnouncementManager from "../../components/admin/AnnouncementManager";
 import HomeMusicManager from "../../components/admin/HomeMusicManager";
 import { exportExcel } from "../../components/admin/ExportExcel";
+import EventManager from "../../components/admin/EventManager";
 
 function Dashboard() {
   const [stats, setStats] = useState({
@@ -43,6 +44,9 @@ function Dashboard() {
     showHomeMusicManager,
     setShowHomeMusicManager,
   ] = useState(false);
+
+  const [showEventManager, setShowEventManager] =
+    useState(false);
 
   const [
     showAnnouncementManager,
@@ -102,7 +106,7 @@ function Dashboard() {
     }
   };
 
-  
+
 
   useEffect(() => {
     loadTrafficChart();
@@ -512,6 +516,9 @@ function Dashboard() {
             onManageMusic={() =>
               setShowHomeMusicManager(true)
             }
+            onManageEvents={() =>
+              setShowEventManager(true)
+            }
             onExportExcel={exportExcel}
             onAdd={handleAdd}
           />
@@ -663,6 +670,13 @@ function Dashboard() {
         open={showHomeMusicManager}
         onClose={() =>
           setShowHomeMusicManager(false)
+        }
+      />
+
+      <EventManager
+        open={showEventManager}
+        onClose={() =>
+          setShowEventManager(false)
         }
       />
     </Layout>
