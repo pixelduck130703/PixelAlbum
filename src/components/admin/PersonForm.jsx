@@ -472,7 +472,7 @@ function PersonForm({
                   </FormField>
 
                   <FormField
-                    label="Tỉnh/Thành phố"
+                    label="Quê quán/Địa điểm"
                     htmlFor="address"
                   >
                     <input

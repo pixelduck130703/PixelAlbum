@@ -93,7 +93,7 @@ function PersonTable({
                   </th>
 
                   <th className="w-[16%] px-5 py-4 text-center">
-                    Quê quán
+                    Quê quán/Địa điểm
                   </th>
 
                   <th className="w-[11%] px-4 py-4 text-center">
@@ -306,7 +306,7 @@ function PersonTable({
           {/* Quê quán */}
           <div className="rounded-xl bg-slate-50 p-3">
             <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
-              Quê quán
+              Quê quán/Địa điểm
             </p>
 
             <p className="mt-2 line-clamp-2 text-sm font-medium leading-5 text-slate-700">
