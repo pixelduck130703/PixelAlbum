@@ -912,117 +912,126 @@ function Detail() {
 
       {verifyOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-md transition-all duration-300"
           onClick={() => {
             if (!verifying) {
               setVerifyOpen(false);
             }
           }}
         >
+          {/* LIQUID GLASS MODAL CARD */}
           <div
-            className="w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl"
+            className="relative w-full max-w-md overflow-hidden rounded-[32px] border border-white/30 bg-white/75 p-6 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3),inset_0_1px_1px_rgba(255,255,255,0.8)] backdrop-blur-2xl ring-1 ring-black/5 sm:p-7"
             onClick={(event) => event.stopPropagation()}
           >
-            {/* Header */}
-            <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 px-5 py-6 text-white sm:px-6">
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 text-2xl shadow-sm backdrop-blur">
-                    🔐
-                  </div>
+            {/* GLOW LIQUID LIGHT ORBS (Hiệu ứng ánh sáng khúc xạ phía sau kính) */}
+            <div className="pointer-events-none absolute -left-12 -top-12 h-44 w-44 rounded-full bg-gradient-to-br from-blue-400/30 to-indigo-500/20 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-12 -right-12 h-44 w-44 rounded-full bg-gradient-to-tl from-violet-400/25 to-rose-400/20 blur-3xl" />
 
-                  <h2 className="mt-4 text-2xl font-bold">
-                    Xác thực để xem album
-                  </h2>
+            {/* HEADER */}
+            <div className="relative flex items-start justify-between gap-4">
+              <div className="flex items-center gap-3.5">
+                {/* Glass Icon Badge */}
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/60 bg-gradient-to-b from-white/80 to-white/30 text-2xl shadow-[0_8px_20px_rgba(37,99,235,0.15),inset_0_1px_2px_rgba(255,255,255,0.9)] backdrop-blur-xl">
+                  🔐
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setVerifyOpen(false)}
-                  disabled={verifying}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15 text-xl text-white transition hover:bg-white/25 disabled:cursor-not-allowed disabled:opacity-50"
-                  aria-label="Đóng"
-                >
-                  ✕
-                </button>
+                <div>
+                  <h2 className="text-xl font-black tracking-tight text-slate-800 sm:text-2xl">
+                    Xác thực album
+                  </h2>
+                  <p className="text-xs font-semibold text-slate-500">
+                    Nhập đáp án để mở khóa nội dung
+                  </p>
+                </div>
               </div>
+
+              {/* Nút Đóng Kính Mờ */}
+              <button
+                type="button"
+                onClick={() => setVerifyOpen(false)}
+                disabled={verifying}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/40 text-sm font-bold text-slate-500 shadow-sm backdrop-blur-md transition hover:bg-white/80 hover:text-slate-800 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+                aria-label="Đóng"
+              >
+                ✕
+              </button>
             </div>
 
-            {/* Nội dung */}
-            <form
-              onSubmit={handleVerifyAlbum}
-              className="p-5 sm:p-6"
-            >
-              {/* Câu hỏi */}
-              <div className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
-                <p className="text-xs font-bold uppercase tracking-wide text-blue-500">
-                  Câu hỏi xác thực
-                </p>
+            {/* FORM BODY */}
+            <form onSubmit={handleVerifyAlbum} className="relative mt-6 space-y-4">
+              {/* CÂU HỎI XÁC THỰC (Glass Card) */}
+              <div className="relative overflow-hidden rounded-2xl border border-blue-200/50 bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-white/40 p-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.7)] backdrop-blur-lg">
+                <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-blue-600">
+                  <span className="h-1.5 w-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
+                  Câu hỏi bảo mật
+                </div>
 
-                <p className="mt-2 break-words font-semibold leading-7 text-slate-800">
+                <p className="mt-1.5 text-sm font-bold leading-relaxed text-slate-800">
                   {person.securityQuestion}
                 </p>
               </div>
 
-              {/* Câu trả lời */}
-              <div className="mt-5">
+              {/* INPUT CÂU TRẢ LỜI */}
+              <div className="space-y-1.5">
                 <label
                   htmlFor="verify-answer"
-                  className="mb-2 block text-sm font-semibold text-slate-700"
+                  className="block text-xs font-bold uppercase tracking-wider text-slate-600"
                 >
                   Câu trả lời
                 </label>
 
-                <input
-                  id="verify-answer"
-                  type="text"
-                  value={verifyAnswer}
-                  onChange={(event) =>
-                    setVerifyAnswer(event.target.value)
-                  }
-                  placeholder="Nhập câu trả lời..."
-                  autoFocus
-                  disabled={verifying}
-                  className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3.5 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:opacity-70"
-                />
+                <div className="relative">
+                  <input
+                    id="verify-answer"
+                    type="text"
+                    value={verifyAnswer}
+                    onChange={(event) => setVerifyAnswer(event.target.value)}
+                    placeholder="Nhập câu trả lời..."
+                    autoFocus
+                    disabled={verifying}
+                    className="h-12 w-full rounded-2xl border border-white/80 bg-white/60 px-4 text-sm font-semibold text-slate-800 shadow-[inset_0_2px_4px_rgba(0,0,0,0.03)] backdrop-blur-md outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-blue-400 focus:bg-white/90 focus:ring-4 focus:ring-blue-400/20 disabled:cursor-not-allowed disabled:bg-slate-100/50"
+                  />
+                </div>
               </div>
 
-              {/* Lỗi */}
+              {/* THÔNG BÁO LỖI (Liquid Alert) */}
               {verifyError && (
-                <div className="mt-3 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
-                  <span className="shrink-0">⚠️</span>
-
-                  <span className="break-words">
-                    {verifyError}
-                  </span>
+                <div className="flex items-center gap-2 rounded-2xl border border-rose-300/60 bg-rose-500/10 px-3.5 py-2.5 text-xs font-bold text-rose-700 shadow-sm backdrop-blur-md">
+                  <span className="shrink-0 text-sm">⚠️</span>
+                  <span className="break-words">{verifyError}</span>
                 </div>
               )}
 
-              {/* Nút */}
-              <div className="mt-6 grid grid-cols-2 gap-3">
+              {/* BUTTON ACTIONS */}
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                {/* Nút Hủy */}
                 <button
                   type="button"
                   onClick={() => setVerifyOpen(false)}
                   disabled={verifying}
-                  className="min-h-[48px] rounded-xl bg-slate-100 px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex h-11 items-center justify-center rounded-2xl border border-white/60 bg-white/40 font-bold text-slate-700 shadow-sm backdrop-blur-md transition hover:bg-white/80 hover:text-slate-900 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 text-sm"
                 >
                   Hủy
                 </button>
 
+                {/* Nút Xác Nhận (Liquid Glossy Button) */}
                 <button
                   type="submit"
                   disabled={verifying}
-                  className="flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 font-semibold text-white shadow-sm transition hover:from-blue-700 hover:to-indigo-700 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+                  className="relative flex h-11 items-center justify-center gap-2 overflow-hidden rounded-2xl border border-blue-400/40 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 bg-[length:200%_auto] font-bold text-white shadow-[0_8px_20px_-4px_rgba(37,99,235,0.4),inset_0_1px_1px_rgba(255,255,255,0.4)] transition duration-300 hover:bg-right hover:shadow-[0_12px_24px_-4px_rgba(37,99,235,0.5)] active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 text-sm"
                 >
-                  {verifying && (
-                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-                  )}
+                  {/* Lớp phản chiếu ánh sáng mặt trên button */}
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/20 to-transparent" />
 
-                  <span>
-                    {verifying
-                      ? "Đang xác thực..."
-                      : "Xác nhận"}
-                  </span>
+                  {verifying ? (
+                    <>
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                      <span className="relative">Đang xử lý...</span>
+                    </>
+                  ) : (
+                    <span className="relative">Xác nhận</span>
+                  )}
                 </button>
               </div>
             </form>
