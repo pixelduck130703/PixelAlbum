@@ -715,8 +715,10 @@ function Detail() {
                 {/* Đếm ngày sinh và ngày giỗ */}
                 <div className="mb-7 grid grid-cols-1 gap-4 sm:grid-cols-2">
                   {birthdayCountdown && (
-                    <div className="overflow-hidden rounded-3xl border border-pink-200 bg-gradient-to-br from-pink-50 via-white to-rose-50 p-5 text-center shadow-sm">
-
+                    <div
+                      className={`overflow-hidden rounded-3xl border border-pink-200 bg-gradient-to-br from-pink-50 via-white to-rose-50 p-5 text-center shadow-sm ${!deathAnniversaryCountdown ? "sm:col-span-2" : ""
+                        }`}
+                    >
                       <p className="mt-1 font-semibold leading-6 text-slate-700">
                         {birthdayCountdown}
                       </p>
@@ -724,8 +726,10 @@ function Detail() {
                   )}
 
                   {deathAnniversaryCountdown && (
-                    <div className="overflow-hidden rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-orange-50 p-5 text-center shadow-sm">
-
+                    <div
+                      className={`overflow-hidden rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-orange-50 p-5 text-center shadow-sm ${!birthdayCountdown ? "sm:col-span-2" : ""
+                        }`}
+                    >
                       <p className="mt-1 font-semibold leading-6 text-slate-700">
                         {deathAnniversaryCountdown.message}
                       </p>
@@ -843,7 +847,7 @@ function Detail() {
                   value={
                     daysLived
                       ? `${daysLived.toLocaleString("vi-VN")} ngày`
-                      : "Chưa cập nhật"
+                      : "Chưa có ngày sinh"
                   }
                   icon="🌎"
                 />
