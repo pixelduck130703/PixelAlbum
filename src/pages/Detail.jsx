@@ -819,7 +819,7 @@ function Detail() {
                   />
 
                   <InfoItem
-                    label="Quê quán"
+                    label="Quê quán/Địa điểm"
                     value={person.address || "Chưa cập nhật"}
                     icon="📍"
                   />
