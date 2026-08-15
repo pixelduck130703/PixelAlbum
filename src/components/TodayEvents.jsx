@@ -91,7 +91,7 @@ function TodayEvents({
             {safeEvents.length > 0 && (
                 <div className="mb-8 overflow-hidden rounded-3xl border border-purple-200 bg-gradient-to-br from-purple-50 via-white to-pink-50 p-6 shadow-lg sm:p-8">
                     <div className="text-center">
-                        <h2 className="mt-1 text-lg font-bold text-purple-600 sm:text-2xl">
+                        <h2 className="mt-1 text-lg font-bold text-red-600 sm:text-2xl">
                             📅 Sự kiện hôm nay
                         </h2>
                     </div>
