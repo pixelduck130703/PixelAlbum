@@ -8,12 +8,13 @@ function DashboardActions({
   onAdd,
 }) {
   const buttonClass =
-    "flex min-h-[50px] w-full items-center justify-center gap-2 rounded-xl px-3 py-3 text-sm font-semibold text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0";
+    "flex min-h-[48px] sm:min-h-[50px] w-full items-center justify-center gap-2 rounded-xl px-3 py-3 text-sm font-semibold text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0";
 
   return (
     <div className="w-full">
-      <div className="grid grid-cols-2 gap-3 md:flex md:flex-wrap md:items-stretch md:justify-end">
-        {/* Album xem hôm nay */}
+      {/* Mobile: lưới 2 cột đều nhau | Desktop: Flex wrap ngang */}
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:flex md:flex-wrap md:items-stretch md:justify-end">
+        {/* 1. Album xem hôm nay */}
         <button
           type="button"
           onClick={onShowTodayAlbumViews}
@@ -21,61 +22,59 @@ function DashboardActions({
           className={`${buttonClass} bg-green-600 hover:bg-green-700 md:w-auto md:flex-1`}
         >
           <span className="shrink-0 text-base">🔥</span>
-
-          <span className="leading-5">
-            {loadingTodayAlbumViews
-              ? "Đang tải..."
-              : "Lịch sử xem"}
+          <span className="truncate leading-5">
+            {loadingTodayAlbumViews ? "Đang tải..." : "Lịch sử xem"}
           </span>
         </button>
 
-        {/* Thông báo */}
+        {/* 2. Thông báo */}
         <button
           type="button"
           onClick={onManageAnnouncement}
           className={`${buttonClass} bg-amber-500 hover:bg-amber-600 md:w-auto md:flex-1`}
         >
           <span className="shrink-0 text-base">📢</span>
-          <span>Thông báo</span>
+          <span className="truncate">Thông báo</span>
         </button>
 
-        {/* Quản lý nhạc */}
+        {/* 3. Quản lý nhạc */}
         <button
           type="button"
           onClick={onManageMusic}
           className={`${buttonClass} bg-violet-600 hover:bg-violet-700 md:w-auto md:flex-1`}
         >
           <span className="shrink-0 text-base">🎵</span>
-          <span>Quản lý nhạc</span>
+          <span className="truncate">Quản lý nhạc</span>
         </button>
 
-        {/* Xuất Excel */}
+        {/* 4. Xuất Excel */}
         <button
           type="button"
           onClick={onExportExcel}
           className={`${buttonClass} bg-emerald-600 hover:bg-emerald-700 md:w-auto md:flex-1`}
         >
           <span className="shrink-0 text-base">📊</span>
-          <span>Xuất Excel</span>
+          <span className="truncate">Xuất Excel</span>
         </button>
 
-        {/* Quản lý sự kiện */}
+        {/* 5. Quản lý sự kiện */}
         <button
           type="button"
           onClick={onManageEvents}
-          className={`${buttonClass} col-span-2 bg-blue-600 hover:bg-blue-700 md:col-span-1 md:w-auto md:flex-1`}
+          className={`${buttonClass} bg-rose-500 hover:bg-rose-600 shadow-rose-200 md:w-auto md:flex-1`}
         >
-          📅 Thêm sự kiện
+          <span className="shrink-0 text-base">📅</span>
+          <span className="truncate">Thêm sự kiện</span>
         </button>
 
-        {/* Thêm album */}
+        {/* 6. Thêm album */}
         <button
           type="button"
           onClick={onAdd}
-          className={`${buttonClass} col-span-2 bg-blue-600 hover:bg-blue-700 md:col-span-1 md:w-auto md:flex-1`}
+          className={`${buttonClass} bg-blue-600 hover:bg-blue-700 md:w-auto md:flex-1`}
         >
           <span className="shrink-0 text-base">➕</span>
-          <span>Thêm Album</span>
+          <span className="truncate">Thêm Album</span>
         </button>
       </div>
     </div>
