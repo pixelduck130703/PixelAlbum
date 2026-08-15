@@ -666,7 +666,7 @@ function Invitation() {
             </div>
 
             {/* SASH MOBILE */}
-            <div className="inv-sash-left pointer-events-none fixed left-0 top-[118px] z-[2] xl:hidden">
+            <div className="inv-sash-left pointer-events-none absolute left-0 top-[118px] z-[20] xl:hidden">
                 <div className="relative h-[350px] w-[38px] sm:w-[42px]">
                     <div
                         className="absolute inset-x-0 top-0 h-[326px] overflow-hidden bg-gradient-to-b from-blue-950 via-blue-700 to-blue-800 shadow-[0_14px_32px_rgba(30,64,175,0.22)]"
@@ -727,7 +727,7 @@ function Invitation() {
                 </div>
             </div>
 
-            <div className="inv-sash-right pointer-events-none fixed right-0 top-[148px] z-[2] xl:hidden">
+            <div className="inv-sash-right pointer-events-none absolute right-0 top-[148px] z-[20] xl:hidden">
                 <div className="relative h-[330px] w-[36px] sm:w-[40px]">
                     <div
                         className="absolute inset-x-0 top-0 h-[306px] overflow-hidden bg-gradient-to-b from-white via-blue-50 to-blue-100 shadow-[0_14px_30px_rgba(30,64,175,0.18)]"
@@ -1672,8 +1672,8 @@ function LanguageSwitcher({ language, onChange, disabled = false }) {
                         onClick={() => onChange(item.code)}
                         disabled={disabled}
                         className={`relative flex min-h-[38px] items-center gap-1.5 rounded-full px-3 text-xs font-bold transition-all duration-300 disabled:cursor-wait disabled:opacity-70 sm:text-sm ${active
-                                ? "text-white shadow-[0_4px_16px_rgba(37,99,235,0.35)]"
-                                : "text-slate-700 hover:bg-white/40 hover:text-blue-900"
+                            ? "text-white shadow-[0_4px_16px_rgba(37,99,235,0.35)]"
+                            : "text-slate-700 hover:bg-white/40 hover:text-blue-900"
                             }`}
                         aria-label={item.ariaLabel}
                         aria-pressed={active}
