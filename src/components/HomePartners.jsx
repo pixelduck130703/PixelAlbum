@@ -118,7 +118,7 @@ function HomePartners() {
               icon={
                 <SiOppo className="text-green-700" />
               }
-              text="Oppo"
+              text="OPPO"
             />
 
             <ExternalItem
@@ -126,7 +126,7 @@ function HomePartners() {
               icon={
                 <SiVivo className="text-blue-500" />
               }
-              text="Vivo"
+              text="vivo"
             />
 
             <ExternalItem
