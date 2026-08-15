@@ -31,7 +31,7 @@ function AboutMe() {
           <br />
           <br />
           Mình xây dựng website này nhằm lưu giữ và chia sẻ những bức ảnh,
-          khoảnh khắc và kỷ niệm của bạn bè và người thân theo cách đơn giản, dễ dàng tìm kiếm. Những bức ảnh sẽ ở lại khi tất cả đã rời đi!!!
+          khoảnh khắc và kỷ niệm của bạn bè và người thân theo cách đơn giản, dễ dàng tìm kiếm. Gửi đề nghị và feedback ở dưới = {") )"}
         </p>
 
         <div className="mt-8 flex items-center justify-center gap-4">

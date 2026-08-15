@@ -90,6 +90,18 @@ function HomePartners() {
             />
 
             <ExternalItem
+              href="https://godox.com"
+              icon={
+                <img
+                  src="/images/Godox.png"
+                  alt="Godox"
+                  className="h-8 w-8 object-contain sm:h-9 sm:w-9"
+                />
+              }
+              text="Godox"
+            />
+
+            <ExternalItem
               href="https://www.tamron.com"
               icon={
                 <img
@@ -161,6 +173,18 @@ function HomePartners() {
                 />
               }
               text="Photos"
+            />
+
+            <ExternalItem
+              href="https://drive.google.com/"
+              icon={
+                <img
+                  src="/images/Drive.png"
+                  alt="Drive"
+                  className="h-8 w-8 object-contain sm:h-9 sm:w-9"
+                />
+              }
+              text="Drive"
             />
 
             <ExternalItem
@@ -286,17 +310,14 @@ function ExternalItem({
   );
 }
 
-function Item({
-  icon,
-  text,
-}) {
+function Item({ icon, text }) {
   return (
-    <div className="flex w-[64px] shrink-0 flex-col items-center justify-center gap-1.5 text-center transition duration-200 hover:-translate-y-1 sm:w-[72px]">
-      <div className="flex h-10 w-10 items-center justify-center text-3xl sm:h-11 sm:w-11 sm:text-4xl">
+    <div className="flex w-[58px] shrink-0 flex-col items-center justify-center gap-1 text-center transition duration-200 hover:-translate-y-1 sm:w-[64px] lg:w-[68px]">
+      <div className="flex h-9 w-9 items-center justify-center text-2xl sm:h-10 sm:w-10 sm:text-3xl lg:h-11 lg:w-11 lg:text-3xl">
         {icon}
       </div>
 
-      <span className="w-full truncate text-center text-[10px] font-medium text-slate-500 sm:text-xs">
+      <span className="w-full truncate text-center text-[9px] font-medium text-slate-500 sm:text-[10px] lg:text-xs">
         {text}
       </span>
     </div>
