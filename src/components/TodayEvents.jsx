@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import confetti from "canvas-confetti";
 
 function TodayEvents({
@@ -10,6 +10,8 @@ function TodayEvents({
     yearGan,
     yearZhi,
 }) {
+    const [showPopup, setShowPopup] = useState(false);
+
     const safeBirthdayPeople = Array.isArray(todayBirthdayPeople)
         ? todayBirthdayPeople
         : [];
@@ -26,6 +28,9 @@ function TodayEvents({
         ? events
         : [];
 
+    // =========================================================
+    // CONFETTI
+    // =========================================================
     useEffect(() => {
         const shouldCelebrate =
             safeBirthdayPeople.length > 0 ||
@@ -75,6 +80,9 @@ function TodayEvents({
         safeEvents.length,
     ]);
 
+    // =========================================================
+    // TÊN NGÀY LỄ
+    // =========================================================
     const getHolidayTitle = (holiday) => {
         if (holiday.title === "Tất Niên") {
             return `Tất Niên Năm ${yearGan} ${yearZhi}`;
@@ -83,11 +91,25 @@ function TodayEvents({
         return holiday.title;
     };
 
+    // =========================================================
+    // MỞ POPUP
+    // =========================================================
+    const handleOpenPopup = () => {
+        setShowPopup(true);
+    };
+
+    // =========================================================
+    // ĐÓNG POPUP
+    // =========================================================
+    const handleClosePopup = () => {
+        setShowPopup(false);
+    };
+
     return (
         <>
-            {/* ================================
+            {/* =====================================================
                 SỰ KIỆN TÙY CHỈNH
-                ================================ */}
+            ===================================================== */}
             {safeEvents.length > 0 && (
                 <div className="mb-8 overflow-hidden rounded-3xl border border-purple-200 bg-gradient-to-br from-purple-50 via-white to-pink-50 p-6 shadow-lg sm:p-8">
                     <div className="text-center">
@@ -100,7 +122,19 @@ function TodayEvents({
                         {safeEvents.map((event, index) => (
                             <div
                                 key={`${event.month}-${event.day}-${event.title}-${index}`}
-                                className="relative overflow-hidden rounded-3xl border border-purple-200 bg-gradient-to-r from-purple-50 via-white to-pink-50 p-5 shadow-md ring-2 ring-purple-100 transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:ring-purple-300 sm:p-6"
+                                onClick={handleOpenPopup}
+                                role="button"
+                                tabIndex={0}
+                                onKeyDown={(e) => {
+                                    if (
+                                        e.key === "Enter" ||
+                                        e.key === " "
+                                    ) {
+                                        e.preventDefault();
+                                        handleOpenPopup();
+                                    }
+                                }}
+                                className="relative cursor-pointer overflow-hidden rounded-3xl border border-purple-200 bg-gradient-to-r from-purple-50 via-white to-pink-50 p-5 shadow-md ring-2 ring-purple-100 transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:ring-purple-300 active:scale-[0.98] sm:p-6"
                             >
                                 <div className="relative z-10 flex items-center gap-4">
                                     {/* Icon */}
@@ -140,13 +174,13 @@ function TodayEvents({
                 </div>
             )}
 
-            {/* ================================
+            {/* =====================================================
                 NGÀY LỄ VIỆT NAM
-                ================================ */}
+            ===================================================== */}
             {safeHolidays.length > 0 && (
                 <div className="mb-8 overflow-hidden rounded-3xl border border-red-200 bg-gradient-to-br from-red-50 via-white to-yellow-50 p-6 shadow-lg sm:p-8">
                     <div className="text-center">
-                        <h2 className="mmt-1 whitespace-nowrap text-lg font-bold text-red-600 sm:text-2xl">
+                        <h2 className="mt-1 whitespace-nowrap text-lg font-bold text-red-600 sm:text-2xl">
                             Sự kiện hôm nay
                         </h2>
                     </div>
@@ -177,10 +211,11 @@ function TodayEvents({
                                     <div className="min-w-0 flex-1">
                                         <div className="flex flex-wrap items-center gap-2">
                                             <span
-                                                className={`rounded-full px-3 py-1 text-xs font-bold ${holiday.type === "lunar"
+                                                className={`rounded-full px-3 py-1 text-xs font-bold ${
+                                                    holiday.type === "lunar"
                                                         ? "bg-amber-100 text-amber-700"
                                                         : "bg-red-100 text-red-600"
-                                                    }`}
+                                                }`}
                                             >
                                                 {holiday.dateText}
                                             </span>
@@ -202,9 +237,9 @@ function TodayEvents({
                 </div>
             )}
 
-            {/* ================================
+            {/* =====================================================
                 SINH NHẬT HÔM NAY
-                ================================ */}
+            ===================================================== */}
             {safeBirthdayPeople.length > 0 && (
                 <div className="mb-8 overflow-hidden rounded-3xl border border-pink-200 bg-gradient-to-br from-pink-50 via-white to-yellow-50 p-6 shadow-lg sm:p-8">
                     <div className="text-center">
@@ -217,7 +252,19 @@ function TodayEvents({
                         {safeBirthdayPeople.map((person) => (
                             <div
                                 key={person.id}
-                                className="relative overflow-hidden rounded-3xl border border-pink-200 bg-gradient-to-r from-pink-50 via-white to-yellow-50 p-4 shadow-xl ring-2 ring-pink-100 transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:ring-pink-300 sm:p-5"
+                                onClick={handleOpenPopup}
+                                role="button"
+                                tabIndex={0}
+                                onKeyDown={(e) => {
+                                    if (
+                                        e.key === "Enter" ||
+                                        e.key === " "
+                                    ) {
+                                        e.preventDefault();
+                                        handleOpenPopup();
+                                    }
+                                }}
+                                className="relative cursor-pointer overflow-hidden rounded-3xl border border-pink-200 bg-gradient-to-r from-pink-50 via-white to-yellow-50 p-4 shadow-xl ring-2 ring-pink-100 transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:ring-pink-300 active:scale-[0.98] sm:p-5"
                             >
                                 <div className="relative z-10 flex items-center gap-4">
                                     {/* Avatar */}
@@ -269,9 +316,9 @@ function TodayEvents({
                 </div>
             )}
 
-            {/* ================================
+            {/* =====================================================
                 NGÀY GIỖ HÔM NAY
-                ================================ */}
+            ===================================================== */}
             {safeDeathPeople.length > 0 && (
                 <div className="mb-8 overflow-hidden rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-orange-50 p-6 shadow-lg sm:p-8">
                     <div className="text-center">
@@ -344,6 +391,64 @@ function TodayEvents({
                     </div>
                 </div>
             )}
+
+            {/* =====================================================
+                POPUP
+            ===================================================== */}
+            {showPopup && (
+                <div
+                    className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+                    onClick={handleClosePopup}
+                >
+                    <div
+                        className="w-full max-w-sm animate-[popupIn_0.2s_ease-out] rounded-3xl bg-white p-7 text-center shadow-2xl"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Icon */}
+                        <div className="mb-4 text-6xl">
+                            🤨
+                        </div>
+
+                        {/* Tiêu đề */}
+                        <h3 className="text-2xl font-bold text-slate-800">
+                            Có gì đâu mà ấn 😏
+                        </h3>
+
+                        {/* Nội dung */}
+                        <p className="mt-3 text-sm leading-relaxed text-slate-500">
+                            Hãy tìm kiếm ảnh bằng ngày sinh hoặc họ và tên, lớp, địa điểm ở bên dưới
+                        </p>
+
+                        {/* Nút đóng */}
+                        <button
+                            type="button"
+                            onClick={handleClosePopup}
+                            className="mt-6 w-full rounded-2xl bg-slate-900 px-6 py-3 font-semibold text-white shadow-lg transition duration-200 hover:bg-slate-700 active:scale-95"
+                        >
+                            Đóng
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* =====================================================
+                CSS ANIMATION CHO POPUP
+            ===================================================== */}
+            <style>
+                {`
+                    @keyframes popupIn {
+                        0% {
+                            opacity: 0;
+                            transform: scale(0.85);
+                        }
+
+                        100% {
+                            opacity: 1;
+                            transform: scale(1);
+                        }
+                    }
+                `}
+            </style>
         </>
     );
 }
