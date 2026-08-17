@@ -843,12 +843,13 @@ function Detail() {
                 />
 
                 <InfoItem
-                  label="Đã sống"
-                  value={
+                value={
                     daysLived
-                      ? `${daysLived.toLocaleString("vi-VN")} ngày`
+                      ? `${daysLived.toLocaleString("vi-VN")} lần`
                       : "Chưa có ngày sinh"
                   }
+                  label="Số lần đón bình minh 🤧"
+      
                   icon="🌎"
                 />
 
