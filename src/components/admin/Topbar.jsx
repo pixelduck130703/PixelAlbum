@@ -33,9 +33,15 @@ function Topbar() {
           <button
             type="button"
             onClick={handleLogout}
-            className="rounded-xl bg-red-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-600 sm:px-5"
+            className="group relative inline-flex items-center justify-center overflow-hidden rounded-2xl border border-white/35 bg-gradient-to-br from-rose-500/80 via-red-600/70 to-rose-700/80 px-4 py-2.5 text-sm font-bold text-white shadow-[0_8px_32px_0_rgba(225,29,72,0.37)] backdrop-blur-md transition-all duration-300 hover:scale-[1.03] hover:border-white/60 hover:from-rose-500/90 hover:to-red-600/90 hover:shadow-[0_8px_32px_0_rgba(244,63,94,0.5)] active:scale-[0.98] sm:px-5 cursor-pointer"
           >
-            Đăng xuất
+            {/* Vệt phản chiếu ánh sáng lỏng phía trên */}
+            <span className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-2xl bg-gradient-to-b from-white/30 to-transparent" />
+
+            {/* Chữ hiển thị */}
+            <span className="relative z-10 drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]">
+              Đăng xuất
+            </span>
           </button>
         </div>
       </div>

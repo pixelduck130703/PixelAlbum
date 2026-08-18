@@ -56,9 +56,15 @@ function Navbar() {
 
           <Link
             to="/admin/login"
-            className="rounded-xl bg-blue-500 px-3 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 hover:shadow-md sm:px-5"
+            className="relative inline-flex items-center justify-center overflow-hidden rounded-2xl border border-white/40 bg-gradient-to-br from-blue-500/80 via-blue-600/70 to-indigo-600/80 px-4 py-2.5 text-sm font-bold text-white shadow-[0_8px_32px_0_rgba(31,38,135,0.37)] backdrop-blur-md transition-all duration-300 hover:scale-[1.03] hover:border-white/70 hover:from-blue-500/90 hover:to-indigo-500/90 hover:shadow-[0_8px_32px_0_rgba(59,130,246,0.5)] active:scale-[0.98] sm:px-6"
           >
-            Đăng nhập
+            {/* Lớp phản chiếu ánh sáng lỏng bên trên */}
+            <span className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-2xl bg-gradient-to-b from-white/35 to-transparent" />
+
+            {/* Chữ hiển thị */}
+            <span className="relative z-10 drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]">
+              Đăng nhập
+            </span>
           </Link>
         </div>
       </div>
