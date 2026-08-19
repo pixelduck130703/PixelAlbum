@@ -25,7 +25,7 @@ const CustomVisitsLabel = (props) => {
   const diff = Math.abs(visits - views);
 
   // Mặc định ở trên (-LABEL_GAP); nếu gần nhau và visits < views (visits > 0) thì ở dưới (+LABEL_GAP)
-  const isBottom = visits > 0 && diff > 0 && diff <= 3 && visits < views;
+  const isBottom = visits > 0 && diff > 0 && diff < 3 && visits < views;
   const yPos = isBottom ? y + LABEL_GAP : y - LABEL_GAP;
 
   return (
