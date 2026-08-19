@@ -3,6 +3,7 @@ import {
   FaEdit,
   FaExternalLinkAlt,
   FaEye,
+  FaHashtag,
   FaHistory,
   FaMapMarkerAlt,
   FaTrash,
@@ -351,52 +352,41 @@ function PersonTable({
                     className="h-16 w-16 shrink-0 rounded-full border-2 border-white object-cover shadow-sm ring-1 ring-black/10"
                   />
 
-                  {/* Thông tin tên & ngày sinh bên trái */}
+                  {/* Thông tin chính */}
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-2">
-                      {/* Tên: Giữ nguyên cách hiển thị, dài mới xuống dòng */}
-                      <div className="min-w-0 flex-1">
-                        <h3
-                          title={person.name}
-                          className="text-base font-bold leading-snug text-slate-900 break-words"
-                        >
-                          {person.name || "Chưa cập nhật"}
-                        </h3>
+                    <div className="flex items-center justify-between gap-2">
+                      <h3
+                        title={person.name}
+                        className="truncate text-[17px] font-bold text-slate-900"
+                      >
+                        {person.name || "Chưa cập nhật"}
+                      </h3>
 
-                        <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-slate-700">
-                          <FaBirthdayCake className="shrink-0 text-pink-500" />
-
-                          <span className="truncate">
-                            {formatBirthday(person.birthday)}
-                          </span>
-                        </p>
-
-                        {person.class && (
-                          <div className="mt-2">
-                            <span className="inline-flex max-w-[170px] truncate rounded-full bg-white/95 border border-black/10 px-2.5 py-1 text-[11px] font-medium text-slate-700 shadow-2xs">
-                              🎓 {person.class}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Cụm bên phải: Giới tính ở trên, ID ở dưới */}
-                      <div className="flex shrink-0 flex-col items-end gap-1.5">
-                        {/* Giới tính */}
-                        <span
-                          className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1 ring-inset ${getGenderStyle(
-                            person.gender
-                          )}`}
-                        >
-                          {person.gender || "Khác"}
-                        </span>
-
-                        {/* ID nằm dưới giới tính */}
-                        <span className="rounded-md bg-white/95 border border-black/10 px-2 py-0.5 text-[11px] font-mono font-black text-slate-700 shadow-2xs">
-                          ID: {person.id}
-                        </span>
-                      </div>
+                      {/* Giới tính */}
+                      <span
+                        className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1 ring-inset ${getGenderStyle(
+                          person.gender
+                        )}`}
+                      >
+                        {person.gender || "Khác"}
+                      </span>
                     </div>
+
+                    <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-slate-700">
+                      <FaBirthdayCake className="shrink-0 text-pink-500" />
+
+                      <span className="truncate">
+                        {formatBirthday(person.birthday)}
+                      </span>
+                    </p>
+
+                    {person.class && (
+                      <div className="mt-2">
+                        <span className="inline-flex max-w-[170px] truncate rounded-full bg-white/95 border border-black/10 px-2.5 py-1 text-[11px] font-medium text-slate-700 shadow-2xs">
+                          🎓 {person.class}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -404,32 +394,45 @@ function PersonTable({
               {/* Nội dung Thẻ */}
               <div className="p-4">
                 <div className="grid grid-cols-5 gap-2.5">
-                  {/* Quê quán */}
-                  <div className="col-span-3 rounded-xl bg-white/95 border border-black/10 p-2.5 shadow-2xs">
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                  {/* Quê quán (3 cột - Căn giữa toàn bộ) */}
+                  <div className="col-span-3 flex flex-col items-center justify-between rounded-xl bg-white/95 border border-black/10 p-2.5 shadow-2xs text-center">
+                    <p className="w-full truncate text-[10px] font-bold uppercase tracking-wide text-slate-500">
                       Quê quán/Địa điểm
                     </p>
 
-                    <p className="mt-1.5 line-clamp-2 text-sm font-semibold leading-5 text-slate-800">
-                      <FaMapMarkerAlt className="mr-1.5 inline shrink-0 text-red-500" />
-                      {person.address || "Chưa cập nhật"}
+                    <p className="mt-1.5 flex w-full items-center justify-center gap-1.5 line-clamp-2 text-sm font-semibold leading-5 text-slate-800">
+                      <FaMapMarkerAlt className="shrink-0 text-red-500 text-xs" />
+                      <span className="truncate">{person.address || "Chưa cập nhật"}</span>
                     </p>
                   </div>
 
-                  {/* Lượt xem */}
-                  <div className="col-span-2 flex flex-col justify-between rounded-xl bg-white/95 border border-black/10 p-2.5 shadow-2xs">
-                    <p className="truncate text-[10px] font-bold uppercase tracking-wide text-indigo-600">
-                      Lượt xem
-                    </p>
+                  {/* 2 cột còn lại: ID & Lượt xem */}
+                  <div className="col-span-2 grid grid-cols-[1.3fr_0.7fr] gap-1.5">
+                    {/* Thẻ Lượt xem (Căn giữa) */}
+                    <div className="flex flex-col items-center justify-between rounded-xl bg-white/95 border border-black/10 p-2 shadow-2xs text-center">
+                      <p className="w-full truncate text-[9px] font-bold uppercase tracking-wide text-indigo-600">
+                        Lượt xem
+                      </p>
 
-                    <p className="mt-1.5 flex items-center gap-1.5 text-base font-extrabold text-indigo-700">
-                      <FaEye className="shrink-0 text-xs text-indigo-600" />
-                      <span className="truncate">
-                        {person.album
-                          ? formatAlbumViews(person.albumViews)
-                          : "0"}
-                      </span>
-                    </p>
+                      <p className="mt-1 flex w-full items-center justify-center gap-1 text-sm font-extrabold text-indigo-700">
+                        <span className="truncate">
+                          {person.album
+                            ? formatAlbumViews(person.albumViews)
+                            : "0"}
+                        </span>
+                      </p>
+                    </div>
+
+                    {/* Thẻ ID (Căn giữa) */}
+                    <div className="flex flex-col items-center justify-between rounded-xl bg-white/95 border border-black/10 p-2 shadow-2xs text-center">
+                      <p className="w-full truncate text-[9px] font-bold uppercase tracking-wide text-indigo-600">
+                        ID
+                      </p>
+
+                      <p className="mt-1 flex w-full items-center justify-center gap-1 text-sm font-extrabold text-indigo-700">
+                        <span className="truncate">{person.id}</span>
+                      </p>
+                    </div>
                   </div>
                 </div>
 
