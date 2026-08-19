@@ -125,18 +125,22 @@ function PersonTable({
 
   return (
     <>
-      {/* ================= Desktop (Giữ nguyên mức dịu nhẹ) ================= */}
+      {/* ================= Desktop ================= */}
       <div className="hidden overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm md:block">
         <div className="overflow-x-auto">
           <div className="max-h-[680px] overflow-y-auto">
             <table className="w-full min-w-[1100px] table-fixed border-collapse">
               <thead className="sticky top-0 z-10 bg-slate-50/95 backdrop-blur">
                 <tr className="border-b border-slate-200 text-xs font-bold uppercase tracking-wide text-slate-500">
-                  <th className="w-[30%] px-6 py-4 text-left">
+                  <th className="w-[5%] px-1 py-4 text-center">
+                    ID
+                  </th>
+
+                  <th className="w-[28%] px-6 py-4 text-left">
                     Thông tin album
                   </th>
 
-                  <th className="w-[14%] px-4 py-4 text-center">
+                  <th className="w-[13%] px-4 py-4 text-center">
                     Ngày sinh
                   </th>
 
@@ -144,11 +148,11 @@ function PersonTable({
                     Giới tính
                   </th>
 
-                  <th className="w-[16%] px-5 py-4 text-center">
+                  <th className="w-[15%] px-5 py-4 text-center">
                     Quê quán/Địa điểm
                   </th>
 
-                  <th className="w-[11%] px-4 py-4 text-center">
+                  <th className="w-[10%] px-4 py-4 text-center">
                     Lượt xem
                   </th>
 
@@ -169,8 +173,15 @@ function PersonTable({
                   return (
                     <tr
                       key={person.id}
-                      className={`group h-[84px] transition-colors duration-150 ${theme.tableRowBg} ${theme.tableHoverBg}`}
+                      className={`group transition-colors duration-150 ${theme.tableRowBg} ${theme.tableHoverBg}`}
                     >
+                      {/* Cột ID */}
+                      <td className="px-1 py-4 text-center align-middle">
+                        <span className="inline-flex min-w-[28px] items-center justify-center rounded-lg bg-white/95 border border-slate-200/90 px-1.5 py-1 text-xs font-mono font-black text-slate-700 shadow-2xs">
+                          {person.id}
+                        </span>
+                      </td>
+
                       {/* Thông tin album */}
                       <td className="px-6 py-4 align-middle">
                         <div className="flex min-w-0 items-center gap-4">
@@ -183,10 +194,10 @@ function PersonTable({
                             />
                           </div>
 
-                          <div className="min-w-0 flex-1">
+                          <div className="min-w-0 flex-1 py-1">
                             <p
                               title={person.name || "Chưa cập nhật"}
-                              className="truncate text-[18px] font-bold text-slate-800 transition group-hover:text-blue-700"
+                              className="text-[17px] font-bold leading-snug text-slate-800 break-words transition group-hover:text-blue-700"
                             >
                               {person.name || "Chưa cập nhật"}
                             </p>
@@ -319,7 +330,7 @@ function PersonTable({
         </div>
       </div>
 
-      {/* ================= Mobile (Màu thẻ đậm hơn, rõ nét) ================= */}
+      {/* ================= Mobile ================= */}
       <div className="space-y-3.5 md:hidden">
         {people.map((person, index) => {
           const theme = getCardPastelTheme(index);
@@ -340,41 +351,52 @@ function PersonTable({
                     className="h-16 w-16 shrink-0 rounded-full border-2 border-white object-cover shadow-sm ring-1 ring-black/10"
                   />
 
-                  {/* Thông tin chính */}
+                  {/* Thông tin tên & ngày sinh bên trái */}
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <h3
-                        title={person.name}
-                        className="truncate text-[17px] font-bold text-slate-900"
-                      >
-                        {person.name || "Chưa cập nhật"}
-                      </h3>
+                    <div className="flex items-start justify-between gap-2">
+                      {/* Tên: Giữ nguyên cách hiển thị, dài mới xuống dòng */}
+                      <div className="min-w-0 flex-1">
+                        <h3
+                          title={person.name}
+                          className="text-base font-bold leading-snug text-slate-900 break-words"
+                        >
+                          {person.name || "Chưa cập nhật"}
+                        </h3>
 
-                      {/* Giới tính */}
-                      <span
-                        className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1 ring-inset ${getGenderStyle(
-                          person.gender
-                        )}`}
-                      >
-                        {person.gender || "Khác"}
-                      </span>
-                    </div>
+                        <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-slate-700">
+                          <FaBirthdayCake className="shrink-0 text-pink-500" />
 
-                    <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-slate-700">
-                      <FaBirthdayCake className="shrink-0 text-pink-500" />
+                          <span className="truncate">
+                            {formatBirthday(person.birthday)}
+                          </span>
+                        </p>
 
-                      <span className="truncate">
-                        {formatBirthday(person.birthday)}
-                      </span>
-                    </p>
+                        {person.class && (
+                          <div className="mt-2">
+                            <span className="inline-flex max-w-[170px] truncate rounded-full bg-white/95 border border-black/10 px-2.5 py-1 text-[11px] font-medium text-slate-700 shadow-2xs">
+                              🎓 {person.class}
+                            </span>
+                          </div>
+                        )}
+                      </div>
 
-                    {person.class && (
-                      <div className="mt-2">
-                        <span className="inline-flex max-w-[170px] truncate rounded-full bg-white/95 border border-black/10 px-2.5 py-1 text-[11px] font-medium text-slate-700 shadow-2xs">
-                          🎓 {person.class}
+                      {/* Cụm bên phải: Giới tính ở trên, ID ở dưới */}
+                      <div className="flex shrink-0 flex-col items-end gap-1.5">
+                        {/* Giới tính */}
+                        <span
+                          className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1 ring-inset ${getGenderStyle(
+                            person.gender
+                          )}`}
+                        >
+                          {person.gender || "Khác"}
+                        </span>
+
+                        {/* ID nằm dưới giới tính */}
+                        <span className="rounded-md bg-white/95 border border-black/10 px-2 py-0.5 text-[11px] font-mono font-black text-slate-700 shadow-2xs">
+                          ID: {person.id}
                         </span>
                       </div>
-                    )}
+                    </div>
                   </div>
                 </div>
               </div>
