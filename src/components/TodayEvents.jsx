@@ -181,7 +181,7 @@ function TodayEvents({
                 <div className="mb-8 overflow-hidden rounded-3xl border border-red-200 bg-gradient-to-br from-red-50 via-white to-yellow-50 p-6 shadow-lg sm:p-8">
                     <div className="text-center">
                         <h2 className="mt-1 whitespace-nowrap text-lg font-bold text-red-600 sm:text-2xl">
-                            Sự kiện hôm nay
+                            SỰ KIỆN HÔM NAY
                         </h2>
                     </div>
 
