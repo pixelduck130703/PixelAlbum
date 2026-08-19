@@ -304,7 +304,7 @@ function HomeMusicManager({
 
               <div className="min-w-0">
                 <h2 className="truncate text-xl font-bold sm:text-2xl">
-                  Quản lý nhạc trang chủ
+                Nhạc nền trang chủ
                 </h2>
               </div>
             </div>

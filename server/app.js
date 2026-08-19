@@ -2686,6 +2686,73 @@ app.delete(
 );
 
 /* ==========================
+   API lấy lịch sử xem của 1 album
+========================== */
+
+app.get(
+  "/api/admin/people/:id/album-history",
+  verifyAdminToken,
+  async (req, res) => {
+    try {
+      const personId = Number(req.params.id);
+
+      if (!Number.isInteger(personId) || personId <= 0) {
+        return res.status(400).json({
+          message: "ID album không hợp lệ.",
+        });
+      }
+
+      const result = await pool.query(
+        `
+          SELECT
+            view_date AS date,
+            views,
+            last_viewed_at AS "lastViewedAt",
+            view_times AS "viewTimes",
+            view_details AS "viewDetails"
+          FROM album_view_by_person_daily
+          WHERE person_id = $1
+          ORDER BY view_date DESC
+        `,
+        [personId]
+      );
+
+      const data = result.rows.map((item) => ({
+        date: item.date,
+        views: Number(item.views) || 0,
+        lastViewedAt: item.lastViewedAt || null,
+        viewTimes: Array.isArray(item.viewTimes)
+          ? item.viewTimes
+          : [],
+        viewDetails: Array.isArray(item.viewDetails)
+          ? item.viewDetails
+          : [],
+      }));
+
+      const totalViews = data.reduce(
+        (total, item) => total + item.views,
+        0
+      );
+
+      return res.json({
+        totalViews,
+        totalDays: data.length,
+        data,
+      });
+    } catch (error) {
+      console.error(
+        "Lỗi lấy lịch sử xem album:",
+        error
+      );
+
+      return res.status(500).json({
+        message: "Không thể tải lịch sử xem album.",
+      });
+    }
+  }
+);
+
+/* ==========================
    Middleware xử lý lỗi CORS
 ========================== */
 

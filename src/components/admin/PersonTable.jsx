@@ -3,6 +3,7 @@ import {
   FaEdit,
   FaExternalLinkAlt,
   FaEye,
+  FaHistory,
   FaMapMarkerAlt,
   FaTrash,
 } from "react-icons/fa";
@@ -10,10 +11,61 @@ import {
 const FALLBACK_AVATAR =
   "https://placehold.co/160x160?text=Avatar";
 
+// Bảng màu: Desktop giữ mức nhẹ dịu (50/50), Mobile nhận tông đậm rõ (100/90)
+const PASTEL_THEMES = [
+  {
+    // Xanh dương
+    tableRowBg: "bg-blue-50/50",
+    tableHoverBg: "hover:bg-blue-100/50",
+    mobileCardBg: "bg-blue-100/90 border-blue-300",
+    mobileHeaderBorder: "border-blue-300/80",
+  },
+  {
+    // Xanh ngọc
+    tableRowBg: "bg-emerald-50/50",
+    tableHoverBg: "hover:bg-emerald-100/50",
+    mobileCardBg: "bg-emerald-100/90 border-emerald-300",
+    mobileHeaderBorder: "border-emerald-300/80",
+  },
+  {
+    // Tím
+    tableRowBg: "bg-purple-50/50",
+    tableHoverBg: "hover:bg-purple-100/50",
+    mobileCardBg: "bg-purple-100/90 border-purple-300",
+    mobileHeaderBorder: "border-purple-300/80",
+  },
+  {
+    // Vàng cam
+    tableRowBg: "bg-amber-50/50",
+    tableHoverBg: "hover:bg-amber-100/50",
+    mobileCardBg: "bg-amber-100/90 border-amber-300",
+    mobileHeaderBorder: "border-amber-300/80",
+  },
+  {
+    // Hồng
+    tableRowBg: "bg-rose-50/50",
+    tableHoverBg: "hover:bg-rose-100/50",
+    mobileCardBg: "bg-rose-100/90 border-rose-300",
+    mobileHeaderBorder: "border-rose-300/80",
+  },
+  {
+    // Xanh mòng két
+    tableRowBg: "bg-teal-50/50",
+    tableHoverBg: "hover:bg-teal-100/50",
+    mobileCardBg: "bg-teal-100/90 border-teal-300",
+    mobileHeaderBorder: "border-teal-300/80",
+  },
+];
+
+function getCardPastelTheme(index) {
+  return PASTEL_THEMES[index % PASTEL_THEMES.length];
+}
+
 function PersonTable({
   people = [],
   onEdit,
   onDelete,
+  onViewHistory,
 }) {
   const formatBirthday = (birthday) => {
     if (!birthday) {
@@ -41,14 +93,14 @@ function PersonTable({
 
   const getGenderStyle = (gender) => {
     if (gender === "Nam") {
-      return "bg-blue-50 text-blue-700 ring-blue-100";
+      return "bg-blue-100 text-blue-800 ring-blue-300";
     }
 
     if (gender === "Nữ") {
-      return "bg-pink-50 text-pink-700 ring-pink-100";
+      return "bg-pink-100 text-pink-800 ring-pink-300";
     }
 
-    return "bg-slate-100 text-slate-600 ring-slate-200";
+    return "bg-slate-200 text-slate-700 ring-slate-300";
   };
 
   if (people.length === 0) {
@@ -73,11 +125,11 @@ function PersonTable({
 
   return (
     <>
-      {/* ================= Desktop ================= */}
+      {/* ================= Desktop (Giữ nguyên mức dịu nhẹ) ================= */}
       <div className="hidden overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm md:block">
         <div className="overflow-x-auto">
           <div className="max-h-[680px] overflow-y-auto">
-            <table className="w-full min-w-[1100px] table-fixed">
+            <table className="w-full min-w-[1100px] table-fixed border-collapse">
               <thead className="sticky top-0 z-10 bg-slate-50/95 backdrop-blur">
                 <tr className="border-b border-slate-200 text-xs font-bold uppercase tracking-wide text-slate-500">
                   <th className="w-[30%] px-6 py-4 text-left">
@@ -110,269 +162,317 @@ function PersonTable({
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-slate-100">
-                {people.map((person) => (
-                  <tr
-                    key={person.id}
-                    className="group h-[84px] transition duration-200 hover:bg-blue-50/40"
-                  >
-                    {/* Thông tin album */}
-                    <td className="px-6 py-4 align-middle">
-                      <div className="flex min-w-0 items-center gap-4">
-                        <div className="relative shrink-0">
-                          <img
-                            src={person.avatar || FALLBACK_AVATAR}
-                            alt={person.name || "Avatar"}
-                            onError={handleImageError}
-                            className="h-14 w-14 rounded-full border border-slate-200 object-cover shadow-sm"
-                          />
+              <tbody className="divide-y divide-slate-200/70">
+                {people.map((person, index) => {
+                  const theme = getCardPastelTheme(index);
+
+                  return (
+                    <tr
+                      key={person.id}
+                      className={`group h-[84px] transition-colors duration-150 ${theme.tableRowBg} ${theme.tableHoverBg}`}
+                    >
+                      {/* Thông tin album */}
+                      <td className="px-6 py-4 align-middle">
+                        <div className="flex min-w-0 items-center gap-4">
+                          <div className="relative shrink-0">
+                            <img
+                              src={person.avatar || FALLBACK_AVATAR}
+                              alt={person.name || "Avatar"}
+                              onError={handleImageError}
+                              className="h-14 w-14 rounded-full border border-slate-200 object-cover shadow-xs"
+                            />
+                          </div>
+
+                          <div className="min-w-0 flex-1">
+                            <p
+                              title={person.name || "Chưa cập nhật"}
+                              className="truncate text-[18px] font-bold text-slate-800 transition group-hover:text-blue-700"
+                            >
+                              {person.name || "Chưa cập nhật"}
+                            </p>
+
+                            {person.class && (
+                              <span className="mt-2 inline-flex max-w-full truncate rounded-full bg-white/90 border border-slate-200/80 px-2.5 py-1 text-[11px] font-medium text-slate-600 shadow-2xs">
+                                🎓 {person.class}
+                              </span>
+                            )}
+                          </div>
                         </div>
+                      </td>
 
-                        <div className="min-w-0 flex-1">
-                          <p
-                            title={person.name || "Chưa cập nhật"}
-                            className="truncate text-[18px] font-bold text-slate-800 transition group-hover:text-blue-700"
-                          >
-                            {person.name || "Chưa cập nhật"}
-                          </p>
+                      {/* Ngày sinh */}
+                      <td className="px-4 py-4 text-center align-middle">
+                        <span className="inline-flex min-w-[110px] items-center justify-center gap-1.5 whitespace-nowrap text-sm text-slate-600">
+                          <FaBirthdayCake className="shrink-0 text-pink-400" />
 
-                          {person.class && (
-                            <span className="mt-2 inline-flex max-w-full truncate rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600">
-                              🎓 {person.class}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </td>
+                          {formatBirthday(person.birthday)}
+                        </span>
+                      </td>
 
-                    {/* Ngày sinh */}
-                    <td className="px-4 py-4 text-center align-middle">
-                      <span className="inline-flex min-w-[110px] items-center justify-center gap-1.5 whitespace-nowrap text-sm text-slate-600">
-                        <FaBirthdayCake className="shrink-0 text-pink-400" />
-
-                        {formatBirthday(person.birthday)}
-                      </span>
-                    </td>
-
-                    {/* Giới tính */}
-                    <td className="px-4 py-4 text-center align-middle">
-                      <span
-                        className={`inline-flex min-w-[68px] items-center justify-center rounded-full px-3 py-1.5 text-xs font-semibold ring-1 ring-inset ${getGenderStyle(
-                          person.gender
-                        )}`}
-                      >
-                        {person.gender || "Khác"}
-                      </span>
-                    </td>
-
-                    {/* Quê quán */}
-                    <td className="px-5 py-4 text-center align-middle">
-                      <div className="mx-auto flex max-w-[170px] items-center justify-center gap-2 text-sm text-slate-600">
-                        <FaMapMarkerAlt className="shrink-0 text-red-400" />
-
+                      {/* Giới tính */}
+                      <td className="px-4 py-4 text-center align-middle">
                         <span
-                          title={person.address || "Chưa cập nhật"}
-                          className="block min-w-0 truncate"
+                          className={`inline-flex min-w-[68px] items-center justify-center rounded-full px-3 py-1.5 text-xs font-semibold ring-1 ring-inset ${getGenderStyle(
+                            person.gender
+                          )}`}
                         >
-                          {person.address || "Chưa cập nhật"}
+                          {person.gender || "Khác"}
                         </span>
-                      </div>
-                    </td>
+                      </td>
 
-                    {/* Lượt xem */}
-                    <td className="px-4 py-4 text-center align-middle">
-                      {person.album ? (
-                        <span className="inline-flex h-9 w-[92px] items-center justify-center gap-2 rounded-full bg-indigo-50 px-3 text-xs font-bold text-indigo-700">
-                          <FaEye className="shrink-0" />
+                      {/* Quê quán */}
+                      <td className="px-5 py-4 text-center align-middle">
+                        <div className="mx-auto flex max-w-[170px] items-center justify-center gap-2 text-sm text-slate-600">
+                          <FaMapMarkerAlt className="shrink-0 text-red-400" />
 
-                          {formatAlbumViews(person.albumViews)}
-                        </span>
-                      ) : (
-                        <span className="inline-flex min-h-9 items-center justify-center text-xs text-slate-400">
-                          Chưa có album
-                        </span>
-                      )}
-                    </td>
+                          <span
+                            title={person.address || "Chưa cập nhật"}
+                            className="block min-w-0 truncate font-medium"
+                          >
+                            {person.address || "Chưa cập nhật"}
+                          </span>
+                        </div>
+                      </td>
 
-                    {/* Liên kết album */}
-                    <td className="px-4 py-4 text-center align-middle">
-                      {person.album ? (
-                        <a
-                          href={person.album}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex h-10 w-[82px] items-center justify-center gap-2 rounded-xl bg-blue-600 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 hover:shadow-md"
-                        >
-                          <FaExternalLinkAlt className="shrink-0 text-xs" />
+                      {/* Lượt xem */}
+                      <td className="px-4 py-4 text-center align-middle">
+                        {person.album ? (
+                          <span className="inline-flex h-9 w-[92px] items-center justify-center gap-2 rounded-full bg-white/90 border border-indigo-100 px-3 text-xs font-bold text-indigo-700 shadow-2xs">
+                            <FaEye className="shrink-0 text-indigo-500" />
 
-                          Mở
-                        </a>
-                      ) : (
-                        <span className="inline-flex h-9 w-[82px] items-center justify-center rounded-full bg-slate-100 px-3 text-xs font-medium text-slate-400">
-                          Chưa có
-                        </span>
-                      )}
-                    </td>
+                            {formatAlbumViews(person.albumViews)}
+                          </span>
+                        ) : (
+                          <span className="inline-flex min-h-9 items-center justify-center text-xs text-slate-400">
+                            Chưa có album
+                          </span>
+                        )}
+                      </td>
 
-                    {/* Thao tác */}
-                    <td className="px-4 py-4 text-center align-middle">
-                      <div className="flex items-center justify-center gap-3">
-                        <button
-                          type="button"
-                          onClick={() => onEdit(person)}
-                          className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-600 transition hover:bg-amber-100 hover:shadow-sm"
-                          title="Sửa album"
-                          aria-label={`Sửa ${person.name}`}
-                        >
-                          <FaEdit />
-                        </button>
+                      {/* Liên kết album */}
+                      <td className="px-4 py-4 text-center align-middle">
+                        {person.album ? (
+                          <a
+                            href={person.album}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex h-10 w-[82px] items-center justify-center gap-2 rounded-xl bg-blue-600 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 hover:shadow-md active:scale-95"
+                          >
+                            <FaExternalLinkAlt className="shrink-0 text-xs" />
 
-                        <button
-                          type="button"
-                          onClick={() => onDelete(person.id)}
-                          className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-red-600 transition hover:bg-red-100 hover:shadow-sm"
-                          title="Xóa album"
-                          aria-label={`Xóa ${person.name}`}
-                        >
-                          <FaTrash />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                            Mở
+                          </a>
+                        ) : (
+                          <span className="inline-flex h-9 w-[82px] items-center justify-center rounded-full bg-white/80 border border-slate-200/60 px-3 text-xs font-medium text-slate-400">
+                            Chưa có
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Thao tác */}
+                      <td className="px-4 py-4 text-center align-middle">
+                        <div className="flex items-center justify-center gap-2">
+
+                          {/* Lịch sử */}
+                          {person.album && (
+                            <button
+                              type="button"
+                              onClick={() => onViewHistory(person)}
+                              className="flex h-11 w-11 items-center justify-center rounded-xl border border-indigo-100 bg-white/90 text-indigo-600 shadow-2xs transition hover:bg-indigo-50 hover:shadow-sm active:scale-95 cursor-pointer"
+                              title="Xem lịch sử"
+                              aria-label={`Xem lịch sử ${person.name}`}
+                            >
+                              <FaHistory />
+                            </button>
+                          )}
+
+                          {/* Sửa */}
+                          <button
+                            type="button"
+                            onClick={() => onEdit(person)}
+                            className="flex h-11 w-11 items-center justify-center rounded-xl border border-amber-100 bg-white/90 text-amber-600 shadow-2xs transition hover:bg-amber-50 hover:shadow-sm active:scale-95 cursor-pointer"
+                            title="Sửa album"
+                            aria-label={`Sửa ${person.name}`}
+                          >
+                            <FaEdit />
+                          </button>
+
+                          {/* Xóa */}
+                          <button
+                            type="button"
+                            onClick={() => onDelete(person.id)}
+                            className="flex h-11 w-11 items-center justify-center rounded-xl border border-red-100 bg-white/90 text-red-600 shadow-2xs transition hover:bg-red-50 hover:shadow-sm active:scale-95 cursor-pointer"
+                            title="Xóa album"
+                            aria-label={`Xóa ${person.name}`}
+                          >
+                            <FaTrash />
+                          </button>
+
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         </div>
       </div>
 
-      {/* ================= Mobile ================= */}
-<div className="space-y-3 md:hidden">
-  {people.map((person) => (
-    <article
-      key={person.id}
-      className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
-    >
-      {/* Header */}
-      <div className="border-b border-slate-100 bg-gradient-to-r from-white to-blue-50/50 p-4">
-        <div className="flex items-center gap-3">
-          {/* Avatar tròn */}
-          <img
-            src={person.avatar || FALLBACK_AVATAR}
-            alt={person.name || "Avatar"}
-            onError={handleImageError}
-            className="h-16 w-16 shrink-0 rounded-full border-2 border-white object-cover shadow-md ring-1 ring-slate-200"
-          />
+      {/* ================= Mobile (Màu thẻ đậm hơn, rõ nét) ================= */}
+      <div className="space-y-3.5 md:hidden">
+        {people.map((person, index) => {
+          const theme = getCardPastelTheme(index);
 
-          {/* Thông tin chính */}
-          <div className="min-w-0 flex-1">
-            <h3
-              title={person.name}
-              className="truncate text-[17px] font-bold text-slate-800"
+          return (
+            <article
+              key={person.id}
+              className={`overflow-hidden rounded-2xl border ${theme.mobileCardBg} shadow-xs`}
             >
-              {person.name || "Chưa cập nhật"}
-            </h3>
+              {/* Header Thẻ */}
+              <div className={`border-b ${theme.mobileHeaderBorder} p-4`}>
+                <div className="flex items-center gap-3">
+                  {/* Avatar tròn */}
+                  <img
+                    src={person.avatar || FALLBACK_AVATAR}
+                    alt={person.name || "Avatar"}
+                    onError={handleImageError}
+                    className="h-16 w-16 shrink-0 rounded-full border-2 border-white object-cover shadow-sm ring-1 ring-black/10"
+                  />
 
-            <p className="mt-1 flex items-center gap-1.5 text-xs text-slate-500">
-              <FaBirthdayCake className="shrink-0 text-pink-400" />
+                  {/* Thông tin chính */}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3
+                        title={person.name}
+                        className="truncate text-[17px] font-bold text-slate-900"
+                      >
+                        {person.name || "Chưa cập nhật"}
+                      </h3>
 
-              <span className="truncate">
-                {formatBirthday(person.birthday)}
-              </span>
-            </p>
+                      {/* Giới tính */}
+                      <span
+                        className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1 ring-inset ${getGenderStyle(
+                          person.gender
+                        )}`}
+                      >
+                        {person.gender || "Khác"}
+                      </span>
+                    </div>
 
-            <div className="mt-2 flex flex-wrap gap-2">
-              <span
-                className={`inline-flex items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 ring-inset ${getGenderStyle(
-                  person.gender
-                )}`}
-              >
-                {person.gender || "Khác"}
-              </span>
+                    <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-slate-700">
+                      <FaBirthdayCake className="shrink-0 text-pink-500" />
 
-              {person.class && (
-                <span className="max-w-[150px] truncate rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600">
-                  🎓 {person.class}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
+                      <span className="truncate">
+                        {formatBirthday(person.birthday)}
+                      </span>
+                    </p>
+
+                    {person.class && (
+                      <div className="mt-2">
+                        <span className="inline-flex max-w-[170px] truncate rounded-full bg-white/95 border border-black/10 px-2.5 py-1 text-[11px] font-medium text-slate-700 shadow-2xs">
+                          🎓 {person.class}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Nội dung Thẻ */}
+              <div className="p-4">
+                <div className="grid grid-cols-5 gap-2.5">
+                  {/* Quê quán */}
+                  <div className="col-span-3 rounded-xl bg-white/95 border border-black/10 p-2.5 shadow-2xs">
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                      Quê quán/Địa điểm
+                    </p>
+
+                    <p className="mt-1.5 line-clamp-2 text-sm font-semibold leading-5 text-slate-800">
+                      <FaMapMarkerAlt className="mr-1.5 inline shrink-0 text-red-500" />
+                      {person.address || "Chưa cập nhật"}
+                    </p>
+                  </div>
+
+                  {/* Lượt xem */}
+                  <div className="col-span-2 flex flex-col justify-between rounded-xl bg-white/95 border border-black/10 p-2.5 shadow-2xs">
+                    <p className="truncate text-[10px] font-bold uppercase tracking-wide text-indigo-600">
+                      Lượt xem
+                    </p>
+
+                    <p className="mt-1.5 flex items-center gap-1.5 text-base font-extrabold text-indigo-700">
+                      <FaEye className="shrink-0 text-xs text-indigo-600" />
+                      <span className="truncate">
+                        {person.album
+                          ? formatAlbumViews(person.albumViews)
+                          : "0"}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Xem album */}
+                {person.album ? (
+                  <a
+                    href={person.album}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-xs transition active:bg-blue-700"
+                  >
+                    <FaExternalLinkAlt />
+                    Xem album
+                  </a>
+                ) : (
+                  <div className="mt-4 flex min-h-[48px] items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white/60 px-4 text-center text-sm font-medium text-slate-500">
+                    Chưa có liên kết album
+                  </div>
+                )}
+
+                {/* Thao tác */}
+                <div className="mt-3 grid grid-cols-3 gap-2">
+
+                  {/* Lịch sử */}
+                  {person.album ? (
+                    <button
+                      type="button"
+                      onClick={() => onViewHistory(person)}
+                      className="flex min-h-[46px] items-center justify-center gap-1.5 rounded-xl border border-indigo-200 bg-white/95 px-2 py-3 text-sm font-semibold text-indigo-700 shadow-2xs transition active:bg-indigo-50 cursor-pointer"
+                    >
+                      <FaHistory />
+                      Lịch sử
+                    </button>
+                  ) : (
+                    <div className="flex min-h-[46px] items-center justify-center rounded-xl bg-white/40 px-2 py-3 text-xs font-medium text-slate-400">
+                      Lịch sử
+                    </div>
+                  )}
+
+                  {/* Sửa */}
+                  <button
+                    type="button"
+                    onClick={() => onEdit(person)}
+                    className="flex min-h-[46px] items-center justify-center gap-1.5 rounded-xl border border-amber-200 bg-white/95 px-2 py-3 text-sm font-semibold text-amber-700 shadow-2xs transition active:bg-amber-50 cursor-pointer"
+                  >
+                    <FaEdit />
+                    Sửa
+                  </button>
+
+                  {/* Xóa */}
+                  <button
+                    type="button"
+                    onClick={() => onDelete(person.id)}
+                    className="flex min-h-[46px] items-center justify-center gap-1.5 rounded-xl border border-red-200 bg-white/95 px-2 py-3 text-sm font-semibold text-red-700 shadow-2xs transition active:bg-red-50 cursor-pointer"
+                  >
+                    <FaTrash />
+                    Xóa
+                  </button>
+
+                </div>
+              </div>
+            </article>
+          );
+        })}
       </div>
-
-      {/* Nội dung */}
-      <div className="p-4">
-        <div className="grid grid-cols-2 gap-3">
-          {/* Quê quán */}
-          <div className="rounded-xl bg-slate-50 p-3">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
-              Quê quán/Địa điểm
-            </p>
-
-            <p className="mt-2 line-clamp-2 text-sm font-medium leading-5 text-slate-700">
-              <FaMapMarkerAlt className="mr-1 inline text-red-400" />
-
-              {person.address || "Chưa cập nhật"}
-            </p>
-          </div>
-
-          {/* Lượt xem */}
-          <div className="rounded-xl bg-indigo-50 p-3">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-indigo-400">
-              Lượt xem
-            </p>
-
-            <p className="mt-2 flex items-center gap-2 text-lg font-bold text-indigo-700">
-              <FaEye className="shrink-0" />
-
-              {person.album
-                ? formatAlbumViews(person.albumViews)
-                : "0"}
-            </p>
-          </div>
-        </div>
-
-        {/* Xem album */}
-        {person.album ? (
-          <a
-            href={person.album}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-4 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition active:bg-blue-700"
-          >
-            <FaExternalLinkAlt />
-            Xem album
-          </a>
-        ) : (
-          <div className="mt-4 flex min-h-[48px] items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 text-center text-sm font-medium text-slate-400">
-            Chưa có liên kết album
-          </div>
-        )}
-
-        {/* Thao tác */}
-        <div className="mt-3 grid grid-cols-2 gap-3">
-          <button
-            type="button"
-            onClick={() => onEdit(person)}
-            className="flex min-h-[46px] items-center justify-center gap-2 rounded-xl bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-700 transition active:bg-amber-100"
-          >
-            <FaEdit />
-            Sửa
-          </button>
-
-          <button
-            type="button"
-            onClick={() => onDelete(person.id)}
-            className="flex min-h-[46px] items-center justify-center gap-2 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 transition active:bg-red-100"
-          >
-            <FaTrash />
-            Xóa
-          </button>
-        </div>
-      </div>
-    </article>
-  ))}
-</div>
     </>
   );
 }

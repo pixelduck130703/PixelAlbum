@@ -14,8 +14,19 @@ import AnnouncementManager from "../../components/admin/AnnouncementManager";
 import HomeMusicManager from "../../components/admin/HomeMusicManager";
 import { exportExcel } from "../../components/admin/ExportExcel";
 import EventManager from "../../components/admin/EventManager";
+import AlbumHistoryModal from "../../components/admin/AlbumHistoryModal";
 
 function Dashboard() {
+  const handleShowAlbumHistory = (person) => {
+    setSelectedAlbumHistory(person);
+    setShowAlbumHistoryModal(true);
+  };
+
+  const handleCloseAlbumHistory = () => {
+    setShowAlbumHistoryModal(false);
+    setSelectedAlbumHistory(null);
+  };
+
   const [stats, setStats] = useState({
     totalPeople: 0,
     thisMonth: 0,
@@ -32,6 +43,11 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showTodayModal, setShowTodayModal] = useState(false);
+  const [showAlbumHistoryModal, setShowAlbumHistoryModal] =
+    useState(false);
+
+  const [selectedAlbumHistory, setSelectedAlbumHistory] =
+    useState(null);
   const [todayPeople, setTodayPeople] = useState([]);
   const [visits, setVisits] = useState(null);
 
@@ -590,6 +606,7 @@ function Dashboard() {
               people={filteredPeople}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              onViewHistory={handleShowAlbumHistory}
             />
           </>
         )}
@@ -657,6 +674,12 @@ function Dashboard() {
             false
           )
         }
+      />
+
+      <AlbumHistoryModal
+        open={showAlbumHistoryModal}
+        person={selectedAlbumHistory}
+        onClose={handleCloseAlbumHistory}
       />
 
       <AnnouncementManager
