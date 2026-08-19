@@ -21,8 +21,9 @@ const CustomVisitsLabel = (props) => {
   const views = Number(currentItem?.views) || 0;
   const diff = Math.abs(visits - views);
 
-  // Nếu = 0 thì LUÔN Ở TRÊN; nếu > 0 và gần views (<= 3) mà visits < views thì mới ở dưới
-  const isBottom = visits > 0 && diff <= 3 && visits < views;
+  // Khi bằng nhau: Visits luôn hiển thị ở trên làm đại diện
+  // Khi gần nhau (1 <= diff <= 3) và visits < views và visits > 0 thì đẩy xuống dưới
+  const isBottom = visits > 0 && diff > 0 && diff <= 3 && visits < views;
   const yOffset = isBottom ? 16 : -10;
 
   return (
@@ -50,10 +51,15 @@ const CustomViewsLabel = (props) => {
   const currentItem = data?.[index];
   const visits = Number(currentItem?.visits) || 0;
   const views = Number(currentItem?.views) || 0;
-  const diff = Math.abs(visits - views);
 
-  // Nếu = 0 thì LUÔN Ở TRÊN; nếu > 0 và gần visits (<= 3) mà views <= visits thì mới ở dưới
-  const isBottom = views > 0 && diff <= 3 && views <= visits;
+  // Nếu 2 giá trị bằng nhau -> Ẩn nhãn bên Views để chỉ hiển thị 1 số duy nhất
+  if (visits === views) {
+    return null;
+  }
+
+  const diff = Math.abs(visits - views);
+  // Khi gần nhau (1 <= diff <= 3) và views < visits và views > 0 thì đẩy xuống dưới
+  const isBottom = views > 0 && diff <= 3 && views < visits;
   const yOffset = isBottom ? 16 : -10;
 
   return (
