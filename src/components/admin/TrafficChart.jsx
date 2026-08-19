@@ -9,6 +9,9 @@ import {
   YAxis,
 } from "recharts";
 
+/* Khoảng cách chuẩn từ tâm điểm nút tới tâm con số */
+const LABEL_GAP = 12;
+
 /* =========================================================
    CUSTOM LABEL CHO LƯỢT TRUY CẬP (MÀU ĐỎ)
 ========================================================= */
@@ -21,20 +24,19 @@ const CustomVisitsLabel = (props) => {
   const views = Number(currentItem?.views) || 0;
   const diff = Math.abs(visits - views);
 
-  // Khi bằng nhau: Visits luôn hiển thị ở trên làm đại diện
-  // Khi gần nhau (1 <= diff <= 3) và visits < views và visits > 0 thì đẩy xuống dưới
+  // Mặc định ở trên (-LABEL_GAP); nếu gần nhau và visits < views (visits > 0) thì ở dưới (+LABEL_GAP)
   const isBottom = visits > 0 && diff > 0 && diff <= 3 && visits < views;
-  const yOffset = isBottom ? 16 : -10;
+  const yPos = isBottom ? y + LABEL_GAP : y - LABEL_GAP;
 
   return (
     <text
       x={x}
-      y={y + yOffset}
+      y={yPos}
       fill="#FF0000"
       fontSize={11}
       fontWeight={700}
       textAnchor="middle"
-      dominantBaseline={isBottom ? "hanging" : "auto"}
+      dominantBaseline="central"
     >
       {Number(value).toLocaleString("vi-VN")}
     </text>
@@ -52,25 +54,25 @@ const CustomViewsLabel = (props) => {
   const visits = Number(currentItem?.visits) || 0;
   const views = Number(currentItem?.views) || 0;
 
-  // Nếu 2 giá trị bằng nhau -> Ẩn nhãn bên Views để chỉ hiển thị 1 số duy nhất
+  // Nếu 2 giá trị bằng nhau -> Ẩn nhãn bên Views để chỉ hiển thị 1 số duy nhất bên Visits
   if (visits === views) {
     return null;
   }
 
   const diff = Math.abs(visits - views);
-  // Khi gần nhau (1 <= diff <= 3) và views < visits và views > 0 thì đẩy xuống dưới
+  // Mặc định ở trên (-LABEL_GAP); nếu gần nhau và views < visits (views > 0) thì ở dưới (+LABEL_GAP)
   const isBottom = views > 0 && diff <= 3 && views < visits;
-  const yOffset = isBottom ? 16 : -10;
+  const yPos = isBottom ? y + LABEL_GAP : y - LABEL_GAP;
 
   return (
     <text
       x={x}
-      y={y + yOffset}
+      y={yPos}
       fill="#2563eb"
       fontSize={11}
       fontWeight={700}
       textAnchor="middle"
-      dominantBaseline={isBottom ? "hanging" : "auto"}
+      dominantBaseline="central"
     >
       {Number(value).toLocaleString("vi-VN")}
     </text>
