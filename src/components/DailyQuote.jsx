@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const quotes = [+
+const quotes = [
   "Máy ảnh ghi lại hiện tại, nhưng là bằng chứng của quá khứ.",
   "Chụp mất một giây, nhưng giữ lại cả đời.",
   "Giá trị của bức ảnh nằm ở cảm xúc khi xem lại sau mười năm.",
