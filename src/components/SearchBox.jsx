@@ -124,7 +124,7 @@ function SearchBox({
             htmlFor="name-search"
             className="mb-2 block text-sm font-semibold text-slate-700"
           >
-            Tìm theo họ tên, lớp hoặc địa điểm du lịch (IT2, A3, Hà Giang, ...)
+            Tìm theo họ tên, lớp, sự kiện hoặc địa điểm du lịch (IT2, A3, Hà Giang, Graduation...)
           </label>
 
           <div className="relative">
