@@ -9,6 +9,68 @@ import {
   YAxis,
 } from "recharts";
 
+/* =========================================================
+   CUSTOM LABEL CHO LƯỢT TRUY CẬP (MÀU ĐỎ)
+========================================================= */
+const CustomVisitsLabel = (props) => {
+  const { x, y, value, index, data } = props;
+  if (value === undefined || value === null) return null;
+
+  const currentItem = data?.[index];
+  const visits = Number(currentItem?.visits) || 0;
+  const views = Number(currentItem?.views) || 0;
+  const diff = Math.abs(visits - views);
+
+  // Nếu = 0 thì LUÔN Ở TRÊN; nếu > 0 và gần views (<= 3) mà visits < views thì mới ở dưới
+  const isBottom = visits > 0 && diff <= 3 && visits < views;
+  const yOffset = isBottom ? 16 : -10;
+
+  return (
+    <text
+      x={x}
+      y={y + yOffset}
+      fill="#FF0000"
+      fontSize={11}
+      fontWeight={700}
+      textAnchor="middle"
+      dominantBaseline={isBottom ? "hanging" : "auto"}
+    >
+      {Number(value).toLocaleString("vi-VN")}
+    </text>
+  );
+};
+
+/* =========================================================
+   CUSTOM LABEL CHO LƯỢT MỞ ALBUM (MÀU XANH)
+========================================================= */
+const CustomViewsLabel = (props) => {
+  const { x, y, value, index, data } = props;
+  if (value === undefined || value === null) return null;
+
+  const currentItem = data?.[index];
+  const visits = Number(currentItem?.visits) || 0;
+  const views = Number(currentItem?.views) || 0;
+  const diff = Math.abs(visits - views);
+
+  // Nếu = 0 thì LUÔN Ở TRÊN; nếu > 0 và gần visits (<= 3) mà views <= visits thì mới ở dưới
+  const isBottom = views > 0 && diff <= 3 && views <= visits;
+  const yOffset = isBottom ? 16 : -10;
+
+  return (
+    <text
+      x={x}
+      y={y + yOffset}
+      fill="#2563eb"
+      fontSize={11}
+      fontWeight={700}
+      textAnchor="middle"
+      dominantBaseline={isBottom ? "hanging" : "auto"}
+    >
+      {Number(value).toLocaleString("vi-VN")}
+    </text>
+  );
+};
+
 function TrafficChart({
   visitChart = [],
   albumViewChart = [],
@@ -74,7 +136,7 @@ function TrafficChart({
           onChange={(event) =>
             setDays(Number(event.target.value))
           }
-          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 sm:w-auto"
+          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 sm:w-auto cursor-pointer"
         >
           <option value={7}>7 ngày gần nhất</option>
           <option value={14}>14 ngày gần nhất</option>
@@ -84,76 +146,56 @@ function TrafficChart({
       </div>
 
       {/* =====================================================
-          LOADING
+          LOADING / NO DATA / CHART
       ===================================================== */}
       {loading ? (
         <div className="flex h-[280px] items-center justify-center text-sm text-slate-500 sm:h-[320px]">
           Đang tải biểu đồ...
         </div>
       ) : mergedData.length === 0 ? (
-        /* =====================================================
-            NO DATA
-        ===================================================== */
         <div className="flex h-[280px] items-center justify-center text-sm text-slate-500 sm:h-[320px]">
           Chưa có dữ liệu thống kê
         </div>
       ) : (
-        /* =====================================================
-            CHART
-        ===================================================== */
         <div className="h-[300px] w-full sm:h-[340px] md:h-[420px]">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={mergedData}
               margin={{
-                top: 20,
-                right: 8,
+                top: 25,
+                right: 12,
                 left: 0,
-                bottom: 10,
+                bottom: 15,
               }}
             >
-              {/* =================================================
-                  GRID
-              ================================================= */}
               <CartesianGrid
                 strokeDasharray="3 3"
                 vertical={false}
+                stroke="#f1f5f9"
               />
 
-              {/* =================================================
-                  X AXIS
-              ================================================= */}
               <XAxis
                 dataKey="displayDate"
                 interval={xAxisInterval}
-                tick={{ fontSize: 10 }}
+                tick={{ fontSize: 10, fill: "#64748b" }}
                 tickMargin={8}
                 minTickGap={12}
                 padding={{
-                  left: 8,
-                  right: 8,
+                  left: 12,
+                  right: 12,
                 }}
               />
 
-              {/* =================================================
-                  Y AXIS
-              ================================================= */}
               <YAxis
                 allowDecimals={false}
                 width={34}
-                tick={{ fontSize: 10 }}
+                tick={{ fontSize: 10, fill: "#64748b" }}
               />
 
-              {/* =================================================
-                  TOOLTIP
-              ================================================= */}
               <Tooltip
                 labelFormatter={(_, payload) => {
                   const item = payload?.[0]?.payload;
-
-                  return item?.date
-                    ? formatFullDate(item.date)
-                    : "";
+                  return item?.date ? formatFullDate(item.date) : "";
                 }}
                 formatter={(value, name) => [
                   Number(value).toLocaleString("vi-VN"),
@@ -164,12 +206,10 @@ function TrafficChart({
                   border: "1px solid #e2e8f0",
                   fontSize: "12px",
                   maxWidth: "220px",
+                  boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
                 }}
               />
 
-              {/* =================================================
-                  LEGEND
-              ================================================= */}
               <Legend
                 verticalAlign="top"
                 align="center"
@@ -183,8 +223,7 @@ function TrafficChart({
               />
 
               {/* =================================================
-                  LƯỢT TRUY CẬP
-                  ĐƯỜNG + SỐ = MÀU ĐỎ
+                  LƯỢT TRUY CẬP (ĐƯỜNG ĐỎ)
               ================================================= */}
               <Line
                 type="monotone"
@@ -193,29 +232,20 @@ function TrafficChart({
                 stroke="#FF0000"
                 strokeWidth={2.5}
                 dot={{
-                  r: 3,
+                  r: 3.5,
                   fill: "#FF0000",
                   stroke: "#FF0000",
                 }}
                 activeDot={{
-                  r: 5,
+                  r: 5.5,
                   fill: "#FF0000",
                   stroke: "#FF0000",
                 }}
-                label={{
-                  position: "top",
-                  offset: 10,
-                  fill: "#FF0000",
-                  fontSize: 11,
-                  fontWeight: 700,
-                  formatter: (value) =>
-                    Number(value).toLocaleString("vi-VN"),
-                }}
+                label={<CustomVisitsLabel data={mergedData} />}
               />
 
               {/* =================================================
-                  LƯỢT MỞ ALBUM
-                  ĐƯỜNG + SỐ = MÀU XANH
+                  LƯỢT MỞ ALBUM (ĐƯỜNG XANH)
               ================================================= */}
               <Line
                 type="monotone"
@@ -224,24 +254,16 @@ function TrafficChart({
                 stroke="#2563eb"
                 strokeWidth={2.5}
                 dot={{
-                  r: 3,
+                  r: 3.5,
                   fill: "#2563eb",
                   stroke: "#2563eb",
                 }}
                 activeDot={{
-                  r: 5,
+                  r: 5.5,
                   fill: "#2563eb",
                   stroke: "#2563eb",
                 }}
-                label={{
-                  position: "top",
-                  offset: 10,
-                  fill: "#2563eb",
-                  fontSize: 11,
-                  fontWeight: 700,
-                  formatter: (value) =>
-                    Number(value).toLocaleString("vi-VN"),
-                }}
+                label={<CustomViewsLabel data={mergedData} />}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -252,8 +274,7 @@ function TrafficChart({
 }
 
 /* =========================================================
-   HIỂN THỊ NGÀY TRÊN TRỤC X
-   Ví dụ: 18/08
+   HIỂN THỊ NGÀY TRÊN TRỤC X (Ví dụ: 18/08)
 ========================================================= */
 function formatDisplayDate(dateString) {
   const [, month, day] = String(dateString || "").split("-");
@@ -264,8 +285,7 @@ function formatDisplayDate(dateString) {
 }
 
 /* =========================================================
-   HIỂN THỊ NGÀY TRONG TOOLTIP
-   Ví dụ: 18/08/2026
+   HIỂN THỊ NGÀY TRONG TOOLTIP (Ví dụ: 18/08/2026)
 ========================================================= */
 function formatFullDate(dateString) {
   const [year, month, day] = String(dateString || "").split("-");
