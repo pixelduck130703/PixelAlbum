@@ -171,7 +171,7 @@ function AlbumHistoryModal({
         </div>
 
         {/* TỔNG QUAN / SUMMARY */}
-        <div className="grid shrink-0 grid-cols-2 gap-2 border-b border-emerald-100 bg-white px-3 py-2.5 sm:grid-cols-3 sm:gap-3 sm:px-6 sm:py-3.5">
+        <div className="grid shrink-0 grid-cols-2 gap-2 border-b border-emerald-100 bg-white px-3 py-2.5 sm:grid-cols-2 sm:gap-2 sm:px-6 sm:py-3.5">
           {/* Tổng lượt xem */}
           <div className="flex min-w-0 items-center gap-2.5 rounded-xl border border-emerald-100 bg-emerald-50/80 px-3 py-2.5 sm:rounded-2xl sm:px-4">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600 sm:h-9 sm:w-9">
@@ -198,23 +198,6 @@ function AlbumHistoryModal({
               </span>
               <span className="text-base font-black leading-none text-lime-700 sm:text-xl">
                 {history.length.toLocaleString("vi-VN")}
-              </span>
-            </div>
-          </div>
-
-          {/* Lần xem gần nhất */}
-          <div className="col-span-2 flex min-w-0 items-center gap-2.5 rounded-xl border border-slate-200/80 bg-slate-50 px-3 py-2.5 sm:col-span-1 sm:rounded-2xl sm:px-4">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-200/70 text-slate-600 sm:h-9 sm:w-9">
-              <FaClock className="text-sm sm:text-base" />
-            </div>
-            <div className="min-w-0">
-              <span className="block truncate text-[10px] font-bold uppercase tracking-wide text-slate-400 sm:text-xs">
-                Xem gần nhất
-              </span>
-              <span className="block truncate text-xs font-black text-slate-700 sm:text-sm">
-                {history[0]?.lastViewedAt
-                  ? formatDateTime(history[0].lastViewedAt)
-                  : "Chưa có dữ liệu"}
               </span>
             </div>
           </div>
