@@ -45,12 +45,13 @@ function PersonCard({ person }) {
       />
 
       <div className="min-w-0 flex-1">
-        <h2 className="truncate text-lg font-bold text-slate-800">
+        {/* Hiển thị trọn vẹn họ tên, tự xuống dòng khi tên dài */}
+        <h2 className="text-base font-bold leading-snug text-slate-800 break-words sm:text-lg">
           {person.name || "Chưa cập nhật"}
         </h2>
 
         {person.class && (
-          <p className="mt-0.5 truncate text-xs font-semibold text-slate-500">
+          <p className="mt-1 text-xs font-semibold text-slate-500 break-words">
             🎓 {person.class}
           </p>
         )}
