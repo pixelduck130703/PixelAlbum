@@ -135,7 +135,7 @@ function TrafficChart({
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <h2 className="text-base font-bold text-slate-800 sm:text-lg md:text-xl">
-            Thống kê lượt truy cập
+            Thống kê lượt truy cập và lượt xem album
           </h2>
         </div>
 

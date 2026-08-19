@@ -44,7 +44,7 @@ function DashboardActions({
           className={`${buttonClass} bg-violet-600 hover:bg-violet-700 md:w-auto md:flex-1`}
         >
           <span className="shrink-0 text-base">🎵</span>
-          <span className="truncate">Quản lý nhạc</span>
+          <span className="truncate">Nhạc nền</span>
         </button>
 
         {/* 4. Xuất Excel */}
