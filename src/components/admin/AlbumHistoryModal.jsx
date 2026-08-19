@@ -222,9 +222,6 @@ function AlbumHistoryModal({
               <h3 className="mt-3 text-base font-bold text-slate-800 sm:mt-4 sm:text-lg">
                 Chưa có lịch sử xem
               </h3>
-              <p className="mt-1.5 text-xs text-slate-500 sm:mt-2 sm:text-sm">
-                Album này chưa được mở xem lần nào.
-              </p>
             </div>
           ) : (
             <div className="space-y-3 sm:space-y-4">
