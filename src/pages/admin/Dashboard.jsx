@@ -16,6 +16,18 @@ import { exportExcel } from "../../components/admin/ExportExcel";
 import EventManager from "../../components/admin/EventManager";
 import AlbumHistoryModal from "../../components/admin/AlbumHistoryModal";
 
+// Hàm chuẩn hóa tiếng Việt bỏ dấu
+function normalizeText(text) {
+  return String(text || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function Dashboard() {
   const handleShowAlbumHistory = (person) => {
     setSelectedAlbumHistory(person);
@@ -43,11 +55,9 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showTodayModal, setShowTodayModal] = useState(false);
-  const [showAlbumHistoryModal, setShowAlbumHistoryModal] =
-    useState(false);
+  const [showAlbumHistoryModal, setShowAlbumHistoryModal] = useState(false);
 
-  const [selectedAlbumHistory, setSelectedAlbumHistory] =
-    useState(null);
+  const [selectedAlbumHistory, setSelectedAlbumHistory] = useState(null);
   const [todayPeople, setTodayPeople] = useState([]);
   const [visits, setVisits] = useState(null);
 
@@ -56,24 +66,13 @@ function Dashboard() {
   const [chartDays, setChartDays] = useState(7);
   const [loadingTrafficChart, setLoadingTrafficChart] = useState(true);
 
-  const [
-    showHomeMusicManager,
-    setShowHomeMusicManager,
-  ] = useState(false);
-
-  const [showEventManager, setShowEventManager] =
-    useState(false);
-
-  const [
-    showAnnouncementManager,
-    setShowAnnouncementManager,
-  ] = useState(false);
+  const [showHomeMusicManager, setShowHomeMusicManager] = useState(false);
+  const [showEventManager, setShowEventManager] = useState(false);
+  const [showAnnouncementManager, setShowAnnouncementManager] = useState(false);
 
   const formatChartDate = (dateString) => {
     if (!dateString) return "";
-
     const [, month, day] = String(dateString).split("-");
-
     return day && month ? `${day}/${month}` : String(dateString);
   };
 
@@ -114,15 +113,12 @@ function Dashboard() {
         "Lỗi tải biểu đồ thống kê:",
         error.response?.data || error
       );
-
       setVisitChart([]);
       setAlbumViewChart([]);
     } finally {
       setLoadingTrafficChart(false);
     }
   };
-
-
 
   useEffect(() => {
     loadTrafficChart();
@@ -132,7 +128,6 @@ function Dashboard() {
     const loadVisits = async () => {
       try {
         const res = await api.get("/visits");
-        console.log(res.data); // kiểm tra
         setVisits(Number(res.data.visits) || 0);
       } catch (err) {
         console.error(err);
@@ -146,16 +141,9 @@ function Dashboard() {
   const handleShowTodayBirthday = async () => {
     try {
       const response = await api.get("/people");
-
       const today = new Date();
-
-      const month = String(
-        today.getMonth() + 1
-      ).padStart(2, "0");
-
-      const day = String(
-        today.getDate()
-      ).padStart(2, "0");
+      const month = String(today.getMonth() + 1).padStart(2, "0");
+      const day = String(today.getDate()).padStart(2, "0");
 
       const list = response.data.filter((person) => {
         if (!person.birthday || person.deathDate) {
@@ -163,22 +151,15 @@ function Dashboard() {
         }
 
         return (
-          person.birthday.substring(5) ===
-          `${month}-${day}`
+          person.birthday.substring(5) === `${month}-${day}`
         );
       });
 
       setTodayPeople(list);
       setShowTodayModal(true);
     } catch (error) {
-      console.error(
-        "Lỗi lấy sinh nhật hôm nay:",
-        error
-      );
-
-      toast.error(
-        "Không thể tải danh sách sinh nhật hôm nay."
-      );
+      console.error("Lỗi lấy sinh nhật hôm nay:", error);
+      toast.error("Không thể tải danh sách sinh nhật hôm nay.");
     }
   };
 
@@ -210,7 +191,6 @@ function Dashboard() {
 
   const handleShowMonthBirthday = () => {
     const currentMonth = String(new Date().getMonth() + 1);
-
     setSelectedBirthdayMonth(currentMonth);
     setBirthdayMonthPeople(getBirthdayPeopleByMonth(currentMonth));
     setShowBirthdayMonthModal(true);
@@ -221,50 +201,28 @@ function Dashboard() {
       const response = await api.get("/dashboard");
       setStats(response.data);
     } catch (error) {
-      //Xóa thông báo lỗi
+      // Bỏ qua lỗi hiển thị
     }
   };
 
-
-  const [
-    showTodayAlbumViewsModal,
-    setShowTodayAlbumViewsModal,
-  ] = useState(false);
-
-  const [todayAlbumViews, setTodayAlbumViews] =
-    useState([]);
-
-  const [
-    todayAlbumViewSummary,
-    setTodayAlbumViewSummary,
-  ] = useState({
+  const [showTodayAlbumViewsModal, setShowTodayAlbumViewsModal] = useState(false);
+  const [todayAlbumViews, setTodayAlbumViews] = useState([]);
+  const [todayAlbumViewSummary, setTodayAlbumViewSummary] = useState({
     totalAlbums: 0,
     totalViews: 0,
   });
-
-  const [
-    loadingTodayAlbumViews,
-    setLoadingTodayAlbumViews,
-  ] = useState(false);
+  const [loadingTodayAlbumViews, setLoadingTodayAlbumViews] = useState(false);
 
   const getTodayVietnam = () => {
-    return new Intl.DateTimeFormat(
-      "en-CA",
-      {
-        timeZone: "Asia/Ho_Chi_Minh",
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-      }
-    ).format(new Date());
+    return new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Ho_Chi_Minh",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date());
   };
 
-  const [
-    albumViewDate,
-    setAlbumViewDate,
-  ] = useState(
-    getTodayVietnam()
-  );
+  const [albumViewDate, setAlbumViewDate] = useState(getTodayVietnam());
 
   const loadPeople = async () => {
     try {
@@ -286,121 +244,92 @@ function Dashboard() {
     loadPeople();
   }, []);
 
+  // TÌM KIẾM THEO ID, TÊN, QUÊ QUÁN, LỚP HỌC (ĐÃ LOẠI BỎ NGÀY SINH & SĐT)
   const filteredPeople = useMemo(() => {
-    const searchValue = keyword.trim().toLowerCase();
-
-    if (!searchValue) {
+    const trimmed = keyword.trim();
+    if (!trimmed) {
       return people;
     }
 
-    return people.filter((person) => {
-      const name = person.name?.toLowerCase() || "";
-      const birthday = person.birthday?.toLowerCase() || "";
-      const address = person.address?.toLowerCase() || "";
-      const className = person.class?.toLowerCase() || "";
-      const phone = person.phone?.toLowerCase() || "";
+    // Kiểm tra nếu nhập dạng số hoặc #ID (ví dụ: "1", "#1", "25")
+    const isIdSearch = /^#?\d+$/.test(trimmed);
+    const cleanId = trimmed.replace(/^#/, "");
 
-      return (
-        name.includes(searchValue) ||
-        birthday.includes(searchValue) ||
-        address.includes(searchValue) ||
-        className.includes(searchValue) ||
-        phone.includes(searchValue)
+    if (isIdSearch) {
+      // Ưu tiên khớp chính xác ID trước (gõ 1 ra đúng ID 1)
+      const exactMatch = people.filter(
+        (person) => String(person.id) === cleanId
       );
+
+      if (exactMatch.length > 0) {
+        return exactMatch;
+      }
+
+      // Nếu không có ID chính xác, tìm các ID bắt đầu bằng chữ số đó
+      return people.filter((person) =>
+        String(person.id).startsWith(cleanId)
+      );
+    }
+
+    // Khi gõ chữ: Tìm theo Tên, Quê quán/Địa chỉ, Lớp học
+    const normalizedKeyword = normalizeText(trimmed);
+
+    return people.filter((person) => {
+      const matchName = normalizeText(person.name).includes(normalizedKeyword);
+      const matchAddress = normalizeText(person.address).includes(normalizedKeyword);
+      const matchClass = normalizeText(person.class).includes(normalizedKeyword);
+
+      return matchName || matchAddress || matchClass;
     });
   }, [people, keyword]);
 
-  const [showBirthdayMonthModal, setShowBirthdayMonthModal] =
-    useState(false);
-
-  const [selectedBirthdayMonth, setSelectedBirthdayMonth] =
-    useState(String(new Date().getMonth() + 1));
-
-  const [birthdayMonthPeople, setBirthdayMonthPeople] =
-    useState([]);
+  const [showBirthdayMonthModal, setShowBirthdayMonthModal] = useState(false);
+  const [selectedBirthdayMonth, setSelectedBirthdayMonth] = useState(
+    String(new Date().getMonth() + 1)
+  );
+  const [birthdayMonthPeople, setBirthdayMonthPeople] = useState([]);
 
   const loadAlbumViewsByDate = async (date) => {
     try {
       setLoadingTodayAlbumViews(true);
 
-      const response = await api.get(
-        "/admin/album-views",
-        {
-          params: {
-            date,
-          },
-        }
-      );
+      const response = await api.get("/admin/album-views", {
+        params: { date },
+      });
 
-      const list = Array.isArray(
-        response.data?.data
-      )
-        ? response.data.data
-        : [];
+      const list = Array.isArray(response.data?.data) ? response.data.data : [];
 
       setTodayAlbumViews(list);
-
       setTodayAlbumViewSummary({
-        totalAlbums:
-          Number(
-            response.data?.totalAlbums
-          ) || 0,
-
-        totalViews:
-          Number(
-            response.data?.totalViews
-          ) || 0,
+        totalAlbums: Number(response.data?.totalAlbums) || 0,
+        totalViews: Number(response.data?.totalViews) || 0,
       });
     } catch (error) {
-      console.error(
-        "Lỗi tải lịch sử xem album:",
-        error
-      );
-
+      console.error("Lỗi tải lịch sử xem album:", error);
       setTodayAlbumViews([]);
-
       setTodayAlbumViewSummary({
         totalAlbums: 0,
         totalViews: 0,
       });
-
-      toast.error(
-        "Không thể tải lịch sử xem album."
-      );
+      toast.error("Không thể tải lịch sử xem album.");
     } finally {
       setLoadingTodayAlbumViews(false);
     }
   };
 
   const handleShowTodayAlbumViews = async () => {
-    if (loadingTodayAlbumViews) {
-      return;
-    }
+    if (loadingTodayAlbumViews) return;
 
-    const today =
-      getTodayVietnam();
-
+    const today = getTodayVietnam();
     setAlbumViewDate(today);
-
     setShowTodayAlbumViewsModal(true);
-
-    await loadAlbumViewsByDate(
-      today
-    );
+    await loadAlbumViewsByDate(today);
   };
 
-  const handleAlbumViewDateChange = async (
-    date
-  ) => {
-    if (!date) {
-      return;
-    }
-
+  const handleAlbumViewDateChange = async (date) => {
+    if (!date) return;
     setAlbumViewDate(date);
-
-    await loadAlbumViewsByDate(
-      date
-    );
+    await loadAlbumViewsByDate(date);
   };
 
   const handleAdd = () => {
@@ -415,15 +344,12 @@ function Dashboard() {
 
   const formatDate = (date) => {
     if (!date) return "Chưa cập nhật";
-
     const [year, month, day] = date.split("-");
-
     return `${day}/${month}/${year}`;
   };
 
   const handleCloseForm = () => {
     if (submitting) return;
-
     setFormOpen(false);
     setEditingPerson(null);
   };
@@ -443,18 +369,13 @@ function Dashboard() {
       setFormOpen(false);
       setEditingPerson(null);
 
-      await Promise.all([
-        loadPeople(),
-        loadDashboard(),
-      ]);
+      await Promise.all([loadPeople(), loadDashboard()]);
     } catch (error) {
       console.error("Lỗi lưu dữ liệu:", error);
-
       const message =
         error.response?.data?.message ||
         error.response?.data?.error ||
         "Không thể lưu dữ liệu.";
-
       toast.error(message);
     } finally {
       setSubmitting(false);
@@ -465,13 +386,10 @@ function Dashboard() {
     const person = people.find((item) => item.id === id);
 
     const confirmed = window.confirm(
-      `Bạn có chắc muốn xóa ${person?.name || "album này"
-      } khỏi hệ thống không?`
+      `Bạn có chắc muốn xóa ${person?.name || "album này"} khỏi hệ thống không?`
     );
 
-    if (!confirmed) {
-      return;
-    }
+    if (!confirmed) return;
 
     try {
       await api.delete(`/people/${id}`);
@@ -481,16 +399,13 @@ function Dashboard() {
       );
 
       await loadDashboard();
-
       toast.success("Xóa album thành công!");
     } catch (error) {
       console.error("Lỗi xóa album:", error);
-
       const message =
         error.response?.data?.message ||
         error.response?.data?.error ||
         "Không thể xóa dữ liệu.";
-
       toast.error(message);
     }
   };
@@ -526,15 +441,9 @@ function Dashboard() {
           <DashboardActions
             loadingTodayAlbumViews={loadingTodayAlbumViews}
             onShowTodayAlbumViews={handleShowTodayAlbumViews}
-            onManageAnnouncement={() =>
-              setShowAnnouncementManager(true)
-            }
-            onManageMusic={() =>
-              setShowHomeMusicManager(true)
-            }
-            onManageEvents={() =>
-              setShowEventManager(true)
-            }
+            onManageAnnouncement={() => setShowAnnouncementManager(true)}
+            onManageMusic={() => setShowHomeMusicManager(true)}
+            onManageEvents={() => setShowEventManager(true)}
             onExportExcel={exportExcel}
             onAdd={handleAdd}
           />
@@ -555,7 +464,7 @@ function Dashboard() {
               type="text"
               value={keyword}
               onChange={(event) => setKeyword(event.target.value)}
-              placeholder="Nhập tên, quê quán hoặc địa điểm"
+              placeholder="Nhập ID, tên, quê quán hoặc địa điểm"
               className="w-full rounded-xl border border-slate-300 px-4 py-3 pr-12 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
             />
 
@@ -563,7 +472,7 @@ function Dashboard() {
               <button
                 type="button"
                 onClick={() => setKeyword("")}
-                className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-red-500"
+                className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-red-500 cursor-pointer"
                 aria-label="Xóa tìm kiếm"
               >
                 ✕
@@ -588,7 +497,7 @@ function Dashboard() {
               <button
                 type="button"
                 onClick={loadPeople}
-                className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+                className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700 cursor-pointer"
               >
                 Tải lại
               </button>
@@ -633,47 +542,20 @@ function Dashboard() {
         people={birthdayMonthPeople}
         onChangeMonth={(month) => {
           setSelectedBirthdayMonth(month);
-
-          setBirthdayMonthPeople(
-            getBirthdayPeopleByMonth(month)
-          );
+          setBirthdayMonthPeople(getBirthdayPeopleByMonth(month));
         }}
-        onClose={() =>
-          setShowBirthdayMonthModal(false)
-        }
+        onClose={() => setShowBirthdayMonthModal(false)}
         formatDate={formatDate}
       />
 
       <TodayAlbumViewsModal
-        open={
-          showTodayAlbumViewsModal
-        }
-
-        people={
-          todayAlbumViews
-        }
-
-        summary={
-          todayAlbumViewSummary
-        }
-
-        selectedDate={
-          albumViewDate
-        }
-
-        loading={
-          loadingTodayAlbumViews
-        }
-
-        onDateChange={
-          handleAlbumViewDateChange
-        }
-
-        onClose={() =>
-          setShowTodayAlbumViewsModal(
-            false
-          )
-        }
+        open={showTodayAlbumViewsModal}
+        people={todayAlbumViews}
+        summary={todayAlbumViewSummary}
+        selectedDate={albumViewDate}
+        loading={loadingTodayAlbumViews}
+        onDateChange={handleAlbumViewDateChange}
+        onClose={() => setShowTodayAlbumViewsModal(false)}
       />
 
       <AlbumHistoryModal
@@ -684,26 +566,19 @@ function Dashboard() {
 
       <AnnouncementManager
         open={showAnnouncementManager}
-        onClose={() =>
-          setShowAnnouncementManager(false)
-        }
+        onClose={() => setShowAnnouncementManager(false)}
       />
 
       <HomeMusicManager
         open={showHomeMusicManager}
-        onClose={() =>
-          setShowHomeMusicManager(false)
-        }
+        onClose={() => setShowHomeMusicManager(false)}
       />
 
       <EventManager
         open={showEventManager}
-        onClose={() =>
-          setShowEventManager(false)
-        }
+        onClose={() => setShowEventManager(false)}
       />
     </Layout>
-
   );
 }
 
