@@ -10,7 +10,7 @@ import {
 } from "recharts";
 
 /* Khoảng cách chuẩn từ tâm điểm nút tới tâm con số */
-const LABEL_GAP = 12;
+const LABEL_GAP = 15;
 
 /* =========================================================
    CUSTOM LABEL CHO LƯỢT TRUY CẬP (MÀU ĐỎ)
