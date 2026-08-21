@@ -941,7 +941,6 @@ function Invitation() {
             </div>
 
             {/* SASH MOBILE */}
-            {/* SASH MOBILE */}
             <div className="inv-sash-left pointer-events-none absolute left-0 top-[118px] z-[20] xl:hidden">
                 <div className="relative h-[360px] w-[38px] sm:w-[42px]">
                     <div
@@ -1034,7 +1033,7 @@ function Invitation() {
                             </div>
                         </div>
                         <p className="absolute left-1/2 top-[58px] -translate-x-1/2 [writing-mode:vertical-rl] whitespace-nowrap text-[12px] font-black uppercase tracking-[0.13em] text-blue-900">
-                            Graduation UTC
+                            UTC Graduation
                         </p>
                         <div className="absolute inset-x-0 bottom-[58px] text-center">
                             <p className="text-[6px] font-black uppercase tracking-[0.08em] text-amber-600">
