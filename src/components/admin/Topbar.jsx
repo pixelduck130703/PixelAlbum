@@ -29,28 +29,28 @@ function Topbar() {
         </h2>
 
         <div className="flex items-center gap-3">
-          {/* Nút xem thiệp mời chuẩn Liquid Glass */}
+          {/* Nút xem thiệp mời (Cố định chuẩn min-h) */}
           <Link
             to="/invitation"
             target="_blank"
             rel="noopener noreferrer"
-            className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-2xl border border-amber-300/80 bg-amber-300/20 px-4 py-2.5 text-sm font-bold text-amber-950 shadow-[0_8px_32px_0_rgba(245,158,11,0.15)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.03] hover:bg-amber-300/35 hover:shadow-[0_12px_40px_0_rgba(245,158,11,0.25)] active:scale-[0.98] sm:px-5 cursor-pointer"
+            className="group relative inline-flex min-h-[42px] items-center justify-center gap-1.5 overflow-hidden rounded-2xl border border-amber-300/80 bg-amber-300/20 px-4 py-2 text-sm font-bold text-amber-950 shadow-[0_8px_32px_0_rgba(245,158,11,0.15)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.03] hover:bg-amber-300/35 hover:shadow-[0_12px_40px_0_rgba(245,158,11,0.25)] active:scale-[0.98] sm:px-5 cursor-pointer"
           >
             {/* Vệt phản chiếu ánh sáng lỏng phía trên */}
             <span className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-2xl bg-gradient-to-b from-white/60 to-transparent" />
-            <span className="relative z-10 text-base">💌</span>
-            <span className="relative z-10">Thiệp mời</span>
+            <span className="relative z-10 text-base leading-none">💌</span>
+            <span className="relative z-10 leading-none">Thiệp mời</span>
           </Link>
 
-          {/* Nút đăng xuất chuẩn Liquid Glass */}
+          {/* Nút đăng xuất (Cố định chuẩn min-h) */}
           <button
             type="button"
             onClick={handleLogout}
-            className="group relative inline-flex items-center justify-center gap-1.5 overflow-hidden rounded-2xl border border-rose-300/80 bg-rose-500/15 px-4 py-2.5 text-sm font-bold text-rose-950 shadow-[0_8px_32px_0_rgba(244,63,94,0.15)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.03] hover:bg-rose-500/25 hover:shadow-[0_12px_40px_0_rgba(244,63,94,0.25)] active:scale-[0.98] sm:px-5 cursor-pointer"
+            className="group relative inline-flex min-h-[42px] items-center justify-center gap-1.5 overflow-hidden rounded-2xl border border-rose-300/80 bg-rose-500/15 px-4 py-2 text-sm font-bold text-rose-950 shadow-[0_8px_32px_0_rgba(244,63,94,0.15)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.03] hover:bg-rose-500/25 hover:shadow-[0_12px_40px_0_rgba(244,63,94,0.25)] active:scale-[0.98] sm:px-5 cursor-pointer"
           >
             {/* Vệt phản chiếu ánh sáng lỏng phía trên */}
             <span className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-2xl bg-gradient-to-b from-white/60 to-transparent" />
-            <span className="relative z-10">Đăng xuất</span>
+            <span className="relative z-10 leading-none">Đăng xuất</span>
           </button>
         </div>
       </div>
