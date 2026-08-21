@@ -27,8 +27,8 @@ const pool = new Pool({
   ssl: isLocalDatabase
     ? false
     : {
-        rejectUnauthorized: false,
-      },
+      rejectUnauthorized: false,
+    },
 
   max: 10,
   idleTimeoutMillis: 30000,
@@ -180,6 +180,40 @@ async function initializeDatabase() {
    *   - device
    *   - userAgent
    */
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS graduation_rsvps (
+        id BIGSERIAL PRIMARY KEY,
+
+        name VARCHAR(150) NOT NULL,
+
+        attendance VARCHAR(20) NOT NULL
+            CHECK (attendance IN ('yes', 'maybe', 'no')),
+
+        guests VARCHAR(20) NOT NULL DEFAULT 'alone'
+            CHECK (guests IN ('alone', 'plus_one', 'group')),
+
+        wishes TEXT,
+
+        submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+        ip_address INET,
+
+        user_agent TEXT,
+
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+`);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_graduation_rsvps_submitted_at
+    ON graduation_rsvps (submitted_at DESC);
+`);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_graduation_rsvps_attendance
+    ON graduation_rsvps (attendance);
+`);
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS album_view_by_person_daily (
       person_id INTEGER NOT NULL,

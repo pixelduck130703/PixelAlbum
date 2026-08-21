@@ -15,6 +15,7 @@ import HomeMusicManager from "../../components/admin/HomeMusicManager";
 import { exportExcel } from "../../components/admin/ExportExcel";
 import EventManager from "../../components/admin/EventManager";
 import AlbumHistoryModal from "../../components/admin/AlbumHistoryModal";
+import GraduationRsvpModal from "../../components/admin/GraduationRsvpModal";
 
 // Hàm chuẩn hóa tiếng Việt bỏ dấu
 function normalizeText(text) {
@@ -69,6 +70,11 @@ function Dashboard() {
   const [showHomeMusicManager, setShowHomeMusicManager] = useState(false);
   const [showEventManager, setShowEventManager] = useState(false);
   const [showAnnouncementManager, setShowAnnouncementManager] = useState(false);
+
+  // State mở Popup RSVP
+  const [showRsvpModal, setShowRsvpModal] = useState(false);
+  const [rsvpList, setRsvpList] = useState([]);
+  const [loadingRsvp, setLoadingRsvp] = useState(false);
 
   const formatChartDate = (dateString) => {
     if (!dateString) return "";
@@ -196,12 +202,45 @@ function Dashboard() {
     setShowBirthdayMonthModal(true);
   };
 
+  // Tải danh sách RSVP khi bấm vào Lượt truy cập
+  const handleShowRsvpModal = async () => {
+    setShowRsvpModal(true);
+    try {
+      setLoadingRsvp(true);
+      const res = await api.get("/admin/graduation-rsvps");
+      const list = Array.isArray(res.data?.data)
+        ? res.data.data
+        : Array.isArray(res.data)
+        ? res.data
+        : [];
+      setRsvpList(list);
+    } catch (err) {
+      console.error("Lỗi tải RSVP:", err);
+      toast.error("Không thể tải danh sách xác nhận tham dự.");
+      setRsvpList([]);
+    } finally {
+      setLoadingRsvp(false);
+    }
+  };
+
+  const handleDeleteRsvp = async (id) => {
+    if (!window.confirm("Bạn có chắc muốn xóa xác nhận này không?")) return;
+    try {
+      await api.delete(`/admin/graduation-rsvps/${id}`);
+      setRsvpList((prev) => prev.filter((item) => item.id !== id));
+      toast.success("Xóa xác nhận thành công!");
+    } catch (err) {
+      console.error("Lỗi xóa RSVP:", err);
+      toast.error("Không thể xóa xác nhận.");
+    }
+  };
+
   const loadDashboard = async () => {
     try {
       const response = await api.get("/dashboard");
       setStats(response.data);
     } catch (error) {
-      // Bỏ qua lỗi hiển thị
+      // Bỏ qua lỗi
     }
   };
 
@@ -244,19 +283,16 @@ function Dashboard() {
     loadPeople();
   }, []);
 
-  // TÌM KIẾM THEO ID, TÊN, QUÊ QUÁN, LỚP HỌC (ĐÃ LOẠI BỎ NGÀY SINH & SĐT)
   const filteredPeople = useMemo(() => {
     const trimmed = keyword.trim();
     if (!trimmed) {
       return people;
     }
 
-    // Kiểm tra nếu nhập dạng số hoặc #ID (ví dụ: "1", "#1", "25")
     const isIdSearch = /^#?\d+$/.test(trimmed);
     const cleanId = trimmed.replace(/^#/, "");
 
     if (isIdSearch) {
-      // Ưu tiên khớp chính xác ID trước (gõ 1 ra đúng ID 1)
       const exactMatch = people.filter(
         (person) => String(person.id) === cleanId
       );
@@ -265,13 +301,11 @@ function Dashboard() {
         return exactMatch;
       }
 
-      // Nếu không có ID chính xác, tìm các ID bắt đầu bằng chữ số đó
       return people.filter((person) =>
         String(person.id).startsWith(cleanId)
       );
     }
 
-    // Khi gõ chữ: Tìm theo Tên, Quê quán/Địa chỉ, Lớp học
     const normalizedKeyword = normalizeText(trimmed);
 
     return people.filter((person) => {
@@ -412,12 +446,13 @@ function Dashboard() {
 
   return (
     <Layout>
-      {/* Thẻ thống kê */}
+      {/* Thẻ thống kê (Bấm vào lượt truy cập sẽ kích hoạt onShowVisits) */}
       <DashboardStats
         stats={stats}
         visits={visits}
         onShowMonthBirthday={handleShowMonthBirthday}
         onShowTodayBirthday={handleShowTodayBirthday}
+        onShowVisits={handleShowRsvpModal}
       />
 
       {/* Biểu đồ */}
@@ -577,6 +612,15 @@ function Dashboard() {
       <EventManager
         open={showEventManager}
         onClose={() => setShowEventManager(false)}
+      />
+
+      {/* MODAL COMPONENT RIÊNG */}
+      <GraduationRsvpModal
+        open={showRsvpModal}
+        onClose={() => setShowRsvpModal(false)}
+        list={rsvpList}
+        loading={loadingRsvp}
+        onDelete={handleDeleteRsvp}
       />
     </Layout>
   );

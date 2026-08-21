@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+
 function BirthdayMonthModal({
   open,
   selectedMonth,
@@ -11,13 +12,19 @@ function BirthdayMonthModal({
     if (!open) return;
 
     const originalOverflow = document.body.style.overflow;
-
     document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") onClose?.();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
 
     return () => {
       document.body.style.overflow = originalOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [open]);
+  }, [open, onClose]);
 
   if (!open) return null;
 
@@ -46,30 +53,29 @@ function BirthdayMonthModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15 text-xl text-white transition hover:bg-white/25"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15 text-xl text-white transition hover:bg-white/25 cursor-pointer"
               aria-label="Đóng"
             >
               ✕
             </button>
           </div>
 
+          {/* 2 Thẻ thống kê căn thẳng hàng 1 dòng */}
           <div className="mt-5 grid grid-cols-2 gap-3">
-            <div className="rounded-2xl bg-white/15 px-4 py-3 backdrop-blur">
-              <p className="text-xs font-medium uppercase tracking-wide text-white/75">
-                Tháng đang chọn
+            <div className="flex items-center justify-between gap-2 rounded-2xl bg-white/15 px-4 py-3 backdrop-blur">
+              <p className="truncate text-xs font-medium uppercase tracking-wide text-white/75">
+                Tháng chọn:
               </p>
-
-              <p className="mt-1 text-2xl font-bold">
+              <p className="font-mono text-xl font-bold sm:text-2xl">
                 {selectedMonth}
               </p>
             </div>
 
-            <div className="rounded-2xl bg-white/15 px-4 py-3 backdrop-blur">
-              <p className="text-xs font-medium uppercase tracking-wide text-white/75">
-                Số người
+            <div className="flex items-center justify-between gap-2 rounded-2xl bg-white/15 px-4 py-3 backdrop-blur">
+              <p className="truncate text-xs font-medium uppercase tracking-wide text-white/75">
+                Số người:
               </p>
-
-              <p className="mt-1 text-2xl font-bold">
+              <p className="font-mono text-xl font-bold sm:text-2xl">
                 {Number(people.length).toLocaleString("vi-VN")}
               </p>
             </div>
@@ -79,12 +85,6 @@ function BirthdayMonthModal({
         {/* Nội dung */}
         <div className="p-4 sm:p-6">
           <div className="mb-5">
-            <label
-              htmlFor="birthday-month"
-              className="mb-2 block text-sm font-semibold text-slate-700"
-            >
-              Chọn tháng
-            </label>
 
             <select
               id="birthday-month"

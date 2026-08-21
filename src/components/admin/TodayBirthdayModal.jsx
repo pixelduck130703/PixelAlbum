@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+
 function TodayBirthdayModal({
   open,
   people = [],
@@ -9,13 +10,19 @@ function TodayBirthdayModal({
     if (!open) return;
 
     const originalOverflow = document.body.style.overflow;
-
     document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") onClose?.();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
 
     return () => {
       document.body.style.overflow = originalOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [open]);
+  }, [open, onClose]);
 
   if (!open) return null;
 
@@ -44,18 +51,20 @@ function TodayBirthdayModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15 text-xl text-white transition hover:bg-white/25"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15 text-xl text-white transition hover:bg-white/25 cursor-pointer"
+              aria-label="Đóng"
             >
               ✕
             </button>
           </div>
 
-          <div className="mt-5 rounded-2xl bg-white/15 px-4 py-3 backdrop-blur">
-            <p className="text-xs font-medium uppercase tracking-wide text-white/75">
-              Tổng số người
+          {/* Thẻ thống kê căn thẳng hàng 1 dòng */}
+          <div className="mt-5 flex items-center justify-between gap-2 rounded-2xl bg-white/15 px-4 py-3 backdrop-blur">
+            <p className="truncate text-xs font-medium uppercase tracking-wide text-white/75 sm:text-sm">
+              Tổng số người:
             </p>
 
-            <p className="mt-1 text-2xl font-bold">
+            <p className="font-mono text-xl font-bold sm:text-2xl">
               {Number(people.length).toLocaleString("vi-VN")}
             </p>
           </div>
