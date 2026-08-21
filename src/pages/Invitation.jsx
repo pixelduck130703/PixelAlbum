@@ -1313,6 +1313,35 @@ function Invitation() {
                     <div className="mx-auto mt-5 h-px w-56 bg-gradient-to-r from-transparent via-amber-400 to-transparent" />
                 </section>
 
+                {/* Ô hiển thị lời chúc lướt qua */}
+                <section className="liquid-glass-card relative mt-8 w-full max-w-4xl overflow-hidden rounded-3xl p-5 sm:p-7">
+                    <div className="min-h-[85px] flex items-center justify-center">
+                        {wishesList.length === 0 ? (
+                            <p className="text-center text-xs italic text-slate-500 sm:text-sm">
+                                {t.noWishesText}
+                            </p>
+                        ) : (
+                            <div
+                                key={`${currentWish?.id}-${currentWishIndex}`}
+                                className={`w-full text-center transition-all ${wishVisible ? "wish-enter" : "wish-leave"
+                                    }`}
+                            >
+                                <p className="mx-auto max-w-2xl font-serif text-base italic leading-relaxed text-slate-800 sm:text-xl">
+                                    "{currentWish?.wishes}"
+                                </p>
+
+                                <div className="mt-3 flex items-center justify-center gap-2">
+                                    <span className="h-px w-6 bg-amber-300" />
+                                    <p className="text-xs font-bold tracking-wider text-blue-900 sm:text-sm">
+                                        {currentWish?.name}
+                                    </p>
+                                    <span className="h-px w-6 bg-amber-300" />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </section>
+
                 {/* 4 Nút chức năng */}
                 <div className="mt-10 grid w-full max-w-4xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     {/* 1. Xem địa điểm: Vàng sang trọng */}
@@ -1360,34 +1389,7 @@ function Invitation() {
                     </button>
                 </div>
 
-                {/* Ô hiển thị lời chúc lướt qua */}
-                <section className="liquid-glass-card relative mt-8 w-full max-w-4xl overflow-hidden rounded-3xl p-5 sm:p-7">
-                    <div className="min-h-[85px] flex items-center justify-center">
-                        {wishesList.length === 0 ? (
-                            <p className="text-center text-xs italic text-slate-500 sm:text-sm">
-                                {t.noWishesText}
-                            </p>
-                        ) : (
-                            <div
-                                key={`${currentWish?.id}-${currentWishIndex}`}
-                                className={`w-full text-center transition-all ${wishVisible ? "wish-enter" : "wish-leave"
-                                    }`}
-                            >
-                                <p className="mx-auto max-w-2xl font-serif text-base italic leading-relaxed text-slate-800 sm:text-xl">
-                                    "{currentWish?.wishes}"
-                                </p>
-
-                                <div className="mt-3 flex items-center justify-center gap-2">
-                                    <span className="h-px w-6 bg-amber-300" />
-                                    <p className="text-xs font-bold tracking-wider text-blue-900 sm:text-sm">
-                                        {currentWish?.name}
-                                    </p>
-                                    <span className="h-px w-6 bg-amber-300" />
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </section>
+                
 
                 <footer className="mt-12 text-center">
                     <p
