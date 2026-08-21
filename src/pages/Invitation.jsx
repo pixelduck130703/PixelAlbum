@@ -437,7 +437,7 @@ function Invitation() {
     try {
       const baseUrl =
         import.meta.env.VITE_API_URL || "http://localhost:5000";
-      const response = await fetch(`${baseUrl}/api/admin/graduation-rsvps`);
+      const response = await fetch(`${baseUrl}/admin/graduation-rsvps`);
       const data = await response.json();
       const list = Array.isArray(data?.data) ? data.data : [];
       const validWishes = list.filter(
@@ -507,7 +507,7 @@ function Invitation() {
       const baseUrl =
         import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-      const response = await fetch(`${baseUrl}/api/graduation-rsvp`, {
+      const response = await fetch(`${baseUrl}/graduation-rsvp`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -1314,7 +1314,7 @@ function Invitation() {
           <div className="mx-auto mt-5 h-px w-56 bg-gradient-to-r from-transparent via-amber-400 to-transparent" />
         </section>
 
-        {/* 4 Nút chức năng (ĐÃ ĐỔI MÀU THEO YÊU CẦU) */}
+        {/* 4 Nút chức năng */}
         <div className="mt-10 grid w-full max-w-4xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {/* 1. Xem địa điểm: Vàng sang trọng */}
           <a
