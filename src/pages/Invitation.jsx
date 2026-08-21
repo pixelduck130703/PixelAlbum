@@ -302,7 +302,7 @@ const TRANSLATIONS = {
     locationLine1: "Großer Hörsaal - 3 Cau Giay",
     locationLine2: "Universität für Verkehr und Kommunikation",
     seeYou: "Wir freuen uns darauf, Sie bei der Feier zu begrüßen!",
-    viewMap: "Standort anzeigen",
+    viewMap: "Standort",
     contact: "Kontakt",
     contactTitle: "Kontakt aufnehmen",
     campusMap: "Campusplan",
