@@ -8,18 +8,18 @@ function DashboardActions({
   onAdd,
 }) {
   const buttonClass =
-    "flex min-h-[48px] sm:min-h-[50px] w-full items-center justify-center gap-2 rounded-xl px-3 py-3 text-sm font-semibold text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0";
+    "flex min-h-[48px] sm:min-h-[50px] w-full items-center justify-center gap-2 rounded-2xl border px-3 py-3 text-sm font-bold shadow-md backdrop-blur-md transition duration-200 hover:-translate-y-0.5 hover:shadow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 cursor-pointer";
 
   return (
     <div className="w-full">
       {/* Mobile: lưới 2 cột đều nhau | Desktop: Flex wrap ngang */}
       <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:flex md:flex-wrap md:items-stretch md:justify-end">
-        {/* 1. Album xem hôm nay */}
+        {/* 1. Album xem hôm nay: Xanh lá nhạt */}
         <button
           type="button"
           onClick={onShowTodayAlbumViews}
           disabled={loadingTodayAlbumViews}
-          className={`${buttonClass} bg-green-600 hover:bg-green-700 md:w-auto md:flex-1`}
+          className={`${buttonClass} border-emerald-300 bg-emerald-100/70 text-emerald-950 md:w-auto md:flex-1`}
         >
           <span className="shrink-0 text-base">🔥</span>
           <span className="truncate leading-5">
@@ -27,51 +27,51 @@ function DashboardActions({
           </span>
         </button>
 
-        {/* 2. Thông báo */}
+        {/* 2. Thông báo: Vàng cam nhạt */}
         <button
           type="button"
           onClick={onManageAnnouncement}
-          className={`${buttonClass} bg-amber-500 hover:bg-amber-600 md:w-auto md:flex-1`}
+          className={`${buttonClass} border-amber-300 bg-amber-100/70 text-amber-950 md:w-auto md:flex-1`}
         >
           <span className="shrink-0 text-base">📢</span>
           <span className="truncate">Thông báo</span>
         </button>
 
-        {/* 3. Quản lý nhạc */}
+        {/* 3. Quản lý nhạc: Tím nhạt */}
         <button
           type="button"
           onClick={onManageMusic}
-          className={`${buttonClass} bg-violet-600 hover:bg-violet-700 md:w-auto md:flex-1`}
+          className={`${buttonClass} border-violet-300 bg-violet-100/70 text-violet-950 md:w-auto md:flex-1`}
         >
           <span className="shrink-0 text-base">🎵</span>
           <span className="truncate">Nhạc nền</span>
         </button>
 
-        {/* 4. Xuất Excel */}
+        {/* 4. Xuất Excel: Xanh ngọc nhạt */}
         <button
           type="button"
           onClick={onExportExcel}
-          className={`${buttonClass} bg-emerald-600 hover:bg-emerald-700 md:w-auto md:flex-1`}
+          className={`${buttonClass} border-teal-300 bg-teal-100/70 text-teal-950 md:w-auto md:flex-1`}
         >
           <span className="shrink-0 text-base">📊</span>
           <span className="truncate">Xuất Excel</span>
         </button>
 
-        {/* 5. Quản lý sự kiện */}
+        {/* 5. Quản lý sự kiện: Hồng đỏ nhạt */}
         <button
           type="button"
           onClick={onManageEvents}
-          className={`${buttonClass} bg-rose-500 hover:bg-rose-600 shadow-rose-200 md:w-auto md:flex-1`}
+          className={`${buttonClass} border-rose-300 bg-rose-100/70 text-rose-950 md:w-auto md:flex-1`}
         >
           <span className="shrink-0 text-base">📅</span>
           <span className="truncate">Thêm sự kiện</span>
         </button>
 
-        {/* 6. Thêm album */}
+        {/* 6. Thêm album: Xanh dương nhạt */}
         <button
           type="button"
           onClick={onAdd}
-          className={`${buttonClass} bg-blue-600 hover:bg-blue-700 md:w-auto md:flex-1`}
+          className={`${buttonClass} border-blue-300 bg-blue-100/70 text-blue-950 md:w-auto md:flex-1`}
         >
           <span className="shrink-0 text-base">➕</span>
           <span className="truncate">Thêm Album</span>

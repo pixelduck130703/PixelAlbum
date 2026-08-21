@@ -84,6 +84,25 @@ const INVITATION_ANIMATIONS = `
     pointer-events: none;
   }
 
+  /* HIỆU ỨNG CHUYỂN ĐỔI LỜI CHÚC */
+  @keyframes wishFadeInAnim {
+    0% { opacity: 0; transform: translateY(8px) scale(0.98); filter: blur(3px); }
+    100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0px); }
+  }
+
+  @keyframes wishFadeOutAnim {
+    0% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0px); }
+    100% { opacity: 0; transform: translateY(-8px) scale(0.98); filter: blur(3px); }
+  }
+
+  .wish-enter {
+    animation: wishFadeInAnim 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .wish-leave {
+    animation: wishFadeOutAnim 0.4s ease-in forwards;
+  }
+
   /* LIQUID GLASS DESIGN SYSTEM */
   .liquid-glass-card {
     background: rgba(255, 255, 255, 0.55);
@@ -126,7 +145,9 @@ const INVITATION_ANIMATIONS = `
     .inv-sash-left,
     .inv-sash-right,
     .inv-text-enter,
-    .inv-text-leave {
+    .inv-text-leave,
+    .wish-enter,
+    .wish-leave {
       animation: none !important;
     }
   }
@@ -190,7 +211,8 @@ const TRANSLATIONS = {
     rsvpWishesPlaceholder: "Gửi lời chúc đến Nguyễn Tuấn Hùng",
     rsvpSubmit: "Gửi",
     rsvpSubmitting: "Đang gửi...",
-    rsvpSuccess: "Cảm ơn bạn! Xác nhận đã được gửi thành công 🎉",
+    rsvpSuccess: "Cảm ơn bạn! Đã gửi thành công 🎉",
+    noWishesText: "Hãy là người đầu tiên gửi lời chúc tốt đẹp đến Tuấn Hùng nhé!",
   },
 
   en: {
@@ -252,6 +274,7 @@ const TRANSLATIONS = {
     rsvpSubmit: "Confirm Attendance",
     rsvpSubmitting: "Submitting...",
     rsvpSuccess: "Thank you! Your response has been received 🎉",
+    noWishesText: "Be the first to send a warm graduation wish to Tuan Hung!",
   },
 
   de: {
@@ -313,6 +336,7 @@ const TRANSLATIONS = {
     rsvpSubmit: "Antwort senden",
     rsvpSubmitting: "Wird gesendet...",
     rsvpSuccess: "Vielen Dank für Ihre Rückmeldung! 🎉",
+    noWishesText: "Seien Sie der Erste, der Tuan Hung Glückwünsche sendet!",
   },
 
   zh: {
@@ -373,6 +397,7 @@ const TRANSLATIONS = {
     rsvpSubmit: "提交确认",
     rsvpSubmitting: "正在提交...",
     rsvpSuccess: "非常感谢您的回复！🎉",
+    noWishesText: "快来送出第一份给俊雄的美好毕业祝福吧！",
   },
 };
 
@@ -396,6 +421,10 @@ function Invitation() {
     wishes: "",
   });
 
+  const [wishesList, setWishesList] = useState([]);
+  const [currentWishIndex, setCurrentWishIndex] = useState(0);
+  const [wishVisible, setWishVisible] = useState(true);
+
   const audioRef = useRef(null);
   const [musicPlaying, setMusicPlaying] = useState(false);
   const [musicLoading, setMusicLoading] = useState(false);
@@ -403,6 +432,24 @@ function Invitation() {
   const [language, setLanguage] = useState("vi");
   const [contentVisible, setContentVisible] = useState(true);
   const [languageChanging, setLanguageChanging] = useState(false);
+
+  const loadWishes = async () => {
+    try {
+      const baseUrl =
+        import.meta.env.VITE_API_URL || "http://localhost:5000";
+      const response = await fetch(`${baseUrl}/api/admin/graduation-rsvps`);
+      const data = await response.json();
+      const list = Array.isArray(data?.data) ? data.data : [];
+      const validWishes = list.filter(
+        (item) => item.wishes && String(item.wishes).trim() !== ""
+      );
+      if (validWishes.length > 0) {
+        setWishesList(validWishes);
+      }
+    } catch {
+      // Bỏ qua lỗi hiển thị
+    }
+  };
 
   useEffect(() => {
     const hasGuide = sessionStorage.getItem("music-guide");
@@ -414,7 +461,22 @@ function Invitation() {
       setLanguage(savedLang);
     }
     setIsClientReady(true);
+    loadWishes();
   }, []);
+
+  useEffect(() => {
+    if (wishesList.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setWishVisible(false);
+      setTimeout(() => {
+        setCurrentWishIndex((prev) => (prev + 1) % wishesList.length);
+        setWishVisible(true);
+      }, 400);
+    }, 4500);
+
+    return () => clearInterval(interval);
+  }, [wishesList.length]);
 
   const t = TRANSLATIONS[language] || TRANSLATIONS.vi;
 
@@ -466,6 +528,20 @@ function Invitation() {
 
       if (!response.ok) {
         throw new Error(data.message || "Không thể gửi xác nhận.");
+      }
+
+      if (rsvpForm.wishes.trim()) {
+        setWishesList((prev) => [
+          {
+            id: Date.now(),
+            name: trimmedName,
+            wishes: rsvpForm.wishes.trim(),
+            attendance: rsvpForm.attendance,
+            submittedAt: new Date().toISOString(),
+          },
+          ...prev,
+        ]);
+        setCurrentWishIndex(0);
       }
 
       setRsvpSuccess(true);
@@ -659,6 +735,7 @@ function Invitation() {
   }, [currentTime]);
 
   const textAnimClass = contentVisible ? "inv-text-enter" : "inv-text-leave";
+  const currentWish = wishesList[currentWishIndex] || null;
 
   if (!isClientReady) {
     return <div className="fixed inset-0 bg-[#f8fbff] z-[9999]" />;
@@ -1237,48 +1314,82 @@ function Invitation() {
           <div className="mx-auto mt-5 h-px w-56 bg-gradient-to-r from-transparent via-amber-400 to-transparent" />
         </section>
 
-        {/* Nút chức năng */}
+        {/* 4 Nút chức năng (ĐÃ ĐỔI MÀU THEO YÊU CẦU) */}
         <div className="mt-10 grid w-full max-w-4xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {/* 1. Xem địa điểm: Vàng sang trọng */}
           <a
             href={MAP_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex min-h-[56px] items-center justify-center gap-3 rounded-2xl border border-amber-400/80 bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-400 px-6 py-4 font-bold text-blue-950 shadow-xl backdrop-blur-md transition hover:-translate-y-1 hover:scale-[1.02] active:scale-95"
+            className="flex min-h-[56px] items-center justify-center gap-3 rounded-2xl border border-amber-300 bg-amber-100 px-6 py-4 font-bold text-amber-950 shadow-xl backdrop-blur-md transition hover:-translate-y-1 hover:scale-[1.02] active:scale-95"
           >
             <span className="text-xl">📍</span>
             <span className={textAnimClass}>{t.viewMap}</span>
           </a>
 
+          {/* 2. Sơ đồ trường: Xanh dương */}
           <button
             type="button"
             onClick={() => setShowCampusMap(true)}
-            className="liquid-glass-card flex min-h-[56px] items-center justify-center gap-3 rounded-2xl px-6 py-4 font-bold text-blue-800 transition hover:-translate-y-1 hover:scale-[1.02] active:scale-95 cursor-pointer"
+            className="flex min-h-[56px] items-center justify-center gap-3 rounded-2xl border border-blue-300 bg-blue-100 px-6 py-4 font-bold text-blue-950 shadow-xl backdrop-blur-md transition hover:-translate-y-1 hover:scale-[1.02] active:scale-95 cursor-pointer"
           >
             <span className="text-xl">🗺️</span>
             <span className={textAnimClass}>{t.campusMap}</span>
           </button>
 
+          {/* 3. Liên hệ: Xanh lục nhạt */}
           <button
             type="button"
             onClick={() => setShowPhone(true)}
-            className="flex min-h-[56px] items-center justify-center gap-3 rounded-2xl border border-white/80 bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 px-6 py-4 font-bold text-white shadow-xl backdrop-blur-md transition hover:-translate-y-1 hover:scale-[1.02] active:scale-95 cursor-pointer"
+            className="flex min-h-[56px] items-center justify-center gap-3 rounded-2xl border border-emerald-300 bg-emerald-100 px-6 py-4 font-bold text-emerald-950 shadow-xl backdrop-blur-md transition hover:-translate-y-1 hover:scale-[1.02] active:scale-95 cursor-pointer"
           >
             <span className="text-xl">📞</span>
             <span className={textAnimClass}>{t.contact}</span>
           </button>
 
+          {/* 4. Xác nhận tham dự: Hồng nhạt */}
           <button
             type="button"
             onClick={() => {
               setRsvpSuccess(false);
               setShowRsvp(true);
             }}
-            className="flex min-h-[56px] items-center justify-center gap-3 rounded-2xl border border-white/80 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 px-6 py-4 font-bold text-blue-950 shadow-xl backdrop-blur-md transition hover:-translate-y-1 hover:scale-[1.02] active:scale-95 cursor-pointer"
+            className="flex min-h-[56px] items-center justify-center gap-3 rounded-2xl border border-pink-300 bg-pink-100 px-6 py-4 font-bold text-pink-950 shadow-xl backdrop-blur-md transition hover:-translate-y-1 hover:scale-[1.02] active:scale-95 cursor-pointer"
           >
             <span className="text-xl">💌</span>
             <span className={textAnimClass}>{t.rsvpBtn}</span>
           </button>
         </div>
+
+        {/* Ô hiển thị lời chúc lướt qua */}
+        <section className="liquid-glass-card relative mt-8 w-full max-w-4xl overflow-hidden rounded-3xl p-5 sm:p-7">
+          <div className="min-h-[85px] flex items-center justify-center">
+            {wishesList.length === 0 ? (
+              <p className="text-center text-xs italic text-slate-500 sm:text-sm">
+                {t.noWishesText}
+              </p>
+            ) : (
+              <div
+                key={`${currentWish?.id}-${currentWishIndex}`}
+                className={`w-full text-center transition-all ${
+                  wishVisible ? "wish-enter" : "wish-leave"
+                }`}
+              >
+                <p className="mx-auto max-w-2xl font-serif text-base italic leading-relaxed text-slate-800 sm:text-xl">
+                  "{currentWish?.wishes}"
+                </p>
+
+                <div className="mt-3 flex items-center justify-center gap-2">
+                  <span className="h-px w-6 bg-amber-300" />
+                  <p className="text-xs font-bold tracking-wider text-blue-900 sm:text-sm">
+                    {currentWish?.name}
+                  </p>
+                  <span className="h-px w-6 bg-amber-300" />
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
 
         <footer className="mt-12 text-center">
           <p
