@@ -1287,8 +1287,6 @@ function Invitation() {
               value={
                 <>
                   {t.locationLine1}
-                  <br />
-                  {t.locationLine2}
                 </>
               }
               textAnimClass={textAnimClass}
