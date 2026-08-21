@@ -11,6 +11,25 @@ function WelcomePopup() {
         }
     }, []);
 
+    // Thêm hiệu ứng chống cuộn màn hình khi popup mở
+    useEffect(() => {
+        if (!open) return;
+
+        const originalOverflow = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+
+        const handleKeyDown = (e) => {
+            if (e.key === "Escape") handleClose();
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+
+        return () => {
+            document.body.style.overflow = originalOverflow;
+            window.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [open]);
+
     const handleClose = () => {
         sessionStorage.setItem("welcomePopupSeen", "true");
         setOpen(false);
@@ -54,7 +73,6 @@ function WelcomePopup() {
                             {" "}họ tên, lớp, địa điểm
                         </strong>.
                     </p>
-
 
                     <div className="mt-5 space-y-3">
                         {/* Bật nhạc */}
@@ -121,7 +139,7 @@ function WelcomePopup() {
                     <button
                         type="button"
                         onClick={handleClose}
-                        className="mt-6 flex min-h-[50px] w-full items-center justify-center rounded-2xl bg-blue-600 px-5 font-semibold text-white shadow-md transition hover:bg-blue-700"
+                        className="mt-6 flex min-h-[50px] w-full items-center justify-center rounded-2xl bg-blue-600 px-5 font-semibold text-white shadow-md transition hover:bg-blue-700 cursor-pointer"
                     >
                         Đã hiểu
                     </button>
