@@ -128,7 +128,7 @@ function Login() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-slate-400 transition hover:text-blue-600"
+                className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-slate-400 transition hover:text-blue-600 cursor-pointer"
               >
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
               </button>
@@ -141,22 +141,27 @@ function Login() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {/* 2 nút nằm chung một hàng với hiệu ứng Liquid Glass đồng bộ */}
+          <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
               onClick={() => navigate("/")}
               disabled={loading}
-              className="w-full rounded-xl border border-white/80 bg-white/60 py-3 font-semibold text-slate-700 shadow-sm backdrop-blur-md transition hover:border-slate-200 hover:bg-white/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+              className="group relative inline-flex min-h-[44px] items-center justify-center overflow-hidden rounded-2xl border border-blue-300/80 bg-blue-500/15 px-4 py-2.5 text-sm font-bold text-blue-950 shadow-[0_8px_32px_0_rgba(59,130,246,0.15)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.03] hover:bg-blue-500/25 hover:shadow-[0_12px_40px_0_rgba(59,130,246,0.25)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
             >
-              Hủy
+              <span className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-2xl bg-gradient-to-b from-white/60 to-transparent" />
+              <span className="relative z-10">Trang chủ</span>
             </button>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-xl border border-blue-400/30 bg-blue-600/90 py-3 font-semibold text-white shadow-lg shadow-blue-500/25 backdrop-blur-md transition hover:bg-blue-600 hover:shadow-blue-500/35 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+              className="group relative inline-flex min-h-[44px] items-center justify-center overflow-hidden rounded-2xl border border-blue-300/80 bg-blue-500/15 px-4 py-2.5 text-sm font-bold text-blue-950 shadow-[0_8px_32px_0_rgba(59,130,246,0.15)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.03] hover:bg-blue-500/25 hover:shadow-[0_12px_40px_0_rgba(59,130,246,0.25)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
             >
-              {loading ? "Đang đăng nhập..." : "Đăng nhập"}
+              <span className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-2xl bg-gradient-to-b from-white/60 to-transparent" />
+              <span className="relative z-10">
+                {loading ? "Đang đăng nhập..." : "Đăng nhập"}
+              </span>
             </button>
           </div>
         </form>
