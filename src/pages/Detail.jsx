@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../services/api";
 import { Solar, Lunar } from "lunar-javascript";
+import confetti from "canvas-confetti";
 
 async function getClientHints() {
   if (!navigator.userAgentData) {
@@ -77,7 +78,6 @@ function Detail() {
   const [verifyError, setVerifyError] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [openingAlbum, setOpeningAlbum] = useState(false);
-
 
   useEffect(() => {
     const loadPerson = async () => {
@@ -228,15 +228,23 @@ function Detail() {
     return `🎉${days} ngày nữa đến sinh nhật`;
   }, [person]);
 
+  // Hiệu ứng pháo hoa khi đúng ngày sinh nhật
+  useEffect(() => {
+    if (person && birthdayCountdown === "🎂 Hôm nay là sinh nhật!") {
+      confetti({
+        particleCount: 120,
+        spread: 80,
+        origin: { y: 0.6 },
+      });
+    }
+  }, [person, birthdayCountdown]);
+
   const deathAnniversaryCountdown = useMemo(() => {
     if (!person?.deathDate) {
       return null;
     }
 
     try {
-      // deathDate có thể là:
-      // 2024-02-04
-      // hoặc 2024-02-04T00:00:00.000Z
       const normalizedDeathDate = String(person.deathDate).slice(0, 10);
 
       const [deathYear, deathMonth, deathDay] =
@@ -246,7 +254,6 @@ function Detail() {
         return null;
       }
 
-      // Chuyển ngày mất dương lịch sang âm lịch
       const deathSolar = Solar.fromYmd(
         deathYear,
         deathMonth,
@@ -277,10 +284,6 @@ function Detail() {
             lunarDay
           ).getSolar();
         } catch (error) {
-          /*
-           * Nếu ngày mất thuộc tháng nhuận nhưng năm cần tính
-           * không có tháng nhuận đó, dùng tháng thường tương ứng.
-           */
           return Lunar.fromYmd(
             lunarYear,
             Math.abs(lunarMonth),
@@ -300,7 +303,6 @@ function Detail() {
 
       anniversaryDate.setHours(0, 0, 0, 0);
 
-      // Nếu ngày giỗ năm nay đã qua thì tính sang năm âm tiếp theo
       if (anniversaryDate < today) {
         anniversarySolar =
           createAnniversaryDate(currentLunarYear + 1);
@@ -611,7 +613,7 @@ function Detail() {
           <button
             type="button"
             onClick={() => navigate("/")}
-            className="mt-6 rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700"
+            className="mt-6 rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700 cursor-pointer"
           >
             Quay lại trang chủ
           </button>
@@ -623,8 +625,6 @@ function Detail() {
   return (
     <div className="min-h-screen bg-slate-100 px-4 py-8 sm:px-6">
       <div className="mx-auto max-w-4xl">
-
-
         <div className="overflow-hidden rounded-3xl bg-white shadow-xl">
           <div className="relative overflow-hidden px-6 py-10 text-center text-white">
             {/* Ảnh nền mờ */}
@@ -843,13 +843,12 @@ function Detail() {
                 />
 
                 <InfoItem
-                value={
+                  value={
                     daysLived
                       ? `${daysLived.toLocaleString("vi-VN")} lần`
                       : "Chưa có ngày sinh"
                   }
                   label="Số lần đón bình minh 🤧"
-      
                   icon="🌎"
                 />
 
@@ -876,7 +875,7 @@ function Detail() {
                     onClick={handleOpenAlbum}
                     disabled={openingAlbum}
                     style={{ touchAction: "manipulation" }}
-                    className="group flex min-h-[56px] w-full select-none items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 px-3 py-3 text-sm font-bold text-white shadow-lg shadow-blue-500/20 transition duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-blue-500/30 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60 sm:px-5 sm:text-base"
+                    className="group flex min-h-[56px] w-full select-none items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 px-3 py-3 text-sm font-bold text-white shadow-lg shadow-blue-500/20 transition duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-blue-500/30 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60 sm:px-5 sm:text-base cursor-pointer"
                   >
                     <span className="shrink-0 text-lg transition duration-300 group-hover:scale-110 sm:text-xl">
                       {openingAlbum ? "⏳" : "🖼️"}
@@ -900,7 +899,7 @@ function Detail() {
                 <button
                   type="button"
                   onClick={() => navigate(-1)}
-                  className="group flex min-h-[56px] w-full items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-white px-3 py-3 text-sm font-bold text-slate-700 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700 hover:shadow-md active:translate-y-0 sm:px-5 sm:text-base"
+                  className="group flex min-h-[56px] w-full items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-white px-3 py-3 text-sm font-bold text-slate-700 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700 hover:shadow-md active:translate-y-0 sm:px-5 sm:text-base cursor-pointer"
                 >
                   <span className="shrink-0 text-lg transition duration-300 group-hover:-translate-x-1">
                     ←
@@ -910,7 +909,6 @@ function Detail() {
                 </button>
               </div>
             </div>
-
           </div>
         </div>
       </div>
@@ -929,14 +927,13 @@ function Detail() {
             className="relative w-full max-w-md overflow-hidden rounded-[32px] border border-white/30 bg-white/75 p-6 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3),inset_0_1px_1px_rgba(255,255,255,0.8)] backdrop-blur-2xl ring-1 ring-black/5 sm:p-7"
             onClick={(event) => event.stopPropagation()}
           >
-            {/* GLOW LIQUID LIGHT ORBS (Hiệu ứng ánh sáng khúc xạ phía sau kính) */}
+            {/* GLOW LIQUID LIGHT ORBS */}
             <div className="pointer-events-none absolute -left-12 -top-12 h-44 w-44 rounded-full bg-gradient-to-br from-blue-400/30 to-indigo-500/20 blur-3xl" />
             <div className="pointer-events-none absolute -bottom-12 -right-12 h-44 w-44 rounded-full bg-gradient-to-tl from-violet-400/25 to-rose-400/20 blur-3xl" />
 
             {/* HEADER */}
             <div className="relative flex items-start justify-between gap-4">
               <div className="flex items-center gap-3.5">
-                {/* Glass Icon Badge */}
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/60 bg-gradient-to-b from-white/80 to-white/30 text-2xl shadow-[0_8px_20px_rgba(37,99,235,0.15),inset_0_1px_2px_rgba(255,255,255,0.9)] backdrop-blur-xl">
                   🔐
                 </div>
@@ -951,12 +948,11 @@ function Detail() {
                 </div>
               </div>
 
-              {/* Nút Đóng Kính Mờ */}
               <button
                 type="button"
                 onClick={() => setVerifyOpen(false)}
                 disabled={verifying}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/40 text-sm font-bold text-slate-500 shadow-sm backdrop-blur-md transition hover:bg-white/80 hover:text-slate-800 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/40 text-sm font-bold text-slate-500 shadow-sm backdrop-blur-md transition hover:bg-white/80 hover:text-slate-800 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
                 aria-label="Đóng"
               >
                 ✕
@@ -965,7 +961,6 @@ function Detail() {
 
             {/* FORM BODY */}
             <form onSubmit={handleVerifyAlbum} className="relative mt-6 space-y-4">
-              {/* CÂU HỎI XÁC THỰC (Glass Card) */}
               <div className="relative overflow-hidden rounded-2xl border border-blue-200/50 bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-white/40 p-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.7)] backdrop-blur-lg">
                 <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-blue-600">
                   <span className="h-1.5 w-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
@@ -977,7 +972,7 @@ function Detail() {
                 </p>
               </div>
 
-              {/* INPUT CÂU TRẢ LỜI */}
+              {/* INPUT CÂU TRẢ LỜI (ĐÃ CHẶN ZOOM MOBILE VỚI text-base sm:text-sm) */}
               <div className="space-y-1.5">
                 <label
                   htmlFor="verify-answer"
@@ -995,12 +990,11 @@ function Detail() {
                     placeholder="Nhập câu trả lời..."
                     autoFocus
                     disabled={verifying}
-                    className="h-12 w-full rounded-2xl border border-white/80 bg-white/60 px-4 text-sm font-semibold text-slate-800 shadow-[inset_0_2px_4px_rgba(0,0,0,0.03)] backdrop-blur-md outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-blue-400 focus:bg-white/90 focus:ring-4 focus:ring-blue-400/20 disabled:cursor-not-allowed disabled:bg-slate-100/50"
+                    className="h-12 w-full rounded-2xl border border-white/80 bg-white/60 px-4 text-base sm:text-sm font-semibold text-slate-800 shadow-[inset_0_2px_4px_rgba(0,0,0,0.03)] backdrop-blur-md outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-blue-400 focus:bg-white/90 focus:ring-4 focus:ring-blue-400/20 disabled:cursor-not-allowed disabled:bg-slate-100/50"
                   />
                 </div>
               </div>
 
-              {/* THÔNG BÁO LỖI (Liquid Alert) */}
               {verifyError && (
                 <div className="flex items-center gap-2 rounded-2xl border border-rose-300/60 bg-rose-500/10 px-3.5 py-2.5 text-xs font-bold text-rose-700 shadow-sm backdrop-blur-md">
                   <span className="shrink-0 text-sm">⚠️</span>
@@ -1008,25 +1002,21 @@ function Detail() {
                 </div>
               )}
 
-              {/* BUTTON ACTIONS */}
               <div className="grid grid-cols-2 gap-3 pt-2">
-                {/* Nút Hủy */}
                 <button
                   type="button"
                   onClick={() => setVerifyOpen(false)}
                   disabled={verifying}
-                  className="flex h-11 items-center justify-center rounded-2xl border border-white/60 bg-white/40 font-bold text-slate-700 shadow-sm backdrop-blur-md transition hover:bg-white/80 hover:text-slate-900 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 text-sm"
+                  className="flex h-11 items-center justify-center rounded-2xl border border-white/60 bg-white/40 font-bold text-slate-700 shadow-sm backdrop-blur-md transition hover:bg-white/80 hover:text-slate-900 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 text-sm cursor-pointer"
                 >
                   Hủy
                 </button>
 
-                {/* Nút Xác Nhận (Liquid Glossy Button) */}
                 <button
                   type="submit"
                   disabled={verifying}
-                  className="relative flex h-11 items-center justify-center gap-2 overflow-hidden rounded-2xl border border-blue-400/40 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 bg-[length:200%_auto] font-bold text-white shadow-[0_8px_20px_-4px_rgba(37,99,235,0.4),inset_0_1px_1px_rgba(255,255,255,0.4)] transition duration-300 hover:bg-right hover:shadow-[0_12px_24px_-4px_rgba(37,99,235,0.5)] active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 text-sm"
+                  className="relative flex h-11 items-center justify-center gap-2 overflow-hidden rounded-2xl border border-blue-400/40 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 bg-[length:200%_auto] font-bold text-white shadow-[0_8px_20px_-4px_rgba(37,99,235,0.4),inset_0_1px_1px_rgba(255,255,255,0.4)] transition duration-300 hover:bg-right hover:shadow-[0_12px_24px_-4px_rgba(37,99,235,0.5)] active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 text-sm cursor-pointer"
                 >
-                  {/* Lớp phản chiếu ánh sáng mặt trên button */}
                   <div className="pointer-events-none absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/20 to-transparent" />
 
                   {verifying ? (
