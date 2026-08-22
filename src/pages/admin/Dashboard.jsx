@@ -211,8 +211,8 @@ function Dashboard() {
       const list = Array.isArray(res.data?.data)
         ? res.data.data
         : Array.isArray(res.data)
-        ? res.data
-        : [];
+          ? res.data
+          : [];
       setRsvpList(list);
     } catch (err) {
       console.error("Lỗi tải RSVP:", err);
@@ -446,7 +446,7 @@ function Dashboard() {
 
   return (
     <Layout>
-      {/* Thẻ thống kê (Bấm vào lượt truy cập sẽ kích hoạt onShowVisits) */}
+      {/* Thẻ thống kê */}
       <DashboardStats
         stats={stats}
         visits={visits}
@@ -500,7 +500,7 @@ function Dashboard() {
               value={keyword}
               onChange={(event) => setKeyword(event.target.value)}
               placeholder="Nhập ID, tên, quê quán hoặc địa điểm"
-              className="w-full rounded-xl border border-slate-300 px-4 py-3 pr-12 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+              className="w-full rounded-xl border border-slate-300 px-4 py-3 pr-12 text-base sm:text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
             />
 
             {keyword && (
@@ -614,7 +614,6 @@ function Dashboard() {
         onClose={() => setShowEventManager(false)}
       />
 
-      {/* MODAL COMPONENT RIÊNG */}
       <GraduationRsvpModal
         open={showRsvpModal}
         onClose={() => setShowRsvpModal(false)}
