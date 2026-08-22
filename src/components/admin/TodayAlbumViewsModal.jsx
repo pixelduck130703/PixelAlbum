@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useCallback } from "react";
+import React, { useEffect, useMemo } from "react";
 import {
   FaEye,
   FaClock,
@@ -278,15 +278,15 @@ function TodayAlbumViewsModal({
                       />
 
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between gap-3">
-                          {/* Đã thêm min-w-0 và truncate để tên dài tự động cắt gọn, không đẩy cụm bên phải */}
+                        <div className="flex items-start justify-between gap-3">
+                          {/* Cho phép tên dài tự xuống dòng thay vì truncate */}
                           <div className="min-w-0 flex-1">
-                            <h3 className="truncate text-sm font-bold text-slate-800 sm:text-base">
+                            <h3 className="whitespace-normal break-words text-sm font-bold text-slate-800 sm:text-base">
                               {person.name || "Chưa cập nhật"}
                             </h3>
                           </div>
 
-                          {/* Cố định cụm badge bằng shrink-0 để không bao giờ bị rơi xuống dòng dưới */}
+                          {/* Cố định cụm badge bằng shrink-0 */}
                           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
                             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-semibold text-emerald-700 sm:px-2.5 sm:py-1 sm:text-xs">
                               <FaEye />
