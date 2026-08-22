@@ -149,10 +149,9 @@ function TodayAlbumViewsModal({
           </div>
         </div>
 
-        {/* BỘ CHỌN NGÀY (Gom chung Mobile & Desktop, giao diện linh hoạt) */}
+        {/* BỘ CHỌN NGÀY */}
         <div className="shrink-0 border-b border-emerald-100 bg-emerald-50/50 px-3 py-2.5 sm:px-6 sm:py-3">
           <div className="flex items-center justify-between gap-2 sm:gap-4">
-            {/* Tiêu đề ngày trên desktop */}
             <div className="hidden min-w-0 items-center gap-3 sm:flex">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
                 <FaCalendarAlt className="text-base" />
@@ -167,7 +166,6 @@ function TodayAlbumViewsModal({
               </div>
             </div>
 
-            {/* Thanh công cụ điều hướng ngày */}
             <div className="flex w-full items-center justify-end gap-1.5 sm:w-auto sm:gap-2">
               <button
                 type="button"
@@ -280,11 +278,15 @@ function TodayAlbumViewsModal({
                       />
 
                       <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <h3 className="truncate text-sm font-bold text-slate-800 sm:text-base">
-                            {person.name || "Chưa cập nhật"}
-                          </h3>
+                        <div className="flex items-center justify-between gap-3">
+                          {/* Đã thêm min-w-0 và truncate để tên dài tự động cắt gọn, không đẩy cụm bên phải */}
+                          <div className="min-w-0 flex-1">
+                            <h3 className="truncate text-sm font-bold text-slate-800 sm:text-base">
+                              {person.name || "Chưa cập nhật"}
+                            </h3>
+                          </div>
 
+                          {/* Cố định cụm badge bằng shrink-0 để không bao giờ bị rơi xuống dòng dưới */}
                           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
                             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-semibold text-emerald-700 sm:px-2.5 sm:py-1 sm:text-xs">
                               <FaEye />
