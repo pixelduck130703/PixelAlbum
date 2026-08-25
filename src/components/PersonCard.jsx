@@ -35,27 +35,36 @@ function PersonCard({ person }) {
   return (
     <div
       onClick={() => navigate(`/person/${person.publicId}`)}
-      className={`flex cursor-pointer items-center gap-4 rounded-2xl border p-4 shadow-xs transition-all duration-200 hover:scale-[1.01] hover:shadow-md active:scale-[0.99] ${randomThemeClass}`}
+      className={`flex cursor-pointer items-center justify-between gap-4 rounded-2xl border p-4 shadow-xs transition-all duration-200 hover:scale-[1.01] hover:shadow-md active:scale-[0.99] ${randomThemeClass}`}
     >
-      <img
-        src={person.avatar || FALLBACK_AVATAR}
-        alt={person.name || "Avatar"}
-        onError={handleImageError}
-        className="h-16 w-16 shrink-0 rounded-full border-2 border-white object-cover shadow-sm ring-1 ring-black/10"
-      />
+      <div className="flex min-w-0 items-center gap-4">
+        <img
+          src={person.avatar || FALLBACK_AVATAR}
+          alt={person.name || "Avatar"}
+          onError={handleImageError}
+          className="h-16 w-16 shrink-0 rounded-full border-2 border-white object-cover shadow-sm ring-1 ring-black/10"
+        />
 
-      <div className="min-w-0 flex-1">
-        {/* Hiển thị trọn vẹn họ tên, tự xuống dòng khi tên dài */}
-        <h2 className="text-base font-bold leading-snug text-slate-800 break-words sm:text-lg">
-          {person.name || "Chưa cập nhật"}
-        </h2>
+        <div className="min-w-0 flex-1">
+          {/* Hiển thị trọn vẹn họ tên, tự xuống dòng khi tên dài */}
+          <h2 className="text-base font-bold leading-snug text-slate-800 break-words sm:text-lg">
+            {person.name || "Chưa cập nhật"}
+          </h2>
 
-        {person.class && (
-          <p className="mt-1 text-xs font-semibold text-slate-500 break-words">
-            🎓 {person.class}
-          </p>
-        )}
+          {person.class && (
+            <p className="mt-1 text-xs font-semibold text-slate-500 break-words">
+              🎓 {person.class}
+            </p>
+          )}
+        </div>
       </div>
+
+      {/* Hiển thị ID làm nổi bật ở góc bên phải */}
+      {person.id && (
+        <span className="shrink-0 rounded-xl bg-white border border-slate-300 px-2.5 py-1.5 text-xs font-mono font-black text-blue-600 shadow-sm">
+          ID: {person.id}
+        </span>
+      )}
     </div>
   );
 }

@@ -12,13 +12,13 @@ function Topbar() {
   return (
     <nav className="w-full border-b border-slate-200/80 bg-white/70 backdrop-blur-md shadow-sm">
       <div className="grid w-full grid-cols-3 items-center px-6 py-4">
-        {/* Cột 1: Logo & Tiêu đề phụ */}
+        {/* Cột 1: Logo & Tiêu đề phụ (Bấm vào logo sẽ về trang chủ /) */}
         <div className="flex items-center justify-start">
-          <Link to="/admin" className="block">
+          <Link to="/" className="block">
             <img
               src="/images/Memories.png"
               alt="Memories"
-              className="h-6 w-auto object-contain"
+              className="h-6 w-auto object-contain cursor-pointer transition hover:scale-105"
             />
             <p className="hidden text-sm text-slate-500 sm:block">
               Trang quản trị hệ thống

@@ -261,18 +261,18 @@ function PersonTable({
                         )}
                       </td>
 
-                      {/* Liên kết album */}
+                      {/* Liên kết album (Nút Mở chuẩn Liquid Glass) */}
                       <td className="px-4 py-4 text-center align-middle">
                         {person.album ? (
                           <a
                             href={person.album}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex h-10 w-[82px] items-center justify-center gap-2 rounded-xl bg-blue-600 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 hover:shadow-md active:scale-95"
+                            className="group relative inline-flex min-h-[38px] w-[82px] items-center justify-center gap-1.5 overflow-hidden rounded-xl border border-blue-300/80 bg-blue-500/15 px-3 py-1.5 text-xs font-bold text-blue-950 shadow-[0_4px_16px_0_rgba(59,130,246,0.15)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.03] hover:bg-blue-500/25 hover:shadow-[0_6px_20px_0_rgba(59,130,246,0.25)] active:scale-[0.98] cursor-pointer"
                           >
-                            <FaExternalLinkAlt className="shrink-0 text-xs" />
-
-                            Mở
+                            <span className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-xl bg-gradient-to-b from-white/60 to-transparent" />
+                            <FaExternalLinkAlt className="relative z-10 shrink-0 text-[10px]" />
+                            <span className="relative z-10">Mở</span>
                           </a>
                         ) : (
                           <span className="inline-flex h-9 w-[82px] items-center justify-center rounded-full bg-white/80 border border-slate-200/60 px-3 text-xs font-medium text-slate-400">
@@ -436,16 +436,17 @@ function PersonTable({
                   </div>
                 </div>
 
-                {/* Xem album */}
+                {/* Xem album (Nút Mở chuẩn Liquid Glass trên Mobile) */}
                 {person.album ? (
                   <a
                     href={person.album}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-4 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-xs transition active:bg-blue-700"
+                    className="group relative mt-4 flex min-h-[48px] w-full items-center justify-center gap-2 overflow-hidden rounded-xl border border-blue-300/80 bg-blue-500/15 px-4 py-3 text-sm font-bold text-blue-950 shadow-[0_6px_24px_0_rgba(59,130,246,0.15)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.02] hover:bg-blue-500/25 active:scale-[0.98] cursor-pointer"
                   >
-                    <FaExternalLinkAlt />
-                    Xem album
+                    <span className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-xl bg-gradient-to-b from-white/60 to-transparent" />
+                    <FaExternalLinkAlt className="relative z-10 shrink-0 text-xs" />
+                    <span className="relative z-10">Xem album</span>
                   </a>
                 ) : (
                   <div className="mt-4 flex min-h-[48px] items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white/60 px-4 text-center text-sm font-medium text-slate-500">
