@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { FaEye } from "react-icons/fa";
 
 const FALLBACK_AVATAR = "https://placehold.co/160x160?text=Avatar";
 
@@ -32,6 +33,10 @@ function PersonCard({ person }) {
     event.currentTarget.src = FALLBACK_AVATAR;
   };
 
+  const formatViews = (views) => {
+    return Number(views || 0).toLocaleString("vi-VN");
+  };
+
   return (
     <div
       onClick={() => navigate(`/person/${person.publicId}`)}
@@ -59,12 +64,19 @@ function PersonCard({ person }) {
         </div>
       </div>
 
-      {/* Hiển thị ID làm nổi bật ở góc bên phải */}
-      {person.id && (
-        <span className="shrink-0 rounded-xl bg-white border border-slate-300 px-2.5 py-1.5 text-xs font-mono font-black text-blue-600 shadow-sm">
-          ID: {person.id}
-        </span>
-      )}
+      {/* Cả hai ô ID và Lượt xem được đồng bộ chung kiểu dáng */}
+      <div className="grid shrink-0 grid-cols-1 gap-1.5">
+        {person.id && (
+          <div className="flex w-full items-center justify-center rounded-xl bg-white border border-slate-300 px-3 py-1 text-xs font-mono font-black text-blue-600 shadow-sm whitespace-nowrap">
+            ID: {person.id}
+          </div>
+        )}
+
+        <div className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-white border border-slate-300 px-3 py-1 text-xs font-mono font-black text-blue-600 shadow-sm whitespace-nowrap">
+          <FaEye className="shrink-0 text-blue-500 text-[11px]" /> :
+          <span>{formatViews(person.albumViews)}</span>
+        </div>
+      </div>
     </div>
   );
 }
