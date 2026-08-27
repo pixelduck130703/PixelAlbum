@@ -308,7 +308,7 @@ const TRANSLATIONS = {
         campusMap: "Campusplan",
         parkingGuide: "Parkhinweise",
         parkingInstruction:
-            "Motorräder und Roller nutzen bitte Tor 2 oder Tor 3 zum Parken. Tor 1 ist ausschließlich für Dozentenfahrzeuge reserviert.",
+            "Motorräder und Roller nutzen bitte Tor 2 hoặc Tor 3 zum Parken. Tor 1 ist ausschließlich für Dozentenfahrzeuge reserviert.",
         phoneLabel: "Telefonnummer",
         close: "Schließen",
         callNow: "Jetzt anrufen",
@@ -401,6 +401,15 @@ const TRANSLATIONS = {
     },
 };
 
+// Hàm chuẩn hóa base URL tự động nhận diện đuôi /api
+const getApiBaseUrl = () => {
+    let url = (import.meta.env.VITE_API_URL || "http://localhost:5000").trim();
+    if (url.endsWith("/")) {
+        url = url.slice(0, -1);
+    }
+    return url.endsWith("/api") ? url : `${url}/api`;
+};
+
 function Invitation() {
     const [isClientReady, setIsClientReady] = useState(false);
     const [showMusicGuide, setShowMusicGuide] = useState(false);
@@ -435,9 +444,8 @@ function Invitation() {
 
     const loadWishes = async () => {
         try {
-            const baseUrl =
-                import.meta.env.VITE_API_URL || "http://localhost:5000";
-            const response = await fetch(`${baseUrl}/admin/graduation-rsvps`);
+            const apiBase = getApiBaseUrl();
+            const response = await fetch(`${apiBase}/admin/graduation-rsvps`);
             const data = await response.json();
             const list = Array.isArray(data?.data) ? data.data : [];
             const validWishes = list.filter(
@@ -496,18 +504,24 @@ function Invitation() {
         event.preventDefault();
 
         const trimmedName = rsvpForm.name.trim();
+        const trimmedWishes = rsvpForm.wishes.trim();
+
         if (!trimmedName) {
             alert(t.rsvpNameLabel || "Vui lòng nhập họ và tên.");
             return;
         }
 
+        // BẮT BUỘC NHẬP LỜI CHÚC
+        if (!trimmedWishes) {
+            alert("Vui lòng nhập lời chúc của bạn.");
+            return;
+        }
+
         try {
             setRsvpLoading(true);
+            const apiBase = getApiBaseUrl();
 
-            const baseUrl =
-                import.meta.env.VITE_API_URL || "http://localhost:5000";
-
-            const response = await fetch(`${baseUrl}/graduation-rsvp`, {
+            const response = await fetch(`${apiBase}/graduation-rsvp`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -516,7 +530,7 @@ function Invitation() {
                     name: trimmedName,
                     attendance: rsvpForm.attendance,
                     guests: "alone",
-                    wishes: rsvpForm.wishes.trim(),
+                    wishes: trimmedWishes,
                 }),
             });
 
@@ -530,19 +544,17 @@ function Invitation() {
                 throw new Error(data.message || "Không thể gửi xác nhận.");
             }
 
-            if (rsvpForm.wishes.trim()) {
-                setWishesList((prev) => [
-                    {
-                        id: Date.now(),
-                        name: trimmedName,
-                        wishes: rsvpForm.wishes.trim(),
-                        attendance: rsvpForm.attendance,
-                        submittedAt: new Date().toISOString(),
-                    },
-                    ...prev,
-                ]);
-                setCurrentWishIndex(0);
-            }
+            setWishesList((prev) => [
+                {
+                    id: Date.now(),
+                    name: trimmedName,
+                    wishes: trimmedWishes,
+                    attendance: rsvpForm.attendance,
+                    submittedAt: new Date().toISOString(),
+                },
+                ...prev,
+            ]);
+            setCurrentWishIndex(0);
 
             setRsvpSuccess(true);
             setRsvpForm({
@@ -965,7 +977,6 @@ function Invitation() {
                         />
 
                         <div className="relative z-10 flex h-full flex-col items-center justify-between px-1 py-4 text-center">
-                            {/* Phần trên: Logo & K63 */}
                             <div className="flex flex-col items-center pt-2">
                                 <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-sm">
                                     <img
@@ -979,14 +990,12 @@ function Invitation() {
                                 </p>
                             </div>
 
-                            {/* Phần giữa: Tên trường (Đã tăng kích thước chữ lên 7.5px) */}
                             <div className="flex flex-1 items-center justify-center py-2">
                                 <p className="[writing-mode:vertical-rl] rotate-180 whitespace-nowrap text-[7.5px] font-black uppercase tracking-[0.14em] text-white">
                                     Trường Đại học Giao thông Vận tải
                                 </p>
                             </div>
 
-                            {/* Phần dưới: Class 2026 */}
                             <div className="pb-3 text-center">
                                 <div className="mx-auto mb-1 h-px w-4 bg-amber-300/80" />
                                 <p className="text-[6px] font-black uppercase tracking-[0.12em] text-amber-300">
@@ -1344,18 +1353,16 @@ function Invitation() {
 
                 {/* 4 Nút chức năng */}
                 <div className="mt-10 grid w-full max-w-4xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    {/* 1. Xem địa điểm: Vàng sang trọng */}
                     <a
                         href={MAP_URL}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex min-h-[56px] items-center justify-center gap-3 rounded-2xl border border-amber-300 bg-amber-100 px-6 py-4 font-bold text-amber-950 shadow-xl backdrop-blur-md transition hover:-translate-y-1 hover:scale-[1.02] active:scale-95"
+                        className="flex min-h-[56px] items-center justify-center gap-3 rounded-2xl border border-amber-300 bg-amber-100 px-6 py-4 font-bold text-amber-950 shadow-xl backdrop-blur-md transition hover:-translate-y-1 hover:scale-[1.02] active:scale-95 cursor-pointer"
                     >
                         <span className="text-xl">📍</span>
                         <span className={textAnimClass}>{t.viewMap}</span>
                     </a>
 
-                    {/* 2. Sơ đồ trường: Xanh dương */}
                     <button
                         type="button"
                         onClick={() => setShowCampusMap(true)}
@@ -1365,7 +1372,6 @@ function Invitation() {
                         <span className={textAnimClass}>{t.campusMap}</span>
                     </button>
 
-                    {/* 3. Liên hệ: Xanh lục nhạt */}
                     <button
                         type="button"
                         onClick={() => setShowPhone(true)}
@@ -1375,7 +1381,6 @@ function Invitation() {
                         <span className={textAnimClass}>{t.contact}</span>
                     </button>
 
-                    {/* 4. Xác nhận tham dự: Hồng nhạt */}
                     <button
                         type="button"
                         onClick={() => {
@@ -1388,8 +1393,6 @@ function Invitation() {
                         <span className={textAnimClass}>{t.rsvpBtn}</span>
                     </button>
                 </div>
-
-                
 
                 <footer className="mt-12 text-center">
                     <p
@@ -1495,7 +1498,6 @@ function Invitation() {
                                     onSubmit={handleRsvpSubmit}
                                     className="mt-6 space-y-4 text-left"
                                 >
-                                    {/* Họ tên */}
                                     <div>
                                         <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-700">
                                             {t.rsvpNameLabel} <span className="text-rose-500">*</span>
@@ -1514,7 +1516,6 @@ function Invitation() {
                                         />
                                     </div>
 
-                                    {/* Trạng thái tham dự */}
                                     <div>
                                         <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-700">
                                             {t.rsvpAttendingLabel}
@@ -1529,8 +1530,8 @@ function Invitation() {
                                                 <label
                                                     key={value}
                                                     className={`flex cursor-pointer items-center gap-3 rounded-2xl border p-3 transition ${rsvpForm.attendance === value
-                                                            ? "border-blue-500 bg-blue-50/80"
-                                                            : "border-white/80 bg-white/50"
+                                                        ? "border-blue-500 bg-blue-50/80"
+                                                        : "border-white/80 bg-white/50"
                                                         }`}
                                                 >
                                                     <input
@@ -1552,10 +1553,9 @@ function Invitation() {
                                         </div>
                                     </div>
 
-                                    {/* Lời chúc */}
                                     <div>
                                         <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-700">
-                                            {t.rsvpWishesLabel}
+                                            {t.rsvpWishesLabel} <span className="text-rose-500">*</span>
                                         </label>
 
                                         <textarea
@@ -1566,6 +1566,7 @@ function Invitation() {
                                             placeholder={t.rsvpWishesPlaceholder}
                                             maxLength={1000}
                                             rows={3}
+                                            required
                                             className="w-full resize-none rounded-2xl border border-white/80 bg-white/60 p-3.5 text-sm font-normal text-slate-800 outline-none backdrop-blur-md focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200"
                                         />
                                     </div>
@@ -1837,8 +1838,8 @@ function LanguageSwitcher({ language, onChange, disabled = false }) {
                         onClick={() => onChange(item.code)}
                         disabled={disabled}
                         className={`relative flex min-h-[38px] items-center gap-1.5 rounded-full px-3 text-xs font-bold transition-all duration-300 disabled:cursor-wait disabled:opacity-70 cursor-pointer sm:text-sm ${active
-                                ? "text-white shadow-[0_4px_16px_rgba(37,99,235,0.35)]"
-                                : "text-slate-700 hover:bg-white/40 hover:text-blue-900"
+                            ? "text-white shadow-[0_4px_16px_rgba(37,99,235,0.35)]"
+                            : "text-slate-700 hover:bg-white/40 hover:text-blue-900"
                             }`}
                         aria-label={item.ariaLabel}
                         aria-pressed={active}
