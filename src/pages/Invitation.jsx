@@ -315,7 +315,7 @@ const TRANSLATIONS = {
         footer: "UTC · Jahrgang 2026 · Abschlussfeier",
         musicOn: "Musik läuft",
         musicOff: "Hintergrundmusik abspielen",
-        musicPlayError: "Der Browser konnte die Musik nicht abspielen.",
+        musicPlayError: "Der Browser konnte die Musik không thể phát nhạc.",
         guideTitle: "Willkommen",
         guideText:
             "Für das beste Erlebnis öffnen Sie die Einladung bitte auf dem PC, wechseln Sie die Sprache und klicken Sie unten rights auf das 🔊 Symbol, um die Hintergrundmusik einzuschalten.",
@@ -449,7 +449,6 @@ function Invitation() {
             const data = await response.json();
             const list = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
             
-            // Giữ lại toàn bộ danh sách khách mời (dù có hay không có lời chúc)
             if (list.length > 0) {
                 setWishesList(list);
             }
@@ -510,6 +509,12 @@ function Invitation() {
             return;
         }
 
+        // BẮT BUỘC NHẬP LỜI CHÚC
+        if (!trimmedWishes) {
+            alert("Vui lòng nhập lời chúc của bạn.");
+            return;
+        }
+
         try {
             setRsvpLoading(true);
             const apiBase = getApiBaseUrl();
@@ -537,7 +542,6 @@ function Invitation() {
                 throw new Error(data.message || "Không thể gửi xác nhận.");
             }
 
-            // Đưa ngay bản ghi mới vào danh sách lướt qua
             setWishesList((prev) => [
                 {
                     id: Date.now(),
@@ -1561,7 +1565,7 @@ function Invitation() {
 
                                     <div>
                                         <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-700">
-                                            {t.rsvpWishesLabel}
+                                            {t.rsvpWishesLabel} <span className="text-rose-500">*</span>
                                         </label>
 
                                         <textarea
@@ -1572,6 +1576,7 @@ function Invitation() {
                                             placeholder={t.rsvpWishesPlaceholder}
                                             maxLength={1000}
                                             rows={3}
+                                            required
                                             className="w-full resize-none rounded-2xl border border-white/80 bg-white/60 p-3.5 text-sm font-normal text-slate-800 outline-none backdrop-blur-md focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200"
                                         />
                                     </div>
