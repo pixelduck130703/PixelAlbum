@@ -303,7 +303,7 @@ const TRANSLATIONS = {
         locationLine2: "Universität für Verkehr und Kommunikation",
         seeYou: "Wir freuen uns darauf, Sie bei der Feier zu begrüßen!",
         viewMap: "Standort",
-        contact: "Kontakt",
+        contact: "Contact",
         contactTitle: "Kontakt aufnehmen",
         campusMap: "Campusplan",
         parkingGuide: "Parkhinweise",
@@ -401,7 +401,7 @@ const TRANSLATIONS = {
     },
 };
 
-// Hàm chuẩn hóa base URL tự động nhận diện đuôi /api
+// Chuẩn hóa base URL tự động xử lý tiền tố /api
 const getApiBaseUrl = () => {
     let url = (import.meta.env.VITE_API_URL || "http://localhost:5000").trim();
     if (url.endsWith("/")) {
@@ -448,11 +448,10 @@ function Invitation() {
             const response = await fetch(`${apiBase}/admin/graduation-rsvps`);
             const data = await response.json();
             const list = Array.isArray(data?.data) ? data.data : [];
-            const validWishes = list.filter(
-                (item) => item.wishes && String(item.wishes).trim() !== ""
-            );
-            if (validWishes.length > 0) {
-                setWishesList(validWishes);
+            
+            // Giữ lại toàn bộ danh sách khách mời (kể cả khi không có lời chúc)
+            if (list.length > 0) {
+                setWishesList(list);
             }
         } catch {
             // Bỏ qua lỗi hiển thị
@@ -508,12 +507,6 @@ function Invitation() {
 
         if (!trimmedName) {
             alert(t.rsvpNameLabel || "Vui lòng nhập họ và tên.");
-            return;
-        }
-
-        // BẮT BUỘC NHẬP LỜI CHÚC
-        if (!trimmedWishes) {
-            alert("Vui lòng nhập lời chúc của bạn.");
             return;
         }
 
@@ -1335,17 +1328,31 @@ function Invitation() {
                                 className={`w-full text-center transition-all ${wishVisible ? "wish-enter" : "wish-leave"
                                     }`}
                             >
-                                <p className="mx-auto max-w-2xl font-serif text-base italic leading-relaxed text-slate-800 sm:text-xl">
-                                    "{currentWish?.wishes}"
-                                </p>
+                                {currentWish?.wishes && String(currentWish.wishes).trim() !== "" ? (
+                                    <>
+                                        <p className="mx-auto max-w-2xl font-serif text-base italic leading-relaxed text-slate-800 sm:text-xl">
+                                            "{currentWish.wishes}"
+                                        </p>
 
-                                <div className="mt-3 flex items-center justify-center gap-2">
-                                    <span className="h-px w-6 bg-amber-300" />
-                                    <p className="text-xs font-bold tracking-wider text-blue-900 sm:text-sm">
-                                        {currentWish?.name}
-                                    </p>
-                                    <span className="h-px w-6 bg-amber-300" />
-                                </div>
+                                        <div className="mt-3 flex items-center justify-center gap-2">
+                                            <span className="h-px w-6 bg-amber-300" />
+                                            <p className="text-xs font-bold tracking-wider text-blue-900 sm:text-sm">
+                                                {currentWish?.name}
+                                            </p>
+                                            <span className="h-px w-6 bg-amber-300" />
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="flex items-center justify-center gap-2.5">
+                                        <span className="h-px w-8 bg-amber-300" />
+                                        <span className="text-sm">✨</span>
+                                        <p className="text-sm font-bold tracking-wider text-blue-900 sm:text-base">
+                                            {currentWish?.name}
+                                        </p>
+                                        <span className="text-sm">✨</span>
+                                        <span className="h-px w-8 bg-amber-300" />
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
@@ -1555,7 +1562,7 @@ function Invitation() {
 
                                     <div>
                                         <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-700">
-                                            {t.rsvpWishesLabel} <span className="text-rose-500">*</span>
+                                            {t.rsvpWishesLabel}
                                         </label>
 
                                         <textarea
@@ -1566,7 +1573,6 @@ function Invitation() {
                                             placeholder={t.rsvpWishesPlaceholder}
                                             maxLength={1000}
                                             rows={3}
-                                            required
                                             className="w-full resize-none rounded-2xl border border-white/80 bg-white/60 p-3.5 text-sm font-normal text-slate-800 outline-none backdrop-blur-md focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200"
                                         />
                                     </div>
