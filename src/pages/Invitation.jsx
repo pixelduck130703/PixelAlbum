@@ -303,12 +303,12 @@ const TRANSLATIONS = {
         locationLine2: "Universität für Verkehr und Kommunikation",
         seeYou: "Wir freuen uns darauf, Sie bei der Feier zu begrüßen!",
         viewMap: "Standort",
-        contact: "Contact",
+        contact: "Kontakt",
         contactTitle: "Kontakt aufnehmen",
         campusMap: "Campusplan",
         parkingGuide: "Parkhinweise",
         parkingInstruction:
-            "Motorräder und Roller nutzen bitte Tor 2 hoặc Tor 3 zum Parken. Tor 1 ist ausschließlich für Dozentenfahrzeuge reserviert.",
+            "Motorräder und Roller nutzen bitte Tor 2 oder Tor 3 zum Parken. Tor 1 ist ausschließlich für Dozentenfahrzeuge reserviert.",
         phoneLabel: "Telefonnummer",
         close: "Schließen",
         callNow: "Jetzt anrufen",
@@ -401,7 +401,7 @@ const TRANSLATIONS = {
     },
 };
 
-// Chuẩn hóa base URL tự động xử lý tiền tố /api
+// Chuẩn hóa base URL tự động nhận diện đuôi /api
 const getApiBaseUrl = () => {
     let url = (import.meta.env.VITE_API_URL || "http://localhost:5000").trim();
     if (url.endsWith("/")) {
@@ -447,9 +447,9 @@ function Invitation() {
             const apiBase = getApiBaseUrl();
             const response = await fetch(`${apiBase}/admin/graduation-rsvps`);
             const data = await response.json();
-            const list = Array.isArray(data?.data) ? data.data : [];
+            const list = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
             
-            // Giữ lại toàn bộ danh sách khách mời (kể cả khi không có lời chúc)
+            // Giữ lại toàn bộ danh sách khách mời (dù có hay không có lời chúc)
             if (list.length > 0) {
                 setWishesList(list);
             }
@@ -537,6 +537,7 @@ function Invitation() {
                 throw new Error(data.message || "Không thể gửi xác nhận.");
             }
 
+            // Đưa ngay bản ghi mới vào danh sách lướt qua
             setWishesList((prev) => [
                 {
                     id: Date.now(),
@@ -1343,14 +1344,12 @@ function Invitation() {
                                         </div>
                                     </>
                                 ) : (
-                                    <div className="flex items-center justify-center gap-2.5">
-                                        <span className="h-px w-8 bg-amber-300" />
-                                        <span className="text-sm">✨</span>
+                                    <div className="flex items-center justify-center gap-2">
+                                        <span className="h-px w-6 bg-amber-300" />
                                         <p className="text-sm font-bold tracking-wider text-blue-900 sm:text-base">
                                             {currentWish?.name}
                                         </p>
-                                        <span className="text-sm">✨</span>
-                                        <span className="h-px w-8 bg-amber-300" />
+                                        <span className="h-px w-6 bg-amber-300" />
                                     </div>
                                 )}
                             </div>
