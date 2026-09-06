@@ -124,12 +124,12 @@ function PersonForm({
 }) {
   const [form, setForm] = useState(initialForm);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [clearSecurityAnswer, setClearSecurityAnswer] = useState(false);
 
   useEffect(() => {
     if (!open) return;
 
     const originalOverflow = document.body.style.overflow;
-
     document.body.style.overflow = "hidden";
 
     return () => {
@@ -156,6 +156,7 @@ function PersonForm({
       setForm(initialForm);
     }
 
+    setClearSecurityAnswer(false);
     setUploadingImage(false);
   }, [person, open]);
 
@@ -191,6 +192,52 @@ function PersonForm({
     }));
   };
 
+  const handleSecurityQuestionChange = (event) => {
+    const value = event.target.value;
+
+    setForm((current) => ({
+      ...current,
+      securityQuestion: value,
+      ...(value.trim()
+        ? {}
+        : {
+            securityAnswer: "",
+          }),
+    }));
+
+    if (!value.trim()) {
+      setClearSecurityAnswer(false);
+    }
+  };
+
+  const handleSecurityAnswerChange = (event) => {
+    const value = event.target.value;
+    setClearSecurityAnswer(false);
+
+    setForm((current) => ({
+      ...current,
+      securityAnswer: value,
+    }));
+  };
+
+  const handleClearSecurityAnswer = () => {
+    setClearSecurityAnswer(true);
+
+    setForm((current) => ({
+      ...current,
+      securityAnswer: "",
+    }));
+  };
+
+  const handleRestoreSecurityAnswer = () => {
+    setClearSecurityAnswer(false);
+
+    setForm((current) => ({
+      ...current,
+      securityAnswer: "",
+    }));
+  };
+
   const handleAvatarUpload = async (event) => {
     const file = event.target.files?.[0];
 
@@ -210,7 +257,6 @@ function PersonForm({
 
     try {
       setUploadingImage(true);
-
       const imageUrl = await uploadImageToCloudinary(file);
 
       setForm((current) => ({
@@ -263,17 +309,19 @@ function PersonForm({
       return;
     }
 
-    const hasSecurityQuestion =
-      form.securityQuestion.trim() !== "";
+    const hasSecurityQuestion = form.securityQuestion.trim() !== "";
+    const hasSecurityAnswer = form.securityAnswer.trim() !== "";
+    const hasExistingQuestion = Boolean(person?.securityQuestion);
 
-    const isCreatingNewQuestion =
-      !person?.securityQuestion && hasSecurityQuestion;
-
-    if (
-      isCreatingNewQuestion &&
-      !form.securityAnswer.trim()
-    ) {
+    // Khi tạo mới hoặc trước đó chưa có câu hỏi: Bắt buộc nhập câu trả lời
+    if (hasSecurityQuestion && !hasExistingQuestion && !hasSecurityAnswer) {
       alert("Vui lòng nhập câu trả lời xác thực.");
+      return;
+    }
+
+    // Nếu sửa câu hỏi nhưng đã xóa đáp án cũ và không nhập mới
+    if (hasSecurityQuestion && hasExistingQuestion && clearSecurityAnswer && !hasSecurityAnswer) {
+      alert("Vui lòng nhập câu trả lời xác thực mới hoặc khôi phục câu trả lời cũ.");
       return;
     }
 
@@ -294,6 +342,7 @@ function PersonForm({
       album: form.album.trim(),
       securityQuestion: form.securityQuestion.trim(),
       securityAnswer: form.securityAnswer.trim(),
+      clearSecurityAnswer,
     });
   };
 
@@ -308,6 +357,7 @@ function PersonForm({
   };
 
   const isBusy = submitting || uploadingImage;
+  const hasExistingAnswer = Boolean(person?.securityQuestion) && !clearSecurityAnswer;
 
   return (
     <div
@@ -315,11 +365,9 @@ function PersonForm({
       className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-3 backdrop-blur-sm sm:p-5"
     >
       <div className="flex max-h-[94vh] w-full max-w-4xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl">
-
         {/* HEADER */}
         <div className="shrink-0 bg-gradient-to-r from-sky-400 via-blue-400 to-indigo-400 px-5 py-5 text-white sm:px-7 sm:py-6">
           <div className="flex items-center justify-between gap-4">
-
             <div className="flex min-w-0 items-center gap-3">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/25 text-2xl backdrop-blur">
                 {person ? "✏️" : "➕"}
@@ -327,9 +375,7 @@ function PersonForm({
 
               <div className="min-w-0">
                 <h2 className="truncate text-xl font-bold sm:text-2xl">
-                  {person
-                    ? "Chỉnh sửa album"
-                    : "Thêm album mới"}
+                  {person ? "Chỉnh sửa album" : "Thêm album mới"}
                 </h2>
               </div>
             </div>
@@ -352,9 +398,7 @@ function PersonForm({
           className="flex min-h-0 flex-1 flex-col"
         >
           <div className="flex-1 overflow-y-auto bg-slate-50 p-4 sm:p-6">
-
             <div className="space-y-6">
-
               {/* THÔNG TIN CƠ BẢN */}
               <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
                 <SectionHeader
@@ -364,7 +408,6 @@ function PersonForm({
                 />
 
                 <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
-
                   <FormField
                     label="Họ và tên"
                     htmlFor="name"
@@ -397,7 +440,6 @@ function PersonForm({
                       maxLength={10}
                       className={inputClass}
                     />
-
                     <HelperText>
                       Nhập theo định dạng ngày/tháng/năm.
                     </HelperText>
@@ -418,7 +460,6 @@ function PersonForm({
                       maxLength={10}
                       className={inputClass}
                     />
-
                     <HelperText>
                       Để trống nếu người này còn sống.
                     </HelperText>
@@ -495,7 +536,6 @@ function PersonForm({
                       ))}
                     </datalist>
                   </FormField>
-
                 </div>
               </section>
 
@@ -508,7 +548,6 @@ function PersonForm({
                 />
 
                 <div className="mt-5 rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 p-4 transition hover:border-sky-300 hover:bg-sky-50/40 sm:p-5">
-
                   <input
                     type="file"
                     accept="image/png,image/jpeg,image/jpg,image/webp"
@@ -530,7 +569,6 @@ function PersonForm({
 
                   {!uploadingImage && form.avatar && (
                     <div className="mt-5 flex flex-col gap-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 sm:flex-row sm:items-center">
-
                       <img
                         src={form.avatar}
                         alt="Ảnh đại diện xem trước"
@@ -543,7 +581,6 @@ function PersonForm({
                       />
 
                       <div className="min-w-0 flex-1">
-
                         <p className="font-semibold text-emerald-700">
                           ✓ Tải ảnh thành công
                         </p>
@@ -556,11 +593,10 @@ function PersonForm({
                           type="button"
                           onClick={handleRemoveAvatar}
                           disabled={submitting}
-                          className="mt-3 rounded-xl bg-red-100 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-200 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="mt-3 rounded-xl bg-red-100 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-200 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
                         >
                           Xóa ảnh
                         </button>
-
                       </div>
                     </div>
                   )}
@@ -590,9 +626,7 @@ function PersonForm({
 
               {/* BẢO MẬT */}
               <section className="overflow-hidden rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-orange-50 shadow-sm">
-
                 <div className="p-4 sm:p-6">
-
                   <SectionHeader
                     icon="🔐"
                     title="Xác thực khi xem album"
@@ -600,7 +634,6 @@ function PersonForm({
                   />
 
                   <div className="mt-5 space-y-5">
-
                     <FormField
                       label="Câu hỏi xác thực"
                       htmlFor="securityQuestion"
@@ -610,7 +643,7 @@ function PersonForm({
                         type="text"
                         name="securityQuestion"
                         value={form.securityQuestion}
-                        onChange={handleChange}
+                        onChange={handleSecurityQuestionChange}
                         placeholder="Ví dụ: Tên gọi ở nhà là gì?"
                         className={inputClass}
                       />
@@ -620,44 +653,77 @@ function PersonForm({
                       <FormField
                         label="Câu trả lời xác thực"
                         htmlFor="securityAnswer"
+                        required={!hasExistingAnswer}
                       >
-                        <input
-                          id="securityAnswer"
-                          type="text"
-                          name="securityAnswer"
-                          value={form.securityAnswer}
-                          onChange={handleChange}
-                          placeholder={
-                            person?.securityQuestion
-                              ? "Để trống nếu không muốn đổi câu trả lời"
-                              : "Nhập câu trả lời"
-                          }
-                          className={inputClass}
-                        />
+                        <div className="space-y-3">
+                          {hasExistingAnswer && (
+                            <div className="flex items-center justify-between rounded-xl border border-amber-300 bg-amber-50/80 px-4 py-2.5 text-sm">
+                              <span className="font-medium text-amber-900">
+                                🔒 Đang lưu câu trả lời bảo mật (đã mã hóa)
+                              </span>
+                              <button
+                                type="button"
+                                onClick={handleClearSecurityAnswer}
+                                disabled={isBusy}
+                                className="text-xs font-semibold text-red-600 hover:text-red-700 hover:underline cursor-pointer"
+                              >
+                                Xóa để tạo mới
+                              </button>
+                            </div>
+                          )}
 
-                        <HelperText>
-                          Chỉ người trả lời đúng mới có thể mở album.
-                        </HelperText>
+                          <input
+                            id="securityAnswer"
+                            type="text"
+                            name="securityAnswer"
+                            value={form.securityAnswer}
+                            onChange={handleSecurityAnswerChange}
+                            placeholder={
+                              hasExistingAnswer
+                                ? "Nhập vào đây nếu muốn thay thế câu trả lời mới..."
+                                : "Nhập câu trả lời..."
+                            }
+                            className={inputClass}
+                          />
+
+                          {clearSecurityAnswer && (
+                            <div className="flex flex-col gap-2 rounded-xl border border-red-200 bg-red-50 p-3 sm:flex-row sm:items-center sm:justify-between">
+                              <span className="text-sm font-medium text-red-600">
+                                ⚠️ Đã xóa câu trả lời cũ. Hãy nhập câu trả lời mới vào ô trên.
+                              </span>
+                              <button
+                                type="button"
+                                onClick={handleRestoreSecurityAnswer}
+                                disabled={isBusy}
+                                className="rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100 cursor-pointer"
+                              >
+                                Khôi phục câu trả lời cũ
+                              </button>
+                            </div>
+                          )}
+
+                          <HelperText>
+                            {hasExistingAnswer
+                              ? "Nếu không muốn đổi, bạn chỉ cần để trống ô này (câu trả lời cũ vẫn sẽ được giữ nguyên)."
+                              : "Chỉ người trả lời đúng câu hỏi này mới có thể mở album."}
+                          </HelperText>
+                        </div>
                       </FormField>
                     )}
-
                   </div>
                 </div>
               </section>
-
             </div>
           </div>
 
           {/* FOOTER */}
           <div className="shrink-0 border-t border-slate-200 bg-white px-4 py-4 sm:px-6">
-
             <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-
               <button
                 type="button"
                 onClick={onClose}
                 disabled={isBusy}
-                className="min-h-[48px] rounded-xl bg-slate-200 px-6 py-3 font-semibold text-slate-700 transition hover:bg-slate-300 disabled:cursor-not-allowed disabled:opacity-60"
+                className="min-h-[48px] rounded-xl bg-slate-200 px-6 py-3 font-semibold text-slate-700 transition hover:bg-slate-300 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
               >
                 Hủy
               </button>
@@ -665,7 +731,7 @@ function PersonForm({
               <button
                 type="submit"
                 disabled={isBusy}
-                className="flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-sky-500 px-6 py-3 font-semibold text-white shadow-sm transition hover:bg-sky-600 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-sky-500 px-6 py-3 font-semibold text-white shadow-sm transition hover:bg-sky-600 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
               >
                 {submitting && (
                   <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
@@ -679,7 +745,6 @@ function PersonForm({
                       ? "Lưu thay đổi"
                       : "Thêm album"}
               </button>
-
             </div>
           </div>
         </form>
@@ -688,30 +753,19 @@ function PersonForm({
   );
 }
 
-function SectionHeader({
-  icon,
-  title,
-  description,
-}) {
+function SectionHeader({ icon, title, description }) {
   return (
     <div className="flex items-start gap-3">
-
       <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-sky-50 text-xl">
         {icon}
       </div>
 
       <div>
-        <h3 className="font-bold text-slate-800 sm:text-lg">
-          {title}
-        </h3>
-
+        <h3 className="font-bold text-slate-800 sm:text-lg">{title}</h3>
         {description && (
-          <p className="mt-1 text-sm leading-5 text-slate-500">
-            {description}
-          </p>
+          <p className="mt-1 text-sm leading-5 text-slate-500">{description}</p>
         )}
       </div>
-
     </div>
   );
 }
@@ -725,20 +779,13 @@ function FormField({
 }) {
   return (
     <div className={fullWidth ? "md:col-span-2" : ""}>
-
       <label
         htmlFor={htmlFor}
         className="mb-2 block text-sm font-semibold text-slate-700"
       >
         {label}
-
-        {required && (
-          <span className="ml-1 text-red-500">
-            *
-          </span>
-        )}
+        {required && <span className="ml-1 text-red-500">*</span>}
       </label>
-
       {children}
     </div>
   );
@@ -746,9 +793,7 @@ function FormField({
 
 function HelperText({ children }) {
   return (
-    <p className="mt-2 text-xs leading-5 text-slate-500">
-      {children}
-    </p>
+    <p className="mt-2 text-xs leading-5 text-slate-500">{children}</p>
   );
 }
 

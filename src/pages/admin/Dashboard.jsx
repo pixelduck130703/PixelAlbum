@@ -464,24 +464,25 @@ function Dashboard() {
         loading={loadingTrafficChart}
       />
 
-      {/* Khối quản lý album */}
-      <div className="mt-8 sm:mt-10">
-        <div className="mb-5 flex flex-col-reverse gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-slate-800">
-              Danh sách album
-            </h2>
-          </div>
+      {/* 1. KHỐI NÚT HÀNH ĐỘNG (NẰM TRÊN) */}
+      <div className="mt-8 flex flex-wrap justify-end gap-3 sm:mt-10">
+        <DashboardActions
+          loadingTodayAlbumViews={loadingTodayAlbumViews}
+          onShowTodayAlbumViews={handleShowTodayAlbumViews}
+          onManageAnnouncement={() => setShowAnnouncementManager(true)}
+          onManageMusic={() => setShowHomeMusicManager(true)}
+          onManageEvents={() => setShowEventManager(true)}
+          onExportExcel={exportExcel}
+          onAdd={handleAdd}
+        />
+      </div>
 
-          <DashboardActions
-            loadingTodayAlbumViews={loadingTodayAlbumViews}
-            onShowTodayAlbumViews={handleShowTodayAlbumViews}
-            onManageAnnouncement={() => setShowAnnouncementManager(true)}
-            onManageMusic={() => setShowHomeMusicManager(true)}
-            onManageEvents={() => setShowEventManager(true)}
-            onExportExcel={exportExcel}
-            onAdd={handleAdd}
-          />
+      {/* 2. KHỐI TIÊU ĐỀ & DANH SÁCH ALBUM (NẰM DƯỚI) */}
+      <div className="mt-6">
+        <div className="mb-4">
+          <h2 className="text-2xl font-bold text-slate-800">
+            Danh sách album
+          </h2>
         </div>
 
         {/* Ô tìm kiếm */}

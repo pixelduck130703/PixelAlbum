@@ -41,16 +41,14 @@ function SearchBox({
     <section className="rounded-3xl bg-white p-5 shadow-xl sm:p-6">
       <div className="text-center">
         <h1 className="mx-auto max-w-5xl text-center text-2xl font-black leading-tight tracking-tight text-slate-800 sm:text-3xl lg:text-4xl lg:whitespace-nowrap">
-          🎞️ NHỮNG BỨC ẢNH
-          <span className="hidden sm:inline"> TÔI LƯU VỀ BẠN</span>
+          🎞️ TÌM KIẾM ALBUM VỀ BẠN
 
           <br className="sm:hidden" />
 
-          <span className="sm:hidden">TÔI LƯU VỀ BẠN</span>
         </h1>
 
         <p className="mx-auto mt-4 text-lg leading-6 text-slate-500">
-          Tìm theo ngày sinh hoặc họ tên, chọn 1 trong 2 cách.
+          Chọn 1 trong 2 cách.
         </p>
       </div>
 
