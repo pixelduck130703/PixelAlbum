@@ -48,7 +48,7 @@ function SearchBox({
         </h1>
 
         <p className="mx-auto mt-4 text-lg leading-6 text-slate-500">
-          Chọn 1 trong 2 cách.
+          Chọn 1 trong 2 cách bên dưới.
         </p>
       </div>
 
