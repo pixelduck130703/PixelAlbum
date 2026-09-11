@@ -1,34 +1,43 @@
 function DashboardStats({
   stats = {
-    totalPeople: 0,
-    album: 0,
-    totalAlbumViews: 0,
-    thisMonth: 0,
-    today: 0,
+    totalPeople: null,
+    album: null,
+    totalAlbumViews: null,
+    thisMonth: null,
+    today: null,
   },
-  visits = 0,
+  visits = null,
   onShowMonthBirthday,
   onShowTodayBirthday,
-  onShowVisits, // Nhận hàm mở modal RSVP
+  onShowVisits,
 }) {
+  // Hiển thị "..." khi chưa có dữ liệu
+  const formatValue = (value) => {
+    if (value === null || value === undefined) {
+      return "...";
+    }
+
+    return Number(value || 0).toLocaleString("vi-VN");
+  };
+
   const staticCards = [
     {
       title: "Tổng số album",
-      value: Number(stats.totalPeople || 0).toLocaleString("vi-VN"),
+      value: formatValue(stats.totalPeople),
       icon: "👥",
       color: "text-blue-600",
       bg: "bg-blue-100",
     },
     {
       title: "Có liên kết",
-      value: Number(stats.album || 0).toLocaleString("vi-VN"),
+      value: formatValue(stats.album),
       icon: "🖼️",
       color: "text-purple-600",
       bg: "bg-purple-100",
     },
     {
       title: "Tổng lượt xem album",
-      value: Number(stats.totalAlbumViews || 0).toLocaleString("vi-VN"),
+      value: formatValue(stats.totalAlbumViews),
       icon: "👁️",
       color: "text-indigo-600",
       bg: "bg-indigo-100",
@@ -37,7 +46,7 @@ function DashboardStats({
 
   return (
     <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
-      {/* 3 thẻ tĩnh thông thường */}
+      {/* 3 thẻ tĩnh */}
       {staticCards.map((card) => (
         <div
           key={card.title}
@@ -55,13 +64,15 @@ function DashboardStats({
             </div>
           </div>
 
-          <h2 className={`mt-3 text-2xl font-bold md:text-3xl ${card.color}`}>
+          <h2
+            className={`mt-3 text-2xl font-bold md:text-3xl ${card.color}`}
+          >
             {card.value}
           </h2>
         </div>
       ))}
 
-      {/* Lượt truy cập website - Click để mở Modal RSVP */}
+      {/* Lượt truy cập website */}
       <button
         type="button"
         onClick={onShowVisits}
@@ -79,9 +90,7 @@ function DashboardStats({
         </div>
 
         <h2 className="mt-3 text-2xl font-bold text-green-600 md:text-3xl">
-          {visits === null
-            ? "..."
-            : Number(visits || 0).toLocaleString("vi-VN")}
+          {formatValue(visits)}
         </h2>
       </button>
 
@@ -102,7 +111,7 @@ function DashboardStats({
         </div>
 
         <h2 className="mt-3 text-2xl font-bold text-red-500 md:text-3xl">
-          {Number(stats.thisMonth || 0).toLocaleString("vi-VN")}
+          {formatValue(stats.thisMonth)}
         </h2>
       </button>
 
@@ -123,7 +132,7 @@ function DashboardStats({
         </div>
 
         <h2 className="mt-3 text-2xl font-bold text-pink-500 md:text-3xl">
-          {Number(stats.today || 0).toLocaleString("vi-VN")}
+          {formatValue(stats.today)}
         </h2>
       </button>
     </div>

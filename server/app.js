@@ -1172,7 +1172,7 @@ app.post("/api/admin/login", (req, res) => {
     },
     process.env.JWT_SECRET,
     {
-      expiresIn: "1d",
+      expiresIn: "30d",
     }
   );
 

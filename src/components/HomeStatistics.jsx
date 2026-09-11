@@ -1,35 +1,43 @@
 export default function HomeStatistics({
-  visits,
-  totalAlbums = 0,
-  totalAlbumViews = 0,
-  birthdaysThisMonth = 0,
+  visits = null,
+  totalAlbums = null,
+  totalAlbumViews = null,
+  birthdaysThisMonth = null,
 }) {
+  const formatValue = (value) => {
+    if (value === null || value === undefined) {
+      return "...";
+    }
+
+    return Number(value).toLocaleString("vi-VN");
+  };
+
   const cards = [
     {
       icon: "👥",
       title: "Lượt truy cập",
-      value: Number(visits ?? 0).toLocaleString("vi-VN"),
+      value: formatValue(visits),
       bg: "bg-blue-100",
       color: "text-blue-600",
     },
     {
       icon: "🖼️",
       title: "Số album",
-      value: Number(totalAlbums).toLocaleString("vi-VN"),
+      value: formatValue(totalAlbums),
       bg: "bg-green-100",
       color: "text-green-600",
     },
     {
       icon: "👁️",
       title: "Lượt xem album",
-      value: Number(totalAlbumViews).toLocaleString("vi-VN"),
+      value: formatValue(totalAlbumViews),
       bg: "bg-purple-100",
       color: "text-purple-600",
     },
     {
       icon: "🎂",
       title: "Sinh nhật tháng này",
-      value: Number(birthdaysThisMonth).toLocaleString("vi-VN"),
+      value: formatValue(birthdaysThisMonth),
       bg: "bg-pink-100",
       color: "text-pink-600",
     },
