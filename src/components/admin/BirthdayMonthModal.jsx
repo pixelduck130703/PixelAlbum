@@ -44,10 +44,6 @@ function BirthdayMonthModal({
               <h2 className="text-xl font-bold sm:text-2xl">
                 📅 Sinh nhật tháng {selectedMonth}
               </h2>
-
-              <p className="mt-1 text-sm text-white/80">
-                Danh sách sinh nhật theo tháng đã chọn
-              </p>
             </div>
 
             <button

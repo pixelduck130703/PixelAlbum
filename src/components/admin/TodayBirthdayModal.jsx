@@ -42,10 +42,6 @@ function TodayBirthdayModal({
               <h2 className="text-xl font-bold sm:text-2xl">
                 🎂 Sinh nhật hôm nay
               </h2>
-
-              <p className="mt-1 text-sm text-white/80">
-                Những người có sinh nhật trong ngày hôm nay
-              </p>
             </div>
 
             <button

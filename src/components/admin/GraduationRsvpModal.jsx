@@ -114,9 +114,6 @@ function GraduationRsvpModal({
                 <h2 className="truncate text-lg font-black sm:text-2xl">
                   Xác nhận tham dự lễ tốt nghiệp
                 </h2>
-                <p className="mt-0.5 truncate text-xs font-medium text-blue-100 sm:text-sm">
-                  Danh sách phản hồi & lời chúc từ khách mời
-                </p>
               </div>
             </div>
 
