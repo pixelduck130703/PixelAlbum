@@ -224,8 +224,8 @@ function Home() {
         const data = Array.isArray(response.data)
           ? response.data
           : Array.isArray(response.data?.data)
-          ? response.data.data
-          : [];
+            ? response.data.data
+            : [];
 
         setEvents(data);
       } catch (err) {
@@ -417,8 +417,8 @@ function Home() {
   const searchDescription = searchBirthday
     ? `Kết quả theo ngày sinh: ${formatDate(searchBirthday)}`
     : searchName
-    ? `Kết quả theo tên: “${searchName}”`
-    : "";
+      ? `Kết quả theo tên: “${searchName}”`
+      : "";
 
   // ================================
   // SINH NHẬT HÔM NAY
@@ -515,16 +515,29 @@ function Home() {
   // ================================
 
   const homeStatistics = useMemo(() => {
+    // Chưa tải xong dữ liệu people
+    if (loading) {
+      return {
+        totalAlbums: null,
+        totalAlbumViews: null,
+        birthdaysThisMonth: null,
+      };
+    }
+
     const currentMonth = new Date().getMonth() + 1;
+
     const totalAlbums = people.length;
+
     const totalAlbumViews = people.reduce((total, person) => {
       return total + (Number(person.albumViews) || 0);
     }, 0);
 
     const birthdaysThisMonth = people.filter((person) => {
       if (!person.birthday) return false;
+
       const normalizedBirthday = String(person.birthday).slice(0, 10);
       const [, month] = normalizedBirthday.split("-");
+
       return Number(month) === currentMonth;
     }).length;
 
@@ -533,7 +546,7 @@ function Home() {
       totalAlbumViews,
       birthdaysThisMonth,
     };
-  }, [people]);
+  }, [people, loading]);
 
   // ================================
   // RENDER
