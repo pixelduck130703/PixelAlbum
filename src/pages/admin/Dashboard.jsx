@@ -41,12 +41,14 @@ function Dashboard() {
   };
 
   const [stats, setStats] = useState({
-    totalPeople: 0,
-    thisMonth: 0,
-    album: 0,
-    today: 0,
-    totalAlbumViews: 0,
+    totalPeople: null,
+    thisMonth: null,
+    album: null,
+    today: null,
+    totalAlbumViews: null,
   });
+
+  const [loadingStats, setLoadingStats] = useState(true);
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingPerson, setEditingPerson] = useState(null);
@@ -137,7 +139,7 @@ function Dashboard() {
         setVisits(Number(res.data.visits) || 0);
       } catch (err) {
         console.error(err);
-        setVisits(0);
+        setVisits(null);
       }
     };
 
@@ -237,10 +239,21 @@ function Dashboard() {
 
   const loadDashboard = async () => {
     try {
+      setLoadingStats(true);
+
       const response = await api.get("/dashboard");
       setStats(response.data);
     } catch (error) {
-      // Bỏ qua lỗi
+      console.error("Lỗi tải thống kê dashboard:", error);
+      setStats({
+        totalPeople: null,
+        thisMonth: null,
+        album: null,
+        today: null,
+        totalAlbumViews: null,
+      });
+    } finally {
+      setLoadingStats(false);
     }
   };
 
@@ -450,6 +463,7 @@ function Dashboard() {
       <DashboardStats
         stats={stats}
         visits={visits}
+        loadingStats={loadingStats}
         onShowMonthBirthday={handleShowMonthBirthday}
         onShowTodayBirthday={handleShowTodayBirthday}
         onShowVisits={handleShowRsvpModal}
