@@ -197,8 +197,8 @@ const TRANSLATIONS = {
     guideButton: "Đã hiểu",
     openEnvelopeBtn: "Mở thiệp mời",
     clickToOpen: "Nhấn vào đây để mở thiệp",
-    rsvpBtn: "Xác nhận",
-    rsvpTitle: "Xác nhận tham dự",
+    rsvpBtn: "Gửi lời chúc",
+    rsvpTitle: "Gửi lời chúc mừng",
     rsvpSubtitle: "Hãy cho Hùng biết để đón tiếp bạn chu đáo nhất nhé!",
     rsvpNameLabel: "Họ và tên của bạn",
     rsvpNamePlaceholder: "Vui lòng nhập đúng họ và tên của bạn",
@@ -258,8 +258,8 @@ const TRANSLATIONS = {
     guideButton: "Got it",
     openEnvelopeBtn: "Open Invitation",
     clickToOpen: "Click to open invitation",
-    rsvpBtn: "Confirm",
-    rsvpTitle: "RSVP / Attendance",
+    rsvpBtn: "Send Wishes",
+    rsvpTitle: "Send Your Wishes",
     rsvpSubtitle: "Please let Hung know so he can prepare best for your arrival!",
     rsvpNameLabel: "Your Name",
     rsvpNamePlaceholder: "Enter your full name...",
@@ -380,7 +380,7 @@ const TRANSLATIONS = {
     openEnvelopeBtn: "开启邀请函",
     clickToOpen: "点击此处开启邀请函",
     rsvpBtn: "出席确认",
-    rsvpTitle: "出席确认 (RSVP)",
+    rsvpTitle: "出席确认",
     rsvpSubtitle: "请告知雄以便做好迎接准备！",
     rsvpNameLabel: "您的姓名",
     rsvpNamePlaceholder: "请输入姓名...",
@@ -437,23 +437,25 @@ function Invitation() {
   const [languageChanging, setLanguageChanging] = useState(false);
 
   const loadWishes = async () => {
-    try {
-      const apiBase = getApiBaseUrl();
-      const response = await fetch(
-        `${apiBase}/admin/graduation-rsvps?invitationId=${encodeURIComponent(INVITATION_ID)}`
-      );
-      const data = await response.json();
-      const list = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
+  try {
+    const apiBase = getApiBaseUrl();
+    const response = await fetch(
+      `${apiBase}/admin/graduation-rsvps?invitationId=${encodeURIComponent(INVITATION_ID)}&invitation_id=${encodeURIComponent(INVITATION_ID)}`
+    );
+    const data = await response.json();
+    const list = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
 
-      // Lọc đảm bảo chỉ hiển thị đúng của thiệp graduation-01
-      const filtered = list.filter((item) => !item.invitationId || item.invitationId === INVITATION_ID);
-      if (filtered.length > 0) {
-        setWishesList(filtered);
-      }
-    } catch {
-      // Bỏ qua lỗi
-    }
-  };
+    // Chỉ lấy đúng graduation-01 (bỏ điều kiện !item.invitationId để không bị nhận vơ)
+    const filtered = list.filter((item) => {
+      const id = item.invitationId || item.invitation_id;
+      return id === INVITATION_ID || id === "graduation-01";
+    });
+
+    setWishesList(filtered);
+  } catch {
+    // Bỏ qua lỗi
+  }
+};
 
   useEffect(() => {
     const hasGuide = sessionStorage.getItem("music-guide");

@@ -2753,42 +2753,24 @@ app.get(
 );
 
 /* ==========================================================
-   GRADUATION RSVP / WISHES API
-   Hỗ trợ nhiều thiệp thông qua invitation_id
-========================================================== */
-
-
-/* ==========================================================
    1. API LƯU XÁC NHẬN THAM DỰ + LỜI CHÚC
 ========================================================== */
 
 app.post("/api/graduation-rsvp", async (req, res) => {
   try {
+    // Nhận cả invitationId (từ frontend) hoặc invitation_id
     const invitationId = String(
-      req.body?.invitation_id || "graduation-01"
+      req.body?.invitationId || req.body?.invitation_id || "graduation-01"
     ).trim();
 
-    const name = String(
-      req.body?.name || ""
-    ).trim();
-
-    const attendance = String(
-      req.body?.attendance || ""
-    ).trim();
-
-    const guests = String(
-      req.body?.guests || "alone"
-    ).trim();
-
-    const wishes = String(
-      req.body?.wishes || ""
-    ).trim();
-
+    const name = String(req.body?.name || "").trim();
+    const attendance = String(req.body?.attendance || "").trim();
+    const guests = String(req.body?.guests || "alone").trim();
+    const wishes = String(req.body?.wishes || "").trim();
 
     /* ------------------------------------------------------
        KIỂM TRA DỮ LIỆU
     ------------------------------------------------------ */
-
     if (!invitationId) {
       return res.status(400).json({
         success: false,
@@ -2817,11 +2799,9 @@ app.post("/api/graduation-rsvp", async (req, res) => {
       });
     }
 
-
     /* ------------------------------------------------------
        GIỚI HẠN DỮ LIỆU
     ------------------------------------------------------ */
-
     if (invitationId.length > 100) {
       return res.status(400).json({
         success: false,
@@ -2843,26 +2823,19 @@ app.post("/api/graduation-rsvp", async (req, res) => {
       });
     }
 
-
     /* ------------------------------------------------------
        IP + USER AGENT
     ------------------------------------------------------ */
-
     const ipAddress =
-      req.headers["x-forwarded-for"]
-        ?.split(",")[0]
-        ?.trim() ||
+      req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
       req.socket?.remoteAddress ||
       null;
 
-    const userAgent =
-      req.headers["user-agent"] || null;
-
+    const userAgent = req.headers["user-agent"] || null;
 
     /* ------------------------------------------------------
        LƯU DATABASE
     ------------------------------------------------------ */
-
     const result = await pool.query(
       `
         INSERT INTO graduation_rsvps (
@@ -2875,13 +2848,7 @@ app.post("/api/graduation-rsvp", async (req, res) => {
           user_agent
         )
         VALUES (
-          $1,
-          $2,
-          $3,
-          $4,
-          $5,
-          $6,
-          $7
+          $1, $2, $3, $4, $5, $6, $7
         )
         RETURNING
           id,
@@ -2903,18 +2870,13 @@ app.post("/api/graduation-rsvp", async (req, res) => {
       ]
     );
 
-
     return res.status(201).json({
       success: true,
       message: "Xác nhận tham dự đã được gửi thành công.",
       data: result.rows[0],
     });
-
   } catch (error) {
-    console.error(
-      "Lỗi lưu xác nhận tham dự:",
-      error
-    );
+    console.error("Lỗi lưu xác nhận tham dự:", error);
 
     return res.status(500).json({
       success: false,
@@ -2923,19 +2885,16 @@ app.post("/api/graduation-rsvp", async (req, res) => {
   }
 });
 
-
-
 /* ==========================================================
    2. API LẤY DANH SÁCH RSVP + LỜI CHÚC CHO ADMIN
-   Có thể lọc theo invitation_id
 ========================================================== */
 
 app.get("/api/admin/graduation-rsvps", async (req, res) => {
   try {
+    // Nhận cả invitationId hoặc invitation_id từ query
     const invitationId = String(
-      req.query?.invitation_id || ""
+      req.query?.invitationId || req.query?.invitation_id || ""
     ).trim();
-
 
     let query = `
       SELECT
@@ -2953,42 +2912,22 @@ app.get("/api/admin/graduation-rsvps", async (req, res) => {
 
     const params = [];
 
-
-    /* ------------------------------------------------------
-       LỌC THEO THIỆP
-    ------------------------------------------------------ */
-
     if (invitationId) {
-      query += `
-        WHERE invitation_id = $1
-      `;
-
+      query += ` WHERE invitation_id = $1 `;
       params.push(invitationId);
     }
 
+    query += ` ORDER BY submitted_at DESC `;
 
-    query += `
-      ORDER BY submitted_at DESC
-    `;
-
-
-    const result = await pool.query(
-      query,
-      params
-    );
-
+    const result = await pool.query(query, params);
 
     return res.status(200).json({
       success: true,
       total: result.rowCount,
       data: result.rows,
     });
-
   } catch (error) {
-    console.error(
-      "Lỗi lấy danh sách xác nhận tham dự:",
-      error
-    );
+    console.error("Lỗi lấy danh sách xác nhận tham dự:", error);
 
     return res.status(500).json({
       success: false,
