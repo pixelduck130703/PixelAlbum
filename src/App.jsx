@@ -10,6 +10,7 @@ import Dashboard from "./pages/admin/Dashboard";
 import Login from "./pages/admin/Login";
 import ProtectedRoute from "./components/admin/ProtectedRoute";
 import Invitation from "./pages/Invitation";
+import Invitation2 from "./pages/Invitation2"; // Import Invitation2
 import HomeMusicPlayer from "./components/HomeMusicPlayer";
 
 function App() {
@@ -36,9 +37,16 @@ function App() {
           element={<Login />}
         />
 
+        {/* Bản thiệp mời 1 */}
         <Route
           path="/invitation"
           element={<Invitation />}
+        />
+
+        {/* Bản thiệp mời 2 mới thêm */}
+        <Route
+          path="/invitation2"
+          element={<Invitation2 />}
         />
 
         <Route
