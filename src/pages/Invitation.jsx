@@ -915,14 +915,6 @@ function Invitation() {
               </div>
             </div>
 
-            <p
-              className={`mt-9 text-center text-xs tracking-wide text-blue-900/60 transition-all duration-500 sm:text-sm ${
-                isOpening ? "opacity-0" : "opacity-100"
-              } ${textAnimClass}`}
-            >
-              {t.clickToOpen}
-            </p>
-
             <button
               type="button"
               onClick={handleOpenEnvelope}
