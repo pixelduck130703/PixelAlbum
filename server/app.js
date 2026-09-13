@@ -9,6 +9,7 @@ const multer = require("multer");
 const cloudinary = require("./config/cloudinary");
 const DeviceDetector = require("device-detector-js");
 
+
 const musicUpload = multer({
   storage: multer.memoryStorage(),
 
@@ -1132,55 +1133,102 @@ app.delete(
 );
 
 /* ==========================
-   Đăng nhập Admin
+   Đăng nhập Admin (Dùng Database + bcryptjs)
 ========================== */
 
-app.post("/api/admin/login", (req, res) => {
-  const { username, password } = req.body;
+app.post("/api/admin/login", async (req, res) => {
+  try {
+    const { username, password } = req.body;
 
-  if (!username || !password) {
-    return res.status(400).json({
-      success: false,
-      message: "Vui lòng nhập tài khoản và mật khẩu.",
+    if (!username || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Vui lòng nhập tài khoản và mật khẩu.",
+      });
+    }
+
+    const validUsername = process.env.ADMIN_USERNAME || "admin";
+
+    // 1. Kiểm tra tên đăng nhập
+    if (username !== validUsername) {
+      return res.status(401).json({
+        success: false,
+        message: "Tài khoản hoặc mật khẩu không đúng.",
+      });
+    }
+
+    // 2. Đảm bảo bảng lưu mật khẩu tồn tại trong DB
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS admin_passwords (
+          id SERIAL PRIMARY KEY,
+          password_hash VARCHAR(255) NOT NULL,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // 3. Lấy mật khẩu mới nhất từ Database
+    let passResult = await pool.query(
+      `SELECT id, password_hash FROM admin_passwords ORDER BY id DESC LIMIT 1`
+    );
+
+    let currentPassHash;
+
+    if (passResult.rowCount === 0) {
+      // Nếu DB chưa có bản ghi nào, tự động tạo mật khẩu mặc định là 'admin123' (hoặc dùng biến môi trường cũ nếu có)
+      const defaultPassword = process.env.ADMIN_PASSWORD || "admin123";
+      currentPassHash = await bcrypt.hash(defaultPassword, 10);
+      
+      await pool.query(
+        `INSERT INTO admin_passwords (password_hash) VALUES ($1)`,
+        [currentPassHash]
+      );
+    } else {
+      currentPassHash = passResult.rows[0].password_hash;
+    }
+
+    // 4. So khớp mật khẩu nhập vào với mã hóa trong DB bằng bcryptjs
+    const isMatch = await bcrypt.compare(password, currentPassHash);
+
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: "Tài khoản hoặc mật khẩu không đúng.",
+      });
+    }
+
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({
+        success: false,
+        message: "Server chưa cấu hình JWT_SECRET.",
+      });
+    }
+
+    // 5. Cấp Token khi đăng nhập thành công
+    const token = jwt.sign(
+      {
+        role: "admin",
+        username,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "30d",
+      }
+    );
+
+    return res.json({
+      success: true,
+      message: "Đăng nhập thành công.",
+      token,
     });
-  }
 
-  const validUsername = process.env.ADMIN_USERNAME;
-  const validPassword = process.env.ADMIN_PASSWORD;
-
-  if (
-    username !== validUsername ||
-    password !== validPassword
-  ) {
-    return res.status(401).json({
-      success: false,
-      message: "Tài khoản hoặc mật khẩu không đúng.",
-    });
-  }
-
-  if (!process.env.JWT_SECRET) {
+  } catch (error) {
+    console.error("Lỗi đăng nhập:", error);
     return res.status(500).json({
       success: false,
-      message: "Server chưa cấu hình JWT_SECRET.",
+      message: "Không thể đăng nhập do lỗi máy chủ.",
+      error: error.message,
     });
   }
-
-  const token = jwt.sign(
-    {
-      role: "admin",
-      username,
-    },
-    process.env.JWT_SECRET,
-    {
-      expiresIn: "30d",
-    }
-  );
-
-  res.json({
-    success: true,
-    message: "Đăng nhập thành công.",
-    token,
-  });
 });
 
 /* ==========================
@@ -3004,6 +3052,89 @@ app.delete(
     }
   }
 );
+
+/* ==========================================================
+   API ĐỔI MẬT KHẨU QUẢN TRỊ (Đã bao gồm tự động khởi tạo)
+========================================================== */
+app.put("/api/admin/change-password", async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Vui lòng nhập đầy đủ mật khẩu cũ và mới.",
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Mật khẩu mới phải có ít nhất 6 ký tự.",
+      });
+    }
+
+    // Đảm bảo bảng tồn tại trước khi truy vấn
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS admin_passwords (
+          id SERIAL PRIMARY KEY,
+          password_hash VARCHAR(255) NOT NULL,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Lấy mật khẩu hiện tại
+    let passResult = await pool.query(
+      `SELECT id, password_hash FROM admin_passwords ORDER BY id DESC LIMIT 1`
+    );
+
+    let currentPassHash;
+    let recordId;
+
+    if (passResult.rowCount === 0) {
+      // Nếu DB chưa có bản ghi nào, mặc định mật khẩu ban đầu là 'admin123'
+      const defaultPassword = "admin123";
+      currentPassHash = await bcrypt.hash(defaultPassword, 10);
+      
+      const insertRes = await pool.query(
+        `INSERT INTO admin_passwords (password_hash) VALUES ($1) RETURNING id, password_hash`,
+        [currentPassHash]
+      );
+      recordId = insertRes.rows[0].id;
+    } else {
+      recordId = passResult.rows[0].id;
+      currentPassHash = passResult.rows[0].password_hash;
+    }
+
+    // So khớp mật khẩu cũ
+    const isMatch = await bcrypt.compare(oldPassword, currentPassHash);
+    if (!isMatch) {
+      return res.status(400).json({
+        success: false,
+        message: "Mật khẩu hiện tại không chính xác. (Nếu chưa đổi lần nào, mật khẩu mặc định là admin123)",
+      });
+    }
+
+    // Mã hóa và cập nhật mật khẩu mới
+    const newPasswordHash = await bcrypt.hash(newPassword, 10);
+    await pool.query(
+      `UPDATE admin_passwords SET password_hash = $1, updated_at = NOW() WHERE id = $2`,
+      [newPasswordHash, recordId]
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Đổi mật khẩu thành công.",
+    });
+  } catch (error) {
+    console.error("Lỗi đổi mật khẩu:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Không thể đổi mật khẩu do lỗi máy chủ.",
+      error: error.message,
+    });
+  }
+});
 
 /* ==========================
    Middleware xử lý lỗi CORS
