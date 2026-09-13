@@ -1,9 +1,10 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   FaCheckCircle,
   FaClock,
   FaCommentDots,
   FaEnvelopeOpenText,
+  FaFilter,
   FaQuestionCircle,
   FaTimes,
   FaTimesCircle,
@@ -18,6 +19,9 @@ function GraduationRsvpModal({
   loading = false,
   onDelete,
 }) {
+  // State quản lý bộ lọc thiệp mời ('all', 'graduation-01', 'graduation-02')
+  const [selectedInvitationId, setSelectedInvitationId] = useState("all");
+
   // Khóa cuộn trang khi mở modal + Hỗ trợ phím ESC để đóng
   useEffect(() => {
     if (!open) return;
@@ -36,15 +40,24 @@ function GraduationRsvpModal({
     };
   }, [open, onClose]);
 
-  // Thống kê số lượng
+  // Lọc danh sách dựa theo ID thiệp mời được chọn
+  const filteredList = useMemo(() => {
+    if (selectedInvitationId === "all") return list;
+    return list.filter((item) => {
+      const id = item.invitationId || item.invitation_id;
+      return id === selectedInvitationId;
+    });
+  }, [list, selectedInvitationId]);
+
+  // Thống kê số lượng dựa trên danh sách đã lọc
   const stats = useMemo(() => {
-    const total = list.length;
-    const countYes = list.filter((item) => item.attendance === "yes").length;
-    const countMaybe = list.filter((item) => item.attendance === "maybe").length;
-    const countNo = list.filter((item) => item.attendance === "no").length;
+    const total = filteredList.length;
+    const countYes = filteredList.filter((item) => item.attendance === "yes").length;
+    const countMaybe = filteredList.filter((item) => item.attendance === "maybe").length;
+    const countNo = filteredList.filter((item) => item.attendance === "no").length;
 
     return { total, countYes, countMaybe, countNo };
-  }, [list]);
+  }, [filteredList]);
 
   const formatDateTime = (value) => {
     if (!value) return "--:--:--";
@@ -128,6 +141,49 @@ function GraduationRsvpModal({
           </div>
         </div>
 
+        {/* BỘ LỌC THEO THIỆP MỜI */}
+        <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-slate-50 px-4 py-2.5 sm:px-6">
+          <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 sm:text-sm">
+            <FaFilter className="text-indigo-600" />
+            <span>Lọc theo thiệp:</span>
+          </div>
+          <div className="flex gap-1.5 overflow-x-auto">
+            <button
+              type="button"
+              onClick={() => setSelectedInvitationId("all")}
+              className={`rounded-xl px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
+                selectedInvitationId === "all"
+                  ? "bg-indigo-600 text-white shadow-sm"
+                  : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
+              }`}
+            >
+              Tất cả thiệp
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedInvitationId("graduation-01")}
+              className={`rounded-xl px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
+                selectedInvitationId === "graduation-01"
+                  ? "bg-indigo-600 text-white shadow-sm"
+                  : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
+              }`}
+            >
+              Thiệp 1 (Tuấn Hùng)
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedInvitationId("graduation-02")}
+              className={`rounded-xl px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
+                selectedInvitationId === "graduation-02"
+                  ? "bg-indigo-600 text-white shadow-sm"
+                  : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
+              }`}
+            >
+              Thiệp 2 (Ngọc Anh)
+            </button>
+          </div>
+        </div>
+
         {/* TỔNG QUAN / 4 THẺ THẲNG HÀNG 1 DÒNG */}
         <div className="grid shrink-0 grid-cols-4 gap-2 border-b border-indigo-100 bg-white p-3 sm:px-6 sm:py-3.5">
           {/* Tổng phản hồi */}
@@ -192,7 +248,7 @@ function GraduationRsvpModal({
                 Đang tải danh sách xác nhận...
               </p>
             </div>
-          ) : list.length === 0 ? (
+          ) : filteredList.length === 0 ? (
             <div className="flex min-h-[220px] flex-col items-center justify-center text-center sm:min-h-[280px]">
               <div className="text-4xl sm:text-5xl">💌</div>
               <h3 className="mt-3 text-base font-bold text-slate-800 sm:mt-4 sm:text-lg">
@@ -204,7 +260,7 @@ function GraduationRsvpModal({
             </div>
           ) : (
             <div className="space-y-3 sm:space-y-4">
-              {list.map((item) => (
+              {filteredList.map((item) => (
                 <article
                   key={item.id}
                   className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:border-indigo-200 hover:shadow-md"
@@ -217,6 +273,10 @@ function GraduationRsvpModal({
                       </div>
                       <span className="text-sm font-bold text-slate-900 sm:text-base">
                         {item.name}
+                      </span>
+                      {/* Hiển thị nhãn nhỏ phân biệt thiệp */}
+                      <span className="rounded-md bg-slate-200 px-2 py-0.5 text-[10px] font-mono font-bold text-slate-700">
+                        {item.invitationId || item.invitation_id || "graduation-01"}
                       </span>
                     </div>
 
