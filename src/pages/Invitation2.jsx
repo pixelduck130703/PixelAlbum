@@ -156,7 +156,7 @@ const TRANSLATIONS = {
     vi: {
         locale: "vi-VN",
         back: "Quay lại trang chủ",
-        university: "Trường Đại học Công nghiệp và Thương mại Hà Nội",
+        university: "TRƯỜNG ĐẠI HỌC CÔNG NGHIỆP VÀ THƯƠNG MẠI HÀ NỘI",
         universityEnglish: "Hanoi Industrial and Trade University",
         invitation: "THIỆP MỜI",
         graduationCeremony: "LỄ TỐT NGHIỆP",
@@ -277,8 +277,8 @@ const TRANSLATIONS = {
     de: {
         locale: "de-DE",
         back: "Zurück zur Startseite",
-        university: "Hanoi Industrial and Trade University",
-        universityEnglish: "Hanoi, Vietnam",
+        university: "Universität für Industrie und Handel Hanoi",
+        universityEnglish: "Hanoi Industrial and Trade University",
         invitation: "EINLADUNG",
         graduationCeremony: "DIE ABSCHLUSSFEIER",
         invitationText:
@@ -1100,6 +1100,8 @@ function Invitation2() {
                     🎓
                 </div>
 
+                {/* Logo HITU */}
+                {/* Logo HITU */}
                 <section className="text-center">
                     <div className="mx-auto flex h-28 w-28 items-center justify-center sm:h-32 sm:w-32">
                         <div className="h-full w-full overflow-hidden rounded-full shadow-[0_15px_35px_rgba(37,99,235,0.18)]">
@@ -1113,7 +1115,20 @@ function Invitation2() {
 
                     <div className={textAnimClass}>
                         <p className="mt-5 text-sm font-bold uppercase tracking-[0.12em] text-amber-600 sm:text-lg sm:tracking-[0.2em]">
-                            {t.university}
+                            {language === "vi" ? (
+                                <>
+                                    {/* Tiếng Việt: Mobile 2 dòng, Desktop 1 dòng */}
+                                    <span className="block sm:hidden leading-snug">
+                                        TRƯỜNG ĐẠI HỌC<br />CÔNG NGHIỆP VÀ THƯƠNG MẠI HÀ NỘI
+                                    </span>
+                                    <span className="hidden sm:inline">
+                                        {t.university}
+                                    </span>
+                                </>
+                            ) : (
+                                /* Các ngôn ngữ khác: Giữ nguyên bình thường */
+                                <span>{t.university}</span>
+                            )}
                         </p>
 
                         {t.universityEnglish && (
@@ -1531,8 +1546,8 @@ function Invitation2() {
                                                 <label
                                                     key={value}
                                                     className={`flex cursor-pointer items-center gap-3 rounded-2xl border p-3 transition ${rsvpForm.attendance === value
-                                                            ? "border-blue-500 bg-blue-50/80"
-                                                            : "border-white/80 bg-white/50"
+                                                        ? "border-blue-500 bg-blue-50/80"
+                                                        : "border-white/80 bg-white/50"
                                                         }`}
                                                 >
                                                     <input
@@ -1780,8 +1795,8 @@ function LanguageSwitcher({ language, onChange, disabled = false }) {
                         onClick={() => onChange(item.code)}
                         disabled={disabled}
                         className={`relative flex min-h-[38px] items-center gap-1.5 rounded-full px-3 text-xs font-bold transition-all duration-300 disabled:cursor-wait disabled:opacity-70 cursor-pointer sm:text-sm ${active
-                                ? "text-white shadow-[0_4px_16px_rgba(37,99,235,0.35)]"
-                                : "text-slate-700 hover:bg-white/40 hover:text-blue-900"
+                            ? "text-white shadow-[0_4px_16px_rgba(37,99,235,0.35)]"
+                            : "text-slate-700 hover:bg-white/40 hover:text-blue-900"
                             }`}
                         aria-label={item.ariaLabel}
                         aria-pressed={active}
@@ -1943,7 +1958,7 @@ function GraduationSash({ side }) {
                                         textRendering: "geometricPrecision",
                                     }}
                                 >
-                                Graduation
+                                    Graduation
                                 </p>
                             </div>
 
