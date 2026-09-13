@@ -8,8 +8,8 @@ const GRADUATE_IMAGE = "/images/graduation-avatar-2.jpg";
 const PHONE_NUMBER = "0389 386 129";
 const PHONE_DISPLAY = "0389 386 129";
 const MAP_URL = "https://maps.app.goo.gl/SsNPrqkMPm5PwLHp6";
-const MUSIC_URL = "/music/graduation.mp3";
-const MUSIC_TITLE = "A LITTLE DREAM OF ME";
+const MUSIC_URL = "/music/graduation2.mp3";
+const MUSIC_TITLE = "공원에서 (공원에서)";
 
 const INVITATION_ANIMATIONS = `
   @keyframes flapOpen {
