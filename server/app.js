@@ -87,7 +87,7 @@ const verifyAdminToken = require("./middleware/auth");
 
 const app = express();
 
-// Kích hoạt trust proxy để đọc IP client chuẩn xác qua Render, Nginx, Cloudflare
+// Kích hoạt trust proxy TRƯỚC mọi middleware để Express đọc đúng IP từ header proxy
 app.set("trust proxy", true);
 
 const deviceDetector = new DeviceDetector();
@@ -143,18 +143,29 @@ function normalizeOptionalDate(value) {
   return value ? String(value).slice(0, 10) : null;
 }
 
-// Hàm lấy địa chỉ IP chuẩn xác của client
+// Hàm lấy địa chỉ IP chuẩn xác của client trên môi trường Cloud (Cloudflare, Render, Vercel, Proxy)
 function getClientIp(req) {
-  const forwarded = req.headers["x-forwarded-for"];
-  if (forwarded) {
-    return forwarded.split(",")[0].trim();
+  let ip =
+    req.headers["cf-connecting-ip"] ||
+    req.headers["x-real-ip"] ||
+    (req.headers["x-forwarded-for"]
+      ? req.headers["x-forwarded-for"].split(",")[0].trim()
+      : null) ||
+    req.ip ||
+    req.socket?.remoteAddress ||
+    "";
+
+  // Chuẩn hóa loại bỏ tiền tố IPv6-mapped IPv4 (::ffff:123.45.67.89 -> 123.45.67.89)
+  if (ip.startsWith("::ffff:")) {
+    ip = ip.replace("::ffff:", "");
   }
-  return req.socket?.remoteAddress || req.ip || "";
+
+  return String(ip).trim();
 }
 
 // Hàm tra cứu vị trí địa lý từ IP qua geoip-lite
 function getIpLocation(ip) {
-  if (!ip) return "Không xác định";
+  if (!ip) return "Không rõ vị trí";
 
   // Kiểm tra IP mạng nội bộ / localhost
   if (
@@ -167,14 +178,19 @@ function getIpLocation(ip) {
     return "Localhost";
   }
 
-  const geo = geoip.lookup(ip);
-  if (!geo) return "Không xác định";
+  try {
+    const geo = geoip.lookup(ip);
+    if (!geo) return ip; // Nếu chưa tra được thành phố, hiển thị trực tiếp IP
 
-  const city = geo.city ? geo.city.trim() : "";
-  const country = geo.country ? geo.country.trim() : "";
+    const city = geo.city ? geo.city.trim() : "";
+    const country = geo.country ? geo.country.trim() : "";
 
-  if (city && country) return `${city}, ${country}`;
-  return city || country || "Không xác định";
+    if (city && country) return `${city}, ${country}`;
+    return city || country || ip;
+  } catch (err) {
+    console.error("Lỗi parse geoip:", err);
+    return ip;
+  }
 }
 
 /* ==========================
@@ -1706,6 +1722,8 @@ app.post(
       /* 0. IP & Vị trí */
       const clientIp = getClientIp(req);
       const clientLocation = getIpLocation(clientIp);
+
+      console.log(`[ALBUM VIEW] PublicID: ${publicId} | IP: ${clientIp} | Location: ${clientLocation}`);
 
       /* 1. User Agent & Hints */
       const userAgent = req.headers["user-agent"] || "";
