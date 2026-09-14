@@ -385,14 +385,20 @@ function Detail() {
 
     setOpeningAlbum(true);
 
+    const newWindow = window.open("about:blank", "_blank");
+
     try {
-      // Đảm bảo ghi nhận xong vào database rồi mới mở tab mới
       await recordAlbumView();
+
+      if (newWindow) {
+        newWindow.location.href = normalizedUrl;
+      } else {
+        window.location.assign(normalizedUrl);
+      }
     } catch (err) {
       console.error(err);
+      if (newWindow) newWindow.close();
     } finally {
-      // Mở sang tab mới để không ngắt kết nối mạng của trang hiện tại
-      window.open(normalizedUrl, "_blank", "noopener,noreferrer");
       setOpeningAlbum(false);
     }
   };
@@ -430,6 +436,8 @@ function Detail() {
       return;
     }
 
+    const newWindow = window.open("about:blank", "_blank");
+
     try {
       setVerifying(true);
       setVerifyError("");
@@ -444,6 +452,7 @@ function Detail() {
       );
 
       if (!albumUrl) {
+        if (newWindow) newWindow.close();
         setVerifyError("Không tìm thấy liên kết album.");
         return;
       }
@@ -454,8 +463,13 @@ function Detail() {
 
       await recordAlbumView();
 
-      window.open(albumUrl, "_blank", "noopener,noreferrer");
+      if (newWindow) {
+        newWindow.location.href = albumUrl;
+      } else {
+        window.location.assign(albumUrl);
+      }
     } catch (error) {
+      if (newWindow) newWindow.close();
       setVerifyError(
         error.response?.data?.message ||
           "Không thể xác thực câu trả lời."
