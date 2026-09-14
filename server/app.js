@@ -144,6 +144,7 @@ function normalizeOptionalDate(value) {
 }
 
 // Hàm lấy địa chỉ IP chuẩn xác của client trên môi trường Cloud (Cloudflare, Render, Vercel, Proxy)
+// 1. Hàm trích xuất IP client sạch (bỏ port, bỏ ipv6 prefix, lấy IP công khai đầu tiên)
 function getClientIp(req) {
   let ip =
     req.headers["cf-connecting-ip"] ||
@@ -155,19 +156,24 @@ function getClientIp(req) {
     req.socket?.remoteAddress ||
     "";
 
-  // Chuẩn hóa loại bỏ tiền tố IPv6-mapped IPv4 (::ffff:123.45.67.89 -> 123.45.67.89)
+  // Bỏ prefix IPv6
   if (ip.startsWith("::ffff:")) {
     ip = ip.replace("::ffff:", "");
   }
 
-  return String(ip).trim();
+  // Bỏ port nếu có (dạng 113.160.22.1:45321)
+  if (ip.includes(":") && !ip.includes("::")) {
+    ip = ip.split(":")[0];
+  }
+
+  return ip.trim();
 }
 
-// Hàm tra cứu vị trí địa lý từ IP qua geoip-lite
-function getIpLocation(ip) {
+// 2. Hàm tra cứu vị trí kết hợp geoip-lite và API miễn phí
+async function getIpLocation(ip) {
   if (!ip) return "Không rõ vị trí";
 
-  // Kiểm tra IP mạng nội bộ / localhost
+  // Nhận diện localhost / mạng nội bộ
   if (
     ip === "127.0.0.1" ||
     ip === "::1" ||
@@ -178,19 +184,39 @@ function getIpLocation(ip) {
     return "Localhost";
   }
 
+  // Thử tra cứu nhanh bằng geoip-lite trước
   try {
     const geo = geoip.lookup(ip);
-    if (!geo) return ip; // Nếu chưa tra được thành phố, hiển thị trực tiếp IP
-
-    const city = geo.city ? geo.city.trim() : "";
-    const country = geo.country ? geo.country.trim() : "";
-
-    if (city && country) return `${city}, ${country}`;
-    return city || country || ip;
-  } catch (err) {
-    console.error("Lỗi parse geoip:", err);
-    return ip;
+    if (geo && (geo.city || geo.country)) {
+      const city = geo.city ? geo.city.trim() : "";
+      const country = geo.country ? geo.country.trim() : "";
+      if (city && country) return `${city}, ${country}`;
+      if (city || country) return city || country;
+    }
+  } catch (e) {
+    // Bỏ qua lỗi geoip-lite
   }
+
+  // Nếu geoip-lite không ra, gọi API ipwho.is (miễn phí, nhanh, không cần API key)
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 1500); // timeout 1.5s để không nghẽn request
+
+    const res = await fetch(`http://ipwho.is/${ip}`, { signal: controller.signal });
+    clearTimeout(timeout);
+
+    const data = await res.json();
+    if (data && data.success) {
+      const city = data.city || "";
+      const country = data.country_code || data.country || "";
+      if (city && country) return `${city}, ${country}`;
+      return city || country || ip;
+    }
+  } catch (err) {
+    // API timeout hoặc lỗi mạng
+  }
+
+  return ip; // Fallback cuối cùng: hiển thị chính địa chỉ IP để không bao giờ bị rỗng
 }
 
 /* ==========================
@@ -1638,8 +1664,8 @@ app.get(
       const daysValue = Number(req.query.days);
       const days =
         Number.isInteger(daysValue) &&
-        daysValue >= 7 &&
-        daysValue <= 365
+          daysValue >= 7 &&
+          daysValue <= 365
           ? daysValue
           : 30;
 
@@ -1721,7 +1747,7 @@ app.post(
 
       /* 0. IP & Vị trí */
       const clientIp = getClientIp(req);
-      const clientLocation = getIpLocation(clientIp);
+      const clientLocation = await getIpLocation(clientIp);
 
       console.log(`[ALBUM VIEW] PublicID: ${publicId} | IP: ${clientIp} | Location: ${clientLocation}`);
 
@@ -1891,7 +1917,7 @@ app.post(
         DO UPDATE SET views = album_view_daily.views + 1
       `);
 
-      /* 13. Lưu chi tiết album kèm IP và Location */
+      /* 13. Lưu chi tiết album kèm IP và Location (Bảo vệ giá trị IP khi Conflict) */
       await client.query(
         `
         INSERT INTO album_view_by_person_daily (
@@ -1935,7 +1961,7 @@ app.post(
         DO UPDATE SET
           views = album_view_by_person_daily.views + 1,
           last_viewed_at = NOW(),
-          ip_address = $15::text,
+          ip_address = COALESCE(NULLIF($15::text, ''), album_view_by_person_daily.ip_address),
           view_times = array_append(
             COALESCE(album_view_by_person_daily.view_times, '{}'::timestamptz[]),
             NOW()
@@ -2020,8 +2046,8 @@ app.get(
 
       const days =
         Number.isInteger(requestedDays) &&
-        requestedDays >= 7 &&
-        requestedDays <= 365
+          requestedDays >= 7 &&
+          requestedDays <= 365
           ? requestedDays
           : 30;
 
