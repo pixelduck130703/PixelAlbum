@@ -1209,7 +1209,7 @@ function Invitation2() {
                 <section className="liquid-glass-card relative mt-9 w-full max-w-3xl overflow-hidden rounded-3xl p-5 sm:p-7">
                     <div className="relative flex items-center gap-4 sm:gap-5">
                         <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-blue-800 text-2xl text-white shadow-lg sm:h-16 sm:w-16 sm:text-3xl">
-                            💻
+                            🧑‍🏭
                         </div>
 
                         <div className={`min-w-0 flex-1 text-left ${textAnimClass}`}>
