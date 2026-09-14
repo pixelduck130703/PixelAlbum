@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 const INVITATION_ID = "graduation-02";
 
-const GRADUATION_DATE = new Date("2026-09-27T14:00:00+07:00");
+const GRADUATION_DATE = new Date("2026-09-27T14:30:00+07:00");
 const GRADUATE_NAME = "NGUYỄN NGỌC ANH";
 const GRADUATE_IMAGE = "/images/graduation-avatar-2.jpg";
 const PHONE_NUMBER = "0389 386 129";
@@ -172,7 +172,7 @@ const TRANSLATIONS = {
         eventDateLabel: "Ngày tổ chức",
         eventDate: "Chủ Nhật, 27/09/2026",
         eventTimeLabel: "Thời gian",
-        eventTime: "14h00",
+        eventTime: "14h30",
         locationLabel: "Địa điểm",
         locationLine1: "Hội trường C5 - Phòng 401",
         locationLine2: "Trường Đại học Công nghiệp và Thương mại Hà Nội",
@@ -233,7 +233,7 @@ const TRANSLATIONS = {
         eventDateLabel: "Date",
         eventDate: "Sunday, September 27, 2026",
         eventTimeLabel: "Time",
-        eventTime: "2:00 PM",
+        eventTime: "2:30 PM",
         locationLabel: "Venue",
         locationLine1: "Hall C5 - Room 401",
         locationLine2: "Hanoi Industrial and Trade University",
@@ -294,7 +294,7 @@ const TRANSLATIONS = {
         eventDateLabel: "Veranstaltungsdatum",
         eventDate: "Sonntag, 27. September 2026",
         eventTimeLabel: "Uhrzeit",
-        eventTime: "14:00 Uhr",
+        eventTime: "14:30 Uhr",
         locationLabel: "Veranstaltungsort",
         locationLine1: "Hörsaal C5 - Raum 401",
         locationLine2: "Universität für Industrie und Handel Hanoi",
@@ -354,7 +354,7 @@ const TRANSLATIONS = {
         eventDateLabel: "举办日期",
         eventDate: "2026年9月27日，星期日",
         eventTimeLabel: "具体时间",
-        eventTime: "14:00",
+        eventTime: "14:30",
         locationLabel: "典礼地点",
         locationLine1: "C5大礼堂 - 401会议室",
         locationLine2: "河内工业与商业大学",
@@ -978,24 +978,11 @@ function Invitation2() {
                                         className="h-6 w-6 rounded-full object-contain"
                                     />
                                 </div>
-                                <p className="mt-1 text-[8px] font-black tracking-[0.12em] text-amber-300">
-                                    K7
-                                </p>
                             </div>
 
                             <div className="flex flex-1 items-center justify-center py-2">
-                                <p className="[writing-mode:vertical-rl] rotate-180 whitespace-nowrap text-[7.5px] font-black uppercase tracking-[0.14em] text-white">
+                                <p className="[writing-mode:vertical-rl] rotate-180 whitespace-nowrap text-[7px] font-black uppercase tracking-[0.14em] text-white">
                                     Trường Đại học Công nghiệp và Thương mại Hà Nội
-                                </p>
-                            </div>
-
-                            <div className="pb-3 text-center">
-                                <div className="mx-auto mb-1 h-px w-4 bg-amber-300/80" />
-                                <p className="text-[6px] font-black uppercase tracking-[0.12em] text-amber-300">
-                                    Class
-                                </p>
-                                <p className="mt-0.5 text-[10px] font-black leading-none text-white">
-                                    2026
                                 </p>
                             </div>
                         </div>
@@ -1094,7 +1081,6 @@ function Invitation2() {
                     🎓
                 </div>
 
-                {/* Logo HITU */}
                 {/* Logo HITU */}
                 <section className="text-center">
                     <div className="mx-auto flex h-28 w-28 items-center justify-center sm:h-32 sm:w-32">
@@ -1321,7 +1307,36 @@ function Invitation2() {
 
                 {/* Ô hiển thị lời chúc lướt qua */}
                 <section className="liquid-glass-card relative mt-8 w-full max-w-4xl overflow-hidden rounded-3xl p-5 sm:p-7">
-                    <div className="min-h-[85px] flex items-center justify-center">
+                    {/* Thời gian gửi đặt ở góc trên bên trái */}
+                    {wishesList.length > 0 &&
+                        (currentWish?.submittedAt ||
+                            currentWish?.submitted_at ||
+                            currentWish?.created_at) && (
+                            <div
+                                className={`absolute left-4 top-3.5 z-10 flex items-center gap-1.5 font-mono text-[10px] text-slate-400 sm:left-6 sm:top-4 sm:text-xs transition-all ${wishVisible ? "wish-enter" : "wish-leave"
+                                    }`}
+                            >
+                                <span>🕒</span>
+                                <span>
+                                    {new Intl.DateTimeFormat("vi-VN", {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                        day: "2-digit",
+                                        month: "2-digit",
+                                        year: "numeric",
+                                        timeZone: "Asia/Ho_Chi_Minh",
+                                    }).format(
+                                        new Date(
+                                            currentWish.submittedAt ||
+                                            currentWish.submitted_at ||
+                                            currentWish.created_at
+                                        )
+                                    )}
+                                </span>
+                            </div>
+                        )}
+
+                    <div className="min-h-[85px] flex items-center justify-center pt-3 sm:pt-2">
                         {wishesList.length === 0 ? (
                             <p className="text-center text-xs italic text-slate-500 sm:text-sm">
                                 {t.noWishesText}
@@ -1360,8 +1375,8 @@ function Invitation2() {
                     </div>
                 </section>
 
-                {/* 4 Nút chức năng */}
-                <div className="mt-10 grid w-full max-w-4xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {/* 3 Nút chức năng */}
+                <div className="mt-10 grid w-full max-w-4xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     <a
                         href={MAP_URL}
                         target="_blank"
@@ -1371,15 +1386,6 @@ function Invitation2() {
                         <span className="text-xl">📍</span>
                         <span className={textAnimClass}>{t.viewMap}</span>
                     </a>
-
-                    <button
-                        type="button"
-                        onClick={() => setShowCampusMap(true)}
-                        className="flex min-h-[56px] items-center justify-center gap-3 rounded-2xl border border-blue-300 bg-blue-100 px-6 py-4 font-bold text-blue-950 shadow-xl backdrop-blur-md transition hover:-translate-y-1 hover:scale-[1.02] active:scale-95 cursor-pointer"
-                    >
-                        <span className="text-xl">🗺️</span>
-                        <span className={textAnimClass}>{t.campusMap}</span>
-                    </button>
 
                     <button
                         type="button"
@@ -1411,62 +1417,6 @@ function Invitation2() {
                     </p>
                 </footer>
             </main>
-
-            {/* POPUP SƠ ĐỒ TRƯỜNG */}
-            {showCampusMap && (
-                <div
-                    className="fixed inset-0 z-[110] flex items-center justify-center p-4 backdrop-blur-md transition-all"
-                    onClick={() => setShowCampusMap(false)}
-                >
-                    <div
-                        className="liquid-glass-card relative inline-block overflow-hidden rounded-3xl p-3 shadow-2xl"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <button
-                            type="button"
-                            onClick={() => setShowCampusMap(false)}
-                            className="absolute right-5 top-5 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-white/80 bg-white/80 shadow-lg backdrop-blur-md transition hover:bg-red-500 hover:text-white cursor-pointer"
-                        >
-                            ✕
-                        </button>
-
-                        <div className="flex min-h-0 items-center justify-center overflow-auto rounded-2xl bg-white/60 p-1">
-                            <img
-                                src="/images/campus-map.png"
-                                alt={t.campusMap}
-                                className="block h-auto w-auto max-w-full rounded-xl object-contain shadow-md"
-                                style={{
-                                    maxHeight: "calc(100dvh - 180px)",
-                                }}
-                            />
-                        </div>
-
-                        {/*
-            <div className="px-5 py-4 text-center">
-              <p
-                className={`text-base font-bold text-amber-600 sm:text-lg ${textAnimClass}`}
-                style={{
-                  fontFamily:
-                    language === "zh"
-                      ? "'Noto Serif SC', serif"
-                      : "'Cormorant Garamond', serif",
-                }}
-              >
-                🅿️ {t.parkingGuide}
-              </p>
-
-              <p
-                className={`mx-auto mt-1 max-w-2xl text-sm leading-relaxed text-slate-700 sm:text-base ${textAnimClass}`}
-                style={{
-                  textWrap: "balance",
-                }}
-              >
-                {t.parkingInstruction}
-              </p>
-            </div> */}
-                    </div>
-                </div>
-            )}
 
             {/* POPUP RSVP XÁC NHẬN THAM DỰ */}
             {showRsvp && (
@@ -1900,7 +1850,7 @@ function GraduationSash({ side }) {
 
                             <div className="mt-6 flex min-h-0 flex-1 items-center justify-center">
                                 <p
-                                    className="[writing-mode:vertical-rl] rotate-180 text-[12px] font-black uppercase tracking-[0.18em] text-blue-900 2xl:text-[13px]"
+                                    className="[writing-mode:vertical-rl] rotate-180 text-[12px] font-black uppercase tracking-[0.18em] text-blue-900 2xl:text-[15px]"
                                     style={{
                                         textRendering: "geometricPrecision",
                                     }}
@@ -1912,7 +1862,7 @@ function GraduationSash({ side }) {
                             <div className="mb-12 shrink-0">
                                 <div className="mx-auto mb-3 h-px w-11 bg-amber-300" />
                                 <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-amber-600 2xl:text-xs">
-                                    Class of
+                                    Class
                                 </p>
                                 <p className="mt-1 text-3xl font-black leading-none text-blue-900 2xl:text-4xl">
                                     2026
