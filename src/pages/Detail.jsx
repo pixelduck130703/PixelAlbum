@@ -23,44 +23,22 @@ async function getClientHints() {
       ]);
 
     return {
-      mobile:
-        navigator.userAgentData.mobile ?? false,
-
-      brands:
-        navigator.userAgentData.brands || [],
-
+      mobile: navigator.userAgentData.mobile ?? false,
+      brands: navigator.userAgentData.brands || [],
       platform:
         navigator.userAgentData.platform ||
         highEntropyValues.platform ||
         "",
-
-      architecture:
-        highEntropyValues.architecture || "",
-
-      bitness:
-        highEntropyValues.bitness || "",
-
-      model:
-        highEntropyValues.model || "",
-
-      platformVersion:
-        highEntropyValues.platformVersion || "",
-
-      uaFullVersion:
-        highEntropyValues.uaFullVersion || "",
-
-      fullVersionList:
-        highEntropyValues.fullVersionList || [],
-
-      wow64:
-        highEntropyValues.wow64 ?? false,
+      architecture: highEntropyValues.architecture || "",
+      bitness: highEntropyValues.bitness || "",
+      model: highEntropyValues.model || "",
+      platformVersion: highEntropyValues.platformVersion || "",
+      uaFullVersion: highEntropyValues.uaFullVersion || "",
+      fullVersionList: highEntropyValues.fullVersionList || [],
+      wow64: highEntropyValues.wow64 ?? false,
     };
   } catch (error) {
-    console.error(
-      "Không thể lấy Client Hints:",
-      error
-    );
-
+    console.error("Không thể lấy Client Hints:", error);
     return null;
   }
 }
@@ -94,7 +72,7 @@ function Detail() {
 
         setError(
           error.response?.data?.message ||
-          "Không thể tải thông tin người này."
+            "Không thể tải thông tin người này."
         );
       } finally {
         setLoading(false);
@@ -110,16 +88,12 @@ function Detail() {
     const birthday = new Date(`${person.birthday}T00:00:00`);
     const today = new Date();
 
-    let calculatedAge =
-      today.getFullYear() - birthday.getFullYear();
-
-    const monthDifference =
-      today.getMonth() - birthday.getMonth();
+    let calculatedAge = today.getFullYear() - birthday.getFullYear();
+    const monthDifference = today.getMonth() - birthday.getMonth();
 
     if (
       monthDifference < 0 ||
-      (monthDifference === 0 &&
-        today.getDate() < birthday.getDate())
+      (monthDifference === 0 && today.getDate() < birthday.getDate())
     ) {
       calculatedAge--;
     }
@@ -132,10 +106,7 @@ function Detail() {
       return "";
     }
 
-    const birthday = new Date(
-      String(person.birthday).slice(0, 10)
-    );
-
+    const birthday = new Date(String(person.birthday).slice(0, 10));
     const today = person?.deathDate
       ? new Date(String(person.deathDate).slice(0, 10))
       : new Date();
@@ -144,7 +115,6 @@ function Detail() {
     today.setHours(0, 0, 0, 0);
 
     const diff = today.getTime() - birthday.getTime();
-
     return Math.floor(diff / (1000 * 60 * 60 * 24));
   }, [person]);
 
@@ -162,13 +132,11 @@ function Detail() {
 
     if (days < 0) {
       months--;
-
       const previousMonth = new Date(
         today.getFullYear(),
         today.getMonth(),
         0
       );
-
       days += previousMonth.getDate();
     }
 
@@ -185,10 +153,7 @@ function Detail() {
       return "";
     }
 
-    const birthdayParts = person.birthday
-      .split("-")
-      .map(Number);
-
+    const birthdayParts = person.birthday.split("-").map(Number);
     const month = birthdayParts[1];
     const day = birthdayParts[2];
 
@@ -199,27 +164,15 @@ function Detail() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    let nextBirthday = new Date(
-      today.getFullYear(),
-      month - 1,
-      day
-    );
-
+    let nextBirthday = new Date(today.getFullYear(), month - 1, day);
     nextBirthday.setHours(0, 0, 0, 0);
 
     if (nextBirthday < today) {
-      nextBirthday = new Date(
-        today.getFullYear() + 1,
-        month - 1,
-        day
-      );
+      nextBirthday = new Date(today.getFullYear() + 1, month - 1, day);
     }
 
     const difference = nextBirthday.getTime() - today.getTime();
-
-    const days = Math.round(
-      difference / (1000 * 60 * 60 * 24)
-    );
+    const days = Math.round(difference / (1000 * 60 * 60 * 24));
 
     if (days === 0) {
       return "🎂 Hôm nay là sinh nhật!";
@@ -228,7 +181,6 @@ function Detail() {
     return `🎉${days} ngày nữa đến sinh nhật`;
   }, [person]);
 
-  // Hiệu ứng pháo hoa khi đúng ngày sinh nhật
   useEffect(() => {
     if (person && birthdayCountdown === "🎂 Hôm nay là sinh nhật!") {
       confetti({
@@ -246,7 +198,6 @@ function Detail() {
 
     try {
       const normalizedDeathDate = String(person.deathDate).slice(0, 10);
-
       const [deathYear, deathMonth, deathDay] =
         normalizedDeathDate.split("-").map(Number);
 
@@ -254,12 +205,7 @@ function Detail() {
         return null;
       }
 
-      const deathSolar = Solar.fromYmd(
-        deathYear,
-        deathMonth,
-        deathDay
-      );
-
+      const deathSolar = Solar.fromYmd(deathYear, deathMonth, deathDay);
       const deathLunar = deathSolar.getLunar();
 
       const lunarMonth = deathLunar.getMonth();
@@ -278,11 +224,7 @@ function Detail() {
 
       const createAnniversaryDate = (lunarYear) => {
         try {
-          return Lunar.fromYmd(
-            lunarYear,
-            lunarMonth,
-            lunarDay
-          ).getSolar();
+          return Lunar.fromYmd(lunarYear, lunarMonth, lunarDay).getSolar();
         } catch (error) {
           return Lunar.fromYmd(
             lunarYear,
@@ -292,9 +234,7 @@ function Detail() {
         }
       };
 
-      let anniversarySolar =
-        createAnniversaryDate(currentLunarYear);
-
+      let anniversarySolar = createAnniversaryDate(currentLunarYear);
       let anniversaryDate = new Date(
         anniversarySolar.getYear(),
         anniversarySolar.getMonth() - 1,
@@ -304,24 +244,18 @@ function Detail() {
       anniversaryDate.setHours(0, 0, 0, 0);
 
       if (anniversaryDate < today) {
-        anniversarySolar =
-          createAnniversaryDate(currentLunarYear + 1);
-
+        anniversarySolar = createAnniversaryDate(currentLunarYear + 1);
         anniversaryDate = new Date(
           anniversarySolar.getYear(),
           anniversarySolar.getMonth() - 1,
           anniversarySolar.getDay()
         );
-
         anniversaryDate.setHours(0, 0, 0, 0);
       }
 
-      const millisecondsPerDay =
-        1000 * 60 * 60 * 24;
-
+      const millisecondsPerDay = 1000 * 60 * 60 * 24;
       const days = Math.round(
-        (anniversaryDate.getTime() - today.getTime()) /
-        millisecondsPerDay
+        (anniversaryDate.getTime() - today.getTime()) / millisecondsPerDay
       );
 
       const lunarMonthText = Math.abs(lunarMonth);
@@ -360,7 +294,6 @@ function Detail() {
 
   const formatBirthday = (birthday) => {
     if (!birthday) return "Chưa cập nhật";
-
     const [year, month, day] = birthday.split("-");
     return `${day}/${month}/${year}`;
   };
@@ -378,35 +311,16 @@ function Detail() {
       const lunar = solar.getLunar();
 
       const ganMap = {
-        甲: "Giáp",
-        乙: "Ất",
-        丙: "Bính",
-        丁: "Đinh",
-        戊: "Mậu",
-        己: "Kỷ",
-        庚: "Canh",
-        辛: "Tân",
-        壬: "Nhâm",
-        癸: "Quý",
+        甲: "Giáp", 乙: "Ất", 丙: "Bính", 丁: "Đinh", 戊: "Mậu",
+        己: "Kỷ", 庚: "Canh", 辛: "Tân", 壬: "Nhâm", 癸: "Quý",
       };
 
       const chiMap = {
-        子: "Tý",
-        丑: "Sửu",
-        寅: "Dần",
-        卯: "Mão",
-        辰: "Thìn",
-        巳: "Tỵ",
-        午: "Ngọ",
-        未: "Mùi",
-        申: "Thân",
-        酉: "Dậu",
-        戌: "Tuất",
-        亥: "Hợi",
+        子: "Tý", 丑: "Sửu", 寅: "Dần", 卯: "Mão", 辰: "Thìn", 巳: "Tỵ",
+        午: "Ngọ", 未: "Mùi", 申: "Thân", 酉: "Dậu", 戌: "Tuất", 亥: "Hợi",
       };
 
       const ganZhi = lunar.getYearInGanZhi();
-
       return `${ganMap[ganZhi[0]]} ${chiMap[ganZhi[1]]}`;
     } catch {
       return "";
@@ -427,47 +341,16 @@ function Detail() {
       const lunarMonth = Math.abs(lunar.getMonth());
       const lunarYear = lunar.getYear();
 
-      let monthText;
-      if (lunarMonth === 1) {
-        monthText = "01";
-      } else if (lunarMonth === 12) {
-        monthText = "12";
-      } else {
-        monthText = String(lunarMonth).padStart(2, "0");
-      }
+      let monthText = String(lunarMonth).padStart(2, "0");
 
-      const can = [
-        "Canh",
-        "Tân",
-        "Nhâm",
-        "Quý",
-        "Giáp",
-        "Ất",
-        "Bính",
-        "Đinh",
-        "Mậu",
-        "Kỷ",
-      ];
-
-      const chi = [
-        "Thân",
-        "Dậu",
-        "Tuất",
-        "Hợi",
-        "Tý",
-        "Sửu",
-        "Dần",
-        "Mão",
-        "Thìn",
-        "Tỵ",
-        "Ngọ",
-        "Mùi",
-      ];
+      const can = ["Canh", "Tân", "Nhâm", "Quý", "Giáp", "Ất", "Bính", "Đinh", "Mậu", "Kỷ"];
+      const chi = ["Thân", "Dậu", "Tuất", "Hợi", "Tý", "Sửu", "Dần", "Mão", "Thìn", "Tỵ", "Ngọ", "Mùi"];
 
       const yearCanChi = `${can[lunarYear % 10]} ${chi[lunarYear % 12]}`;
 
-      return `${String(lunarDay).padStart(2, "0")}/${monthText}${lunar.getMonth() < 0 ? " (nhuận)" : ""
-        }/${yearCanChi}`;
+      return `${String(lunarDay).padStart(2, "0")}/${monthText}${
+        lunar.getMonth() < 0 ? " (nhuận)" : ""
+      }/${yearCanChi}`;
     } catch (error) {
       return "Không xác định";
     }
@@ -475,32 +358,21 @@ function Detail() {
 
   const normalizeAlbumUrl = (url) => {
     if (!url) return "";
-
     const normalizedUrl = String(url).trim();
-
     if (/^https?:\/\//i.test(normalizedUrl)) {
       return normalizedUrl;
     }
-
     return `https://${normalizedUrl}`;
   };
 
   const recordAlbumView = async () => {
     try {
-      const clientHints =
-        await getClientHints();
-
-      await api.post(
-        `/people/public/${publicId}/album-view`,
-        {
-          clientHints,
-        }
-      );
+      const clientHints = await getClientHints();
+      await api.post(`/people/public/${publicId}/album-view`, {
+        clientHints,
+      });
     } catch (error) {
-      console.error(
-        "Lỗi tăng lượt xem album:",
-        error
-      );
+      console.error("Lỗi tăng lượt xem album:", error);
     }
   };
 
@@ -513,9 +385,16 @@ function Detail() {
 
     setOpeningAlbum(true);
 
-    await recordAlbumView();
-
-    window.location.assign(normalizedUrl);
+    try {
+      // Đảm bảo ghi nhận xong vào database rồi mới mở tab mới
+      await recordAlbumView();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      // Mở sang tab mới để không ngắt kết nối mạng của trang hiện tại
+      window.open(normalizedUrl, "_blank", "noopener,noreferrer");
+      setOpeningAlbum(false);
+    }
   };
 
   const handleOpenAlbum = () => {
@@ -575,14 +454,15 @@ function Detail() {
 
       await recordAlbumView();
 
-      window.location.assign(albumUrl);
+      window.open(albumUrl, "_blank", "noopener,noreferrer");
     } catch (error) {
       setVerifyError(
         error.response?.data?.message ||
-        "Không thể xác thực câu trả lời."
+          "Không thể xác thực câu trả lời."
       );
     } finally {
       setVerifying(false);
+      setOpeningAlbum(false);
     }
   };
 
@@ -601,15 +481,12 @@ function Detail() {
       <div className="flex min-h-screen items-center justify-center bg-slate-100 p-5">
         <div className="w-full max-w-md rounded-3xl bg-white p-8 text-center shadow-xl">
           <div className="text-5xl">😕</div>
-
           <h1 className="mt-4 text-2xl font-bold text-slate-800">
             Không tìm thấy thông tin
           </h1>
-
           <p className="mt-3 text-slate-500">
             {error || "Người này không tồn tại."}
           </p>
-
           <button
             type="button"
             onClick={() => navigate("/")}
@@ -627,25 +504,20 @@ function Detail() {
       <div className="mx-auto max-w-4xl">
         <div className="overflow-hidden rounded-3xl bg-white shadow-xl">
           <div className="relative overflow-hidden px-6 py-10 text-center text-white">
-            {/* Ảnh nền mờ */}
             <div
               className="absolute inset-0 bg-cover bg-center scale-110 blur-sm brightness-120"
               style={{
-                backgroundImage: `url(${person.avatar ||
-                  "https://placehold.co/300x300?text=Avatar"
-                  })`,
+                backgroundImage: `url(${
+                  person.avatar || "https://placehold.co/300x300?text=Avatar"
+                })`,
               }}
             />
-
-            {/* Lớp phủ màu tối */}
             <div className="absolute inset-0 bg-black/40" />
 
-            {/* Nội dung */}
             <div className="relative z-10">
               <img
                 src={
-                  person.avatar ||
-                  "https://placehold.co/300x300?text=Avatar"
+                  person.avatar || "https://placehold.co/300x300?text=Avatar"
                 }
                 alt={person.name}
                 className="mx-auto h-36 w-36 rounded-full border-4 border-white object-cover shadow-2xl sm:h-44 sm:w-44"
@@ -668,8 +540,7 @@ function Detail() {
                 )}
 
                 <span className="rounded-full bg-white/20 px-4 py-2 text-sm font-semibold backdrop-blur-md">
-                  👁️{" "}
-                  {Number(person.albumViews || 0).toLocaleString("vi-VN")} lượt xem
+                  👁️ {Number(person.albumViews || 0).toLocaleString("vi-VN")} lượt xem
                 </span>
 
                 {person.class && (
@@ -682,42 +553,33 @@ function Detail() {
           </div>
 
           <div className="p-6 sm:p-8">
-            {/* Người đã mất */}
             {person.deathDate && (
               <>
                 <div className="mb-7 rounded-3xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-6 text-center shadow-sm">
                   <div className="text-5xl">🕯️🎗︎</div>
-
                   <h2 className="mt-4 text-2xl font-bold text-slate-800 sm:text-3xl">
                     Tưởng nhớ và tri ân
                   </h2>
-
                   <p className="mt-4 text-lg leading-relaxed text-slate-700">
                     Xin được tưởng nhớ và trân trọng những kỷ niệm đẹp về{" "}
-                    <strong className="text-slate-800">
-                      {person.name}
-                    </strong>
-                    . Những hình ảnh, khoảnh khắc và ký ức về{" "}
-                    <strong className="text-slate-800">
-                      {person.name}
-                    </strong>{" "}
+                    <strong className="text-slate-800">{person.name}</strong>.
+                    Những hình ảnh, khoảnh khắc và ký ức về{" "}
+                    <strong className="text-slate-800">{person.name}</strong>{" "}
                     sẽ luôn được lưu giữ như một phần đáng quý trong lòng gia đình,
                     bạn bè và những người thân yêu.
                   </p>
-
                   <div className="mx-auto mt-6 h-px max-w-md bg-amber-200" />
-
                   <p className="mt-6 font-medium italic text-amber-700">
                     “Kỷ niệm vẫn còn mãi theo thời gian.”
                   </p>
                 </div>
 
-                {/* Đếm ngày sinh và ngày giỗ */}
                 <div className="mb-7 grid grid-cols-1 gap-4 sm:grid-cols-2">
                   {birthdayCountdown && (
                     <div
-                      className={`overflow-hidden rounded-3xl border border-pink-200 bg-gradient-to-br from-pink-50 via-white to-rose-50 p-5 text-center shadow-sm ${!deathAnniversaryCountdown ? "sm:col-span-2" : ""
-                        }`}
+                      className={`overflow-hidden rounded-3xl border border-pink-200 bg-gradient-to-br from-pink-50 via-white to-rose-50 p-5 text-center shadow-sm ${
+                        !deathAnniversaryCountdown ? "sm:col-span-2" : ""
+                      }`}
                     >
                       <p className="mt-1 font-semibold leading-6 text-slate-700">
                         {birthdayCountdown}
@@ -727,8 +589,9 @@ function Detail() {
 
                   {deathAnniversaryCountdown && (
                     <div
-                      className={`overflow-hidden rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-orange-50 p-5 text-center shadow-sm ${!birthdayCountdown ? "sm:col-span-2" : ""
-                        }`}
+                      className={`overflow-hidden rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-orange-50 p-5 text-center shadow-sm ${
+                        !birthdayCountdown ? "sm:col-span-2" : ""
+                      }`}
                     >
                       <p className="mt-1 font-semibold leading-6 text-slate-700">
                         {deathAnniversaryCountdown.message}
@@ -739,18 +602,13 @@ function Detail() {
               </>
             )}
 
-            {/* Người còn sống và hôm nay là sinh nhật */}
             {!person.deathDate &&
               birthdayCountdown === "🎂 Hôm nay là sinh nhật!" && (
                 <div className="mb-7 rounded-3xl border border-pink-200 bg-gradient-to-r from-pink-50 via-rose-50 to-yellow-50 p-6 text-center shadow-sm">
-                  <div className="text-6xl">
-                    🎂🎉
-                  </div>
-
+                  <div className="text-6xl">🎂🎉</div>
                   <h2 className="mt-3 text-3xl font-bold text-pink-600">
                     Chúc mừng sinh nhật!
                   </h2>
-
                   <p className="mt-3 text-lg leading-relaxed text-slate-700">
                     Gửi những lời chúc tốt đẹp nhất đến{" "}
                     <strong>{person.name}</strong>. Mong rằng bạn luôn lạc quan để
@@ -758,16 +616,13 @@ function Detail() {
                     tình yêu thương, bình an trong mỗi bước đi và gặt hái được thật
                     nhiều thành công trên chặng đường phía trước.
                   </p>
-
                   <div className="mx-auto mt-6 h-px max-w-md bg-pink-200" />
-
                   <p className="mt-6 font-medium italic text-pink-600">
                     🎈 Chúc bạn có một ngày sinh nhật thật ý nghĩa! 🎈
                   </p>
                 </div>
               )}
 
-            {/* Người còn sống và chưa đến sinh nhật */}
             {!person.deathDate &&
               birthdayCountdown &&
               birthdayCountdown !== "🎂 Hôm nay là sinh nhật!" && (
@@ -777,66 +632,64 @@ function Detail() {
               )}
 
             {person.deathDate ? (
-              <>
-                {/* Ngày sinh và ngày mất */}
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <InfoItem
-                    label="Ngày sinh"
-                    value={
-                      person.birthday
-                        ? formatBirthday(person.birthday)
-                        : "Chưa cập nhật"
-                    }
-                    icon="🎁"
-                  />
-
-                  <InfoItem
-                    label="Ngày mất"
-                    value={
-                      person.deathDate
-                        ? `${formatBirthday(person.deathDate)} (${formatLunarDate(
-                          person.deathDate
-                        )})`
-                        : "Chưa cập nhật"
-                    }
-                    icon="🎗️"
-                  />
-
-                  <InfoItem
-                    label="Ngày giỗ tiếp theo"
-                    value={
-                      deathAnniversaryCountdown
-                        ? `${deathAnniversaryCountdown.solarDate} (Dương lịch)`
-                        : "Chưa cập nhật"
-                    }
-                    icon="🕯️"
-                  />
-                  <InfoItem
-                    label="Đã yên nghỉ"
-                    value={timeSinceDeath || "Chưa cập nhật"}
-                    icon="⏳"
-                  />
-                  <InfoItem
-                    label="Giới tính"
-                    value={person.gender || "Chưa cập nhật"}
-                    icon="👤"
-                  />
-
-                  <InfoItem
-                    label="Quê quán/Địa điểm"
-                    value={person.address || "Chưa cập nhật"}
-                    icon="📍"
-                  />
-                </div>
-              </>
-            ) : (
-              /* Người còn sống: hiển thị 4 thẻ bình thường */
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <InfoItem
                   label="Ngày sinh"
                   value={
                     person.birthday
-                      ? `${formatBirthday(person.birthday)} (${getCanChi(person.birthday)})`
+                      ? formatBirthday(person.birthday)
+                      : "Chưa cập nhật"
+                  }
+                  icon="🎁"
+                />
+
+                <InfoItem
+                  label="Ngày mất"
+                  value={
+                    person.deathDate
+                      ? `${formatBirthday(person.deathDate)} (${formatLunarDate(
+                          person.deathDate
+                        )})`
+                      : "Chưa cập nhật"
+                  }
+                  icon="🎗️"
+                />
+
+                <InfoItem
+                  label="Ngày giỗ tiếp theo"
+                  value={
+                    deathAnniversaryCountdown
+                      ? `${deathAnniversaryCountdown.solarDate} (Dương lịch)`
+                      : "Chưa cập nhật"
+                  }
+                  icon="🕯️"
+                />
+                <InfoItem
+                  label="Đã yên nghỉ"
+                  value={timeSinceDeath || "Chưa cập nhật"}
+                  icon="⏳"
+                />
+                <InfoItem
+                  label="Giới tính"
+                  value={person.gender || "Chưa cập nhật"}
+                  icon="👤"
+                />
+
+                <InfoItem
+                  label="Quê quán/Địa điểm"
+                  value={person.address || "Chưa cập nhật"}
+                  icon="📍"
+                />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <InfoItem
+                  label="Ngày sinh"
+                  value={
+                    person.birthday
+                      ? `${formatBirthday(person.birthday)} (${getCanChi(
+                          person.birthday
+                        )})`
                       : "Chưa cập nhật"
                   }
                   icon="🎁"
@@ -868,7 +721,6 @@ function Detail() {
 
             <div className="mt-8 border-t border-slate-200 pt-6">
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                {/* Nút xem album bên trái */}
                 {person.hasAlbum || person.album ? (
                   <button
                     type="button"
@@ -885,8 +737,8 @@ function Detail() {
                       {openingAlbum
                         ? "Đang mở..."
                         : person.securityQuestion
-                          ? "Xem album"
-                          : "Xem album"}
+                        ? "Xem album"
+                        : "Xem album"}
                     </span>
                   </button>
                 ) : (
@@ -895,7 +747,6 @@ function Detail() {
                   </div>
                 )}
 
-                {/* Nút quay lại bên phải */}
                 <button
                   type="button"
                   onClick={() => navigate(-1)}
@@ -904,7 +755,6 @@ function Detail() {
                   <span className="shrink-0 text-lg transition duration-300 group-hover:-translate-x-1">
                     ←
                   </span>
-
                   <span>Quay lại</span>
                 </button>
               </div>
@@ -922,16 +772,13 @@ function Detail() {
             }
           }}
         >
-          {/* LIQUID GLASS MODAL CARD */}
           <div
             className="relative w-full max-w-md overflow-hidden rounded-[32px] border border-white/30 bg-white/75 p-6 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3),inset_0_1px_1px_rgba(255,255,255,0.8)] backdrop-blur-2xl ring-1 ring-black/5 sm:p-7"
             onClick={(event) => event.stopPropagation()}
           >
-            {/* GLOW LIQUID LIGHT ORBS */}
             <div className="pointer-events-none absolute -left-12 -top-12 h-44 w-44 rounded-full bg-gradient-to-br from-blue-400/30 to-indigo-500/20 blur-3xl" />
             <div className="pointer-events-none absolute -bottom-12 -right-12 h-44 w-44 rounded-full bg-gradient-to-tl from-violet-400/25 to-rose-400/20 blur-3xl" />
 
-            {/* HEADER */}
             <div className="relative flex items-start justify-between gap-4">
               <div className="flex items-center gap-3.5">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/60 bg-gradient-to-b from-white/80 to-white/30 text-2xl shadow-[0_8px_20px_rgba(37,99,235,0.15),inset_0_1px_2px_rgba(255,255,255,0.9)] backdrop-blur-xl">
@@ -959,7 +806,6 @@ function Detail() {
               </button>
             </div>
 
-            {/* FORM BODY */}
             <form onSubmit={handleVerifyAlbum} className="relative mt-6 space-y-4">
               <div className="relative overflow-hidden rounded-2xl border border-blue-200/50 bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-white/40 p-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.7)] backdrop-blur-lg">
                 <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-blue-600">
@@ -972,7 +818,6 @@ function Detail() {
                 </p>
               </div>
 
-              {/* INPUT CÂU TRẢ LỜI (ĐÃ CHẶN ZOOM MOBILE VỚI text-base sm:text-sm) */}
               <div className="space-y-1.5">
                 <label
                   htmlFor="verify-answer"
@@ -1040,8 +885,9 @@ function Detail() {
 function InfoItem({ label, value, icon, fullWidth = false }) {
   return (
     <div
-      className={`rounded-2xl border border-slate-200 bg-slate-50 p-5 ${fullWidth ? "md:col-span-2" : ""
-        }`}
+      className={`rounded-2xl border border-slate-200 bg-slate-50 p-5 ${
+        fullWidth ? "md:col-span-2" : ""
+      }`}
     >
       <div className="flex items-start gap-4">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white text-xl shadow-sm">
@@ -1049,10 +895,7 @@ function InfoItem({ label, value, icon, fullWidth = false }) {
         </div>
 
         <div className="min-w-0">
-          <p className="text-sm font-medium text-slate-500">
-            {label}
-          </p>
-
+          <p className="text-sm font-medium text-slate-500">{label}</p>
           <p className="mt-1 break-words font-semibold text-slate-800">
             {value}
           </p>
