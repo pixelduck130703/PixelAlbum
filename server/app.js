@@ -8,7 +8,7 @@ const ExcelJS = require("exceljs");
 const multer = require("multer");
 const cloudinary = require("./config/cloudinary");
 const DeviceDetector = require("device-detector-js");
-
+const geoip = require("geoip-lite");
 
 const musicUpload = multer({
   storage: multer.memoryStorage(),
@@ -86,8 +86,11 @@ const {
 const verifyAdminToken = require("./middleware/auth");
 
 const app = express();
-const deviceDetector = new DeviceDetector();
 
+// Kích hoạt trust proxy để đọc IP client chuẩn xác qua Render, Nginx, Cloudflare
+app.set("trust proxy", true);
+
+const deviceDetector = new DeviceDetector();
 
 /* ==========================
    Middleware
@@ -102,7 +105,6 @@ const allowedOrigins = [
 app.use(
   cors({
     origin(origin, callback) {
-      // Cho phép Postman hoặc request không có Origin
       if (!origin || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
@@ -134,7 +136,6 @@ function normalizeSecurityAnswer(value) {
 
 function normalizeOptionalText(value) {
   const normalized = String(value || "").trim();
-
   return normalized || null;
 }
 
@@ -142,6 +143,39 @@ function normalizeOptionalDate(value) {
   return value ? String(value).slice(0, 10) : null;
 }
 
+// Hàm lấy địa chỉ IP chuẩn xác của client
+function getClientIp(req) {
+  const forwarded = req.headers["x-forwarded-for"];
+  if (forwarded) {
+    return forwarded.split(",")[0].trim();
+  }
+  return req.socket?.remoteAddress || req.ip || "";
+}
+
+// Hàm tra cứu vị trí địa lý từ IP qua geoip-lite
+function getIpLocation(ip) {
+  if (!ip) return "Không xác định";
+
+  // Kiểm tra IP mạng nội bộ / localhost
+  if (
+    ip === "127.0.0.1" ||
+    ip === "::1" ||
+    ip.startsWith("192.168.") ||
+    ip.startsWith("10.") ||
+    ip.startsWith("172.16.")
+  ) {
+    return "Localhost";
+  }
+
+  const geo = geoip.lookup(ip);
+  if (!geo) return "Không xác định";
+
+  const city = geo.city ? geo.city.trim() : "";
+  const country = geo.country ? geo.country.trim() : "";
+
+  if (city && country) return `${city}, ${country}`;
+  return city || country || "Không xác định";
+}
 
 /* ==========================
    Trang chủ
@@ -159,10 +193,10 @@ app.get("/api/test", async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT
-  id,
-  name,
-  TO_CHAR(birthday, 'YYYY-MM-DD') AS birthday,
-  TO_CHAR("deathDate", 'YYYY-MM-DD') AS "deathDate",
+        id,
+        name,
+        TO_CHAR(birthday, 'YYYY-MM-DD') AS birthday,
+        TO_CHAR("deathDate", 'YYYY-MM-DD') AS "deathDate",
         gender,
         class,
         phone,
@@ -189,7 +223,6 @@ app.get("/api/test", async (req, res) => {
     });
   }
 });
-
 
 /* ==========================
    API công khai cho Home
@@ -242,7 +275,6 @@ app.put(
     try {
       const rawTrackId = req.body.trackId;
 
-      // Không chọn bài nào.
       if (
         rawTrackId === null ||
         rawTrackId === undefined ||
@@ -496,7 +528,6 @@ app.post(
     } catch (error) {
       console.error("Lỗi thêm bài hát:", error);
 
-      // Nếu upload thành công nhưng lưu DB lỗi thì xóa file vừa tải.
       if (uploadedPublicId) {
         try {
           await cloudinary.uploader.destroy(
@@ -533,7 +564,7 @@ app.post(
 );
 
 /* ==========================
-   LAPI lấy danh sách nhạc
+   API lấy danh sách nhạc
 ========================== */
 
 app.get(
@@ -583,23 +614,23 @@ app.get("/api/people", async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT
-  id,
-  "publicId",
-  name,
-  TO_CHAR(birthday, 'YYYY-MM-DD') AS birthday,
-  TO_CHAR("deathDate", 'YYYY-MM-DD') AS "deathDate",
-  gender,
-  class,
-  phone,
-  address,
-  avatar,
-  album,
-  "securityQuestion",
-  COALESCE("albumViews", 0) AS "albumViews"
-FROM people
-ORDER BY
-  COALESCE("albumViews", 0) DESC,
-  id DESC;
+        id,
+        "publicId",
+        name,
+        TO_CHAR(birthday, 'YYYY-MM-DD') AS birthday,
+        TO_CHAR("deathDate", 'YYYY-MM-DD') AS "deathDate",
+        gender,
+        class,
+        phone,
+        address,
+        avatar,
+        album,
+        "securityQuestion",
+        COALESCE("albumViews", 0) AS "albumViews"
+      FROM people
+      ORDER BY
+        COALESCE("albumViews", 0) DESC,
+        id DESC;
     `);
 
     return res.json(result.rows);
@@ -629,25 +660,20 @@ app.get("/api/people/public/:publicId", async (req, res) => {
         phone,
         address,
         avatar,
-
         COALESCE("albumViews", 0) AS "albumViews",
-
         CASE
           WHEN "securityQuestion" IS NULL
             OR TRIM("securityQuestion") = ''
           THEN album
           ELSE NULL
         END AS album,
-
         CASE
           WHEN album IS NULL
             OR TRIM(album) = ''
           THEN FALSE
           ELSE TRUE
         END AS "hasAlbum",
-
         "securityQuestion"
-
       FROM people
       WHERE "publicId" = $1
       `,
@@ -676,35 +702,31 @@ app.get("/api/people/:id", async (req, res) => {
   try {
     const result = await pool.query(
       `
-        SELECT
-  id,
-  name,
-  TO_CHAR(birthday, 'YYYY-MM-DD') AS birthday,
-  TO_CHAR("deathDate", 'YYYY-MM-DD') AS "deathDate",
-          gender,
-          class,
-          phone,
-          address,
-          avatar,
-
-          CASE
-            WHEN "securityQuestion" IS NULL
-              OR TRIM("securityQuestion") = ''
-            THEN album
-            ELSE NULL
-          END AS album,
-
-          CASE
-            WHEN album IS NULL
-              OR TRIM(album) = ''
-            THEN FALSE
-            ELSE TRUE
-          END AS "hasAlbum",
-
-          "securityQuestion"
-
-        FROM people
-        WHERE id = $1
+      SELECT
+        id,
+        name,
+        TO_CHAR(birthday, 'YYYY-MM-DD') AS birthday,
+        TO_CHAR("deathDate", 'YYYY-MM-DD') AS "deathDate",
+        gender,
+        class,
+        phone,
+        address,
+        avatar,
+        CASE
+          WHEN "securityQuestion" IS NULL
+            OR TRIM("securityQuestion") = ''
+          THEN album
+          ELSE NULL
+        END AS album,
+        CASE
+          WHEN album IS NULL
+            OR TRIM(album) = ''
+          THEN FALSE
+          ELSE TRUE
+        END AS "hasAlbum",
+        "securityQuestion"
+      FROM people
+      WHERE id = $1
       `,
       [req.params.id]
     );
@@ -730,28 +752,27 @@ app.get("/api/people/:id", async (req, res) => {
 
 /* ==========================
    Tìm theo ngày sinh
-   Định dạng: YYYY-MM-DD
 ========================== */
 
 app.get("/api/birthday/:birthday", async (req, res) => {
   try {
     const result = await pool.query(
       `
-        SELECT
-  id,
-  name,
-  TO_CHAR(birthday, 'YYYY-MM-DD') AS birthday,
-  TO_CHAR("deathDate", 'YYYY-MM-DD') AS "deathDate",
-          gender,
-          class,
-          phone,
-          address,
-          avatar,
-          album,
-          "securityQuestion"
-        FROM people
-        WHERE birthday = $1::date
-        ORDER BY id DESC
+      SELECT
+        id,
+        name,
+        TO_CHAR(birthday, 'YYYY-MM-DD') AS birthday,
+        TO_CHAR("deathDate", 'YYYY-MM-DD') AS "deathDate",
+        gender,
+        class,
+        phone,
+        address,
+        avatar,
+        album,
+        "securityQuestion"
+      FROM people
+      WHERE birthday = $1::date
+      ORDER BY id DESC
       `,
       [req.params.birthday]
     );
@@ -837,24 +858,24 @@ app.post(
 
       const result = await pool.query(
         `
-          INSERT INTO people (
-            name,
-            birthday,
-            "deathDate",
-            gender,
-            class,
-            phone,
-            address,
-            avatar,
-            album,
-            "securityQuestion",
-            "securityAnswer"
-          )
-          VALUES (
-            $1, $2, $3, $4, $5, $6,
-            $7, $8, $9, $10, $11
-          )
-          RETURNING id
+        INSERT INTO people (
+          name,
+          birthday,
+          "deathDate",
+          gender,
+          class,
+          phone,
+          address,
+          avatar,
+          album,
+          "securityQuestion",
+          "securityAnswer"
+        )
+        VALUES (
+          $1, $2, $3, $4, $5, $6,
+          $7, $8, $9, $10, $11
+        )
+        RETURNING id
         `,
         [
           name.trim(),
@@ -897,19 +918,16 @@ app.get("/api/dashboard", verifyAdminToken, async (req, res) => {
     const result = await pool.query(`
       SELECT
         COUNT(*)::INTEGER AS "totalPeople",
-
         COUNT(*) FILTER (
           WHERE birthday IS NOT NULL
           AND "deathDate" IS NULL
           AND EXTRACT(MONTH FROM birthday) =
               EXTRACT(MONTH FROM CURRENT_DATE)
         )::INTEGER AS "thisMonth",
-
         COUNT(*) FILTER (
           WHERE album IS NOT NULL
           AND TRIM(album) <> ''
         )::INTEGER AS album,
-
         COUNT(*) FILTER (
           WHERE birthday IS NOT NULL
           AND "deathDate" IS NULL
@@ -918,12 +936,10 @@ app.get("/api/dashboard", verifyAdminToken, async (req, res) => {
           AND EXTRACT(DAY FROM birthday) =
               EXTRACT(DAY FROM CURRENT_DATE)
         )::INTEGER AS today,
-
         COALESCE(
           SUM("albumViews"),
           0
         )::BIGINT AS "totalAlbumViews"
-
       FROM people
     `);
 
@@ -992,11 +1008,11 @@ app.put(
 
       const currentResult = await pool.query(
         `
-          SELECT
-            "securityQuestion",
-            "securityAnswer"
-          FROM people
-          WHERE id = $1
+        SELECT
+          "securityQuestion",
+          "securityAnswer"
+        FROM people
+        WHERE id = $1
         `,
         [req.params.id]
       );
@@ -1018,11 +1034,9 @@ app.put(
 
       let storedAnswer = currentPerson.securityAnswer;
 
-      // Xóa câu hỏi thì xóa luôn câu trả lời
       if (!question) {
         storedAnswer = null;
       } else if (newAnswer) {
-        // Nhập câu trả lời mới thì mã hóa lại
         storedAnswer = await bcrypt.hash(newAnswer, 10);
       } else if (!currentPerson.securityAnswer) {
         return res.status(400).json({
@@ -1034,22 +1048,22 @@ app.put(
 
       const updateResult = await pool.query(
         `
-          UPDATE people
-          SET
-            name = $1,
-            birthday = $2,
-            "deathDate" = $3,
-            gender = $4,
-            class = $5,
-            phone = $6,
-            address = $7,
-            avatar = $8,
-            album = $9,
-            "securityQuestion" = $10,
-            "securityAnswer" = $11,
-            "updatedAt" = CURRENT_TIMESTAMP
-          WHERE id = $12
-          RETURNING id
+        UPDATE people
+        SET
+          name = $1,
+          birthday = $2,
+          "deathDate" = $3,
+          gender = $4,
+          class = $5,
+          phone = $6,
+          address = $7,
+          avatar = $8,
+          album = $9,
+          "securityQuestion" = $10,
+          "securityAnswer" = $11,
+          "updatedAt" = CURRENT_TIMESTAMP
+        WHERE id = $12
+        RETURNING id
         `,
         [
           name.trim(),
@@ -1101,9 +1115,9 @@ app.delete(
     try {
       const result = await pool.query(
         `
-          DELETE FROM people
-          WHERE id = $1
-          RETURNING id
+        DELETE FROM people
+        WHERE id = $1
+        RETURNING id
         `,
         [req.params.id]
       );
@@ -1149,7 +1163,6 @@ app.post("/api/admin/login", async (req, res) => {
 
     const validUsername = process.env.ADMIN_USERNAME || "admin";
 
-    // 1. Kiểm tra tên đăng nhập
     if (username !== validUsername) {
       return res.status(401).json({
         success: false,
@@ -1157,7 +1170,6 @@ app.post("/api/admin/login", async (req, res) => {
       });
     }
 
-    // 2. Đảm bảo bảng lưu mật khẩu tồn tại trong DB
     await pool.query(`
       CREATE TABLE IF NOT EXISTS admin_passwords (
           id SERIAL PRIMARY KEY,
@@ -1166,7 +1178,6 @@ app.post("/api/admin/login", async (req, res) => {
       )
     `);
 
-    // 3. Lấy mật khẩu mới nhất từ Database
     let passResult = await pool.query(
       `SELECT id, password_hash FROM admin_passwords ORDER BY id DESC LIMIT 1`
     );
@@ -1174,10 +1185,9 @@ app.post("/api/admin/login", async (req, res) => {
     let currentPassHash;
 
     if (passResult.rowCount === 0) {
-      // Nếu DB chưa có bản ghi nào, tự động tạo mật khẩu mặc định là 'admin123' (hoặc dùng biến môi trường cũ nếu có)
       const defaultPassword = process.env.ADMIN_PASSWORD || "admin123";
       currentPassHash = await bcrypt.hash(defaultPassword, 10);
-      
+
       await pool.query(
         `INSERT INTO admin_passwords (password_hash) VALUES ($1)`,
         [currentPassHash]
@@ -1186,7 +1196,6 @@ app.post("/api/admin/login", async (req, res) => {
       currentPassHash = passResult.rows[0].password_hash;
     }
 
-    // 4. So khớp mật khẩu nhập vào với mã hóa trong DB bằng bcryptjs
     const isMatch = await bcrypt.compare(password, currentPassHash);
 
     if (!isMatch) {
@@ -1203,7 +1212,6 @@ app.post("/api/admin/login", async (req, res) => {
       });
     }
 
-    // 5. Cấp Token khi đăng nhập thành công
     const token = jwt.sign(
       {
         role: "admin",
@@ -1220,7 +1228,6 @@ app.post("/api/admin/login", async (req, res) => {
       message: "Đăng nhập thành công.",
       token,
     });
-
   } catch (error) {
     console.error("Lỗi đăng nhập:", error);
     return res.status(500).json({
@@ -1238,18 +1245,16 @@ app.post(
   "/api/people/public/:publicId/verify-album",
   async (req, res) => {
     try {
-      const answer = normalizeSecurityAnswer(
-        req.body.answer
-      );
+      const answer = normalizeSecurityAnswer(req.body.answer);
 
       const result = await pool.query(
         `
-          SELECT
-            album,
-            "securityQuestion",
-            "securityAnswer"
-          FROM people
-          WHERE "publicId" = $1
+        SELECT
+          album,
+          "securityQuestion",
+          "securityAnswer"
+        FROM people
+        WHERE "publicId" = $1
         `,
         [req.params.publicId]
       );
@@ -1327,17 +1332,16 @@ app.post(
   "/api/people/:id/verify-album",
   async (req, res) => {
     try {
-      const answer =
-        normalizeSecurityAnswer(req.body.answer);
+      const answer = normalizeSecurityAnswer(req.body.answer);
 
       const result = await pool.query(
         `
-          SELECT
-            album,
-            "securityQuestion",
-            "securityAnswer"
-          FROM people
-          WHERE id = $1
+        SELECT
+          album,
+          "securityQuestion",
+          "securityAnswer"
+        FROM people
+        WHERE id = $1
         `,
         [req.params.id]
       );
@@ -1358,7 +1362,6 @@ app.post(
         });
       }
 
-      // Không có câu hỏi thì mở album luôn
       if (!person.securityQuestion) {
         return res.json({
           success: true,
@@ -1476,13 +1479,10 @@ app.get(
 
       const formatDate = (value) => {
         if (!value) return "";
-
         const date = new Date(value);
-
         if (Number.isNaN(date.getTime())) {
           return value;
         }
-
         return date.toLocaleDateString("vi-VN");
       };
 
@@ -1572,7 +1572,6 @@ app.post("/api/visits", async (req, res) => {
   try {
     await client.query("BEGIN");
 
-    // Tăng tổng lượt truy cập
     const totalResult = await client.query(`
       INSERT INTO website_stats (id, visits)
       VALUES (1, 1)
@@ -1582,7 +1581,6 @@ app.post("/api/visits", async (req, res) => {
       RETURNING visits
     `);
 
-    // Tăng lượt truy cập của ngày hiện tại
     await client.query(`
       INSERT INTO website_visit_daily (visit_date, visits)
       VALUES (
@@ -1624,30 +1622,30 @@ app.get(
       const daysValue = Number(req.query.days);
       const days =
         Number.isInteger(daysValue) &&
-          daysValue >= 7 &&
-          daysValue <= 365
+        daysValue >= 7 &&
+        daysValue <= 365
           ? daysValue
           : 30;
 
       const result = await pool.query(
         `
-          WITH date_range AS (
-            SELECT generate_series(
-              (
-                (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date
-                - ($1::integer - 1)
-              ),
-              (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date,
-              INTERVAL '1 day'
-            )::date AS visit_date
-          )
-          SELECT
-            TO_CHAR(date_range.visit_date, 'YYYY-MM-DD') AS date,
-            COALESCE(website_visit_daily.visits, 0)::integer AS visits
-          FROM date_range
-          LEFT JOIN website_visit_daily
-            ON website_visit_daily.visit_date = date_range.visit_date
-          ORDER BY date_range.visit_date ASC
+        WITH date_range AS (
+          SELECT generate_series(
+            (
+              (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date
+              - ($1::integer - 1)
+            ),
+            (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date,
+            INTERVAL '1 day'
+          )::date AS visit_date
+        )
+        SELECT
+          TO_CHAR(date_range.visit_date, 'YYYY-MM-DD') AS date,
+          COALESCE(website_visit_daily.visits, 0)::integer AS visits
+        FROM date_range
+        LEFT JOIN website_visit_daily
+          ON website_visit_daily.visit_date = date_range.visit_date
+        ORDER BY date_range.visit_date ASC
         `,
         [days]
       );
@@ -1694,7 +1692,7 @@ app.get("/api/visits", async (req, res) => {
 });
 
 /* ==========================
-   API ghi nhận số lượt truy cập album
+   API ghi nhận số lượt truy cập album (Kèm IP & Vị trí GeoIP)
 ========================== */
 
 app.post(
@@ -1705,667 +1703,292 @@ app.post(
     try {
       const { publicId } = req.params;
 
-      /*
-       * ========================================
-       * 1. USER AGENT + CLIENT HINTS
-       * ========================================
-       */
+      /* 0. IP & Vị trí */
+      const clientIp = getClientIp(req);
+      const clientLocation = getIpLocation(clientIp);
 
-      const userAgent =
-        req.headers["user-agent"] || "";
-
+      /* 1. User Agent & Hints */
+      const userAgent = req.headers["user-agent"] || "";
       const clientHints =
-        req.body?.clientHints &&
-          typeof req.body.clientHints === "object"
+        req.body?.clientHints && typeof req.body.clientHints === "object"
           ? req.body.clientHints
           : {};
 
-      /*
-       * ========================================
-       * 2. DEVICE DETECTOR
-       * ========================================
-       */
+      /* 2. Device Detector */
+      const detected = deviceDetector.parse(userAgent);
+      const browserInfo = detected?.client || {};
+      const deviceInfo = detected?.device || {};
+      const osInfo = detected?.os || {};
 
-      const detected =
-        deviceDetector.parse(userAgent);
-
-      const browserInfo =
-        detected?.client || {};
-
-      const deviceInfo =
-        detected?.device || {};
-
-      const osInfo =
-        detected?.os || {};
-
-      /*
-       * ========================================
-       * 3. TRÌNH DUYỆT
-       * ========================================
-       */
-
-      const browser =
-        browserInfo.name ||
-        "Không xác định";
-
+      /* 3. Browser */
+      const browser = browserInfo.name || "Không xác định";
       const browserVersion =
-        clientHints.uaFullVersion ||
-        browserInfo.version ||
-        "";
+        clientHints.uaFullVersion || browserInfo.version || "";
 
-      /*
-       * ========================================
-       * 4. LOẠI THIẾT BỊ
-       * ========================================
-       */
-
+      /* 4. Device Type */
       let deviceType =
         deviceInfo.type ||
-        (
-          clientHints.mobile === true
-            ? "smartphone"
-            : "desktop"
-        );
+        (clientHints.mobile === true ? "smartphone" : "desktop");
 
-      deviceType =
-        String(deviceType || "")
-          .trim()
-          .toLowerCase();
+      deviceType = String(deviceType || "").trim().toLowerCase();
+      const deviceVendor = String(deviceInfo.brand || "").trim();
+      const deviceModel = String(
+        deviceInfo.model || clientHints.model || ""
+      ).trim();
 
-      /*
-       * device-detector-js dùng brand
-       * thay vì vendor.
-       */
-      const deviceVendor =
-        String(
-          deviceInfo.brand || ""
-        ).trim();
+      /* 5. OS */
+      const os = osInfo.name || clientHints.platform || "Không xác định";
+      const osVersion = osInfo.version || clientHints.platformVersion || "";
 
-      /*
-       * Ưu tiên model mà device-detector-js
-       * nhận diện được.
-       *
-       * Nếu detector không nhận ra thì mới
-       * dùng model từ Client Hints.
-       */
-      const deviceModel =
-        String(
-          deviceInfo.model ||
-          clientHints.model ||
-          ""
-        ).trim();
+      /* 6. CPU & Bitness */
+      const cpu = clientHints.architecture || "";
+      const bitness = clientHints.bitness || "";
 
-      /*
-       * ========================================
-       * 5. HỆ ĐIỀU HÀNH
-       * ========================================
-       */
-
-      const os =
-        osInfo.name ||
-        clientHints.platform ||
-        "Không xác định";
-
-      const osVersion =
-        osInfo.version ||
-        clientHints.platformVersion ||
-        "";
-
-      /*
-       * ========================================
-       * 6. CPU
-       * ========================================
-       */
-
-      const cpu =
-        clientHints.architecture ||
-        "";
-
-      const bitness =
-        clientHints.bitness ||
-        "";
-
-      /*
-       * ========================================
-       * 7. LOẠI THIẾT BỊ TIẾNG VIỆT
-       * ========================================
-       */
-
+      /* 7. Loại thiết bị tiếng Việt */
       let deviceTypeText;
-
       switch (deviceType) {
         case "smartphone":
         case "mobile":
-          deviceTypeText =
-            "Điện thoại";
+          deviceTypeText = "Điện thoại";
           break;
-
         case "tablet":
-          deviceTypeText =
-            "Máy tính bảng";
+          deviceTypeText = "Máy tính bảng";
           break;
-
         case "smarttv":
         case "tv":
-          deviceTypeText =
-            "Smart TV";
+          deviceTypeText = "Smart TV";
           break;
-
         case "wearable":
-          deviceTypeText =
-            "Thiết bị đeo";
+          deviceTypeText = "Thiết bị đeo";
           break;
-
         case "console":
-          deviceTypeText =
-            "Máy chơi game";
+          deviceTypeText = "Máy chơi game";
           break;
-
         case "car browser":
-          deviceTypeText =
-            "Màn hình ô tô";
+          deviceTypeText = "Màn hình ô tô";
           break;
-
         case "camera":
-          deviceTypeText =
-            "Máy ảnh";
+          deviceTypeText = "Máy ảnh";
           break;
-
         case "portable media player":
-          deviceTypeText =
-            "Thiết bị đa phương tiện";
+          deviceTypeText = "Thiết bị đa phương tiện";
           break;
-
         case "feature phone":
-          deviceTypeText =
-            "Điện thoại phổ thông";
+          deviceTypeText = "Điện thoại phổ thông";
           break;
-
         default:
-          deviceTypeText =
-            "Máy tính";
+          deviceTypeText = "Máy tính";
       }
 
-      /*
-       * ========================================
-       * 8. TẠO TÊN THIẾT BỊ
-       * ========================================
-       */
-
+      /* 8. Tên thiết bị */
       let deviceName = "";
-
-      if (
-        deviceVendor &&
-        deviceModel
-      ) {
-        /*
-         * Nếu model đã chứa tên hãng thì không
-         * ghép hãng lần nữa.
-         *
-         * Ví dụ:
-         * Samsung Galaxy S24 Ultra
-         */
-        if (
-          deviceModel
-            .toLowerCase()
-            .includes(
-              deviceVendor.toLowerCase()
-            )
-        ) {
-          deviceName =
-            deviceModel;
+      if (deviceVendor && deviceModel) {
+        if (deviceModel.toLowerCase().includes(deviceVendor.toLowerCase())) {
+          deviceName = deviceModel;
         } else {
-          deviceName =
-            `${deviceVendor} ${deviceModel}`;
+          deviceName = `${deviceVendor} ${deviceModel}`;
         }
       } else if (deviceModel) {
-        /*
-         * Pixel thường có model:
-         * Pixel 7
-         * Pixel 8 Pro
-         */
-        if (
-          /^pixel/i.test(deviceModel)
-        ) {
-          deviceName =
-            `Google ${deviceModel}`;
+        if (/^pixel/i.test(deviceModel)) {
+          deviceName = `Google ${deviceModel}`;
         } else {
-          deviceName =
-            deviceModel;
+          deviceName = deviceModel;
         }
       } else if (deviceVendor) {
-        deviceName =
-          deviceVendor;
-      } else if (
-        /iphone/i.test(userAgent)
-      ) {
-        deviceName =
-          "Apple iPhone";
-      } else if (
-        /ipad/i.test(userAgent)
-      ) {
-        deviceName =
-          "Apple iPad";
-      } else if (
-        deviceType === "desktop"
-      ) {
-        deviceName =
-          `${os} PC`;
+        deviceName = deviceVendor;
+      } else if (/iphone/i.test(userAgent)) {
+        deviceName = "Apple iPhone";
+      } else if (/ipad/i.test(userAgent)) {
+        deviceName = "Apple iPad";
+      } else if (deviceType === "desktop") {
+        deviceName = `${os} PC`;
       } else {
-        deviceName =
-          deviceTypeText;
+        deviceName = deviceTypeText;
       }
 
-      /*
-       * ========================================
-       * 9. DỮ LIỆU CHI TIẾT LƯỢT MỞ
-       * ========================================
-       */
-
+      /* 9. Chi tiết phiên xem */
       const viewDetail = {
+        ipAddress: clientIp,
+        location: clientLocation,
         browser,
         browserVersion,
-
         deviceType,
         deviceTypeText,
-
         deviceVendor,
         deviceModel,
         deviceName,
-
         os,
         osVersion,
-
         cpu,
         bitness,
-
         clientHints,
-
         userAgent,
       };
 
-      /*
-       * Debug.
-       * Sau khi test ổn có thể xóa.
-       */
-      console.log(
-        "========== ALBUM DEVICE =========="
-      );
-
-      console.log(
-        "DEVICE DETECTOR:",
-        detected
-      );
-
-      console.log(
-        "CLIENT HINTS:",
-        clientHints
-      );
-
-      console.log(
-        "FINAL DEVICE:",
-        viewDetail
-      );
-
-      console.log(
-        "=================================="
-      );
-
-      /*
-       * ========================================
-       * 10. BẮT ĐẦU TRANSACTION
-       * ========================================
-       */
-
       await client.query("BEGIN");
 
-      /*
-       * ========================================
-       * 11. TÌM ALBUM
-       * ========================================
-       */
+      /* 10. Tìm người */
+      const personResult = await client.query(
+        `
+        SELECT id, name, album, "albumViews"
+        FROM people
+        WHERE "publicId" = $1
+        LIMIT 1
+        `,
+        [publicId]
+      );
 
-      const personResult =
-        await client.query(
-          `
-            SELECT
-              id,
-              name,
-              album,
-              "albumViews"
-            FROM people
-            WHERE "publicId" = $1
-            LIMIT 1
-          `,
-          [publicId]
-        );
-
-      if (
-        personResult.rows.length === 0
-      ) {
-        await client.query(
-          "ROLLBACK"
-        );
-
+      if (personResult.rows.length === 0) {
+        await client.query("ROLLBACK");
         return res.status(404).json({
-          message:
-            "Không tìm thấy album.",
+          message: "Không tìm thấy album.",
         });
       }
 
-      const person =
-        personResult.rows[0];
+      const person = personResult.rows[0];
 
-      if (
-        !person.album ||
-        !String(
-          person.album
-        ).trim()
-      ) {
-        await client.query(
-          "ROLLBACK"
-        );
-
+      if (!person.album || !String(person.album).trim()) {
+        await client.query("ROLLBACK");
         return res.status(400).json({
-          message:
-            "Người này chưa có liên kết album.",
+          message: "Người này chưa có liên kết album.",
         });
       }
 
-      /*
-       * ========================================
-       * 12. TĂNG TỔNG LƯỢT XEM CỦA ALBUM
-       * ========================================
-       */
+      /* 11. Tăng albumViews */
+      const updatedPerson = await client.query(
+        `
+        UPDATE people
+        SET "albumViews" = COALESCE("albumViews", 0) + 1
+        WHERE id = $1
+        RETURNING "albumViews"
+        `,
+        [person.id]
+      );
 
-      const updatedPerson =
-        await client.query(
-          `
-            UPDATE people
-
-            SET "albumViews" =
-              COALESCE(
-                "albumViews",
-                0
-              ) + 1
-
-            WHERE id = $1
-
-            RETURNING
-              "albumViews"
-          `,
-          [person.id]
-        );
-
-      /*
-       * ========================================
-       * 13. TĂNG TỔNG LƯỢT MỞ TRONG NGÀY
-       * ========================================
-       */
-
+      /* 12. Tăng view theo ngày chung */
       await client.query(`
-        INSERT INTO album_view_daily (
-          view_date,
-          views
-        )
-
-        VALUES (
-          (
-            NOW()
-            AT TIME ZONE
-              'Asia/Ho_Chi_Minh'
-          )::date,
-
-          1
-        )
-
-        ON CONFLICT (
-          view_date
-        )
-
-        DO UPDATE SET
-
-          views =
-            album_view_daily.views + 1
+        INSERT INTO album_view_daily (view_date, views)
+        VALUES ((NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh')::date, 1)
+        ON CONFLICT (view_date)
+        DO UPDATE SET views = album_view_daily.views + 1
       `);
 
-      /*
-       * ========================================
-       * 14. LƯU CHI TIẾT THEO ALBUM
-       * ========================================
-       */
-
+      /* 13. Lưu chi tiết album kèm IP và Location */
       await client.query(
         `
-          INSERT INTO album_view_by_person_daily (
-            person_id,
-            view_date,
-            views,
-            last_viewed_at,
-            view_times,
-            view_details
-          )
-
-          VALUES (
-            $1,
-
-            (
-              NOW()
-              AT TIME ZONE
-                'Asia/Ho_Chi_Minh'
-            )::date,
-
-            1,
-
-            NOW(),
-
-            ARRAY[
-              NOW()
-            ]::timestamptz[],
-
-            jsonb_build_array(
-              jsonb_build_object(
-
-                'viewedAt',
-                NOW(),
-
-                'browser',
-                $2::text,
-
-                'browserVersion',
-                $3::text,
-
-                'deviceType',
-                $4::text,
-
-                'deviceTypeText',
-                $5::text,
-
-                'deviceVendor',
-                $6::text,
-
-                'deviceModel',
-                $7::text,
-
-                'deviceName',
-                $8::text,
-
-                'os',
-                $9::text,
-
-                'osVersion',
-                $10::text,
-
-                'cpu',
-                $11::text,
-
-                'bitness',
-                $12::text,
-
-                'clientHints',
-                $13::jsonb,
-
-                'userAgent',
-                $14::text
-              )
+        INSERT INTO album_view_by_person_daily (
+          person_id,
+          view_date,
+          views,
+          last_viewed_at,
+          view_times,
+          ip_address,
+          view_details
+        )
+        VALUES (
+          $1,
+          (NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh')::date,
+          1,
+          NOW(),
+          ARRAY[NOW()]::timestamptz[],
+          $15::text,
+          jsonb_build_array(
+            jsonb_build_object(
+              'viewedAt', NOW(),
+              'ipAddress', $15::text,
+              'location', $16::text,
+              'browser', $2::text,
+              'browserVersion', $3::text,
+              'deviceType', $4::text,
+              'deviceTypeText', $5::text,
+              'deviceVendor', $6::text,
+              'deviceModel', $7::text,
+              'deviceName', $8::text,
+              'os', $9::text,
+              'osVersion', $10::text,
+              'cpu', $11::text,
+              'bitness', $12::text,
+              'clientHints', $13::jsonb,
+              'userAgent', $14::text
             )
           )
-
-          ON CONFLICT (
-            person_id,
-            view_date
+        )
+        ON CONFLICT (person_id, view_date)
+        DO UPDATE SET
+          views = album_view_by_person_daily.views + 1,
+          last_viewed_at = NOW(),
+          ip_address = $15::text,
+          view_times = array_append(
+            COALESCE(album_view_by_person_daily.view_times, '{}'::timestamptz[]),
+            NOW()
+          ),
+          view_details = COALESCE(album_view_by_person_daily.view_details, '[]'::jsonb)
+          ||
+          jsonb_build_array(
+            jsonb_build_object(
+              'viewedAt', NOW(),
+              'ipAddress', $15::text,
+              'location', $16::text,
+              'browser', $2::text,
+              'browserVersion', $3::text,
+              'deviceType', $4::text,
+              'deviceTypeText', $5::text,
+              'deviceVendor', $6::text,
+              'deviceModel', $7::text,
+              'deviceName', $8::text,
+              'os', $9::text,
+              'osVersion', $10::text,
+              'cpu', $11::text,
+              'bitness', $12::text,
+              'clientHints', $13::jsonb,
+              'userAgent', $14::text
+            )
           )
-
-          DO UPDATE SET
-
-            views =
-              album_view_by_person_daily.views
-              + 1,
-
-            last_viewed_at =
-              NOW(),
-
-            view_times =
-              array_append(
-                COALESCE(
-                  album_view_by_person_daily.view_times,
-                  '{}'::timestamptz[]
-                ),
-                NOW()
-              ),
-
-            view_details =
-              COALESCE(
-                album_view_by_person_daily.view_details,
-                '[]'::jsonb
-              )
-
-              ||
-
-              jsonb_build_array(
-                jsonb_build_object(
-
-                  'viewedAt',
-                  NOW(),
-
-                  'browser',
-                  $2::text,
-
-                  'browserVersion',
-                  $3::text,
-
-                  'deviceType',
-                  $4::text,
-
-                  'deviceTypeText',
-                  $5::text,
-
-                  'deviceVendor',
-                  $6::text,
-
-                  'deviceModel',
-                  $7::text,
-
-                  'deviceName',
-                  $8::text,
-
-                  'os',
-                  $9::text,
-
-                  'osVersion',
-                  $10::text,
-
-                  'cpu',
-                  $11::text,
-
-                  'bitness',
-                  $12::text,
-
-                  'clientHints',
-                  $13::jsonb,
-
-                  'userAgent',
-                  $14::text
-                )
-              )
         `,
         [
           person.id,
-
           viewDetail.browser,
-
           viewDetail.browserVersion,
-
           viewDetail.deviceType,
-
           viewDetail.deviceTypeText,
-
           viewDetail.deviceVendor,
-
           viewDetail.deviceModel,
-
           viewDetail.deviceName,
-
           viewDetail.os,
-
           viewDetail.osVersion,
-
           viewDetail.cpu,
-
           viewDetail.bitness,
-
-          JSON.stringify(
-            viewDetail.clientHints
-          ),
-
+          JSON.stringify(viewDetail.clientHints),
           viewDetail.userAgent,
+          clientIp,       // $15
+          clientLocation, // $16
         ]
       );
 
-      /*
-       * ========================================
-       * 15. COMMIT
-       * ========================================
-       */
-
-      await client.query(
-        "COMMIT"
-      );
+      await client.query("COMMIT");
 
       return res.json({
-        message:
-          "Đã ghi nhận lượt xem album.",
-
-        albumViews: Number(
-          updatedPerson.rows[0]
-            ?.albumViews || 0
-        ),
+        message: "Đã ghi nhận lượt xem album.",
+        albumViews: Number(updatedPerson.rows[0]?.albumViews || 0),
       });
     } catch (error) {
       try {
-        await client.query(
-          "ROLLBACK"
-        );
+        await client.query("ROLLBACK");
       } catch {
-        // Bỏ qua lỗi rollback.
+        // Bỏ qua lỗi rollback
       }
 
-      console.error(
-        "Lỗi ghi nhận lượt xem album:",
-        error
-      );
+      console.error("Lỗi ghi nhận lượt xem album:", error);
 
-      return res
-        .status(500)
-        .json({
-          message:
-            "Không thể ghi nhận lượt xem album.",
-        });
+      return res.status(500).json({
+        message: "Không thể ghi nhận lượt xem album.",
+      });
     } finally {
       client.release();
     }
   }
 );
+
 /* ==========================
    API lấy số lượt truy cập album
 ========================== */
@@ -2379,30 +2002,30 @@ app.get(
 
       const days =
         Number.isInteger(requestedDays) &&
-          requestedDays >= 7 &&
-          requestedDays <= 365
+        requestedDays >= 7 &&
+        requestedDays <= 365
           ? requestedDays
           : 30;
 
       const result = await pool.query(
         `
-          WITH date_range AS (
-            SELECT generate_series(
-              (
-                (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date
-                - ($1::integer - 1)
-              ),
-              (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date,
-              INTERVAL '1 day'
-            )::date AS view_date
-          )
-          SELECT
-            TO_CHAR(date_range.view_date, 'YYYY-MM-DD') AS date,
-            COALESCE(album_view_daily.views, 0)::integer AS views
-          FROM date_range
-          LEFT JOIN album_view_daily
-            ON album_view_daily.view_date = date_range.view_date
-          ORDER BY date_range.view_date ASC
+        WITH date_range AS (
+          SELECT generate_series(
+            (
+              (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date
+              - ($1::integer - 1)
+            ),
+            (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date,
+            INTERVAL '1 day'
+          )::date AS view_date
+        )
+        SELECT
+          TO_CHAR(date_range.view_date, 'YYYY-MM-DD') AS date,
+          COALESCE(album_view_daily.views, 0)::integer AS views
+        FROM date_range
+        LEFT JOIN album_view_daily
+          ON album_view_daily.view_date = date_range.view_date
+        ORDER BY date_range.view_date ASC
         `,
         [days]
       );
@@ -2425,24 +2048,13 @@ app.get(
 );
 
 /* ==========================
-   EVENTS
-   Sự kiện thủ công
+   EVENTS - Sự kiện thủ công
 ========================== */
 
-/*
- * GET /api/events
- * Public
- * Lấy toàn bộ sự kiện
- */
 app.get("/api/events", async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT
-        id,
-        day,
-        month,
-        title,
-        icon
+      SELECT id, day, month, title, icon
       FROM events
       ORDER BY month ASC, day ASC, id ASC
     `);
@@ -2457,33 +2069,18 @@ app.get("/api/events", async (req, res) => {
   }
 });
 
-
-/*
- * GET /api/events/today
- * Public
- * Lấy sự kiện của ngày hôm nay
- */
 app.get("/api/events/today", async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT
-        id,
-        day,
-        month,
-        title,
-        icon
+      SELECT id, day, month, title, icon
       FROM events
       WHERE
         day = EXTRACT(
-          DAY FROM (
-            CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh'
-          )
+          DAY FROM (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')
         )::integer
         AND
         month = EXTRACT(
-          MONTH FROM (
-            CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh'
-          )
+          MONTH FROM (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')
         )::integer
       ORDER BY id ASC
     `);
@@ -2498,33 +2095,20 @@ app.get("/api/events/today", async (req, res) => {
   }
 });
 
-
-/*
- * GET /api/admin/events
- * Admin
- */
 app.get(
   "/api/admin/events",
   verifyAdminToken,
   async (req, res) => {
     try {
       const result = await pool.query(`
-        SELECT
-          id,
-          day,
-          month,
-          title,
-          icon
+        SELECT id, day, month, title, icon
         FROM events
         ORDER BY month ASC, day ASC, id ASC
       `);
 
       return res.json(result.rows);
     } catch (error) {
-      console.error(
-        "Lỗi lấy danh sách sự kiện admin:",
-        error
-      );
+      console.error("Lỗi lấy danh sách sự kiện admin:", error);
 
       return res.status(500).json({
         message: "Không thể tải danh sách sự kiện.",
@@ -2533,11 +2117,6 @@ app.get(
   }
 );
 
-
-/*
- * POST /api/admin/events
- * Thêm sự kiện
- */
 app.post(
   "/api/admin/events",
   verifyAdminToken,
@@ -2554,11 +2133,7 @@ app.post(
         });
       }
 
-      if (
-        !Number.isInteger(month) ||
-        month < 1 ||
-        month > 12
-      ) {
+      if (!Number.isInteger(month) || month < 1 || month > 12) {
         return res.status(400).json({
           message: "Tháng không hợp lệ.",
         });
@@ -2572,19 +2147,9 @@ app.post(
 
       const result = await pool.query(
         `
-          INSERT INTO events (
-            day,
-            month,
-            title,
-            icon
-          )
-          VALUES ($1, $2, $3, $4)
-          RETURNING
-            id,
-            day,
-            month,
-            title,
-            icon
+        INSERT INTO events (day, month, title, icon)
+        VALUES ($1, $2, $3, $4)
+        RETURNING id, day, month, title, icon
         `,
         [day, month, title, icon || "📅"]
       );
@@ -2603,11 +2168,6 @@ app.post(
   }
 );
 
-
-/*
- * PUT /api/admin/events/:id
- * Sửa sự kiện
- */
 app.put(
   "/api/admin/events/:id",
   verifyAdminToken,
@@ -2631,11 +2191,7 @@ app.put(
         });
       }
 
-      if (
-        !Number.isInteger(month) ||
-        month < 1 ||
-        month > 12
-      ) {
+      if (!Number.isInteger(month) || month < 1 || month > 12) {
         return res.status(400).json({
           message: "Tháng không hợp lệ.",
         });
@@ -2649,20 +2205,15 @@ app.put(
 
       const result = await pool.query(
         `
-          UPDATE events
-          SET
-            day = $1,
-            month = $2,
-            title = $3,
-            icon = $4,
-            updated_at = CURRENT_TIMESTAMP
-          WHERE id = $5
-          RETURNING
-            id,
-            day,
-            month,
-            title,
-            icon
+        UPDATE events
+        SET
+          day = $1,
+          month = $2,
+          title = $3,
+          icon = $4,
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = $5
+        RETURNING id, day, month, title, icon
         `,
         [day, month, title, icon || "📅", id]
       );
@@ -2687,11 +2238,6 @@ app.put(
   }
 );
 
-
-/*
- * DELETE /api/admin/events/:id
- * Xóa sự kiện
- */
 app.delete(
   "/api/admin/events/:id",
   verifyAdminToken,
@@ -2707,9 +2253,9 @@ app.delete(
 
       const result = await pool.query(
         `
-          DELETE FROM events
-          WHERE id = $1
-          RETURNING id
+        DELETE FROM events
+        WHERE id = $1
+        RETURNING id
         `,
         [id]
       );
@@ -2734,7 +2280,7 @@ app.delete(
 );
 
 /* ==========================
-   API lấy lịch sử xem của 1 album
+   API lấy lịch sử xem của 1 album (Kèm IP)
 ========================== */
 
 app.get(
@@ -2752,15 +2298,16 @@ app.get(
 
       const result = await pool.query(
         `
-          SELECT
-            view_date AS date,
-            views,
-            last_viewed_at AS "lastViewedAt",
-            view_times AS "viewTimes",
-            view_details AS "viewDetails"
-          FROM album_view_by_person_daily
-          WHERE person_id = $1
-          ORDER BY view_date DESC
+        SELECT
+          view_date AS date,
+          views,
+          last_viewed_at AS "lastViewedAt",
+          ip_address AS "ipAddress",
+          view_times AS "viewTimes",
+          view_details AS "viewDetails"
+        FROM album_view_by_person_daily
+        WHERE person_id = $1
+        ORDER BY view_date DESC
         `,
         [personId]
       );
@@ -2769,12 +2316,9 @@ app.get(
         date: item.date,
         views: Number(item.views) || 0,
         lastViewedAt: item.lastViewedAt || null,
-        viewTimes: Array.isArray(item.viewTimes)
-          ? item.viewTimes
-          : [],
-        viewDetails: Array.isArray(item.viewDetails)
-          ? item.viewDetails
-          : [],
+        ipAddress: item.ipAddress || null,
+        viewTimes: Array.isArray(item.viewTimes) ? item.viewTimes : [],
+        viewDetails: Array.isArray(item.viewDetails) ? item.viewDetails : [],
       }));
 
       const totalViews = data.reduce(
@@ -2788,10 +2332,7 @@ app.get(
         data,
       });
     } catch (error) {
-      console.error(
-        "Lỗi lấy lịch sử xem album:",
-        error
-      );
+      console.error("Lỗi lấy lịch sử xem album:", error);
 
       return res.status(500).json({
         message: "Không thể tải lịch sử xem album.",
@@ -2806,7 +2347,6 @@ app.get(
 
 app.post("/api/graduation-rsvp", async (req, res) => {
   try {
-    // Nhận cả invitationId (từ frontend) hoặc invitation_id
     const invitationId = String(
       req.body?.invitationId || req.body?.invitation_id || "graduation-01"
     ).trim();
@@ -2816,9 +2356,6 @@ app.post("/api/graduation-rsvp", async (req, res) => {
     const guests = String(req.body?.guests || "alone").trim();
     const wishes = String(req.body?.wishes || "").trim();
 
-    /* ------------------------------------------------------
-       KIỂM TRA DỮ LIỆU
-    ------------------------------------------------------ */
     if (!invitationId) {
       return res.status(400).json({
         success: false,
@@ -2847,9 +2384,6 @@ app.post("/api/graduation-rsvp", async (req, res) => {
       });
     }
 
-    /* ------------------------------------------------------
-       GIỚI HẠN DỮ LIỆU
-    ------------------------------------------------------ */
     if (invitationId.length > 100) {
       return res.status(400).json({
         success: false,
@@ -2871,41 +2405,31 @@ app.post("/api/graduation-rsvp", async (req, res) => {
       });
     }
 
-    /* ------------------------------------------------------
-       IP + USER AGENT
-    ------------------------------------------------------ */
-    const ipAddress =
-      req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
-      req.socket?.remoteAddress ||
-      null;
-
+    const ipAddress = getClientIp(req);
     const userAgent = req.headers["user-agent"] || null;
 
-    /* ------------------------------------------------------
-       LƯU DATABASE
-    ------------------------------------------------------ */
     const result = await pool.query(
       `
-        INSERT INTO graduation_rsvps (
-          invitation_id,
-          name,
-          attendance,
-          guests,
-          wishes,
-          ip_address,
-          user_agent
-        )
-        VALUES (
-          $1, $2, $3, $4, $5, $6, $7
-        )
-        RETURNING
-          id,
-          invitation_id AS "invitationId",
-          name,
-          attendance,
-          guests,
-          wishes,
-          submitted_at AS "submittedAt"
+      INSERT INTO graduation_rsvps (
+        invitation_id,
+        name,
+        attendance,
+        guests,
+        wishes,
+        ip_address,
+        user_agent
+      )
+      VALUES (
+        $1, $2, $3, $4, $5, $6, $7
+      )
+      RETURNING
+        id,
+        invitation_id AS "invitationId",
+        name,
+        attendance,
+        guests,
+        wishes,
+        submitted_at AS "submittedAt"
       `,
       [
         invitationId,
@@ -2939,7 +2463,6 @@ app.post("/api/graduation-rsvp", async (req, res) => {
 
 app.get("/api/admin/graduation-rsvps", async (req, res) => {
   try {
-    // Nhận cả invitationId hoặc invitation_id từ query
     const invitationId = String(
       req.query?.invitationId || req.query?.invitation_id || ""
     ).trim();
@@ -2985,8 +2508,6 @@ app.get("/api/admin/graduation-rsvps", async (req, res) => {
   }
 });
 
-
-
 /* ==========================================================
    3. API XÓA RSVP
 ========================================================== */
@@ -2997,11 +2518,6 @@ app.delete(
     try {
       const { id } = req.params;
 
-
-      /* ----------------------------------------------------
-         KIỂM TRA ID
-      ---------------------------------------------------- */
-
       if (!id || isNaN(Number(id))) {
         return res.status(400).json({
           success: false,
@@ -3009,20 +2525,14 @@ app.delete(
         });
       }
 
-
-      /* ----------------------------------------------------
-         XÓA
-      ---------------------------------------------------- */
-
       const deleteResult = await pool.query(
         `
-          DELETE FROM graduation_rsvps
-          WHERE id = $1
-          RETURNING id
+        DELETE FROM graduation_rsvps
+        WHERE id = $1
+        RETURNING id
         `,
         [id]
       );
-
 
       if (deleteResult.rowCount === 0) {
         return res.status(404).json({
@@ -3031,18 +2541,13 @@ app.delete(
         });
       }
 
-
       return res.status(200).json({
         success: true,
         message: "Đã xóa phản hồi thành công.",
         deletedId: deleteResult.rows[0].id,
       });
-
     } catch (error) {
-      console.error(
-        "Lỗi xóa xác nhận tham dự:",
-        error
-      );
+      console.error("Lỗi xóa xác nhận tham dự:", error);
 
       return res.status(500).json({
         success: false,
@@ -3074,7 +2579,6 @@ app.put("/api/admin/change-password", async (req, res) => {
       });
     }
 
-    // Đảm bảo bảng tồn tại trước khi truy vấn
     await pool.query(`
       CREATE TABLE IF NOT EXISTS admin_passwords (
           id SERIAL PRIMARY KEY,
@@ -3083,7 +2587,6 @@ app.put("/api/admin/change-password", async (req, res) => {
       )
     `);
 
-    // Lấy mật khẩu hiện tại
     let passResult = await pool.query(
       `SELECT id, password_hash FROM admin_passwords ORDER BY id DESC LIMIT 1`
     );
@@ -3092,10 +2595,9 @@ app.put("/api/admin/change-password", async (req, res) => {
     let recordId;
 
     if (passResult.rowCount === 0) {
-      // Nếu DB chưa có bản ghi nào, mặc định mật khẩu ban đầu là 'admin123'
       const defaultPassword = "admin123";
       currentPassHash = await bcrypt.hash(defaultPassword, 10);
-      
+
       const insertRes = await pool.query(
         `INSERT INTO admin_passwords (password_hash) VALUES ($1) RETURNING id, password_hash`,
         [currentPassHash]
@@ -3106,7 +2608,6 @@ app.put("/api/admin/change-password", async (req, res) => {
       currentPassHash = passResult.rows[0].password_hash;
     }
 
-    // So khớp mật khẩu cũ
     const isMatch = await bcrypt.compare(oldPassword, currentPassHash);
     if (!isMatch) {
       return res.status(400).json({
@@ -3115,7 +2616,6 @@ app.put("/api/admin/change-password", async (req, res) => {
       });
     }
 
-    // Mã hóa và cập nhật mật khẩu mới
     const newPasswordHash = await bcrypt.hash(newPassword, 10);
     await pool.query(
       `UPDATE admin_passwords SET password_hash = $1, updated_at = NOW() WHERE id = $2`,
@@ -3152,7 +2652,7 @@ app.use((error, req, res, next) => {
 });
 
 /* ==========================
-   API lấy album được xem hôm nay
+   API lấy album được xem hôm nay (Kèm IP)
 ========================== */
 
 app.get(
@@ -3160,137 +2660,73 @@ app.get(
   verifyAdminToken,
   async (req, res) => {
     try {
-      /*
-       * Nếu frontend không gửi date
-       * thì mặc định lấy ngày hôm nay.
-       */
-      const requestedDate =
-        String(req.query.date || "").trim();
+      const requestedDate = String(req.query.date || "").trim();
+      let selectedDate = requestedDate;
 
-      let selectedDate =
-        requestedDate;
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(selectedDate)) {
+        const todayResult = await pool.query(`
+          SELECT
+            TO_CHAR(
+              NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh',
+              'YYYY-MM-DD'
+            ) AS date
+        `);
 
-      /*
-       * Kiểm tra YYYY-MM-DD
-       */
-      if (
-        !/^\d{4}-\d{2}-\d{2}$/.test(
-          selectedDate
-        )
-      ) {
-        const todayResult =
-          await pool.query(`
-            SELECT
-              TO_CHAR(
-                NOW()
-                AT TIME ZONE 'Asia/Ho_Chi_Minh',
-                'YYYY-MM-DD'
-              ) AS date
-          `);
-
-        selectedDate =
-          todayResult.rows[0].date;
+        selectedDate = todayResult.rows[0].date;
       }
 
-      /*
-       * Lấy danh sách album được xem
-       * trong ngày được chọn.
-       */
-      const result =
-        await pool.query(
-          `
-            SELECT
-              p.id,
-              p."publicId",
-              p.name,
-              p.avatar,
-              p.birthday,
-              p.album,
-              p."albumViews",
+      const result = await pool.query(
+        `
+        SELECT
+          p.id,
+          p."publicId",
+          p.name,
+          p.avatar,
+          p.birthday,
+          p.album,
+          p."albumViews",
+          daily.views AS "todayViews",
+          daily.last_viewed_at AS "lastViewedAt",
+          daily.ip_address AS "ipAddress",
+          daily.view_times AS "viewTimes",
+          daily.view_details AS "viewDetails"
+        FROM album_view_by_person_daily daily
+        INNER JOIN people p
+          ON p.id = daily.person_id
+        WHERE
+          daily.view_date = $1::date
+        ORDER BY
+          daily.last_viewed_at DESC,
+          daily.views DESC,
+          p.name ASC
+        `,
+        [selectedDate]
+      );
 
-              daily.views
-                AS "todayViews",
+      const data = result.rows.map((person) => ({
+        ...person,
+        todayViews: Number(person.todayViews) || 0,
+        ipAddress: person.ipAddress || null,
+        viewTimes: Array.isArray(person.viewTimes) ? person.viewTimes : [],
+        viewDetails: Array.isArray(person.viewDetails) ? person.viewDetails : [],
+      }));
 
-              daily.last_viewed_at
-                AS "lastViewedAt",
-
-              daily.view_times
-                AS "viewTimes",
-
-              daily.view_details
-                AS "viewDetails"
-
-            FROM album_view_by_person_daily daily
-
-            INNER JOIN people p
-              ON p.id = daily.person_id
-
-            WHERE
-              daily.view_date = $1::date
-
-            ORDER BY
-              daily.last_viewed_at DESC,
-              daily.views DESC,
-              p.name ASC
-          `,
-          [selectedDate]
-        );
-
-      const data =
-        result.rows.map(
-          (person) => ({
-            ...person,
-
-            todayViews:
-              Number(
-                person.todayViews
-              ) || 0,
-
-            viewTimes:
-              Array.isArray(
-                person.viewTimes
-              )
-                ? person.viewTimes
-                : [],
-
-            viewDetails:
-              Array.isArray(
-                person.viewDetails
-              )
-                ? person.viewDetails
-                : [],
-          })
-        );
-
-      const totalViews =
-        data.reduce(
-          (total, person) =>
-            total +
-            Number(
-              person.todayViews || 0
-            ),
-          0
-        );
+      const totalViews = data.reduce(
+        (total, person) => total + Number(person.todayViews || 0),
+        0
+      );
 
       return res.json({
         date: selectedDate,
-
-        totalAlbums:
-          data.length,
-
+        totalAlbums: data.length,
         totalViews,
-
         data,
       });
     } catch (error) {
-      console.error(
-        "Lỗi lấy lịch sử xem album:",
-        error
-      );
+      console.error("Lỗi lấy lịch sử xem album:", error);
 
       return res.status(500).json({
-        message:
-          "Không thể tải lịch sử xem album.",
+        message: "Không thể tải lịch sử xem album.",
       });
     }
   }
@@ -3344,23 +2780,23 @@ app.put(
 
       const result = await pool.query(
         `
-          INSERT INTO announcements (
-            id,
-            content,
-            updated_at
-          )
-          VALUES (
-            1,
-            $1,
-            NOW()
-          )
-          ON CONFLICT (id)
-          DO UPDATE SET
-            content = EXCLUDED.content,
-            updated_at = NOW()
-          RETURNING
-            content,
-            updated_at AS "updatedAt"
+        INSERT INTO announcements (
+          id,
+          content,
+          updated_at
+        )
+        VALUES (
+          1,
+          $1,
+          NOW()
+        )
+        ON CONFLICT (id)
+        DO UPDATE SET
+          content = EXCLUDED.content,
+          updated_at = NOW()
+        RETURNING
+          content,
+          updated_at AS "updatedAt"
         `,
         [content || null]
       );

@@ -3,17 +3,13 @@ import {
   FaEye,
   FaClock,
   FaTimes,
-  FaChrome,
-  FaFirefoxBrowser,
-  FaSafari,
-  FaEdge,
   FaDesktop,
   FaMobileAlt,
   FaTabletAlt,
-  FaGlobe,
   FaCalendarAlt,
   FaChevronLeft,
   FaChevronRight,
+  FaMapMarkerAlt,
 } from "react-icons/fa";
 
 const FALLBACK_AVATAR = "https://placehold.co/160x160?text=Avatar";
@@ -93,21 +89,12 @@ function TodayAlbumViewsModal({
     onDateChange?.(`${nextYear}-${nextMonth}-${nextDay}`);
   };
 
-  const getBrowserIcon = (browser = "") => {
-    const value = String(browser).toLowerCase();
-    if (value.includes("chrome")) return <FaChrome className="text-emerald-600" />;
-    if (value.includes("firefox")) return <FaFirefoxBrowser className="text-lime-600" />;
-    if (value.includes("safari")) return <FaSafari className="text-teal-600" />;
-    if (value.includes("edge")) return <FaEdge className="text-green-600" />;
-    return <FaGlobe className="text-slate-500" />;
-  };
-
   const getDeviceIcon = (device = "") => {
     const value = String(device).toLowerCase();
     if (value.includes("mobile") || value.includes("smartphone"))
-      return <FaMobileAlt className="text-emerald-600" />;
-    if (value.includes("tablet")) return <FaTabletAlt className="text-lime-600" />;
-    return <FaDesktop className="text-green-600" />;
+      return <FaMobileAlt className="text-emerald-600 shrink-0" />;
+    if (value.includes("tablet")) return <FaTabletAlt className="text-lime-600 shrink-0" />;
+    return <FaDesktop className="text-green-600 shrink-0" />;
   };
 
   const handleImageError = (event) => {
@@ -125,15 +112,15 @@ function TodayAlbumViewsModal({
         onClick={(event) => event.stopPropagation()}
       >
         {/* HEADER */}
-        <div className="shrink-0 bg-gradient-to-r from-emerald-600 via-green-600 to-lime-600 px-4 py-4 text-white sm:px-6 sm:py-5">
+        <div className="shrink-0 bg-gradient-to-r from-emerald-600 via-green-600 to-lime-600 px-4 py-3.5 text-white sm:px-6 sm:py-5">
           <div className="flex items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 text-lg backdrop-blur sm:h-12 sm:w-12 sm:rounded-2xl sm:text-xl">
+            <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/15 text-base backdrop-blur sm:h-12 sm:w-12 sm:rounded-2xl sm:text-xl">
                 <FaEye />
               </div>
               <div className="min-w-0">
-                <h2 className="truncate text-lg font-black sm:text-2xl">
-                  Lịch sử xem album
+                <h2 className="truncate text-base font-black sm:text-2xl">
+                  Lịch sử xem album theo ngày
                 </h2>
               </div>
             </div>
@@ -141,7 +128,7 @@ function TodayAlbumViewsModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15 text-base text-white backdrop-blur transition hover:bg-white/25 active:scale-95 cursor-pointer sm:h-10 sm:w-10 sm:text-lg"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15 text-sm text-white backdrop-blur transition hover:bg-white/25 active:scale-95 cursor-pointer sm:h-10 sm:w-10 sm:text-lg"
               aria-label="Đóng"
             >
               <FaTimes />
@@ -150,17 +137,17 @@ function TodayAlbumViewsModal({
         </div>
 
         {/* BỘ CHỌN NGÀY */}
-        <div className="shrink-0 border-b border-emerald-100 bg-emerald-50/50 px-3 py-2.5 sm:px-6 sm:py-3">
+        <div className="shrink-0 border-b border-emerald-100 bg-emerald-50/50 px-3 py-2 sm:px-6 sm:py-3">
           <div className="flex items-center justify-between gap-2 sm:gap-4">
-            <div className="hidden min-w-0 items-center gap-3 sm:flex">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
-                <FaCalendarAlt className="text-base" />
+            <div className="hidden min-w-0 items-center gap-2.5 sm:flex">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
+                <FaCalendarAlt className="text-sm" />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
                   Ngày thống kê
                 </p>
-                <p className="mt-0.5 text-base font-black text-slate-800">
+                <p className="mt-0.5 text-sm font-black text-slate-800">
                   {formatDate(selectedDate)}
                 </p>
               </div>
@@ -170,20 +157,20 @@ function TodayAlbumViewsModal({
               <button
                 type="button"
                 onClick={() => changeDate(-1)}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-100 bg-white text-slate-500 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-600 active:scale-95 cursor-pointer"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-emerald-100 bg-white text-slate-500 shadow-xs transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-600 active:scale-95 cursor-pointer sm:h-10 sm:w-10"
                 title="Ngày trước"
               >
-                <FaChevronLeft className="text-sm" />
+                <FaChevronLeft className="text-xs sm:text-sm" />
               </button>
 
-              <div className="relative min-w-0 flex-1 sm:w-[170px] sm:flex-none">
-                <FaCalendarAlt className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-emerald-500 sm:left-3 sm:text-sm" />
+              <div className="relative min-w-0 flex-1 sm:w-[160px] sm:flex-none">
+                <FaCalendarAlt className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-emerald-500 sm:text-sm" />
                 <input
                   type="date"
                   value={selectedDate}
                   max={today}
                   onChange={(event) => onDateChange?.(event.target.value)}
-                  className="h-10 w-full min-w-0 rounded-xl border border-emerald-100 bg-white pl-8 pr-2 text-xs font-bold text-slate-700 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 sm:pl-9 sm:pr-3 sm:text-sm"
+                  className="h-9 w-full min-w-0 rounded-xl border border-emerald-100 bg-white pl-7 pr-2 text-xs font-bold text-slate-700 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 sm:h-10 sm:pl-8 sm:pr-3 sm:text-sm"
                 />
               </div>
 
@@ -191,17 +178,17 @@ function TodayAlbumViewsModal({
                 type="button"
                 onClick={() => changeDate(1)}
                 disabled={selectedDate >= today}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-100 bg-white text-slate-500 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-600 active:scale-95 disabled:cursor-not-allowed disabled:opacity-30 cursor-pointer"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-emerald-100 bg-white text-slate-500 shadow-xs transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-600 active:scale-95 disabled:cursor-not-allowed disabled:opacity-30 cursor-pointer sm:h-10 sm:w-10"
                 title="Ngày sau"
               >
-                <FaChevronRight className="text-sm" />
+                <FaChevronRight className="text-xs sm:text-sm" />
               </button>
 
               {selectedDate !== today && (
                 <button
                   type="button"
                   onClick={() => onDateChange?.(today)}
-                  className="h-10 shrink-0 whitespace-nowrap rounded-xl bg-emerald-600 px-3 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700 active:scale-95 cursor-pointer sm:px-4"
+                  className="h-9 shrink-0 whitespace-nowrap rounded-xl bg-emerald-600 px-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-emerald-700 active:scale-95 cursor-pointer sm:h-10 sm:px-4"
                 >
                   Hôm nay
                 </button>
@@ -211,54 +198,54 @@ function TodayAlbumViewsModal({
         </div>
 
         {/* TỔNG QUAN */}
-        <div className="grid shrink-0 grid-cols-2 gap-2 border-b border-emerald-100 bg-white px-3 py-2.5 sm:gap-3 sm:px-6 sm:py-3">
-          <div className="flex min-w-0 items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2 sm:gap-2.5 sm:rounded-2xl sm:px-4 sm:py-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600 sm:h-9 sm:w-9">
-              <FaEye className="text-sm sm:text-base" />
+        <div className="grid shrink-0 grid-cols-2 gap-2 border-b border-emerald-100 bg-white p-2.5 sm:gap-3 sm:px-6 sm:py-3.5">
+          <div className="flex min-w-0 items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50 px-2.5 py-2 sm:gap-2.5 sm:rounded-2xl sm:px-4 sm:py-2.5">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-xs text-emerald-600 sm:h-9 sm:w-9 sm:text-base">
+              <FaEye />
             </div>
-            <span className="truncate text-[10px] font-bold uppercase tracking-wide text-emerald-600 sm:text-xs">
+            <span className="truncate text-[9px] font-bold uppercase tracking-wide text-emerald-600 sm:text-xs">
               Album đã xem
             </span>
-            <span className="ml-auto shrink-0 text-base font-black leading-none text-emerald-700 sm:text-xl">
+            <span className="ml-auto shrink-0 text-sm font-black leading-none text-emerald-700 sm:text-xl">
               {Number(summary.totalAlbums || 0).toLocaleString("vi-VN")}
             </span>
           </div>
 
-          <div className="flex min-w-0 items-center gap-2 rounded-xl border border-lime-100 bg-lime-50 px-3 py-2 sm:gap-2.5 sm:rounded-2xl sm:px-4 sm:py-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-lime-100 text-lime-600 sm:h-9 sm:w-9">
-              <FaClock className="text-sm sm:text-base" />
+          <div className="flex min-w-0 items-center gap-2 rounded-xl border border-lime-100 bg-lime-50 px-2.5 py-2 sm:gap-2.5 sm:rounded-2xl sm:px-4 sm:py-2.5">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-lime-100 text-xs text-lime-600 sm:h-9 sm:w-9 sm:text-base">
+              <FaClock />
             </div>
-            <span className="truncate text-[10px] font-bold uppercase tracking-wide text-lime-600 sm:text-xs">
+            <span className="truncate text-[9px] font-bold uppercase tracking-wide text-lime-600 sm:text-xs">
               Tổng lượt mở
             </span>
-            <span className="ml-auto shrink-0 text-base font-black leading-none text-lime-700 sm:text-xl">
+            <span className="ml-auto shrink-0 text-sm font-black leading-none text-lime-700 sm:text-xl">
               {Number(summary.totalViews || 0).toLocaleString("vi-VN")}
             </span>
           </div>
         </div>
 
         {/* NỘI DUNG */}
-        <div className="min-h-0 flex-1 overflow-y-auto bg-slate-50/40 p-3 sm:p-6">
+        <div className="min-h-0 flex-1 overflow-y-auto bg-slate-50/40 p-2.5 sm:p-6">
           {loading ? (
-            <div className="flex min-h-[220px] flex-col items-center justify-center sm:min-h-[280px]">
-              <div className="h-9 w-9 animate-spin rounded-full border-4 border-emerald-100 border-t-emerald-600 sm:h-10 sm:w-10" />
+            <div className="flex min-h-[200px] flex-col items-center justify-center sm:min-h-[280px]">
+              <div className="h-8 w-8 animate-spin rounded-full border-3 border-emerald-100 border-t-emerald-600 sm:h-10 sm:w-10 sm:border-4" />
               <p className="mt-3 text-xs font-semibold text-slate-500 sm:mt-4 sm:text-sm">
                 Đang tải dữ liệu...
               </p>
             </div>
           ) : safePeople.length === 0 ? (
-            <div className="flex min-h-[220px] flex-col items-center justify-center text-center sm:min-h-[280px]">
-              <div className="text-4xl sm:text-5xl">👀</div>
-              <h3 className="mt-3 text-base font-bold text-slate-800 sm:mt-4 sm:text-lg">
+            <div className="flex min-h-[200px] flex-col items-center justify-center text-center sm:min-h-[280px]">
+              <div className="text-3xl sm:text-5xl">👀</div>
+              <h3 className="mt-2 text-sm font-bold text-slate-800 sm:mt-4 sm:text-lg">
                 Không có lượt xem
               </h3>
-              <p className="mt-1.5 text-xs text-slate-500 sm:mt-2 sm:text-sm">
+              <p className="mt-1 text-xs text-slate-500 sm:mt-2 sm:text-sm">
                 Không có album nào được mở ngày{" "}
                 <strong className="text-emerald-600">{formatDate(selectedDate)}</strong>.
               </p>
             </div>
           ) : (
-            <div className="space-y-3 sm:space-y-4">
+            <div className="space-y-2.5 sm:space-y-4">
               {safePeople.map((person) => {
                 const viewDetails = Array.isArray(person.viewDetails) ? person.viewDetails : [];
                 const viewTimes = Array.isArray(person.viewTimes) ? person.viewTimes : [];
@@ -266,36 +253,32 @@ function TodayAlbumViewsModal({
                 return (
                   <article
                     key={person.id}
-                    className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:border-emerald-200 hover:shadow-md"
+                    className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs transition hover:border-emerald-200 hover:shadow-md sm:rounded-2xl"
                   >
-                    {/* Người */}
-                    <div className="flex items-center gap-3 p-3 sm:p-4">
+                    {/* Thông tin người */}
+                    <div className="flex items-center gap-2.5 p-2.5 sm:gap-3 sm:p-4">
                       <img
                         src={person.avatar || FALLBACK_AVATAR}
                         alt={person.name || "Avatar"}
                         onError={handleImageError}
-                        className="h-11 w-11 shrink-0 rounded-full border border-emerald-100 object-cover shadow-sm sm:h-14 sm:w-14"
+                        className="h-10 w-10 shrink-0 rounded-full border border-emerald-100 object-cover shadow-xs sm:h-12 sm:w-12"
                       />
 
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-start justify-between gap-3">
-                          {/* Cho phép tên dài tự xuống dòng thay vì truncate */}
-                          <div className="min-w-0 flex-1">
-                            <h3 className="whitespace-normal break-words text-sm font-bold text-slate-800 sm:text-base">
-                              {person.name || "Chưa cập nhật"}
-                            </h3>
-                          </div>
+                        <div className="flex items-center justify-between gap-2">
+                          <h3 className="truncate text-xs font-bold text-slate-800 sm:text-base">
+                            {person.name || "Chưa cập nhật"}
+                          </h3>
 
-                          {/* Cố định cụm badge bằng shrink-0 */}
                           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-semibold text-emerald-700 sm:px-2.5 sm:py-1 sm:text-xs">
-                              <FaEye />
-                              <span>{Number(person.todayViews || 0).toLocaleString("vi-VN")} lượt trong ngày</span>
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 sm:px-2.5 sm:py-1 sm:text-xs">
+                              <FaEye className="text-[10px]" />
+                              <span>{Number(person.todayViews || 0).toLocaleString("vi-VN")} lượt</span>
                             </span>
 
-                            <span className="inline-flex items-center rounded-full bg-lime-100 px-2 py-1 text-[10px] font-semibold text-lime-700 sm:px-2.5 sm:py-1 sm:text-xs">
+                            <span className="inline-flex items-center rounded-full bg-lime-100 px-2 py-0.5 text-[10px] font-semibold text-lime-700 sm:px-2.5 sm:py-1 sm:text-xs">
                               <span>
-                                Tổng {Number(person.totalViews || person.albumViews || person.viewCount || 0).toLocaleString("vi-VN")} lượt
+                                Tổng {Number(person.totalViews || person.albumViews || person.viewCount || 0).toLocaleString("vi-VN")}
                               </span>
                             </span>
                           </div>
@@ -303,22 +286,21 @@ function TodayAlbumViewsModal({
                       </div>
                     </div>
 
-                    {/* Chi tiết */}
-                    <div className="border-t border-emerald-100 bg-gradient-to-r from-emerald-50/60 via-white to-lime-50/50 p-3 sm:p-4">
-                      <div className="mb-2 flex items-center gap-2 sm:mb-3">
-                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
-                          <FaClock className="text-xs" />
+                    {/* Chi tiết từng phiên mở */}
+                    <div className="border-t border-emerald-100 bg-gradient-to-r from-emerald-50/40 via-white to-lime-50/30 p-2.5 sm:p-4">
+                      <div className="mb-2 flex items-center gap-1.5 sm:mb-2.5">
+                        <div className="flex h-5 w-5 items-center justify-center rounded-md bg-emerald-100 text-emerald-600 sm:h-6 sm:w-6">
+                          <FaClock className="text-[10px] sm:text-xs" />
                         </div>
-                        <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-600 sm:text-xs">
-                          Chi tiết lượt mở
+                        <p className="text-[9px] font-bold uppercase tracking-wider text-emerald-600 sm:text-[10px]">
+                          Chi tiết các lần mở
                         </p>
                       </div>
 
                       {viewDetails.length > 0 ? (
-                        <div className="space-y-2">
+                        <div className="space-y-1.5 sm:space-y-2">
                           {[...viewDetails].reverse().map((detail, index) => {
                             const viewedAt = detail?.viewedAt;
-                            const browser = detail?.browser || "Không xác định";
                             const deviceName =
                               detail?.deviceName ||
                               detail?.deviceModel ||
@@ -327,46 +309,73 @@ function TodayAlbumViewsModal({
                               "Không xác định";
                             const deviceType = detail?.deviceType || "";
                             const os = detail?.os || "";
+                            const ipAddress =
+                              detail?.ipAddress ||
+                              person.ipAddress ||
+                              person.ip_address ||
+                              "";
+                            const location =
+                              detail?.location ||
+                              (ipAddress ? ipAddress : "Không rõ vị trí");
 
                             return (
                               <div
                                 key={`${person.id}-${viewedAt}-${index}`}
-                                className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-sm sm:p-3"
+                                className="overflow-x-auto no-scrollbar rounded-lg border border-slate-100 bg-white/90 p-2 shadow-2xs sm:rounded-xl sm:p-2.5"
                               >
-                                <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
-                                  {/* Thời gian */}
-                                  <div className="flex shrink-0 items-center gap-2">
-                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-sm text-blue-600 sm:h-9 sm:w-9 sm:text-base">
+                                {/* CỐ ĐỊNH 1 HÀNG DUY NHẤT (flex-row, flex-nowrap) */}
+                                <div className="flex min-w-max flex-row items-center justify-between gap-2.5 sm:gap-4">
+                                  
+                                  {/* Khối Thời gian */}
+                                  <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+                                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-blue-100 text-[11px] text-blue-600 sm:h-8 sm:w-8 sm:rounded-lg sm:text-xs">
                                       <FaClock />
                                     </div>
-                                    <div>
-                                      <p className="text-[9px] font-bold uppercase tracking-wide text-slate-400 sm:text-[10px]">
+                                    <div className="shrink-0">
+                                      <p className="text-[8px] font-bold uppercase tracking-wider text-slate-400 sm:text-[9px]">
                                         Thời gian
                                       </p>
-                                      <p className="text-xs font-black text-slate-800 sm:text-sm">
+                                      <p className="whitespace-nowrap text-[11px] font-black text-slate-800 sm:text-xs">
                                         {formatTime(viewedAt)}
                                       </p>
                                     </div>
                                   </div>
 
-                                  {/* Thiết bị & Browser */}
-                                  <div className="flex min-w-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
-                                    <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-1 text-[10px] font-semibold text-blue-700 sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-xs">
-                                      {getBrowserIcon(browser)}
-                                      <span className="truncate">{browser}</span>
+                                  {/* Khối Badges: Vị trí (Location), Thiết bị, Hệ điều hành */}
+                                  <div className="flex shrink-0 flex-row items-center gap-1.5 sm:gap-2">
+                                    {/* Badge Vị trí (Thay cho trình duyệt) */}
+                                    <span
+                                      className={`inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold whitespace-nowrap sm:rounded-full sm:gap-1.5 sm:px-2.5 sm:py-1 sm:text-xs ${
+                                        detail?.location && detail.location !== "Không xác định"
+                                          ? "bg-rose-100 text-rose-800"
+                                          : "bg-blue-100 text-blue-800"
+                                      }`}
+                                      title={ipAddress ? `IP: ${ipAddress}` : "Chưa có IP"}
+                                    >
+                                      <FaMapMarkerAlt className="shrink-0 text-rose-600 text-[10px]" />
+                                      <span className="max-w-[130px] truncate sm:max-w-none">
+                                        {location}
+                                      </span>
                                     </span>
 
-                                    <span className="inline-flex max-w-[140px] items-center gap-1 rounded-full bg-violet-100 px-2 py-1 text-[10px] font-semibold text-violet-700 sm:max-w-none sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-xs">
+                                    {/* Badge Thiết bị */}
+                                    <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-violet-100/90 px-2 py-0.5 text-[10px] font-semibold text-violet-800 whitespace-nowrap sm:rounded-full sm:gap-1.5 sm:px-2.5 sm:py-1 sm:text-xs">
                                       {getDeviceIcon(deviceType)}
-                                      <span className="truncate">{deviceName}</span>
+                                      <span className="max-w-[120px] truncate sm:max-w-none">
+                                        {deviceName}
+                                      </span>
                                     </span>
 
+                                    {/* Badge Hệ điều hành */}
                                     {os && (
-                                      <span className="inline-flex max-w-[90px] items-center rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-semibold text-emerald-700 sm:max-w-none sm:px-3 sm:py-1.5 sm:text-xs">
-                                        <span className="truncate">{os}</span>
+                                      <span className="inline-flex shrink-0 items-center rounded-md bg-emerald-100/90 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 whitespace-nowrap sm:rounded-full sm:px-2.5 sm:py-1 sm:text-xs">
+                                        <span className="max-w-[90px] truncate sm:max-w-none">
+                                          {os}
+                                        </span>
                                       </span>
                                     )}
                                   </div>
+
                                 </div>
                               </div>
                             );
@@ -377,9 +386,9 @@ function TodayAlbumViewsModal({
                           {[...viewTimes].reverse().map((viewedAt, index) => (
                             <span
                               key={`${person.id}-${viewedAt}-${index}`}
-                              className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-700 sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-xs"
+                              className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 sm:px-2.5 sm:py-1 sm:text-xs"
                             >
-                              <FaClock />
+                              <FaClock className="text-[10px]" />
                               {formatTime(viewedAt)}
                             </span>
                           ))}
@@ -400,7 +409,7 @@ function TodayAlbumViewsModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-10 w-full items-center justify-center rounded-xl bg-slate-100 px-4 text-sm font-semibold text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-700 active:scale-[0.99] cursor-pointer sm:min-h-[48px] sm:px-5 sm:text-base"
+            className="flex h-9 w-full items-center justify-center rounded-xl bg-slate-100 px-4 text-xs font-semibold text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-700 active:scale-[0.99] cursor-pointer sm:min-h-[46px] sm:px-5 sm:text-base"
           >
             Đóng
           </button>

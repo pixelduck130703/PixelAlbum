@@ -5,14 +5,10 @@ import {
   FaEye,
   FaHistory,
   FaTimes,
-  FaChrome,
-  FaFirefoxBrowser,
-  FaSafari,
-  FaEdge,
   FaDesktop,
   FaMobileAlt,
   FaTabletAlt,
-  FaGlobe,
+  FaMapMarkerAlt,
 } from "react-icons/fa";
 import api from "../../services/api";
 
@@ -114,21 +110,12 @@ function AlbumHistoryModal({
     }).format(date);
   };
 
-  const getBrowserIcon = (browser = "") => {
-    const value = String(browser).toLowerCase();
-    if (value.includes("chrome")) return <FaChrome className="text-emerald-600" />;
-    if (value.includes("firefox")) return <FaFirefoxBrowser className="text-lime-600" />;
-    if (value.includes("safari")) return <FaSafari className="text-teal-600" />;
-    if (value.includes("edge")) return <FaEdge className="text-green-600" />;
-    return <FaGlobe className="text-slate-500" />;
-  };
-
   const getDeviceIcon = (device = "") => {
     const value = String(device).toLowerCase();
     if (value.includes("mobile") || value.includes("smartphone"))
-      return <FaMobileAlt className="text-emerald-600" />;
-    if (value.includes("tablet")) return <FaTabletAlt className="text-lime-600" />;
-    return <FaDesktop className="text-green-600" />;
+      return <FaMobileAlt className="text-emerald-600 shrink-0" />;
+    if (value.includes("tablet")) return <FaTabletAlt className="text-lime-600 shrink-0" />;
+    return <FaDesktop className="text-green-600 shrink-0" />;
   };
 
   if (!open) return null;
@@ -143,17 +130,17 @@ function AlbumHistoryModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* HEADER */}
-        <div className="shrink-0 bg-gradient-to-r from-emerald-600 via-green-600 to-lime-600 px-4 py-4 text-white sm:px-6 sm:py-5">
+        <div className="shrink-0 bg-gradient-to-r from-emerald-600 via-green-600 to-lime-600 px-4 py-3.5 text-white sm:px-6 sm:py-5">
           <div className="flex items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 text-lg backdrop-blur sm:h-12 sm:w-12 sm:rounded-2xl sm:text-xl">
+            <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/15 text-base backdrop-blur sm:h-12 sm:w-12 sm:rounded-2xl sm:text-xl">
                 <FaHistory />
               </div>
               <div className="min-w-0">
-                <h2 className="truncate text-lg font-black sm:text-2xl">
+                <h2 className="truncate text-base font-black sm:text-2xl">
                   Lịch sử xem album
                 </h2>
-                <p className="mt-0.5 truncate text-xs font-medium text-emerald-100 sm:text-sm">
+                <p className="mt-0.5 truncate text-[11px] font-medium text-emerald-100 sm:text-sm">
                   {person?.name || "Chi tiết album"}
                 </p>
               </div>
@@ -162,7 +149,7 @@ function AlbumHistoryModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15 text-base text-white backdrop-blur transition hover:bg-white/25 active:scale-95 cursor-pointer sm:h-10 sm:w-10 sm:text-lg"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15 text-sm text-white backdrop-blur transition hover:bg-white/25 active:scale-95 cursor-pointer sm:h-10 sm:w-10 sm:text-lg"
               aria-label="Đóng (ESC)"
             >
               <FaTimes />
@@ -171,32 +158,32 @@ function AlbumHistoryModal({
         </div>
 
         {/* TỔNG QUAN / SUMMARY */}
-        <div className="grid shrink-0 grid-cols-2 gap-2 border-b border-emerald-100 bg-white px-3 py-2.5 sm:grid-cols-2 sm:gap-2 sm:px-6 sm:py-3.5">
+        <div className="grid shrink-0 grid-cols-2 gap-2 border-b border-emerald-100 bg-white p-2.5 sm:gap-3 sm:px-6 sm:py-3.5">
           {/* Tổng lượt xem */}
-          <div className="flex min-w-0 items-center gap-2.5 rounded-xl border border-emerald-100 bg-emerald-50/80 px-3 py-2.5 sm:rounded-2xl sm:px-4">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600 sm:h-9 sm:w-9">
-              <FaEye className="text-sm sm:text-base" />
+          <div className="flex min-w-0 items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50/80 px-2.5 py-2 sm:gap-2.5 sm:rounded-2xl sm:px-4 sm:py-2.5">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-xs text-emerald-600 sm:h-9 sm:w-9 sm:text-base">
+              <FaEye />
             </div>
             <div className="min-w-0">
-              <span className="block truncate text-[10px] font-bold uppercase tracking-wide text-emerald-600 sm:text-xs">
+              <span className="block truncate text-[9px] font-bold uppercase tracking-wide text-emerald-600 sm:text-xs">
                 Tổng lượt xem
               </span>
-              <span className="text-base font-black leading-none text-emerald-700 sm:text-xl">
+              <span className="text-sm font-black leading-none text-emerald-700 sm:text-xl">
                 {totalViews.toLocaleString("vi-VN")}
               </span>
             </div>
           </div>
 
           {/* Số ngày có lượt xem */}
-          <div className="flex min-w-0 items-center gap-2.5 rounded-xl border border-lime-100 bg-lime-50/80 px-3 py-2.5 sm:rounded-2xl sm:px-4">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-lime-100 text-lime-600 sm:h-9 sm:w-9">
-              <FaCalendarAlt className="text-sm sm:text-base" />
+          <div className="flex min-w-0 items-center gap-2 rounded-xl border border-lime-100 bg-lime-50/80 px-2.5 py-2 sm:gap-2.5 sm:rounded-2xl sm:px-4 sm:py-2.5">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-lime-100 text-xs text-lime-600 sm:h-9 sm:w-9 sm:text-base">
+              <FaCalendarAlt />
             </div>
             <div className="min-w-0">
-              <span className="block truncate text-[10px] font-bold uppercase tracking-wide text-lime-600 sm:text-xs">
+              <span className="block truncate text-[9px] font-bold uppercase tracking-wide text-lime-600 sm:text-xs">
                 Số ngày đã xem
               </span>
-              <span className="text-base font-black leading-none text-lime-700 sm:text-xl">
+              <span className="text-sm font-black leading-none text-lime-700 sm:text-xl">
                 {history.length.toLocaleString("vi-VN")}
               </span>
             </div>
@@ -204,54 +191,54 @@ function AlbumHistoryModal({
         </div>
 
         {/* NỘI DUNG / CONTENT */}
-        <div className="min-h-0 flex-1 overflow-y-auto bg-slate-50/40 p-3 sm:p-6">
+        <div className="min-h-0 flex-1 overflow-y-auto bg-slate-50/40 p-2.5 sm:p-6">
           {loading ? (
-            <div className="flex min-h-[220px] flex-col items-center justify-center sm:min-h-[280px]">
-              <div className="h-9 w-9 animate-spin rounded-full border-4 border-emerald-100 border-t-emerald-600 sm:h-10 sm:w-10" />
+            <div className="flex min-h-[200px] flex-col items-center justify-center sm:min-h-[280px]">
+              <div className="h-8 w-8 animate-spin rounded-full border-3 border-emerald-100 border-t-emerald-600 sm:h-10 sm:w-10 sm:border-4" />
               <p className="mt-3 text-xs font-semibold text-slate-500 sm:mt-4 sm:text-sm">
                 Đang tải lịch sử xem...
               </p>
             </div>
           ) : error ? (
-            <div className="rounded-2xl border border-red-200 bg-red-50 p-5 text-center text-sm font-semibold text-red-600">
+            <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-center text-xs font-semibold text-red-600 sm:rounded-2xl sm:p-5 sm:text-sm">
               {error}
             </div>
           ) : history.length === 0 ? (
-            <div className="flex min-h-[220px] flex-col items-center justify-center text-center sm:min-h-[280px]">
-              <div className="text-4xl sm:text-5xl">👀</div>
-              <h3 className="mt-3 text-base font-bold text-slate-800 sm:mt-4 sm:text-lg">
+            <div className="flex min-h-[200px] flex-col items-center justify-center text-center sm:min-h-[280px]">
+              <div className="text-3xl sm:text-5xl">👀</div>
+              <h3 className="mt-2 text-sm font-bold text-slate-800 sm:mt-4 sm:text-lg">
                 Chưa có lịch sử xem
               </h3>
             </div>
           ) : (
-            <div className="space-y-3 sm:space-y-4">
+            <div className="space-y-2.5 sm:space-y-4">
               {history.map((item) => {
                 const viewDetails = Array.isArray(item.viewDetails) ? item.viewDetails : [];
 
                 return (
                   <article
                     key={item.date}
-                    className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:border-emerald-200 hover:shadow-md"
+                    className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs transition hover:border-emerald-200 hover:shadow-md sm:rounded-2xl"
                   >
                     {/* Header ngày */}
-                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-emerald-100 bg-emerald-50/50 p-3 sm:px-4 sm:py-3">
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600 text-xs sm:h-8 sm:w-8 sm:text-sm">
+                    <div className="flex items-center justify-between gap-2 border-b border-emerald-100 bg-emerald-50/50 px-3 py-2 sm:px-4 sm:py-3">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <div className="flex h-6 w-6 items-center justify-center rounded-md bg-emerald-100 text-[11px] text-emerald-600 sm:h-8 sm:w-8 sm:rounded-lg sm:text-sm">
                           <FaCalendarAlt />
                         </div>
-                        <span className="text-sm font-bold text-slate-800 sm:text-base">
+                        <span className="text-xs font-bold text-slate-800 sm:text-base">
                           {formatDate(item.date)}
                         </span>
                       </div>
 
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 sm:text-xs">
-                        <FaEye />
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 sm:px-2.5 sm:py-1 sm:text-xs">
+                        <FaEye className="text-[10px]" />
                         <span>{Number(item.views || 0).toLocaleString("vi-VN")} lượt</span>
                       </span>
                     </div>
 
                     {/* Chi tiết từng phiên xem trong ngày */}
-                    <div className="p-3 sm:p-4">
+                    <div className="p-2.5 sm:p-4">
                       {viewDetails.length > 0 ? (
                         <div className="space-y-2">
                           {viewDetails
@@ -259,7 +246,6 @@ function AlbumHistoryModal({
                             .reverse()
                             .map((detail, index) => {
                               const viewedAt = detail?.viewedAt;
-                              const browser = detail?.browser || "Không xác định";
                               const deviceName =
                                 detail?.deviceName ||
                                 detail?.deviceModel ||
@@ -268,46 +254,69 @@ function AlbumHistoryModal({
                                 "Không xác định";
                               const deviceType = detail?.deviceType || "";
                               const os = detail?.os || "";
+                              const ipAddress =
+                                detail?.ipAddress ||
+                                item.ip_address ||
+                                item.ipAddress ||
+                                "";
+                              const location =
+                                detail?.location ||
+                                (ipAddress ? ipAddress : "Không rõ vị trí");
 
                               return (
                                 <div
                                   key={`${item.date}-${viewedAt}-${index}`}
-                                  className="rounded-xl border border-slate-100 bg-slate-50/70 p-2.5 shadow-2xs sm:p-3"
+                                  className="rounded-lg border border-slate-100 bg-slate-50/80 p-2 shadow-2xs sm:rounded-xl sm:p-3 overflow-x-auto no-scrollbar"
                                 >
-                                  <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
-                                    {/* Thời gian */}
-                                    <div className="flex shrink-0 items-center gap-2">
-                                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-sm text-blue-600 sm:h-9 sm:w-9 sm:text-base">
+                                  {/* CỐ ĐỊNH 1 HÀNG DUY NHẤT */}
+                                  <div className="flex flex-row items-center justify-between gap-2.5 sm:gap-4 min-w-max">
+                                    
+                                    {/* Khối Thời gian */}
+                                    <div className="flex shrink-0 items-center gap-1.5 sm:gap-2.5">
+                                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-xs text-blue-600 sm:h-8 sm:w-8 sm:text-sm">
                                         <FaClock />
                                       </div>
-                                      <div>
-                                        <p className="text-[9px] font-bold uppercase tracking-wide text-slate-400 sm:text-[10px]">
+                                      <div className="shrink-0">
+                                        <p className="text-[8px] font-bold uppercase tracking-wider text-slate-400 sm:text-[9px]">
                                           Thời gian
                                         </p>
-                                        <p className="text-xs font-black text-slate-800 sm:text-sm">
+                                        <p className="text-[11px] font-black text-slate-800 whitespace-nowrap sm:text-xs">
                                           {formatDateTime(viewedAt)}
                                         </p>
                                       </div>
                                     </div>
 
-                                    {/* Badges Thiết bị & Trình duyệt */}
-                                    <div className="flex min-w-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
-                                      <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-1 text-[10px] font-semibold text-blue-700 sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-xs">
-                                        {getBrowserIcon(browser)}
-                                        <span className="truncate">{browser}</span>
+                                    {/* Khối Badges: Vị trí (Location), Thiết bị, Hệ điều hành */}
+                                    <div className="flex shrink-0 flex-row items-center gap-1.5 sm:gap-2">
+                                      {/* Badge Vị trí (Thay thế cho IP) */}
+                                      <span
+                                        className={`inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold whitespace-nowrap sm:rounded-full sm:gap-1.5 sm:px-2.5 sm:py-1 sm:text-xs ${
+                                          detail?.location && detail.location !== "Không xác định"
+                                            ? "bg-rose-100 text-rose-800"
+                                            : "bg-blue-100 text-blue-800"
+                                        }`}
+                                        title={ipAddress ? `IP: ${ipAddress}` : "Chưa có IP"}
+                                      >
+                                        <FaMapMarkerAlt className="shrink-0 text-rose-600 text-[10px]" />
+                                        <span className="max-w-[130px] truncate sm:max-w-none">
+                                          {location}
+                                        </span>
                                       </span>
 
-                                      <span className="inline-flex max-w-[140px] items-center gap-1 rounded-full bg-violet-100 px-2 py-1 text-[10px] font-semibold text-violet-700 sm:max-w-none sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-xs">
+                                      {/* Badge Thiết bị */}
+                                      <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-violet-100/90 px-2 py-0.5 text-[10px] font-semibold text-violet-800 whitespace-nowrap sm:rounded-full sm:gap-1.5 sm:px-2.5 sm:py-1 sm:text-xs">
                                         {getDeviceIcon(deviceType)}
-                                        <span className="truncate">{deviceName}</span>
+                                        <span className="max-w-[120px] truncate sm:max-w-none">{deviceName}</span>
                                       </span>
 
+                                      {/* Badge Hệ điều hành */}
                                       {os && (
-                                        <span className="inline-flex max-w-[100px] items-center rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-semibold text-emerald-700 sm:max-w-none sm:px-3 sm:py-1.5 sm:text-xs">
-                                          <span className="truncate">{os}</span>
+                                        <span className="inline-flex shrink-0 items-center rounded-md bg-emerald-100/90 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 whitespace-nowrap sm:rounded-full sm:px-2.5 sm:py-1 sm:text-xs">
+                                          <span className="max-w-[90px] truncate sm:max-w-none">{os}</span>
                                         </span>
                                       )}
                                     </div>
+
                                   </div>
                                 </div>
                               );
@@ -331,7 +340,7 @@ function AlbumHistoryModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-10 w-full items-center justify-center rounded-xl bg-slate-100 px-4 text-sm font-semibold text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-700 active:scale-[0.99] cursor-pointer sm:min-h-[48px] sm:px-5 sm:text-base"
+            className="flex h-9 w-full items-center justify-center rounded-xl bg-slate-100 px-4 text-xs font-semibold text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-700 active:scale-[0.99] cursor-pointer sm:min-h-[46px] sm:px-5 sm:text-base"
           >
             Đóng
           </button>
