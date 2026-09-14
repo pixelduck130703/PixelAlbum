@@ -1415,6 +1415,11 @@ function Invitation2() {
                     >
                         {t.footer}
                     </p>
+                    <p className={`text-xs font-bold tracking-[0.15em] text-slate-400 sm:tracking-[0.2em] ${textAnimClass}`}>
+                        Designed by <a href="https://www.instagram.com/hugnpxl.jpg/" target="_blank" rel="noopener noreferrer" className="text-pink-500 hover:text-pink-700">
+                            hugnpxl.jpg
+                        </a>
+                    </p>
                 </footer>
             </main>
 

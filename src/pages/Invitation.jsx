@@ -1422,6 +1422,11 @@ function Invitation() {
                     >
                         {t.footer}
                     </p>
+                    <p className={`text-xs font-bold tracking-[0.15em] text-slate-400 sm:tracking-[0.2em] ${textAnimClass}`}>
+                        Designed by <a href="https://www.instagram.com/hugnpxl.jpg/" target="_blank" rel="noopener noreferrer" className="text-pink-500 hover:text-pink-700">
+                            hugnpxl.jpg
+                        </a>
+                    </p>
                 </footer>
             </main>
 
@@ -1552,8 +1557,8 @@ function Invitation() {
                                                 <label
                                                     key={value}
                                                     className={`flex cursor-pointer items-center gap-3 rounded-2xl border p-3 transition ${rsvpForm.attendance === value
-                                                            ? "border-blue-500 bg-blue-50/80"
-                                                            : "border-white/80 bg-white/50"
+                                                        ? "border-blue-500 bg-blue-50/80"
+                                                        : "border-white/80 bg-white/50"
                                                         }`}
                                                 >
                                                     <input
@@ -1860,8 +1865,8 @@ function LanguageSwitcher({ language, onChange, disabled = false }) {
                         onClick={() => onChange(item.code)}
                         disabled={disabled}
                         className={`relative flex min-h-[38px] items-center gap-1.5 rounded-full px-3 text-xs font-bold transition-all duration-300 disabled:cursor-wait disabled:opacity-70 cursor-pointer sm:text-sm ${active
-                                ? "text-white shadow-[0_4px_16px_rgba(37,99,235,0.35)]"
-                                : "text-slate-700 hover:bg-white/40 hover:text-blue-900"
+                            ? "text-white shadow-[0_4px_16px_rgba(37,99,235,0.35)]"
+                            : "text-slate-700 hover:bg-white/40 hover:text-blue-900"
                             }`}
                         aria-label={item.ariaLabel}
                         aria-pressed={active}
