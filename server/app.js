@@ -1746,8 +1746,18 @@ app.post(
       const { publicId } = req.params;
 
       /* 0. IP & Vị trí */
+      /* 0. IP & Vị trí */
       const clientIp = getClientIp(req);
       const clientLocation = await getIpLocation(clientIp);
+
+      console.log("================ IP DEBUG ================");
+      console.log("x-forwarded-for:", req.headers["x-forwarded-for"]);
+      console.log("cf-connecting-ip:", req.headers["cf-connecting-ip"]);
+      console.log("x-real-ip:", req.headers["x-real-ip"]);
+      console.log("req.ip:", req.ip);
+      console.log("FINAL CLIENT IP:", clientIp);
+      console.log("FINAL LOCATION:", clientLocation);
+      console.log("==========================================");
 
       console.log(`[ALBUM VIEW] PublicID: ${publicId} | IP: ${clientIp} | Location: ${clientLocation}`);
 
