@@ -9,7 +9,6 @@ function DashboardStats({
   visits = null,
   onShowMonthBirthday,
   onShowTodayBirthday,
-  onShowVisits,
 }) {
   // Hiển thị "..." khi chưa có dữ liệu
   const formatValue = (value) => {
@@ -42,11 +41,18 @@ function DashboardStats({
       color: "text-indigo-600",
       bg: "bg-indigo-100",
     },
+    {
+      title: "Lượt truy cập website",
+      value: formatValue(visits),
+      icon: "🌐",
+      color: "text-green-600",
+      bg: "bg-green-100",
+    },
   ];
 
   return (
     <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
-      {/* 3 thẻ tĩnh */}
+      {/* 4 thẻ tĩnh (Bao gồm cả Lượt truy cập website) */}
       {staticCards.map((card) => (
         <div
           key={card.title}
@@ -71,28 +77,6 @@ function DashboardStats({
           </h2>
         </div>
       ))}
-
-      {/* Lượt truy cập website */}
-      <button
-        type="button"
-        onClick={onShowVisits}
-        className="cursor-pointer rounded-2xl bg-white p-3 text-left shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg active:scale-95 md:p-4"
-        title="Bấm để xem danh sách xác nhận tham dự"
-      >
-        <div className="flex items-start justify-between gap-3">
-          <p className="text-xs font-medium leading-5 text-slate-500 md:text-sm">
-            Lượt truy cập website
-          </p>
-
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-100 text-xl md:h-11 md:w-11 md:text-2xl">
-            🌐
-          </div>
-        </div>
-
-        <h2 className="mt-3 text-2xl font-bold text-green-600 md:text-3xl">
-          {formatValue(visits)}
-        </h2>
-      </button>
 
       {/* Sinh nhật tháng này */}
       <button

@@ -4,6 +4,7 @@ import {
   FaClock,
   FaCommentDots,
   FaEnvelopeOpenText,
+  FaExternalLinkAlt,
   FaFilter,
   FaQuestionCircle,
   FaTimes,
@@ -12,6 +13,12 @@ import {
   FaUser,
 } from "react-icons/fa";
 
+// Cấu hình đường dẫn chính xác cho từng thiệp tại đây
+const INVITATION_ROUTES = {
+  "graduation-01": "/invitation",
+  "graduation-02": "/invitation2", // Đổi thành /invitation-2 hoặc /invitation/2 nếu router của bạn dùng tên khác
+};
+
 function GraduationRsvpModal({
   open,
   onClose,
@@ -19,10 +26,8 @@ function GraduationRsvpModal({
   loading = false,
   onDelete,
 }) {
-  // State quản lý bộ lọc thiệp mời ('all', 'graduation-01', 'graduation-02')
-  const [selectedInvitationId, setSelectedInvitationId] = useState("all");
+  const [selectedInvitationId, setSelectedInvitationId] = useState("graduation-01");
 
-  // Khóa cuộn trang khi mở modal + Hỗ trợ phím ESC để đóng
   useEffect(() => {
     if (!open) return;
 
@@ -40,16 +45,13 @@ function GraduationRsvpModal({
     };
   }, [open, onClose]);
 
-  // Lọc danh sách dựa theo ID thiệp mời được chọn
   const filteredList = useMemo(() => {
-    if (selectedInvitationId === "all") return list;
     return list.filter((item) => {
-      const id = item.invitationId || item.invitation_id;
+      const id = item.invitationId || item.invitation_id || "graduation-01";
       return id === selectedInvitationId;
     });
   }, [list, selectedInvitationId]);
 
-  // Thống kê số lượng dựa trên danh sách đã lọc
   const stats = useMemo(() => {
     const total = filteredList.length;
     const countYes = filteredList.filter((item) => item.attendance === "yes").length;
@@ -58,6 +60,13 @@ function GraduationRsvpModal({
 
     return { total, countYes, countMaybe, countNo };
   }, [filteredList]);
+
+  const handleOpenInvitation = () => {
+    const targetUrl =
+      INVITATION_ROUTES[selectedInvitationId] ||
+      `/invitation/${selectedInvitationId}`;
+    window.open(targetUrl, "_blank", "noopener,noreferrer");
+  };
 
   const formatDateTime = (value) => {
     if (!value) return "--:--:--";
@@ -141,52 +150,54 @@ function GraduationRsvpModal({
           </div>
         </div>
 
-        {/* BỘ LỌC THEO THIỆP MỜI */}
-        <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-slate-50 px-4 py-2.5 sm:px-6">
-          <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 sm:text-sm">
-            <FaFilter className="text-indigo-600" />
-            <span>Lọc theo thiệp:</span>
+        {/* BỘ CHỌN THIỆP & NÚT MỞ THIỆP */}
+        <div className="flex shrink-0 flex-wrap items-center justify-between gap-2.5 border-b border-slate-200 bg-slate-50 px-4 py-2.5 sm:px-6">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 sm:text-sm">
+              <FaFilter className="text-indigo-600" />
+              <span>Chọn thiệp:</span>
+            </div>
+
+            <div className="flex gap-1.5">
+              <button
+                type="button"
+                onClick={() => setSelectedInvitationId("graduation-01")}
+                className={`rounded-xl px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
+                  selectedInvitationId === "graduation-01"
+                    ? "bg-indigo-600 text-white shadow-sm"
+                    : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
+                }`}
+              >
+                Thiệp 1 (Tuấn Hùng)
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSelectedInvitationId("graduation-02")}
+                className={`rounded-xl px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
+                  selectedInvitationId === "graduation-02"
+                    ? "bg-indigo-600 text-white shadow-sm"
+                    : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
+                }`}
+              >
+                Thiệp 2 (Ngọc Anh)
+              </button>
+            </div>
           </div>
-          <div className="flex gap-1.5 overflow-x-auto">
-            <button
-              type="button"
-              onClick={() => setSelectedInvitationId("all")}
-              className={`rounded-xl px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
-                selectedInvitationId === "all"
-                  ? "bg-indigo-600 text-white shadow-sm"
-                  : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
-              }`}
-            >
-              Tất cả thiệp
-            </button>
-            <button
-              type="button"
-              onClick={() => setSelectedInvitationId("graduation-01")}
-              className={`rounded-xl px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
-                selectedInvitationId === "graduation-01"
-                  ? "bg-indigo-600 text-white shadow-sm"
-                  : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
-              }`}
-            >
-              Thiệp 1 (Tuấn Hùng)
-            </button>
-            <button
-              type="button"
-              onClick={() => setSelectedInvitationId("graduation-02")}
-              className={`rounded-xl px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
-                selectedInvitationId === "graduation-02"
-                  ? "bg-indigo-600 text-white shadow-sm"
-                  : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
-              }`}
-            >
-              Thiệp 2 (Ngọc Anh)
-            </button>
-          </div>
+
+          <button
+            type="button"
+            onClick={handleOpenInvitation}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-200 bg-white px-3 py-1.5 text-xs font-bold text-indigo-700 shadow-xs transition hover:border-indigo-400 hover:bg-indigo-50 active:scale-95 cursor-pointer"
+            title="Mở thiệp mời trong tab mới"
+          >
+            <span>Mở thiệp này</span>
+            <FaExternalLinkAlt className="text-[10px]" />
+          </button>
         </div>
 
-        {/* TỔNG QUAN / 4 THẺ THẲNG HÀNG 1 DÒNG */}
+        {/* THỐNG KÊ 4 THẺ 1 HÀNG */}
         <div className="grid shrink-0 grid-cols-4 gap-2 border-b border-indigo-100 bg-white p-3 sm:px-6 sm:py-3.5">
-          {/* Tổng phản hồi */}
           <div className="flex min-w-0 items-center justify-between gap-1.5 rounded-xl border border-blue-100 bg-blue-50/80 px-2.5 py-2.5 sm:rounded-2xl sm:px-4 sm:py-3">
             <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
               <FaEnvelopeOpenText className="shrink-0 text-blue-600 text-xs sm:text-sm" />
@@ -199,7 +210,6 @@ function GraduationRsvpModal({
             </span>
           </div>
 
-          {/* Sẽ tham dự */}
           <div className="flex min-w-0 items-center justify-between gap-1.5 rounded-xl border border-emerald-100 bg-emerald-50/80 px-2.5 py-2.5 sm:rounded-2xl sm:px-4 sm:py-3">
             <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
               <FaCheckCircle className="shrink-0 text-emerald-600 text-xs sm:text-sm" />
@@ -212,7 +222,6 @@ function GraduationRsvpModal({
             </span>
           </div>
 
-          {/* Chưa chắc chắn */}
           <div className="flex min-w-0 items-center justify-between gap-1.5 rounded-xl border border-amber-100 bg-amber-50/80 px-2.5 py-2.5 sm:rounded-2xl sm:px-4 sm:py-3">
             <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
               <FaQuestionCircle className="shrink-0 text-amber-600 text-xs sm:text-sm" />
@@ -225,7 +234,6 @@ function GraduationRsvpModal({
             </span>
           </div>
 
-          {/* Vắng mặt */}
           <div className="flex min-w-0 items-center justify-between gap-1.5 rounded-xl border border-rose-100 bg-rose-50/80 px-2.5 py-2.5 sm:rounded-2xl sm:px-4 sm:py-3">
             <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
               <FaTimesCircle className="shrink-0 text-rose-600 text-xs sm:text-sm" />
@@ -239,7 +247,7 @@ function GraduationRsvpModal({
           </div>
         </div>
 
-        {/* NỘI DUNG / CONTENT */}
+        {/* NỘI DUNG DANH SÁCH */}
         <div className="min-h-0 flex-1 overflow-y-auto bg-slate-50/40 p-3 sm:p-6">
           {loading ? (
             <div className="flex min-h-[220px] flex-col items-center justify-center sm:min-h-[280px]">
@@ -255,7 +263,7 @@ function GraduationRsvpModal({
                 Chưa có phản hồi nào
               </h3>
               <p className="mt-1 text-xs text-slate-400 sm:text-sm">
-                Các phản hồi xác nhận tham dự của khách mời sẽ hiển thị tại đây.
+                Thiệp này hiện chưa có khách mời nào gửi phản hồi xác nhận.
               </p>
             </div>
           ) : (
@@ -265,7 +273,6 @@ function GraduationRsvpModal({
                   key={item.id}
                   className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:border-indigo-200 hover:shadow-md"
                 >
-                  {/* Header thẻ người gửi */}
                   <div className="flex flex-wrap items-center justify-between gap-2 border-b border-indigo-50 bg-indigo-50/40 p-3 sm:px-4 sm:py-3">
                     <div className="flex items-center gap-2">
                       <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-100 text-xs text-indigo-600 sm:h-8 sm:w-8 sm:text-sm">
@@ -274,9 +281,8 @@ function GraduationRsvpModal({
                       <span className="text-sm font-bold text-slate-900 sm:text-base">
                         {item.name}
                       </span>
-                      {/* Hiển thị nhãn nhỏ phân biệt thiệp */}
                       <span className="rounded-md bg-slate-200 px-2 py-0.5 text-[10px] font-mono font-bold text-slate-700">
-                        {item.invitationId || item.invitation_id || "graduation-01"}
+                        {item.invitationId || item.invitation_id || selectedInvitationId}
                       </span>
                     </div>
 
@@ -297,9 +303,7 @@ function GraduationRsvpModal({
                     </div>
                   </div>
 
-                  {/* Chi tiết nội dung phản hồi */}
                   <div className="space-y-2.5 p-3 sm:p-4">
-                    {/* Lời chúc */}
                     <div className="rounded-xl border border-amber-200/80 bg-amber-50/50 p-3 shadow-2xs">
                       <div className="flex items-center gap-1.5 text-xs font-bold text-amber-700">
                         <FaCommentDots />
@@ -316,7 +320,6 @@ function GraduationRsvpModal({
                       )}
                     </div>
 
-                    {/* Block Thời gian gửi */}
                     <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-100 bg-slate-50/70 p-2.5 text-xs text-slate-500 sm:px-3.5">
                       <div className="flex items-center gap-1.5 font-medium">
                         <FaClock className="text-indigo-500" />

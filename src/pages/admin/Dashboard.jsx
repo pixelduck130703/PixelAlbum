@@ -204,7 +204,7 @@ function Dashboard() {
     setShowBirthdayMonthModal(true);
   };
 
-  // Tải danh sách RSVP khi bấm vào Lượt truy cập
+  // Tải danh sách RSVP khi bấm vào nút
   const handleShowRsvpModal = async () => {
     setShowRsvpModal(true);
     try {
@@ -458,7 +458,7 @@ function Dashboard() {
   };
 
   return (
-    <Layout>
+    <Layout onShowVisits={handleShowRsvpModal}>
       {/* Thẻ thống kê */}
       <DashboardStats
         stats={stats}
