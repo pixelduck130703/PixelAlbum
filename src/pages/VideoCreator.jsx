@@ -21,25 +21,25 @@ const DEFAULT_PRESET_BGMS = [
   {
     id: 'Nhacnen1',
     title: 'Nhạc nền 1',
-    url: '/public/music/Nhacnen1.mp3',
+    url: '/music/Nhacnen1.mp3',
     isDefault: true,
   },
   {
     id: 'Nhacnen2',
     title: 'Nhạc nền 2',
-    url: '/public/music/Nhacnen2.mp3',
+    url: '/music/Nhacnen2.mp3',
     isDefault: true,
   },
   {
     id: 'Nhacnen3',
     title: 'Nhạc nền 3',
-    url: '/public/music/Nhacnen3.mp3',
+    url: '/music/Nhacnen3.mp3',
     isDefault: true,
   },
   {
     id: 'Nhacnen4',
     title: 'Nhạc nền 4',
-    url: '/public/music/Nhacnen4.mp3',
+    url: '/music/Nhacnen4.mp3',
     isDefault: true,
   },
 ];
