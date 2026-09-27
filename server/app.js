@@ -10,6 +10,7 @@ const cloudinary = require("./config/cloudinary");
 const DeviceDetector = require("device-detector-js");
 const geoip = require("geoip-lite");
 
+
 const musicUpload = multer({
   storage: multer.memoryStorage(),
 
@@ -98,6 +99,8 @@ const deviceDetector = new DeviceDetector();
 
 const allowedOrigins = [
   "http://localhost:5173",
+  "http://localhost:3000", // 👉 THÊM PORT 3000 (React)
+  "http://localhost:5174",
   "https://pixel-album.vercel.app",
   process.env.FRONTEND_URL,
 ].filter(Boolean);
@@ -120,6 +123,10 @@ app.use(
 );
 
 app.use(express.json());
+
+// 👉 Gắn route TTS
+const ttsRoute = require('./routes/tts');
+app.use('/api/tts', ttsRoute);
 
 /* ==========================
    Hàm dùng chung

@@ -12,6 +12,7 @@ import ProtectedRoute from "./components/admin/ProtectedRoute";
 import Invitation from "./pages/Invitation";
 import Invitation2 from "./pages/Invitation2"; // Import Invitation2
 import HomeMusicPlayer from "./components/HomeMusicPlayer";
+import VideoCreator from './pages/VideoCreator';
 
 function App() {
   const location = useLocation();
@@ -57,6 +58,8 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        <Route path="/create-video" element={<VideoCreator />} />
       </Routes>
     </>
   );
