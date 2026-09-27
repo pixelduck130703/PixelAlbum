@@ -5,6 +5,8 @@ import { VideoRenderer } from '../services/videoRenderer';
 import {
   generateThaiSpeechAudio,
   analyzeVideoScriptWithAi,
+  generateThaiScriptFromImage,
+  extractFrameFromVideo, // 👈 ĐÃ BỔ SUNG: Khắc phục lỗi crash khi tải video
   GEMINI_TTS_VOICES,
   DEFAULT_ELEVENLABS_PREMADES,
   VOICE_PROVIDERS,
@@ -60,10 +62,12 @@ export default function VideoCreator() {
 
   const [geminiCooldown, setGeminiCooldown] = useState(0);
 
+  // Kịch bản đọc tiếng Thái (mặc định mẫu sẵn 15-18s)
   const [thaiScript, setThaiScript] = useState(
-    'ลายซิ่งสายสตรีทที่อยากได้ลุคเท่ แบบ และหุ่นเพรียวขึ้นทันที? จัดเสื้อยืด NIGHT DRIVE ตัวนี้เลยครับ! ลายรถสปอร์ตเรโทรช่วยพรางพุงเนียนตา ผ้าคอตตอนนุ่ม ยืดใส่สบายไม่ร้อน ไซส์ครบ M ถึง 4XL ซื้อ 2 ตัวส่งฟรี ทักแชทสั่งด่วน!'
+    'อยากได้ลุคสตรีทเท่ๆ ที่ใส่แล้วหุ่นเพรียวขึ้นทันตาไหมครับ? แนะนำเสื้อยืดโอเวอร์ไซส์ตัวนี้เลย ลายสกรีนคมชัดสไตล์เรโทร ช่วยพรางหุ่นได้เนียนตามากๆ ผ้าคอตตอนแท้ร้อยเปอร์เซ็นต์ นุ่ม สบาย ระบายอากาศดี ไม่ร้อนแน่นอน มีไซส์ตั้งแต่ M จนถึง 4XL สั่งซื้อวันนี้โปรโมชั่นพิเศษสองตัวส่งฟรี ทักแชทสั่งเลยครับ!'
   );
   const [isGeneratingVoice, setIsGeneratingVoice] = useState(false);
+  const [isWritingScript, setIsWritingScript] = useState(false);
 
   const [isPlayingVoicePreview, setIsPlayingVoicePreview] = useState(false);
   const previewAudioRef = useRef(null);
@@ -440,6 +444,39 @@ export default function VideoCreator() {
     setMediaFiles(mediaFiles.filter((_, i) => i !== index));
   };
 
+  // AI TỰ ĐỘNG NHÌN ẢNH / VIDEO VIẾT KỊCH BẢN TIẾNG THÁI (15 - 18s)
+  const handleAutoGenerateThaiScript = async () => {
+    if (mediaFiles.length === 0) {
+      alert('Vui lòng tải lên ít nhất 1 ảnh hoặc video ở mục 01!');
+      return;
+    }
+    if (!geminiApiKey || !geminiApiKey.trim()) {
+      alert('Vui lòng nhập Google AI Studio API Key ở ô cấu hình!');
+      return;
+    }
+
+    try {
+      setIsWritingScript(true);
+      
+      // Nếu là video, tự trích xuất 1 frame ảnh đại diện; nếu là ảnh thì dùng trực tiếp
+      let imageInput = mediaFiles[0];
+      if (mediaType === 'video') {
+        imageInput = await extractFrameFromVideo(mediaFiles[0]);
+      }
+
+      const generatedScript = await generateThaiScriptFromImage(
+        imageInput,
+        geminiApiKey,
+        customScriptPrompt
+      );
+      setThaiScript(generatedScript);
+    } catch (err) {
+      alert('Không thể tạo văn bản tự động: ' + (err.message || 'Lỗi không xác định'));
+    } finally {
+      setIsWritingScript(false);
+    }
+  };
+
   // NÚT NGHE THỬ GIỌNG ĐỌC
   const togglePreviewVoice = async () => {
     if (isPlayingVoicePreview) {
@@ -452,7 +489,7 @@ export default function VideoCreator() {
     }
 
     if (voiceSourceType === 'ai' && (!thaiScript || !thaiScript.trim())) {
-      alert('Vui lòng nhập văn bản kịch bản trước khi nghe thử!');
+      alert('Vui lòng nhập văn bản kịch bản hoặc bấm nút tạo kịch bản trước khi nghe thử!');
       return;
     }
 
@@ -542,7 +579,7 @@ export default function VideoCreator() {
     let finalVoiceSrc = voiceFile;
     if (voiceSourceType === 'ai') {
       if (!thaiScript || !thaiScript.trim()) {
-        throw new Error('Vui lòng nhập kịch bản tiếng Thái!');
+        throw new Error('Vui lòng nhập nội dung tiếng Thái hoặc bấm tạo kịch bản!');
       }
       setIsGeneratingVoice(true);
       try {
@@ -570,20 +607,23 @@ export default function VideoCreator() {
     activeMixerRef.current = mixer;
     const audioStream = mixer.setup(finalVoiceSrc, bgmFile, bgmVolume, voiceVolume, isPreview);
 
-    let targetDuration = 6;
+    // Tự động nhận diện độ dài thực tế của file âm thanh (khớp 15-18s hoặc theo câu thoại tự nhập)
+    let voiceDuration = await mixer.getVoiceDuration();
+    let targetDuration = Math.max(Math.ceil(voiceDuration) || 6, 3);
     let aiTimeline = null;
 
     if (effectMode === 'script') {
-      targetDuration = 6;
       setIsAiDirecting(true);
       try {
-        aiTimeline = await analyzeVideoScriptWithAi(customScriptPrompt, mediaFiles.length, geminiApiKey);
+        aiTimeline = await analyzeVideoScriptWithAi(
+          customScriptPrompt,
+          mediaFiles.length,
+          geminiApiKey,
+          targetDuration
+        );
       } finally {
         setIsAiDirecting(false);
       }
-    } else {
-      let voiceDuration = await mixer.getVoiceDuration();
-      targetDuration = Math.max(voiceDuration || 6, 2);
     }
 
     setPreviewDuration(targetDuration);
@@ -703,9 +743,12 @@ export default function VideoCreator() {
 
   const currentVoiceOptions = selectedProvider === 'gemini' ? (GEMINI_TTS_VOICES || []) : (elevenVoiceList || []);
 
+  // Ước tính độ dài thời gian đọc dựa theo số lượng ký tự tiếng Thái (~16 ký tự/giây)
+  const estimatedSeconds = Math.max(1, Math.round((thaiScript.trim().length || 0) / 16));
+
   return (
     <div style={styles.fullscreenApp}>
-      {/* HEADER: NÚT TRANG CHỦ BÊN TRÁI, TIÊU ĐỀ NẰM CHÍNH GIỮA */}
+      {/* HEADER: NÚT TRANG CHỦ BÊN TRÁI, TIÊU ĐỀ CHÍNH GIỮA */}
       <header style={styles.topNavbar}>
         <button
           type="button"
@@ -902,7 +945,7 @@ export default function VideoCreator() {
                   }}
                   onClick={() => setEffectMode('script')}
                 >
-                  ✨ Grok AI
+                  ✨ Grok AI (Chưa có API Key)
                 </button>
               </div>
 
@@ -993,7 +1036,6 @@ export default function VideoCreator() {
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                     <label style={{ ...styles.label, margin: 0 }}>Kịch bản chuyển động:</label>
-                    <span style={styles.durationBadge}>⏱️ 6 giây</span>
                   </div>
                   <textarea
                     rows="3"
@@ -1036,7 +1078,7 @@ export default function VideoCreator() {
                       : '✨ Grok AI'}
                   </button>
 
-                  {/* NÚT XEM TRƯỚC NHANH CANVAS */}
+                  {/* NÚT XEM TRƯỚC NHANH CANVAS (Đã sửa nhãn hiển thị chính xác) */}
                   <button
                     type="button"
                     disabled={isAiDirecting}
@@ -1047,7 +1089,7 @@ export default function VideoCreator() {
                       ? '🧠 Gemini AI đang phân tích...'
                       : isPreviewingVideo
                       ? '⏹️ Dừng xem trước'
-                      : '⚡ Xem trước Grok AI'}
+                      : '⚡ Xem trước góc máy (Canvas)'}
                   </button>
                 </div>
               )}
@@ -1266,14 +1308,55 @@ export default function VideoCreator() {
                   </div>
                 )}
 
-                <label style={styles.label}>Nhập kịch bản tiếng Thái để AI đọc truyền cảm:</label>
-                <textarea
-                  rows="4"
-                  style={styles.textarea}
-                  value={thaiScript}
-                  onChange={(e) => setThaiScript(e.target.value)}
-                  placeholder="Nhập nội dung quảng cáo tiếng Thái vào đây..."
-                />
+                {/* KHU VỰC NHẬP / TẠO KỊCH BẢN TIẾNG THÁI (15-18S) */}
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, flexWrap: 'wrap', gap: 6 }}>
+                    <label style={{ ...styles.label, margin: 0 }}>
+                      Kịch bản tiếng Thái:
+                    </label>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 11.5, color: '#64748b', backgroundColor: '#f1f5f9', padding: '2px 8px', borderRadius: 4 }}>
+                        ~{estimatedSeconds} giây
+                      </span>
+
+                      {/* NÚT AI TỰ ĐỘNG VIẾT KỊCH BẢN TỪ ẢNH */}
+                      <button
+                        type="button"
+                        disabled={isWritingScript}
+                        onClick={handleAutoGenerateThaiScript}
+                        style={{
+                          padding: '5px 12px',
+                          fontSize: 12,
+                          fontWeight: 700,
+                          background: 'linear-gradient(135deg, #4285F4 0%, #9B72CF 50%, #D96570 100%)',
+                          color: '#ffffff',
+                          border: 'none',
+                          borderRadius: 6,
+                          cursor: isWritingScript ? 'not-allowed' : 'pointer',
+                          opacity: isWritingScript ? 0.7 : 1,
+                          boxShadow: '0 2px 8px rgba(155, 114, 207, 0.3)',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 5,
+                        }}
+                      >
+                        {isWritingScript ? '🧠 AI đang viết bài 15-18s...' : '✨ AI Viết Theo Ảnh (15-18s)'}
+                      </button>
+                    </div>
+                  </div>
+
+                  <textarea
+                    rows="5"
+                    style={{ ...styles.textarea, fontSize: 13, lineHeight: 1.6 }}
+                    value={thaiScript}
+                    onChange={(e) => setThaiScript(e.target.value)}
+                    placeholder="Bạn có thể tự nhập văn bản tiếng Thái tùy ý vào đây, hoặc bấm nút 'AI Viết Theo Ảnh (15-18s)' ở trên..."
+                  />
+                  <div style={{ fontSize: 11.5, color: '#64748b', marginTop: 4 }}>
+                    💡 Có thể tự sửa/thêm văn bản theo ý muốn, hoặc dùng AI.
+                  </div>
+                </div>
               </div>
             )}
 
@@ -1519,6 +1602,9 @@ export default function VideoCreator() {
             >
               {outputVideoUrl ? (
                 <video src={outputVideoUrl} controls autoPlay loop style={styles.mockupScreen} />
+              ) : mediaType === 'video' && mediaFiles.length > 0 && !isPreviewingVideo && !rendering ? (
+                /* HIỂN THỊ TRỰC TIẾP VIDEO THÔ CỦA NGƯỜI DÙNG KHI CHƯA CHẠY RENDER/PREVIEW */
+                <video src={mediaFiles[0]} controls autoPlay loop muted style={styles.mockupScreen} />
               ) : (
                 <canvas
                   ref={previewCanvasRef}
@@ -1533,7 +1619,7 @@ export default function VideoCreator() {
                 <div style={styles.screenEmpty}>
                   <span style={{ fontSize: 54, opacity: 0.5 }}>👗</span>
                   <p style={{ color: '#64748b', fontSize: 15, textAlign: 'center', marginTop: 12, fontWeight: 500 }}>
-                    Chưa có tư liệu.<br />Kéo thả 1 ảnh sản phẩm / người mẫu vào bên trái.
+                    Chưa có tư liệu.<br />Kéo thả 1 ảnh sản phẩm / video vào bên trái.
                   </p>
                 </div>
               )}

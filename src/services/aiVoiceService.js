@@ -2,7 +2,7 @@
 
 export const VOICE_PROVIDERS = [
   { id: 'gemini', name: 'Google AI Studio' },
-  { id: 'elevenlabs', name: 'ElevenLabs Multilingual' },
+  { id: 'elevenlabs', name: 'ElevenLabs (Chưa hay)' },
 ];
 
 export const GEMINI_TTS_VOICES = [
@@ -249,17 +249,132 @@ export async function generateThaiSpeechAudio(text, voiceId, options = {}) {
   return requestPromise;
 }
 
-function generateFallbackTimeline(count = 1) {
+/**
+ * Chuyển Blob URL (tạo từ file máy tính) sang object Base64 chuẩn cho Gemini API
+ */
+async function fileUrlToGenerativePart(url) {
+  const res = await fetch(url);
+  const blob = await res.blob();
+  const base64Data = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+
+  return {
+    inlineData: {
+      data: base64Data,
+      mimeType: blob.type || 'image/jpeg',
+    },
+  };
+}
+
+/**
+ * AI tự động nhìn ảnh sản phẩm thời trang và viết kịch bản quảng cáo tiếng Thái dài 15 - 18 giây
+ */
+/**
+ * AI tự động nhìn ảnh sản phẩm thời trang và viết kịch bản quảng cáo tiếng Thái dài 15 - 18 giây
+ * (Đã có cơ chế Auto-Retry & Fallback chống lỗi High Demand / 503)
+ */
+export async function generateThaiScriptFromImage(imageUrl, apiKey, extraUserNote = '') {
+  if (!apiKey || !apiKey.trim()) {
+    throw new Error('Vui lòng nhập Google AI Studio API Key!');
+  }
+  if (!imageUrl) {
+    throw new Error('Vui lòng tải lên ít nhất 1 ảnh sản phẩm để AI nhận diện mẫu trang phục!');
+  }
+
+  const cleanKey = apiKey.trim();
+  const imagePart = await fileUrlToGenerativePart(imageUrl);
+
+  const hiddenSystemPrompt = `
+Bạn là chuyên gia sáng tạo kịch bản video ngắn TikTok Shop / Reels bán hàng thời trang tại Thái Lan.
+Nhiệm vụ:
+1. Phân tích hình ảnh sản phẩm thời trang được gửi kèm (kiểu dáng áo/quần/váy, chất liệu cảm quan, màu sắc, phong cách phối đồ). Không nói về màu hoặc mã sản phẩm.
+2. Viết MỘT đoạn kịch bản chào hàng liền mạch bằng TIẾNG THÁI LAN có độ dài ĐỌC VỪA VẶN TRONG KHOẢNG 15  GIÂY (khoảng 90 từ tiếng Thái với tốc độ nói tự nhiên, truyền cảm).
+3. Cấu trúc câu nói gồm 3 phần rõ ràng:
+   - 0-3s đầu: Câu hook giật tít gây tò mò, đánh trúng tâm lý người mua (vóc dáng thon gọn, thời tiết, phong cách sành điệu).
+   - 3-11s giữa: Mô tả chi tiết ưu điểm của sản phẩm trong ảnh (chất vải mềm mát, form dáng tôn dáng/giấu bụng, chi tiết đường may hoặc họa tiết độc đáo).
+   - 11-15s cuối: Kêu gọi hành động như ưu đãi số lượng có hạn, freeship, nhắn tin để nhận tư vấn và đặt hàng ngay.
+Yêu cầu bắt buộc:
+- CHỈ TRẢ VỀ DUY NHẤT ĐOẠN VĂN TIẾNG THÁI THUẦN TÚY.
+- TUYỆT ĐỐI KHÔNG thêm bất kỳ giải thích, chú thích phiên âm, tiếng Anh/Việt hay dấu ngoặc kép.
+`.trim();
+
+  const payload = {
+    contents: [
+      {
+        parts: [
+          { text: hiddenSystemPrompt + (extraUserNote ? `\nGhi chú thêm từ người bán: ${extraUserNote}` : '') },
+          imagePart,
+        ],
+      },
+    ],
+  };
+
+  // Danh sách model ưu tiên: nếu flash bận sẽ tự đổi sang flash-lite
+  const candidateModels = ['gemini-3.8-flash', 'gemini-3.8-flash-lite'];
+
+  for (const model of candidateModels) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${cleanKey}`;
+    
+    // Thử tối đa 2 lần cho mỗi model nếu gặp lỗi quá tải
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const thaiText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+          if (thaiText) return thaiText;
+        }
+
+        const errData = await response.json().catch(() => ({}));
+        const errMsg = errData.error?.message || '';
+
+        // Nếu máy chủ báo bận (503 / high demand) thì tạm dừng 1.5 giây rồi thử lại
+        if (response.status === 503 || errMsg.includes('high demand') || errMsg.includes('overloaded')) {
+          if (attempt < 2) {
+            await new Promise((res) => setTimeout(res, 1500));
+            continue;
+          }
+        } else if (response.status === 429) {
+          throw new RateLimitError('Đã vượt hạn mức gọi API trong phút. Vui lòng chờ 20 giây.', 20);
+        } else {
+          // Các lỗi khác (sai key, v.v.) thì throw trực tiếp
+          throw new Error(errMsg || `Lỗi API (${response.status})`);
+        }
+      } catch (err) {
+        if (err instanceof RateLimitError) throw err;
+        if (attempt === 2 && model === candidateModels[candidateModels.length - 1]) {
+          throw err;
+        }
+      }
+    }
+  }
+
+  throw new Error('Máy chủ Google AI hiện đang quá tải lượt yêu cầu. Bạn hãy bấm thử lại sau 5 - 10 giây nhé!');
+}
+
+// Fallback tạo storyboard phân cảnh chuyển động theo độ dài mong muốn (6s, 15s, 18s...)
+function generateFallbackTimeline(count = 1, totalSec = 6) {
+  const duration = Math.max(totalSec, 3);
   if (count <= 1) {
+    const perScene = +(duration / 4).toFixed(2);
     return [
-      { imageIndex: 0, duration: 1.5, effect: 'flash', focus: 'full' },
-      { imageIndex: 0, duration: 2.0, effect: 'kenburns', focus: 'top' },
-      { imageIndex: 0, duration: 1.5, effect: 'pan', focus: 'bottom' },
-      { imageIndex: 0, duration: 1.0, effect: 'pulse', focus: 'full' },
+      { imageIndex: 0, duration: perScene, effect: 'flash', focus: 'full' },
+      { imageIndex: 0, duration: perScene, effect: 'kenburns', focus: 'top' },
+      { imageIndex: 0, duration: perScene, effect: 'pan', focus: 'bottom' },
+      { imageIndex: 0, duration: +(duration - perScene * 3).toFixed(2), effect: 'pulse', focus: 'full' },
     ];
   }
 
-  const perSlide = +(6 / count).toFixed(2);
+  const perSlide = +(duration / count).toFixed(2);
   const effects = ['flash', 'kenburns', 'pan', 'pulse', 'zoomout'];
   return Array.from({ length: count }, (_, idx) => ({
     imageIndex: idx,
@@ -269,56 +384,87 @@ function generateFallbackTimeline(count = 1) {
   }));
 }
 
-export async function analyzeVideoScriptWithAi(promptText, imagesCount = 1, apiKey) {
+/**
+ * Phân tích kịch bản dựng AI: Biến ảnh tĩnh thành chuỗi chuyển động camera thích ứng theo thời lượng tổng (6s hoặc 15-18s)
+ */
+export async function analyzeVideoScriptWithAi(promptText, imagesCount = 1, apiKey, targetDuration = 6) {
+  const duration = Math.max(targetDuration, 3);
   if (!apiKey || !apiKey.trim() || !promptText || !promptText.trim()) {
-    return generateFallbackTimeline(imagesCount);
+    return generateFallbackTimeline(imagesCount, duration);
   }
 
   const cleanKey = apiKey.trim();
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${cleanKey}`;
   const isSingleImage = imagesCount <= 1;
 
   const systemInstruction = `Bạn là đạo diễn camera video TikTok thời trang.
 Người dùng cung cấp ${imagesCount} ảnh sản phẩm (có thể chỉ có 1 ảnh duy nhất).
-Nhiệm vụ: Phân bổ kịch bản thành chuỗi 3 đến 5 cảnh chuyển động camera sao cho TỔNG THỜI LƯỢNG TOÀN BỘ VIDEO XẤP XỈ ĐÚNG 6.0 GIÂY.
+Nhiệm vụ: Phân bổ kịch bản thành chuỗi từ 4 đến 7 cảnh chuyển động camera sao cho TỔNG THỜI LƯỢNG TOÀN BỘ VIDEO XẤP XỈ ĐÚNG ${duration.toFixed(1)} GIÂY.
 Các hiệu ứng hợp lệ: "kenburns", "zoomout", "pan", "flash", "pulse", "spin".
 Các điểm lấy nét chuyển động camera ("focus"): "full" (toàn cảnh), "top" (cận cổ áo/ngực áo), "bottom" (form eo/ống quần), "center" (chi tiết họa tiết).
-${isSingleImage ? 'LƯU Ý: Vì chỉ có 1 ảnh duy nhất, tất cả các cảnh đều đặt "imageIndex": 0 nhưng thay đổi "focus" và "effect" để tạo chuyển động camera mượt mà.' : ''}
+${isSingleImage ? 'LƯU Ý: Vì chỉ có 1 ảnh duy nhất, tất cả các cảnh đều đặt "imageIndex": 0 nhưng thay đổi linh hoạt "focus" và "effect" để tạo chuyển động camera mượt mà xuyên suốt.' : ''}
 Chỉ trả về JSON thuần (array), không bọc markdown:
 [
-  { "imageIndex": 0, "duration": 1.5, "effect": "flash", "focus": "full" },
-  { "imageIndex": 0, "duration": 2.5, "effect": "kenburns", "focus": "top" },
-  { "imageIndex": 0, "duration": 2.0, "effect": "pan", "focus": "bottom" }
+  { "imageIndex": 0, "duration": 3.5, "effect": "flash", "focus": "full" },
+  { "imageIndex": 0, "duration": 4.5, "effect": "kenburns", "focus": "top" },
+  { "imageIndex": 0, "duration": 4.5, "effect": "pan", "focus": "bottom" },
+  { "imageIndex": 0, "duration": 3.5, "effect": "pulse", "focus": "full" }
 ]`;
 
-  try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [{ text: `${systemInstruction}\n\nKịch bản chỉ đạo từ người dùng: ${promptText}` }],
-          },
-        ],
-        generationConfig: {
-          responseMimeType: 'application/json',
-        },
-      }),
-    });
+  const models = ['gemini-3.8-flash', 'gemini-3.8-flash-lite'];
 
-    if (!res.ok) throw new Error('Không thể phân tích qua Gemini AI');
+  for (const model of models) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${cleanKey}`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: `${systemInstruction}\n\nKịch bản chỉ đạo từ người dùng: ${promptText}` }] }],
+          generationConfig: { responseMimeType: 'application/json' },
+        }),
+      });
 
-    const data = await res.json();
-    const rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    const storyboard = JSON.parse(rawJson);
+      if (!res.ok) continue;
 
-    if (Array.isArray(storyboard) && storyboard.length > 0) {
-      return storyboard;
+      const data = await res.json();
+      const rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      const storyboard = JSON.parse(rawJson);
+
+      if (Array.isArray(storyboard) && storyboard.length > 0) {
+        return storyboard;
+      }
+    } catch {
+      continue;
     }
-    return generateFallbackTimeline(imagesCount);
-  } catch (err) {
-    console.warn('Fallback kịch bản 6s:', err.message);
-    return generateFallbackTimeline(imagesCount);
   }
+
+  return generateFallbackTimeline(imagesCount, duration);
+}
+/**
+ * Trích xuất 1 khung hình từ video để gửi lên AI phân tích trang phục
+ */
+export async function extractFrameFromVideo(videoUrl) {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement('video');
+    video.src = videoUrl;
+    video.crossOrigin = 'anonymous';
+    video.muted = true;
+    video.currentTime = 1.0; // Lấy frame ở giây thứ 1 để tránh màn đen mở đầu
+
+    video.onloadeddata = () => {
+      video.currentTime = Math.min(1.0, video.duration / 2);
+    };
+
+    video.onseeked = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth || 720;
+      canvas.height = video.videoHeight || 1280;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      resolve(dataUrl);
+    };
+
+    video.onerror = () => reject(new Error('Không thể đọc khung hình từ video đã tải lên.'));
+  });
 }
