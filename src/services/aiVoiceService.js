@@ -468,3 +468,81 @@ export async function extractFrameFromVideo(videoUrl) {
     video.onerror = () => reject(new Error('Không thể đọc khung hình từ video đã tải lên.'));
   });
 }
+
+/**
+ * Dịch kịch bản tiếng Thái sang tiếng Việt chuẩn văn phong bán hàng thời trang
+ * (Hỗ trợ abort signal để hủy dịch bất kỳ lúc nào)
+ */
+export async function translateThaiToVietnamese(thaiText, apiKey, signal = null) {
+  if (!apiKey || !apiKey.trim()) {
+    throw new Error('Vui lòng nhập Google AI Studio API Key ở ô cấu hình!');
+  }
+  if (!thaiText || !thaiText.trim()) {
+    throw new Error('Chưa có nội dung tiếng Thái để dịch!');
+  }
+
+  const cleanKey = apiKey.trim();
+  const prompt = `Bạn là chuyên gia dịch thuật và biên kịch quảng cáo bán hàng thời trang.
+Nhiệm vụ: Hãy dịch đoạn kịch bản bán hàng tiếng Thái sau sang TIẾNG VIỆT tự nhiên, cuốn hút, đúng văn phong quảng cáo chốt đơn TikTok/Reels.
+Chỉ trả về duy nhất văn bản tiếng Việt đã dịch, không kèm lời giải thích, ghi chú phiên âm hay ngoặc kép:
+${thaiText.trim()}`;
+
+  const payload = {
+    contents: [{ parts: [{ text: prompt }] }],
+  };
+
+  const candidateModels = ['gemini-3.8-flash', 'gemini-3.8-flash-lite', 'gemini-2.5-flash'];
+  let lastErrorMessage = '';
+
+  for (const model of candidateModels) {
+    if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${cleanKey}`;
+
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          signal: signal, // 👈 Truyền signal vào fetch để có thể hủy lập tức
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const translated = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+          if (translated) return translated;
+        }
+
+        const errData = await response.json().catch(() => ({}));
+        const errMsg = errData.error?.message || '';
+        lastErrorMessage = errMsg;
+
+        if (response.status === 503 || errMsg.includes('high demand') || errMsg.includes('overloaded')) {
+          if (attempt < 2) {
+            await new Promise((res) => setTimeout(res, 1500));
+            continue;
+          }
+        } else if (response.status === 429) {
+          throw new RateLimitError('Đã vượt hạn mức gọi API trong phút. Vui lòng đợi 20 giây.', 20);
+        } else if (response.status === 404) {
+          break;
+        } else if (errMsg) {
+          throw new Error(errMsg);
+        }
+      } catch (err) {
+        if (err.name === 'AbortError') throw err;
+        if (err instanceof RateLimitError) throw err;
+        lastErrorMessage = err.message || lastErrorMessage;
+      }
+    }
+  }
+
+  throw new Error(
+    lastErrorMessage
+      ? `Lỗi từ Google AI: ${lastErrorMessage}`
+      : 'Máy chủ Google AI đang tạm thời bận. Bạn hãy bấm thử lại sau 3 - 5 giây!'
+  );
+}

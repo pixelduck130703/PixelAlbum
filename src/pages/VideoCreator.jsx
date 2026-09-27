@@ -6,7 +6,8 @@ import {
   generateThaiSpeechAudio,
   analyzeVideoScriptWithAi,
   generateThaiScriptFromImage,
-  extractFrameFromVideo, // 👈 ĐÃ BỔ SUNG: Khắc phục lỗi crash khi tải video
+  extractFrameFromVideo,
+  translateThaiToVietnamese,
   GEMINI_TTS_VOICES,
   DEFAULT_ELEVENLABS_PREMADES,
   VOICE_PROVIDERS,
@@ -14,6 +15,34 @@ import {
   fetchAllElevenLabsVoices,
 } from '../services/aiVoiceService';
 import { generateGrokMotionVideo } from '../services/grokVideoService';
+
+// DANH SÁCH BÀI HÁT CÓ SẴN (Bạn chỉ cần đặt file MP3 tương ứng vào thư mục public/bgm/)
+const DEFAULT_PRESET_BGMS = [
+  {
+    id: 'Nhacnen1',
+    title: 'Nhạc nền 1',
+    url: '/public/music/Nhacnen1.mp3',
+    isDefault: true,
+  },
+  {
+    id: 'Nhacnen2',
+    title: 'Nhạc nền 2',
+    url: '/public/music/Nhacnen2.mp3',
+    isDefault: true,
+  },
+  {
+    id: 'Nhacnen3',
+    title: 'Nhạc nền 3',
+    url: '/public/music/Nhacnen3.mp3',
+    isDefault: true,
+  },
+  {
+    id: 'Nhacnen4',
+    title: 'Nhạc nền 4',
+    url: '/public/music/Nhacnen4.mp3',
+    isDefault: true,
+  },
+];
 
 export default function VideoCreator() {
   const [mediaType, setMediaType] = useState('images');
@@ -69,6 +98,11 @@ export default function VideoCreator() {
   const [isGeneratingVoice, setIsGeneratingVoice] = useState(false);
   const [isWritingScript, setIsWritingScript] = useState(false);
 
+  // Dịch nghĩa tiếng Việt & AbortController
+  const [vietnameseScript, setVietnameseScript] = useState('');
+  const [isTranslating, setIsTranslating] = useState(false);
+  const translationAbortRef = useRef(null);
+
   const [isPlayingVoicePreview, setIsPlayingVoicePreview] = useState(false);
   const previewAudioRef = useRef(null);
 
@@ -81,15 +115,17 @@ export default function VideoCreator() {
   const [isPlayingUploadedBgmPreview, setIsPlayingUploadedBgmPreview] = useState(false);
   const uploadedBgmPreviewAudioRef = useRef(null);
 
-  // Kho nhạc tự lưu của người dùng (từ file máy tính)
+  // Kho nhạc: Kết hợp nhạc mẫu có sẵn + nhạc lưu trong localStorage
   const [customBgmList, setCustomBgmList] = useState(() => {
     try {
       const saved = localStorage.getItem('USER_CUSTOM_BGMS');
-      return saved ? JSON.parse(saved) : [];
+      const userBgms = saved ? JSON.parse(saved) : [];
+      return [...DEFAULT_PRESET_BGMS, ...userBgms];
     } catch {
-      return [];
+      return DEFAULT_PRESET_BGMS;
     }
   });
+
   const [selectedCustomBgmId, setSelectedCustomBgmId] = useState('');
   const [playingCustomBgmPreviewId, setPlayingCustomBgmPreviewId] = useState(null);
   const customBgmPreviewAudioRef = useRef(null);
@@ -183,6 +219,11 @@ export default function VideoCreator() {
       setPlayingCustomBgmPreviewId(null);
     }
     if (window.speechSynthesis) window.speechSynthesis.cancel();
+    if (translationAbortRef.current) {
+      translationAbortRef.current.abort();
+      translationAbortRef.current = null;
+    }
+    setIsTranslating(false);
     setIsPreviewingVideo(false);
     setIsPlayingVoicePreview(false);
     setPreviewCurrentTime(0);
@@ -363,19 +404,28 @@ export default function VideoCreator() {
     const newSong = {
       id: 'bgm_' + Date.now(),
       title: bgmName.replace(/\.[^/.]+$/, ''),
-      desc: 'Nhạc tải từ máy',
+      desc: 'Nhạc tải từ máy tính',
       url: bgmFile,
+      isDefault: false,
     };
 
-    const updated = [newSong, ...customBgmList];
-    setCustomBgmList(updated);
+    // Lấy danh sách nhạc user tự upload hiện có từ localStorage
+    let savedUserBgms = [];
     try {
-      localStorage.setItem('USER_CUSTOM_BGMS', JSON.stringify(updated));
+      const saved = localStorage.getItem('USER_CUSTOM_BGMS');
+      savedUserBgms = saved ? JSON.parse(saved) : [];
     } catch {}
+
+    const updatedUserList = [newSong, ...savedUserBgms];
+    try {
+      localStorage.setItem('USER_CUSTOM_BGMS', JSON.stringify(updatedUserList));
+    } catch {}
+
+    setCustomBgmList([...DEFAULT_PRESET_BGMS, ...updatedUserList]);
     alert(`Đã lưu "${newSong.title}" vào kho nhạc!`);
   };
 
-  // 4. KHO NHẠC TỰ LƯU
+  // 4. KHO NHẠC (CÓ SẴN + TỰ LƯU)
   const handleSelectCustomBgm = (item) => {
     setSelectedCustomBgmId(item.id);
     setBgmFile(item.url);
@@ -405,7 +455,10 @@ export default function VideoCreator() {
     customBgmPreviewAudioRef.current = audio;
     audio.volume = Math.min(Math.max(bgmVolume, 0), 1.0);
     audio.onended = () => setPlayingCustomBgmPreviewId(null);
-    audio.onerror = () => setPlayingCustomBgmPreviewId(null);
+    audio.onerror = () => {
+      setPlayingCustomBgmPreviewId(null);
+      alert(`Không tìm thấy file nhạc "${item.title}". Hãy đảm bảo file đã được đặt vào thư mục public/bgm/!`);
+    };
 
     setPlayingCustomBgmPreviewId(item.id);
     audio.play().catch(() => setPlayingCustomBgmPreviewId(null));
@@ -413,11 +466,25 @@ export default function VideoCreator() {
 
   const handleDeleteCustomBgm = (e, id) => {
     e.stopPropagation();
-    const updated = customBgmList.filter((b) => b.id !== id);
-    setCustomBgmList(updated);
+    const target = customBgmList.find((b) => b.id === id);
+    if (target?.isDefault) {
+      alert('Không thể xóa bài hát mặc định của hệ thống!');
+      return;
+    }
+
+    let savedUserBgms = [];
     try {
-      localStorage.setItem('USER_CUSTOM_BGMS', JSON.stringify(updated));
+      const saved = localStorage.getItem('USER_CUSTOM_BGMS');
+      savedUserBgms = saved ? JSON.parse(saved) : [];
     } catch {}
+
+    const updatedUserList = savedUserBgms.filter((b) => b.id !== id);
+    try {
+      localStorage.setItem('USER_CUSTOM_BGMS', JSON.stringify(updatedUserList));
+    } catch {}
+
+    setCustomBgmList([...DEFAULT_PRESET_BGMS, ...updatedUserList]);
+
     if (selectedCustomBgmId === id) {
       setSelectedCustomBgmId('');
       setBgmFile(null);
@@ -457,8 +524,7 @@ export default function VideoCreator() {
 
     try {
       setIsWritingScript(true);
-      
-      // Nếu là video, tự trích xuất 1 frame ảnh đại diện; nếu là ảnh thì dùng trực tiếp
+
       let imageInput = mediaFiles[0];
       if (mediaType === 'video') {
         imageInput = await extractFrameFromVideo(mediaFiles[0]);
@@ -475,6 +541,42 @@ export default function VideoCreator() {
     } finally {
       setIsWritingScript(false);
     }
+  };
+
+  // BẮT ĐẦU DỊCH NGHĨA SANG TIẾNG VIỆT
+  const handleTranslateToVietnamese = async () => {
+    if (!thaiScript || !thaiScript.trim()) {
+      alert('Vui lòng nhập hoặc tạo kịch bản tiếng Thái trước khi dịch!');
+      return;
+    }
+    if (!geminiApiKey || !geminiApiKey.trim()) {
+      alert('Vui lòng nhập Google AI Studio API Key ở ô cấu hình!');
+      return;
+    }
+
+    const controller = new AbortController();
+    translationAbortRef.current = controller;
+
+    try {
+      setIsTranslating(true);
+      const viText = await translateThaiToVietnamese(thaiScript, geminiApiKey, controller.signal);
+      setVietnameseScript(viText);
+    } catch (err) {
+      if (err.name === 'AbortError') return;
+      alert('Lỗi dịch: ' + (err.message || 'Không thể dịch văn bản.'));
+    } finally {
+      setIsTranslating(false);
+      translationAbortRef.current = null;
+    }
+  };
+
+  // HỦY TIẾN TRÌNH DỊCH
+  const handleCancelTranslation = () => {
+    if (translationAbortRef.current) {
+      translationAbortRef.current.abort();
+      translationAbortRef.current = null;
+    }
+    setIsTranslating(false);
   };
 
   // NÚT NGHE THỬ GIỌNG ĐỌC
@@ -607,7 +709,6 @@ export default function VideoCreator() {
     activeMixerRef.current = mixer;
     const audioStream = mixer.setup(finalVoiceSrc, bgmFile, bgmVolume, voiceVolume, isPreview);
 
-    // Tự động nhận diện độ dài thực tế của file âm thanh (khớp 15-18s hoặc theo câu thoại tự nhập)
     let voiceDuration = await mixer.getVoiceDuration();
     let targetDuration = Math.max(Math.ceil(voiceDuration) || 6, 3);
     let aiTimeline = null;
@@ -742,8 +843,6 @@ export default function VideoCreator() {
   };
 
   const currentVoiceOptions = selectedProvider === 'gemini' ? (GEMINI_TTS_VOICES || []) : (elevenVoiceList || []);
-
-  // Ước tính độ dài thời gian đọc dựa theo số lượng ký tự tiếng Thái (~16 ký tự/giây)
   const estimatedSeconds = Math.max(1, Math.round((thaiScript.trim().length || 0) / 16));
 
   return (
@@ -866,7 +965,7 @@ export default function VideoCreator() {
               <p style={{ margin: 0, fontWeight: 700, color: '#0284c7', fontSize: 14 }}>
                 {isDraggingOverUpload
                   ? `Thả ${mediaType === 'images' ? 'ảnh' : 'video'} vào đây ngay!`
-                  : `Bấm để chọn hoặc kéo thả ${mediaType === 'images' ? 'ảnh người mẫu / sản phẩm (Chỉ cần 1 ảnh)' : 'video gốc'}`}
+                  : `Bấm để chọn hoặc kéo thả ${mediaType === 'images' ? 'ảnh' : 'video gốc'}`}
               </p>
             </div>
 
@@ -1078,7 +1177,7 @@ export default function VideoCreator() {
                       : '✨ Grok AI'}
                   </button>
 
-                  {/* NÚT XEM TRƯỚC NHANH CANVAS (Đã sửa nhãn hiển thị chính xác) */}
+                  {/* NÚT XEM TRƯỚC NHANH CANVAS */}
                   <button
                     type="button"
                     disabled={isAiDirecting}
@@ -1316,6 +1415,7 @@ export default function VideoCreator() {
                     </label>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {/* BỘ ĐẾM THỜI GIAN */}
                       <span style={{ fontSize: 11.5, color: '#64748b', backgroundColor: '#f1f5f9', padding: '2px 8px', borderRadius: 4 }}>
                         ~{estimatedSeconds} giây
                       </span>
@@ -1343,6 +1443,27 @@ export default function VideoCreator() {
                       >
                         {isWritingScript ? '🧠 AI đang viết bài 15-18s...' : '✨ AI Viết Theo Ảnh (15-18s)'}
                       </button>
+
+                      {/* NÚT XÓA KỊCH BẢN HIỆN TẠI */}
+                      <button
+                        type="button"
+                        title="Xóa kịch bản hiện tại"
+                        onClick={() => setThaiScript('')}
+                        style={{
+                          padding: '5px 8px',
+                          fontSize: 13,
+                          backgroundColor: '#fee2e2',
+                          color: '#dc2626',
+                          border: 'none',
+                          borderRadius: 6,
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        🗑️
+                      </button>
                     </div>
                   </div>
 
@@ -1360,9 +1481,9 @@ export default function VideoCreator() {
               </div>
             )}
 
-            {/* NÚT NGHE THỬ */}
+            {/* NÚT NGHE THỬ VÀ NÚT DỊCH NGHĨA TIẾNG VIỆT */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
-              <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
                 <button
                   type="button"
                   onClick={togglePreviewVoice}
@@ -1383,6 +1504,52 @@ export default function VideoCreator() {
                     : '🔊 Nghe thử giọng đọc'}
                 </button>
 
+                {/* NÚT DỊCH / NÚT HỦY DỊCH NẾU ĐANG CHẠY */}
+                {!isTranslating ? (
+                  <button
+                    type="button"
+                    onClick={handleTranslateToVietnamese}
+                    style={{
+                      padding: '10px 16px',
+                      borderRadius: 8,
+                      border: '1px solid #cbd5e1',
+                      backgroundColor: '#ffffff',
+                      color: '#334155',
+                      fontSize: 13.5,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    🇻🇳 Dịch
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleCancelTranslation}
+                    style={{
+                      padding: '10px 16px',
+                      borderRadius: 8,
+                      border: 'none',
+                      backgroundColor: '#fee2e2',
+                      color: '#dc2626',
+                      fontSize: 13.5,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    🛑 Hủy dịch
+                  </button>
+                )}
+
                 {selectedProvider === 'gemini' && geminiCooldown > 0 && (
                   <span style={styles.cooldownBadge}>
                     ⏳ Google chờ: {geminiCooldown}s
@@ -1390,6 +1557,47 @@ export default function VideoCreator() {
                 )}
               </div>
             </div>
+
+            {/* Ô BẢN DỊCH TIẾNG VIỆT */}
+            {(vietnameseScript || isTranslating) && (
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <label style={{ ...styles.label, margin: 0, color: '#059669' }}>
+                    🇻🇳 Bản dịch nghĩa tiếng Việt:
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (isTranslating) handleCancelTranslation();
+                      setVietnameseScript('');
+                    }}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#94a3b8',
+                      fontSize: 12,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    ✕ Đóng ô dịch
+                  </button>
+                </div>
+                <textarea
+                  rows="3"
+                  style={{
+                    ...styles.textarea,
+                    backgroundColor: '#f0fdf4',
+                    borderColor: '#bbf7d0',
+                    color: '#166534',
+                    fontSize: 13,
+                    lineHeight: 1.5,
+                  }}
+                  value={isTranslating ? 'Đang chuyển ngữ kịch bản sang tiếng Việt...' : vietnameseScript}
+                  onChange={(e) => setVietnameseScript(e.target.value)}
+                  placeholder="Bản dịch tiếng Việt sẽ xuất hiện tại đây..."
+                />
+              </div>
+            )}
 
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
@@ -1509,7 +1717,7 @@ export default function VideoCreator() {
               <div style={{ marginBottom: 14 }}>
                 <div style={{ marginBottom: 8 }}>
                   <span style={{ fontSize: 12.5, color: '#64748b', fontWeight: 600 }}>
-                    Danh sách bài hát bạn đã lưu:
+                    Danh sách bài hát ({customBgmList.length}):
                   </span>
                 </div>
 
@@ -1519,7 +1727,7 @@ export default function VideoCreator() {
                     Hãy qua tab <b>"📁 Tải từ máy tính"</b> chọn file nhạc rồi bấm <b>"Lưu vào kho nhạc"</b>!
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 220, overflowY: 'auto' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 240, overflowY: 'auto' }}>
                     {customBgmList.map((item) => {
                       const isSelected = selectedCustomBgmId === item.id;
                       const isPreviewPlaying = playingCustomBgmPreviewId === item.id;
@@ -1534,14 +1742,20 @@ export default function VideoCreator() {
                           }}
                         >
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontWeight: 700, fontSize: 13.5, color: isSelected ? '#0284c7' : '#0f172a' }}>
-                              {isSelected ? '✓ ' : ''}
-                              {item.title}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <span style={{ fontWeight: 700, fontSize: 13.5, color: isSelected ? '#0284c7' : '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {isSelected ? '✓ ' : ''}{item.title}
+                              </span>
+                              {item.isDefault && (
+                                <span style={styles.defaultBadge}>Có sẵn</span>
+                              )}
                             </div>
-                            <div style={{ fontSize: 11.5, color: '#64748b', marginTop: 2 }}>{item.desc}</div>
+                            <div style={{ fontSize: 11.5, color: '#64748b', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {item.desc}
+                            </div>
                           </div>
 
-                          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                          <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginLeft: 8 }}>
                             <button
                               type="button"
                               onClick={(e) => togglePreviewCustomBgm(e, item)}
@@ -1554,14 +1768,17 @@ export default function VideoCreator() {
                               {isPreviewPlaying ? '⏹️' : '▶️'}
                             </button>
 
-                            <button
-                              type="button"
-                              title="Xóa bài này"
-                              onClick={(e) => handleDeleteCustomBgm(e, item.id)}
-                              style={styles.deleteMiniBtn}
-                            >
-                              ✕
-                            </button>
+                            {/* Chỉ cho xóa các bài do người dùng tự upload, không xóa bài mặc định */}
+                            {!item.isDefault && (
+                              <button
+                                type="button"
+                                title="Xóa bài này"
+                                onClick={(e) => handleDeleteCustomBgm(e, item.id)}
+                                style={styles.deleteMiniBtn}
+                              >
+                                ✕
+                              </button>
+                            )}
                           </div>
                         </div>
                       );
@@ -1603,7 +1820,6 @@ export default function VideoCreator() {
               {outputVideoUrl ? (
                 <video src={outputVideoUrl} controls autoPlay loop style={styles.mockupScreen} />
               ) : mediaType === 'video' && mediaFiles.length > 0 && !isPreviewingVideo && !rendering ? (
-                /* HIỂN THỊ TRỰC TIẾP VIDEO THÔ CỦA NGƯỜI DÙNG KHI CHƯA CHẠY RENDER/PREVIEW */
                 <video src={mediaFiles[0]} controls autoPlay loop muted style={styles.mockupScreen} />
               ) : (
                 <canvas
@@ -1635,9 +1851,6 @@ export default function VideoCreator() {
           {!outputVideoUrl && (
             <div style={styles.timelineScrubberCard}>
               <div style={styles.timelineHeader}>
-                <span style={styles.timelineTitle}>
-                  {isPreviewingVideo ? '🎬 Timeline Xem Trước' : '⏸️ Trục thời gian (Sẵn sàng tua)'}
-                </span>
                 <span style={styles.timelineTimestamp}>
                   {formatTime(previewCurrentTime)} / {formatTime(previewDuration)}
                 </span>
@@ -1957,6 +2170,14 @@ const styles = {
     fontWeight: 700,
     backgroundColor: '#d1fae5',
     padding: '2px 8px',
+    borderRadius: 4,
+  },
+  defaultBadge: {
+    fontSize: 10.5,
+    fontWeight: 700,
+    backgroundColor: '#e0f2fe',
+    color: '#0369a1',
+    padding: '1px 6px',
     borderRadius: 4,
   },
   uploadBox: {
