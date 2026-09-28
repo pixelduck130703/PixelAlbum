@@ -1872,9 +1872,9 @@ export default function VideoCreator() {
 
                             {mediaFiles.length === 0 && !outputVideoUrl && (
                                 <div style={styles.screenEmpty}>
-                                    <span style={{ fontSize: 54, opacity: 0.5 }}>👗</span>
+                                    <span style={{ fontSize: 30, opacity: 0.5 }}>🩳👖🧥👗</span>
                                     <p style={{ color: '#64748b', fontSize: 15, textAlign: 'center', marginTop: 12, fontWeight: 500 }}>
-                                        Chưa có tư liệu.<br />Kéo thả 1 ảnh sản phẩm / video vào bên trái.
+                                        Chưa có tư liệu.<br />Kéo thả ảnh  vào bên trái.
                                     </p>
                                 </div>
                             )}
