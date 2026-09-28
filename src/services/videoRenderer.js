@@ -10,15 +10,26 @@ export class VideoRenderer {
     this.animId = null;
     this.isCancelled = false;
     this.recorder = null;
+    // FPS mục tiêu để tạo cảm giác giật giật (Stop-motion / Low FPS effect)
+    this.targetFps = 10; 
   }
 
-  // Vẽ chuyển động camera mượt mà gốc
-  renderImageFrame(img, nextImg, progress, effect, slideIndex = 0, focus = 'full') {
+  // Chuyển progress liên tục (60 FPS) thành progress giật từng nấc theo FPS mục tiêu
+  quantizeProgress(progress, durationSec) {
+    const totalFrames = Math.max(1, Math.floor(durationSec * this.targetFps));
+    return Math.floor(progress * totalFrames) / totalFrames;
+  }
+
+  // Vẽ chuyển động camera giật nấc FPS
+  renderImageFrame(img, nextImg, rawProgress, effect, slideIndex = 0, focus = 'full', durationSec = 2) {
     const { ctx, width, height } = this;
     ctx.clearRect(0, 0, width, height);
     ctx.fillStyle = '#0f172a';
     ctx.fillRect(0, 0, width, height);
     if (!img) return;
+
+    // LÀM GIẬT CHUYỂN ĐỘNG THEO FPS
+    const progress = this.quantizeProgress(rawProgress, durationSec);
 
     let activeEffect = effect;
     if (effect === 'dynamic') {
@@ -28,32 +39,31 @@ export class VideoRenderer {
 
     ctx.save();
 
-    // Điểm tâm biến đổi (Focus camera)
     let originX = width / 2;
     let originY = height / 2;
     if (focus === 'top') {
-      originY = height * 0.25; // Tập trung cận phần ngực/cổ áo
+      originY = height * 0.25;
     } else if (focus === 'bottom') {
-      originY = height * 0.75; // Tập trung phần tà áo/quần
+      originY = height * 0.75;
     }
 
-    // 1. Zoom In (Ken Burns) mượt mà
+    // 1. Zoom In (Ken Burns) giật FPS
     if (activeEffect === 'kenburns') {
-      const scale = 1.05 + progress * 0.15;
+      const scale = 1.05 + progress * 0.18;
       ctx.translate(originX, originY);
       ctx.scale(scale, scale);
       ctx.translate(-originX, -originY);
       this.drawImageCover(img);
     }
-    // 2. Zoom Out mượt mà
+    // 2. Zoom Out giật FPS
     else if (activeEffect === 'zoomout') {
-      const scale = 1.2 - progress * 0.15;
+      const scale = 1.22 - progress * 0.18;
       ctx.translate(originX, originY);
       ctx.scale(scale, scale);
       ctx.translate(-originX, -originY);
       this.drawImageCover(img);
     }
-    // 3. Pan Lia Máy mượt mà
+    // 3. Pan Lia Máy giật FPS
     else if (activeEffect === 'pan') {
       const scale = 1.15;
       const offsetX = (progress - 0.5) * 60;
@@ -63,30 +73,30 @@ export class VideoRenderer {
       ctx.translate(-originX, -originY);
       this.drawImageCover(img);
     }
-    // 4. Crossfade mượt mà
+    // 4. Crossfade
     else if (activeEffect === 'crossfade') {
       this.drawImageCover(img);
-      if (nextImg && progress > 0.72) {
-        const fadeAlpha = (progress - 0.72) / 0.28;
+      if (nextImg && progress > 0.7) {
+        const fadeAlpha = Math.floor(((progress - 0.7) / 0.3) * 5) / 5; // Giật độ mờ
         ctx.globalAlpha = Math.min(Math.max(fadeAlpha, 0), 1);
         this.drawImageCover(nextImg);
       }
     }
-    // 5. Flash Pop
+    // 5. Flash Pop giật FPS
     else if (activeEffect === 'flash') {
-      const scale = 1.08 + progress * 0.08;
+      const scale = 1.08 + progress * 0.1;
       ctx.translate(originX, originY);
       ctx.scale(scale, scale);
       ctx.translate(-originX, -originY);
       this.drawImageCover(img);
       if (progress < 0.2) {
-        ctx.fillStyle = `rgba(255, 255, 255, ${0.5 * (1 - progress / 0.2)})`;
+        ctx.fillStyle = `rgba(255, 255, 255, ${0.45 * (1 - progress / 0.2)})`;
         ctx.fillRect(0, 0, width, height);
       }
     }
-    // 6. Spin & Tilt
+    // 6. Spin & Tilt giật FPS
     else if (activeEffect === 'spin') {
-      const angle = Math.sin(progress * Math.PI) * 0.04;
+      const angle = Math.sin(progress * Math.PI) * 0.045;
       const scale = 1.12;
       ctx.translate(originX, originY);
       ctx.rotate(angle);
@@ -94,10 +104,10 @@ export class VideoRenderer {
       ctx.translate(-originX, -originY);
       this.drawImageCover(img);
     }
-    // 7. Pulse Beat
+    // 7. Pulse Beat giật FPS
     else if (activeEffect === 'pulse') {
       const beat = Math.sin(progress * Math.PI * 4);
-      const scale = 1.04 + Math.max(0, beat) * 0.07;
+      const scale = 1.04 + Math.max(0, beat) * 0.08;
       ctx.translate(originX, originY);
       ctx.scale(scale, scale);
       ctx.translate(-originX, -originY);
@@ -109,7 +119,6 @@ export class VideoRenderer {
     ctx.restore();
   }
 
-  // Căn chỉnh cả Image lẫn Video lấp đầy khung Canvas
   drawImageCover(media) {
     if (!media) return;
     const { ctx, width, height } = this;
@@ -136,7 +145,7 @@ export class VideoRenderer {
     ctx.drawImage(media, offsetX, offsetY, drawWidth, drawHeight);
   }
 
-  // Tải trước an toàn: nhận diện đúng cả ảnh và video
+  // Tải trước an toàn cho cả Image lẫn Video
   preloadMediaItem(src) {
     return new Promise((resolve) => {
       if (!src) return resolve(null);
@@ -145,9 +154,7 @@ export class VideoRenderer {
       img.crossOrigin = 'anonymous';
       img.src = src;
 
-      img.onload = () => {
-        resolve(img);
-      };
+      img.onload = () => resolve(img);
 
       img.onerror = () => {
         const video = document.createElement('video');
@@ -239,7 +246,7 @@ export class VideoRenderer {
 
       const currentMedia = mediaList[0];
 
-      // NẾU LÀ VIDEO
+      // Nếu là Video
       if (currentMedia && currentMedia.tagName === 'VIDEO') {
         this.ctx.clearRect(0, 0, this.width, this.height);
         this.ctx.fillStyle = '#0f172a';
@@ -254,7 +261,7 @@ export class VideoRenderer {
 
         this.drawImageCover(currentMedia);
       }
-      // NẾU LÀ ẢNH CHẠY THEO AI TIMELINE
+      // Nếu là Ảnh theo AI Timeline
       else if (isScript) {
         let accTime = 0;
         let activeScene = aiTimeline[0];
@@ -278,10 +285,11 @@ export class VideoRenderer {
           sceneProgress,
           activeScene.effect || 'kenburns',
           imgIdx,
-          activeScene.focus || 'full'
+          activeScene.focus || 'full',
+          activeScene.duration || 1.5
         );
       }
-      // NẾU LÀ ẢNH CHẠY THEO HIỆU ỨNG TÙY CHỌN
+      // Nếu là Ảnh chạy Effect thông thường
       else {
         const slideDuration = durationMs / mediaList.length;
         const currentSlideIdx = Math.min(Math.floor(elapsed / slideDuration), mediaList.length - 1);
@@ -291,7 +299,9 @@ export class VideoRenderer {
           mediaList[currentSlideIdx + 1] || mediaList[0],
           slideProgress,
           selectedEffect,
-          currentSlideIdx
+          currentSlideIdx,
+          'full',
+          slideDuration / 1000
         );
       }
 
@@ -334,7 +344,6 @@ export class VideoRenderer {
 
     const recordedChunks = [];
 
-    // Ưu tiên codec MP4
     let mimeType = 'video/webm';
     if (MediaRecorder.isTypeSupported('video/mp4;codecs=avc1,mp4a.40.2')) {
       mimeType = 'video/mp4;codecs=avc1,mp4a.40.2';
@@ -411,7 +420,8 @@ export class VideoRenderer {
           sceneProgress,
           activeScene.effect || 'kenburns',
           imgIdx,
-          activeScene.focus || 'full'
+          activeScene.focus || 'full',
+          activeScene.duration || 1.5
         );
       } else {
         const slideDuration = durationMs / mediaList.length;
@@ -422,7 +432,9 @@ export class VideoRenderer {
           mediaList[currentSlideIdx + 1] || mediaList[0],
           slideProgress,
           selectedEffect,
-          currentSlideIdx
+          currentSlideIdx,
+          'full',
+          slideDuration / 1000
         );
       }
 
