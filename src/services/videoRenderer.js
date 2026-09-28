@@ -1,5 +1,4 @@
 // src/services/videoRenderer.js
-
 export class VideoRenderer {
   constructor(canvas, { width = 720, height = 1280 } = {}) {
     this.canvas = canvas;
@@ -8,7 +7,6 @@ export class VideoRenderer {
     this.height = height;
     this.canvas.width = width;
     this.canvas.height = height;
-
     this.animId = null;
     this.isCancelled = false;
     this.recorder = null;
@@ -18,30 +16,23 @@ export class VideoRenderer {
   renderImageFrame(img, nextImg, progress, effect, slideIndex = 0, focus = 'full') {
     const { ctx, width, height } = this;
     ctx.clearRect(0, 0, width, height);
-
     ctx.fillStyle = '#0f172a';
     ctx.fillRect(0, 0, width, height);
-
     if (!img) return;
-
     let activeEffect = effect;
     if (effect === 'dynamic') {
       const dynamicList = ['kenburns', 'zoomout', 'pan', 'pulse', 'flash', 'spin'];
       activeEffect = dynamicList[slideIndex % dynamicList.length];
     }
-
     ctx.save();
-
     // Điểm tâm biến đổi (Focus camera)
     let originX = width / 2;
     let originY = height / 2;
-
     if (focus === 'top') {
       originY = height * 0.25; // Tập trung cận phần ngực/cổ áo
     } else if (focus === 'bottom') {
       originY = height * 0.75; // Tập trung phần tà áo/quần
     }
-
     // 1. Zoom In (Ken Burns)
     if (activeEffect === 'kenburns') {
       const scale = 1.05 + progress * 0.15;
@@ -84,7 +75,6 @@ export class VideoRenderer {
       ctx.scale(scale, scale);
       ctx.translate(-originX, -originY);
       this.drawImageCover(img);
-
       if (progress < 0.2) {
         ctx.fillStyle = `rgba(255, 255, 255, ${0.5 * (1 - progress / 0.2)})`;
         ctx.fillRect(0, 0, width, height);
@@ -111,41 +101,84 @@ export class VideoRenderer {
     } else {
       this.drawImageCover(img);
     }
-
     ctx.restore();
   }
 
-  drawImageCover(img) {
-    if (!img) return;
+  drawImageCover(media) {
+    if (!media) return;
     const { ctx, width, height } = this;
-    const imgRatio = img.width / img.height;
+    const mWidth = media.videoWidth || media.width;
+    const mHeight = media.videoHeight || media.height;
+    if (!mWidth || !mHeight) return;
+    const mediaRatio = mWidth / mHeight;
     const screenRatio = width / height;
-
     let drawWidth, drawHeight, offsetX, offsetY;
-
-    if (imgRatio > screenRatio) {
+    if (mediaRatio > screenRatio) {
       drawHeight = height;
-      drawWidth = height * imgRatio;
+      drawWidth = height * mediaRatio;
       offsetX = (width - drawWidth) / 2;
       offsetY = 0;
     } else {
       drawWidth = width;
-      drawHeight = width / imgRatio;
+      drawHeight = width / mediaRatio;
       offsetX = 0;
       offsetY = (height - drawHeight) / 2;
     }
-
-    ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+    ctx.drawImage(media, offsetX, offsetY, drawWidth, drawHeight);
   }
 
   async preloadImages(files) {
     const promises = files.map((src) => {
       return new Promise((resolve) => {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.src = src;
-        img.onload = () => resolve(img);
-        img.onerror = () => resolve(null);
+        if (!src) return resolve(null);
+        // Tự động phân loại nếu nguồn là video
+        const isVideo =
+          src.startsWith('blob:') ||
+          src.endsWith('.mp4') ||
+          src.endsWith('.webm') ||
+          src.endsWith('.mov');
+
+        if (isVideo) {
+          const video = document.createElement('video');
+          video.crossOrigin = 'anonymous';
+          video.src = src;
+          video.muted = true;
+          video.defaultMuted = true;
+          video.playsInline = true;
+          video.autoplay = true;
+          video.loop = true;
+
+          let isResolved = false;
+          const onReady = () => {
+            if (isResolved) return;
+            isResolved = true;
+            video.play().catch(() => {});
+            resolve(video);
+          };
+
+          video.onloadeddata = onReady;
+          video.oncanplay = onReady;
+          video.onerror = () => {
+            if (!isResolved) {
+              isResolved = true;
+              resolve(null);
+            }
+          };
+          setTimeout(() => {
+            if (!isResolved) {
+              isResolved = true;
+              video.play().catch(() => {});
+              resolve(video);
+            }
+          }, 1500);
+        } else {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.src = src;
+          img.onload = () => resolve(img);
+          img.onerror = () => resolve(null);
+          setTimeout(() => resolve(img), 1500);
+        }
       });
     });
     const loaded = await Promise.all(promises);
@@ -165,6 +198,14 @@ export class VideoRenderer {
     const images = await this.preloadImages(files);
     if (!images.length) return;
 
+    // Reset tua video về 0 nếu có
+    images.forEach((m) => {
+      if (m.tagName === 'VIDEO') {
+        m.currentTime = 0;
+        m.play().catch(() => {});
+      }
+    });
+
     const isScript = effectMode === 'script' && aiTimeline && aiTimeline.length > 0;
     const finalDurationSec = isScript ? 6 : totalDuration;
     const durationMs = finalDurationSec * 1000;
@@ -172,22 +213,28 @@ export class VideoRenderer {
 
     const loop = (now) => {
       if (this.isCancelled) return;
-
       const elapsed = now - startTime;
       const overallProgress = Math.min(elapsed / durationMs, 1);
-
       if (onProgress) onProgress(overallProgress);
-
       if (elapsed >= durationMs) {
+        images.forEach((m) => {
+          if (m.tagName === 'VIDEO') m.pause();
+        });
         if (onPreviewEnd) onPreviewEnd();
         return;
       }
 
-      if (isScript) {
+      // Xử lý vẽ: Nếu là video thì vẽ frame video hiện tại, nếu là ảnh thì áp dụng effect
+      const currentMedia = images[0];
+      if (currentMedia && currentMedia.tagName === 'VIDEO') {
+        this.ctx.clearRect(0, 0, this.width, this.height);
+        this.ctx.fillStyle = '#0f172a';
+        this.ctx.fillRect(0, 0, this.width, this.height);
+        this.drawImageCover(currentMedia);
+      } else if (isScript) {
         let accTime = 0;
         let activeScene = aiTimeline[0];
         let sceneProgress = 0;
-
         for (let i = 0; i < aiTimeline.length; i++) {
           const scene = aiTimeline[i];
           const sceneMs = (scene.duration || 1.5) * 1000;
@@ -198,11 +245,9 @@ export class VideoRenderer {
           }
           accTime += sceneMs;
         }
-
         const imgIdx = (activeScene.imageIndex || 0) % images.length;
         const curImg = images[imgIdx];
         const nxtImg = images[(imgIdx + 1) % images.length];
-
         this.renderImageFrame(
           curImg,
           nxtImg,
@@ -223,10 +268,8 @@ export class VideoRenderer {
           currentSlideIdx
         );
       }
-
       this.animId = requestAnimationFrame(loop);
     };
-
     this.animId = requestAnimationFrame(loop);
   }
 
@@ -245,27 +288,33 @@ export class VideoRenderer {
     const images = await this.preloadImages(files);
     if (!images.length) return;
 
+    // Reset tua video về 0 nếu có
+    images.forEach((m) => {
+      if (m.tagName === 'VIDEO') {
+        m.currentTime = 0;
+        m.play().catch(() => {});
+      }
+    });
+
     const isScript = effectMode === 'script' && aiTimeline && aiTimeline.length > 0;
     const finalDurationSec = isScript ? 6 : totalDuration;
     const durationMs = finalDurationSec * 1000;
-
     const stream = this.canvas.captureStream(30);
     if (audioStream) {
       audioStream.getAudioTracks().forEach((track) => stream.addTrack(track));
     }
-
     const recordedChunks = [];
     const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
       ? 'video/webm;codecs=vp9'
       : 'video/webm';
-
     this.recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 4000000 });
-
     this.recorder.ondataavailable = (e) => {
       if (e.data && e.data.size > 0) recordedChunks.push(e.data);
     };
-
     this.recorder.onstop = () => {
+      images.forEach((m) => {
+        if (m.tagName === 'VIDEO') m.pause();
+      });
       if (this.isCancelled) {
         if (onCancel) onCancel();
         return;
@@ -274,31 +323,32 @@ export class VideoRenderer {
       const videoUrl = URL.createObjectURL(blob);
       if (onComplete) onComplete(videoUrl);
     };
-
     this.recorder.start();
     const startTime = performance.now();
-
     const renderLoop = (now) => {
       if (this.isCancelled) {
         this.recorder.stop();
         return;
       }
-
       const elapsed = now - startTime;
       const overallProgress = Math.min(elapsed / durationMs, 1);
-
       if (onProgress) onProgress(overallProgress);
-
       if (elapsed >= durationMs) {
         this.recorder.stop();
         return;
       }
 
-      if (isScript) {
+      // Xử lý vẽ khi xuất video
+      const currentMedia = images[0];
+      if (currentMedia && currentMedia.tagName === 'VIDEO') {
+        this.ctx.clearRect(0, 0, this.width, this.height);
+        this.ctx.fillStyle = '#0f172a';
+        this.ctx.fillRect(0, 0, this.width, this.height);
+        this.drawImageCover(currentMedia);
+      } else if (isScript) {
         let accTime = 0;
         let activeScene = aiTimeline[0];
         let sceneProgress = 0;
-
         for (let i = 0; i < aiTimeline.length; i++) {
           const scene = aiTimeline[i];
           const sceneMs = (scene.duration || 1.5) * 1000;
@@ -309,11 +359,9 @@ export class VideoRenderer {
           }
           accTime += sceneMs;
         }
-
         const imgIdx = (activeScene.imageIndex || 0) % images.length;
         const curImg = images[imgIdx];
         const nxtImg = images[(imgIdx + 1) % images.length];
-
         this.renderImageFrame(
           curImg,
           nxtImg,
@@ -334,10 +382,8 @@ export class VideoRenderer {
           currentSlideIdx
         );
       }
-
       this.animId = requestAnimationFrame(renderLoop);
     };
-
     this.animId = requestAnimationFrame(renderLoop);
   }
 

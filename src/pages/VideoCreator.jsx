@@ -989,7 +989,7 @@ export default function VideoCreator() {
                             <p style={{ margin: 0, fontWeight: 700, color: '#0284c7', fontSize: 14 }}>
                                 {isDraggingOverUpload
                                     ? `Thả ${mediaType === 'images' ? 'ảnh' : 'video'} vào đây ngay!`
-                                    : `Bấm để chọn hoặc kéo thả ${mediaType === 'images' ? 'ảnh người mẫu / sản phẩm (Chỉ cần 1 ảnh)' : 'video gốc'}`}
+                                    : `Bấm để chọn hoặc kéo thả ${mediaType === 'images' ? 'ảnh' : 'video'}`}
                             </p>
                         </div>
 
@@ -1890,9 +1890,6 @@ export default function VideoCreator() {
                     {!outputVideoUrl && (
                         <div style={styles.timelineScrubberCard}>
                             <div style={styles.timelineHeader}>
-                                <span style={styles.timelineTitle}>
-                                    {isPreviewingVideo ? '🎬 Timeline Xem Trước' : '⏸️ Trục thời gian (Sẵn sàng tua)'}
-                                </span>
                                 <span style={styles.timelineTimestamp}>
                                     {formatTime(previewCurrentTime)} / {formatTime(previewDuration)}
                                 </span>
