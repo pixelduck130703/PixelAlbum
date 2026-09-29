@@ -84,7 +84,6 @@ export default function VideoCreator() {
     const [selectedVoiceId, setSelectedVoiceId] = useState(GEMINI_TTS_VOICES?.[0]?.id || 'Sadaltager');
     const [customElevenVoiceId, setCustomElevenVoiceId] = useState('');
 
-    // Đồng bộ cả 2 khóa lưu trong localStorage
     const [geminiApiKey, setGeminiApiKey] = useState(
         localStorage.getItem('CUSTOM_GEMINI_KEY') || localStorage.getItem('user_gemini_api_key') || ''
     );
@@ -96,10 +95,8 @@ export default function VideoCreator() {
 
     const [geminiCooldown, setGeminiCooldown] = useState(0);
 
-    // Kịch bản đọc tiếng Thái (mặc định mẫu sẵn 15-18s)
-    const [thaiScript, setThaiScript] = useState(
-        'อยากได้ลุคสตรีทเท่ๆ ที่ใส่แล้วหุ่นเพรียวขึ้นทันตาไหมครับ? แนะนำเสื้อยืดโอเวอร์ไซส์ตัวนี้เลย ลายสกรีนคมชัดสไตล์เรโทร ช่วยพรางหุ่นได้เนียนตามากๆ ผ้าคอตตอนแท้ร้อยเปอร์เซ็นต์ นุ่ม สบาย ระบายอากาศดี ไม่ร้อนแน่นอน มีไซส์ตั้งแต่ M จนถึง 4XL สั่งซื้อวันนี้โปรโมชั่นพิเศษสองตัวส่งฟรี ทักแชทสั่งเลยครับ!'
-    );
+    // 1. KỊCH BẢN ĐỌC TIẾNG THÁI: ĐỂ TRỐNG MỖI LẦN TRUY CẬP
+    const [thaiScript, setThaiScript] = useState('');
     const [isGeneratingVoice, setIsGeneratingVoice] = useState(false);
     const [isWritingScript, setIsWritingScript] = useState(false);
     const [scriptStatusText, setScriptStatusText] = useState('');
@@ -135,6 +132,13 @@ export default function VideoCreator() {
     const [selectedCustomBgmId, setSelectedCustomBgmId] = useState('');
     const [playingCustomBgmPreviewId, setPlayingCustomBgmPreviewId] = useState(null);
     const customBgmPreviewAudioRef = useRef(null);
+
+    // POPUP MODAL THÔNG BÁO CHƯA CÓ NHẠC NỀN
+    const [showNoBgmPrompt, setShowNoBgmPrompt] = useState(false);
+
+    // POPUP MODAL LOADING PREVIEW
+    const [isPreviewPreparing, setIsPreviewPreparing] = useState(false);
+    const [preparingStatusText, setPreparingStatusText] = useState('');
 
     const [isPreviewingVideo, setIsPreviewingVideo] = useState(false);
     const [previewDuration, setPreviewDuration] = useState(6);
@@ -234,6 +238,8 @@ export default function VideoCreator() {
         setIsTranslating(false);
         setIsPreviewingVideo(false);
         setIsPlayingVoicePreview(false);
+        setIsPreviewPreparing(false);
+        setShowNoBgmPrompt(false);
         setPreviewCurrentTime(0);
         setProgress(0);
     };
@@ -709,16 +715,58 @@ export default function VideoCreator() {
         return { width: 720, height: 1280 };
     };
 
+    // HÀM CHUẨN BỊ SESSION: TỰ ĐỘNG VIẾT KỊCH BẢN VÀ TỰ TẠO GIỌNG ĐỌC NẾU THIẾU
     const prepareSession = async (isPreview = false) => {
+        let currentScript = thaiScript?.trim() || '';
+
+        // 1. NẾU CHỌN DÙNG VOICE AI MÀ CHƯA CÓ VĂN BẢN KỊCH BẢN -> TỰ ĐỘNG VIẾT KỊCH BẢN
+        if (voiceSourceType === 'ai' && !currentScript) {
+            if (mediaFiles.length === 0) {
+                throw new Error('Vui lòng tải lên ít nhất 1 ảnh hoặc video để AI có thể viết kịch bản!');
+            }
+
+            setIsWritingScript(true);
+            setScriptStatusText('Tự động tạo kịch bản từ hình ảnh/video...');
+            setPreparingStatusText('Đang phân tích thiết kế & tự động tạo kịch bản...');
+
+            try {
+                let imageInput = mediaFiles[0];
+                if (mediaType === 'video') {
+                    setScriptStatusText('Đang trích xuất khung hình video...');
+                    setPreparingStatusText('Đang trích xuất khung hình từ video...');
+                    imageInput = await extractFrameFromVideo(mediaFiles[0]);
+                }
+
+                setScriptStatusText('AI đang phân tích sản phẩm và viết kịch bản...');
+                setPreparingStatusText('AI đang sáng tạo kịch bản tiếng Thái...');
+                const generatedScript = await generateThaiScriptFromImage(
+                    imageInput,
+                    geminiApiKey,
+                    customScriptPrompt
+                );
+
+                currentScript = generatedScript.trim();
+                setThaiScript(currentScript); // Tự động điền kịch bản vào textarea
+            } catch (err) {
+                throw new Error('Không thể tự động viết kịch bản: ' + (err.message || 'Lỗi AI'));
+            } finally {
+                setIsWritingScript(false);
+                setScriptStatusText('');
+            }
+        }
+
+        // 2. TỰ ĐỘNG TẠO FILE VOICE NẾU CHƯA CÓ
         let finalVoiceSrc = voiceFile;
         if (voiceSourceType === 'ai') {
-            if (!thaiScript || !thaiScript.trim()) {
-                throw new Error('Vui lòng nhập nội dung tiếng Thái hoặc bấm tạo kịch bản!');
+            if (!currentScript) {
+                throw new Error('Không có nội dung kịch bản để tạo giọng đọc!');
             }
+
             setIsGeneratingVoice(true);
+            setPreparingStatusText('Đang nạp giọng đọc AI...');
             try {
                 const activeVoiceId = getEffectiveVoiceId();
-                finalVoiceSrc = await generateThaiSpeechAudio(thaiScript, activeVoiceId, {
+                finalVoiceSrc = await generateThaiSpeechAudio(currentScript, activeVoiceId, {
                     provider: selectedProvider,
                     geminiApiKey,
                     elevenLabsApiKey,
@@ -737,6 +785,8 @@ export default function VideoCreator() {
             throw new Error('Vui lòng chọn hoặc kéo thả file MP3 giọng đọc từ máy!');
         }
 
+        // 3. THIẾT LẬP MIXER VÀ THỜI LƯỢNG VIDEO THEO ĐỘ DÀI GIỌNG ĐỌC
+        setPreparingStatusText('Đang đồng bộ âm thanh & khung hình...');
         const mixer = new AudioMixer();
         activeMixerRef.current = mixer;
         const audioStream = mixer.setup(finalVoiceSrc, bgmFile, bgmVolume, voiceVolume, isPreview);
@@ -767,24 +817,25 @@ export default function VideoCreator() {
         return { mixer, renderer, audioStream, targetDuration, aiTimeline };
     };
 
-    const handleTogglePreviewVideo = async () => {
-        if (isPreviewingVideo) {
-            stopAllActivities();
-            return;
-        }
-
-        if (mediaFiles.length === 0) {
-            alert('Vui lòng tải lên ít nhất 1 ảnh hoặc video để xem trước!');
-            return;
-        }
-
+    // HÀM BẮT ĐẦU CHẠY PREVIEW THỰC SỰ
+    const startPreviewProcess = async () => {
         stopAllActivities();
         setOutputVideoUrl(null);
-        setIsPreviewingVideo(true);
+
+        const needsScript = voiceSourceType === 'ai' && !thaiScript.trim();
+        const needsVoice = voiceSourceType === 'ai';
+
+        if (needsScript || needsVoice) {
+            setIsPreviewPreparing(true);
+            setPreparingStatusText('Đang khởi tạo video...');
+        }
 
         try {
             const { mixer, renderer, targetDuration, aiTimeline } = await prepareSession(true);
             await mixer.play();
+
+            setIsPreviewPreparing(false);
+            setIsPreviewingVideo(true);
 
             renderer.startPreview({
                 files: mediaFiles,
@@ -807,8 +858,31 @@ export default function VideoCreator() {
         } catch (err) {
             console.error(err);
             stopAllActivities();
-            alert(err.message || 'Lỗi khi xem trước video.');
+            setIsPreviewPreparing(false);
+            alert(err.message || 'Lỗi khi chuẩn bị video xem trước.');
         }
+    };
+
+    // HÀM BẤM NÚT PREVIEW (KIỂM TRA CÓ NHẠC NỀN HAY CHƯA)
+    const handleTogglePreviewVideo = async () => {
+        if (isPreviewingVideo) {
+            stopAllActivities();
+            return;
+        }
+
+        if (mediaFiles.length === 0) {
+            alert('Vui lòng tải lên ít nhất 1 ảnh hoặc video ở mục 01 để xem trước!');
+            return;
+        }
+
+        // NẾU CHƯA CÓ NHẠC NỀN -> HIỂN THỊ POPUP THÔNG BÁO CHO NGƯỜI DÙNG BỎ QUA HOẶC CHỌN NHẠC
+        if (!bgmFile) {
+            setShowNoBgmPrompt(true);
+            return;
+        }
+
+        // Nếu đã có nhạc nền, chạy tiếp bình thường
+        startPreviewProcess();
     };
 
     const handleSeek = (newTime) => {
@@ -875,10 +949,93 @@ export default function VideoCreator() {
     };
 
     const currentVoiceOptions = selectedProvider === 'gemini' ? (GEMINI_TTS_VOICES || []) : (elevenVoiceList || []);
-    const estimatedSeconds = Math.max(1, Math.round((thaiScript.trim().length || 0) / 16));
+    const estimatedSeconds = Math.max(0, Math.round((thaiScript.trim().length || 0) / 16));
 
     return (
         <div style={styles.fullscreenApp}>
+            {/* THÊM ANIMATION KEYFRAMES CHO POPUP SPINNER */}
+            <style>{`
+                @keyframes spinAnimation {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+            `}</style>
+
+            {/* POPUP THÔNG BÁO: CHƯA CÓ NHẠC NỀN */}
+            {showNoBgmPrompt && (
+                <div style={styles.loadingOverlay}>
+                    <div style={styles.loadingModal}>
+                        <div style={{ fontSize: 44, marginBottom: 12 }}>🎵</div>
+                        <h3 style={styles.loadingTitle}>Chưa chọn nhạc nền!</h3>
+                        <p style={styles.loadingSubtitle}>
+                            Video chưa được thêm bài nhạc nền nào. Bạn có muốn bỏ qua và tiếp tục phát preview không nhạc không?
+                        </p>
+                        <div style={{ display: 'flex', gap: 12, width: '100%', marginTop: 6 }}>
+                            <button
+                                type="button"
+                                onClick={() => setShowNoBgmPrompt(false)}
+                                style={{
+                                    flex: 1,
+                                    padding: '10px 14px',
+                                    borderRadius: 8,
+                                    border: '1px solid #cbd5e1',
+                                    backgroundColor: '#ffffff',
+                                    color: '#475569',
+                                    fontSize: 13.5,
+                                    fontWeight: 700,
+                                    cursor: 'pointer',
+                                }}
+                            >
+                                Chọn nhạc nền
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setShowNoBgmPrompt(false);
+                                    startPreviewProcess();
+                                }}
+                                style={{
+                                    flex: 1,
+                                    padding: '10px 14px',
+                                    borderRadius: 8,
+                                    border: 'none',
+                                    backgroundColor: '#0284c7',
+                                    color: '#ffffff',
+                                    fontSize: 13.5,
+                                    fontWeight: 700,
+                                    cursor: 'pointer',
+                                }}
+                            >
+                                Bỏ qua & Xem luôn
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* POPUP THÔNG BÁO: ĐANG TẠO VIDEO, VUI LÒNG CHỜ */}
+            {isPreviewPreparing && (
+                <div style={styles.loadingOverlay}>
+                    <div style={styles.loadingModal}>
+                        <div style={styles.spinner} />
+                        <h3 style={styles.loadingTitle}>Đang tạo video, vui lòng chờ...</h3>
+                        <p style={styles.loadingSubtitle}>
+                            {preparingStatusText || 'Hệ thống đang chuẩn bị kịch bản & nạp giọng đọc AI...'}
+                        </p>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                stopAllActivities();
+                                setIsPreviewPreparing(false);
+                            }}
+                            style={styles.cancelPreviewPrepBtn}
+                        >
+                            Hủy bỏ
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* HEADER */}
             <header style={styles.topNavbar}>
                 <button
@@ -1187,8 +1344,9 @@ export default function VideoCreator() {
                                             </span>
                                             {xaiApiKey && <span style={{ fontSize: 11, color: '#10b981', fontWeight: 700 }}>✓ Đã lưu</span>}
                                         </div>
+                                        {/* 3. Ô KEY KHÔNG ẨN CHẤM TRÒN: type="text" */}
                                         <input
-                                            type="password"
+                                            type="text"
                                             placeholder="xai-..."
                                             value={xaiApiKey}
                                             onChange={(e) => handleSaveXaiKey(e.target.value)}
@@ -1362,8 +1520,9 @@ export default function VideoCreator() {
                                             {keySavedStatus && <span style={styles.savedBadge}>✓ Đã lưu</span>}
                                         </div>
                                         <div style={{ display: 'flex', gap: 8 }}>
+                                            {/* 3. Ô KEY KHÔNG ẨN CHẤM TRÒN: type="text" */}
                                             <input
-                                                type="password"
+                                                type="text"
                                                 placeholder="Dán key (AIzaSy...)"
                                                 value={geminiApiKey}
                                                 onChange={(e) => setGeminiApiKey(e.target.value)}
@@ -1390,8 +1549,9 @@ export default function VideoCreator() {
                                             )}
                                         </div>
                                         <div style={{ display: 'flex', gap: 8 }}>
+                                            {/* 3. Ô KEY KHÔNG ẨN CHẤM TRÒN: type="text" */}
                                             <input
-                                                type="password"
+                                                type="text"
                                                 placeholder="Nhập ElevenLabs API Key (sk_...)"
                                                 value={elevenLabsApiKey}
                                                 onChange={(e) => setElevenLabsApiKey(e.target.value)}
@@ -1428,6 +1588,7 @@ export default function VideoCreator() {
                                 {selectedProvider === 'elevenlabs' && (
                                     <div style={{ marginBottom: 12 }}>
                                         <label style={styles.label}>Hoặc nhập Voice ID tùy chỉnh (Custom ID):</label>
+                                        {/* 3. Ô KEY KHÔNG ẨN CHẤM TRÒN: type="text" */}
                                         <input
                                             type="text"
                                             placeholder="Dán ID giọng bất kỳ (VD: 21m00Tcm4TlvDq8ikWAM)..."
@@ -1500,12 +1661,13 @@ export default function VideoCreator() {
                                         </div>
                                     </div>
 
+                                    {/* 2. Ô VĂN BẢN ĐỂ TRỐNG MỖI LẦN TRUY CẬP */}
                                     <textarea
                                         rows="5"
                                         style={{ ...styles.textarea, fontSize: 13, lineHeight: 1.6 }}
                                         value={thaiScript}
                                         onChange={(e) => setThaiScript(e.target.value)}
-                                        placeholder="Bạn có thể tự nhập văn bản tiếng Thái tùy ý vào đây, hoặc bấm nút 'AI Viết' ở trên..."
+                                        placeholder="Nhập kịch bản tiếng Thái tùy ý hoặc bấm nút 'AI Viết' ở trên (nếu để trống, bấm Preview sẽ tự động viết)..."
                                     />
                                     <div style={{ fontSize: 11.5, color: '#64748b', marginTop: 4 }}>
                                         💡 {mediaType === 'video' ? 'Hệ thống tự cắt 1 khung hình từ video để AI nhận diện mẫu trang phục.' : 'Có thể tự sửa/thêm văn bản theo ý muốn, hoặc dùng AI tự động tạo.'}
@@ -1966,7 +2128,8 @@ export default function VideoCreator() {
                     <span style={styles.footerDot}>•</span>
                     <span style={styles.footerText}>Trình dựng Video AI</span>
                     <span style={styles.footerDot}>•</span>
-                    <span style={styles.footerVersion}>v1.0</span>
+                    <span style={styles.footerVersion}>v2.0</span>
+                    <span style={styles.footerVersion}>Updated at 29/09/2026</span>
                 </div>
 
                 <div style={styles.footerRight}>
@@ -1988,6 +2151,67 @@ const styles = {
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         boxSizing: 'border-box',
         overflow: 'hidden',
+    },
+    loadingOverlay: {
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        backgroundColor: 'rgba(15, 23, 42, 0.72)',
+        backdropFilter: 'blur(5px)',
+        zIndex: 9999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    loadingModal: {
+        backgroundColor: '#ffffff',
+        borderRadius: 16,
+        padding: '30px 32px',
+        width: '90%',
+        maxWidth: 420,
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        textAlign: 'center',
+    },
+    spinner: {
+        width: 46,
+        height: 46,
+        borderWidth: 4,
+        borderStyle: 'solid',
+        borderColor: '#e2e8f0',
+        borderTopColor: '#0284c7',
+        borderRadius: '50%',
+        animation: 'spinAnimation 0.85s linear infinite',
+        marginBottom: 16,
+    },
+    loadingTitle: {
+        margin: 0,
+        fontSize: 18,
+        fontWeight: 800,
+        color: '#0f172a',
+    },
+    loadingSubtitle: {
+        margin: '10px 0 20px 0',
+        fontSize: 13.5,
+        color: '#64748b',
+        lineHeight: 1.5,
+    },
+    cancelPreviewPrepBtn: {
+        padding: '8px 20px',
+        borderRadius: 8,
+        borderWidth: 1,
+        borderStyle: 'solid',
+        borderColor: '#cbd5e1',
+        backgroundColor: '#f8fafc',
+        color: '#475569',
+        fontSize: 13,
+        fontWeight: 700,
+        cursor: 'pointer',
+        transition: 'all 0.15s ease',
     },
     topNavbar: {
         height: 60,
@@ -2530,6 +2754,11 @@ const styles = {
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: 4,
+    },
+    timelineTitle: {
+        fontSize: 12,
+        fontWeight: 700,
+        color: '#475569',
     },
     timelineTimestamp: {
         fontSize: 13,
