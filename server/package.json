@@ -1,42 +1,76 @@
 {
 
   "name": "server",
-  "version": "1.0.0",
-  "type": "module",
 
-  "name": "server",
   "version": "1.0.0",
-  "description": "",
-  "main": "app.js",
-  "scripts": {
-    "start": "node app.js",
-    "dev": "nodemon app.js",
-    "migrate:sqlite": "node scripts/migrate-sqlite-to-postgres.js"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+
   "type": "commonjs",
-  "dependencies": {
-    "@google/generative-ai": "^0.24.1",
-    "bcryptjs": "^3.0.3",
-    "cloudinary": "^2.10.0",
-    "cors": "^2.8.6",
-    "device-detector-js": "^3.0.3",
-    "dotenv": "^17.4.2",
-    "edge-tts": "^1.0.1",
-    "exceljs": "^4.4.0",
-    "express": "^5.2.1",
-    "geoip-lite": "^2.0.3",
-    "jsonwebtoken": "^9.0.3",
-    "msedge-tts": "^2.0.8",
-    "multer": "^2.2.0",
-    "pg": "^8.22.0",
-    "sqlite3": "^6.0.1",
-    "ua-parser-js": "^2.0.10",
-    "ws": "^8.22.0"
+
+  "description": "",
+
+  "main": "app.js",
+
+  "scripts": {
+
+    "start": "node app.js",
+
+    "dev": "nodemon app.js",
+
+    "migrate:sqlite": "node scripts/migrate-sqlite-to-postgres.js"
+
   },
+
+  "keywords": [],
+
+  "author": "",
+
+  "license": "ISC",
+
+  "dependencies": {
+
+    "@google/genai": "^2.24.0",
+
+    "@google/generative-ai": "^0.24.1",
+
+    "bcryptjs": "^3.0.3",
+
+    "cloudinary": "^2.10.0",
+
+    "cors": "^2.8.6",
+
+    "device-detector-js": "^3.0.3",
+
+    "dotenv": "^17.4.2",
+
+    "edge-tts": "^1.0.1",
+
+    "exceljs": "^4.4.0",
+
+    "express": "^5.2.1",
+
+    "geoip-lite": "^2.0.3",
+
+    "jsonwebtoken": "^9.0.3",
+
+    "msedge-tts": "^2.0.8",
+
+    "multer": "^2.2.0",
+
+    "pg": "^8.22.0",
+
+    "sqlite3": "^6.0.1",
+
+    "ua-parser-js": "^2.0.10",
+
+    "ws": "^8.22.0"
+
+  },
+
   "devDependencies": {
+
     "nodemon": "^3.1.14"
+
   }
+
 }
+

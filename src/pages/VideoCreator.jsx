@@ -84,8 +84,9 @@ export default function VideoCreator() {
     const [selectedVoiceId, setSelectedVoiceId] = useState(GEMINI_TTS_VOICES?.[0]?.id || 'Sadaltager');
     const [customElevenVoiceId, setCustomElevenVoiceId] = useState('');
 
+    // Đồng bộ cả 2 khóa lưu trong localStorage
     const [geminiApiKey, setGeminiApiKey] = useState(
-        localStorage.getItem('CUSTOM_GEMINI_KEY') || 'AQ.Ab8RN6JBV__jToQkVPcnyf3ux4U-niG1KvjnNQeW5uYoKdMMLg'
+        localStorage.getItem('CUSTOM_GEMINI_KEY') || localStorage.getItem('user_gemini_api_key') || ''
     );
     const [elevenLabsApiKey, setElevenLabsApiKey] = useState(
         localStorage.getItem('CUSTOM_ELEVENLABS_KEY') || 'sk_1b9707067e6f7cce7ceee1c56d2018865aae6f3319c0d1c3'
@@ -101,6 +102,7 @@ export default function VideoCreator() {
     );
     const [isGeneratingVoice, setIsGeneratingVoice] = useState(false);
     const [isWritingScript, setIsWritingScript] = useState(false);
+    const [scriptStatusText, setScriptStatusText] = useState('');
 
     // Dịch nghĩa tiếng Việt & AbortController
     const [vietnameseScript, setVietnameseScript] = useState('');
@@ -181,7 +183,9 @@ export default function VideoCreator() {
     }, [bgmVolume]);
 
     const handleSaveGeminiKey = () => {
-        localStorage.setItem('CUSTOM_GEMINI_KEY', geminiApiKey.trim());
+        const clean = geminiApiKey.trim();
+        localStorage.setItem('CUSTOM_GEMINI_KEY', clean);
+        localStorage.setItem('user_gemini_api_key', clean);
         setGeminiCooldown(0);
         setKeySavedStatus(true);
         setTimeout(() => setKeySavedStatus(false), 2000);
@@ -258,7 +262,7 @@ export default function VideoCreator() {
         return selectedVoiceId;
     };
 
-    // 1. TƯ LIỆU ẢNH / VIDEO (XỬ LÝ AN TOÀN TRÁNH TRẮNG MÀN)
+    // 1. TƯ LIỆU ẢNH / VIDEO
     const processMediaFiles = (files) => {
         if (!files || !files.length) return;
         try {
@@ -290,14 +294,11 @@ export default function VideoCreator() {
         }
     };
 
-    // XÓA TẤT CẢ TƯ LIỆU ẢNH / VIDEO LẬP TỨC (KHÔNG CẦN BẬT HỘP THOẠI XÁC NHẬN)
     const handleClearAllMedia = (e) => {
         e?.stopPropagation();
         if (!mediaFiles.length) return;
 
         stopAllActivities();
-
-        // Thu hồi URL Blob để giải phóng RAM ngay lập tức
         mediaFiles.forEach((url) => {
             try {
                 if (url?.startsWith('blob:')) URL.revokeObjectURL(url);
@@ -517,7 +518,7 @@ export default function VideoCreator() {
         }
     };
 
-    // SẮP XẾP TƯ LIỆU AN TOÀN
+    // SẮP XẾP TƯ LIỆU
     const handleDragStart = (e, index) => {
         setDraggedIndex(index);
         e.dataTransfer.effectAllowed = 'move';
@@ -538,7 +539,7 @@ export default function VideoCreator() {
         setMediaFiles((prev) => prev.filter((_, i) => i !== index));
     };
 
-    // AI TỰ ĐỘNG NHÌN ẢNH / VIDEO VIẾT KỊCH BẢN TIẾNG THÁI (15 - 18s)
+    // AI TỰ ĐỘNG NHÌN ẢNH / VIDEO VIẾT KỊCH BẢN TIẾNG THÁI (15 - 20s)
     const handleAutoGenerateThaiScript = async () => {
         if (mediaFiles.length === 0) {
             alert('Vui lòng tải lên ít nhất 1 ảnh hoặc video ở mục 01!');
@@ -552,10 +553,13 @@ export default function VideoCreator() {
         try {
             setIsWritingScript(true);
             let imageInput = mediaFiles[0];
+
             if (mediaType === 'video') {
+                setScriptStatusText('Đang trích xuất khung hình video...');
                 imageInput = await extractFrameFromVideo(mediaFiles[0]);
             }
 
+            setScriptStatusText('AI đang phân tích & tạo kịch bản tiếng Thái...');
             const generatedScript = await generateThaiScriptFromImage(
                 imageInput,
                 geminiApiKey,
@@ -566,6 +570,7 @@ export default function VideoCreator() {
             alert('Không thể tạo văn bản tự động: ' + (err.message || 'Lỗi không xác định'));
         } finally {
             setIsWritingScript(false);
+            setScriptStatusText('');
         }
     };
 
@@ -596,7 +601,6 @@ export default function VideoCreator() {
         }
     };
 
-    // HỦY TIẾN TRÌNH DỊCH
     const handleCancelTranslation = () => {
         if (translationAbortRef.current) {
             translationAbortRef.current.abort();
@@ -702,7 +706,7 @@ export default function VideoCreator() {
     const getVideoDimensions = () => {
         if (aspectRatio === '3:4') return { width: 720, height: 960 };
         if (aspectRatio === '1:1') return { width: 800, height: 800 };
-        return { width: 720, height: 1280 }; // Mặc định 9:16
+        return { width: 720, height: 1280 };
     };
 
     const prepareSession = async (isPreview = false) => {
@@ -770,7 +774,7 @@ export default function VideoCreator() {
         }
 
         if (mediaFiles.length === 0) {
-            alert('Vui lòng tải lên ít nhất 1 ảnh sản phẩm để xem trước!');
+            alert('Vui lòng tải lên ít nhất 1 ảnh hoặc video để xem trước!');
             return;
         }
 
@@ -823,7 +827,7 @@ export default function VideoCreator() {
 
     const handleStartRender = async () => {
         if (mediaFiles.length === 0) {
-            alert('Vui lòng tải lên ít nhất 1 ảnh sản phẩm!');
+            alert('Vui lòng tải lên ít nhất 1 ảnh hoặc video!');
             return;
         }
 
@@ -875,7 +879,7 @@ export default function VideoCreator() {
 
     return (
         <div style={styles.fullscreenApp}>
-            {/* HEADER: NÚT TRANG CHỦ BÊN TRÁI, TIÊU ĐỀ CHÍNH GIỮA */}
+            {/* HEADER */}
             <header style={styles.topNavbar}>
                 <button
                     type="button"
@@ -999,7 +1003,6 @@ export default function VideoCreator() {
                                     <p style={{ fontSize: 13, color: '#64748b', margin: 0 }}>
                                         💡 <b>Kéo thả</b> để đổi thứ tự xuất hiện ({mediaFiles.length} tư liệu):
                                     </p>
-                                    {/* NÚT XÓA TẤT CẢ TƯ LIỆU */}
                                     <button
                                         type="button"
                                         onClick={handleClearAllMedia}
@@ -1048,7 +1051,6 @@ export default function VideoCreator() {
                                 <h3 style={styles.cardTitle}>Dựng Video</h3>
                             </div>
 
-                            {/* TAB GROUP: CANVAS BÊN TRÁI (MẶC ĐỊNH), GROK AI BÊN PHẢI */}
                             <div style={styles.tabGroup}>
                                 <button
                                     style={{
@@ -1085,7 +1087,6 @@ export default function VideoCreator() {
                             </div>
 
                             {effectMode === 'preset' ? (
-                                /* PHẦN HIỆU ỨNG CANVAS (BÊN TRÁI) */
                                 <div>
                                     <label style={styles.label}>Chọn kiểu chuyển cảnh hình ảnh:</label>
                                     <div
@@ -1167,7 +1168,6 @@ export default function VideoCreator() {
                                     </div>
                                 </div>
                             ) : (
-                                /* PHẦN GROK AI (BÊN PHẢI) */
                                 <div>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                                         <label style={{ ...styles.label, margin: 0 }}>Kịch bản chuyển động:</label>
@@ -1180,7 +1180,6 @@ export default function VideoCreator() {
                                         placeholder="Ví dụ: Người mẫu mỉm cười nhẹ, xoay người khoe form dáng và vạt áo bay tự nhiên..."
                                     />
 
-                                    {/* KHU VỰC CẤU HÌNH XAI GROK API KEY */}
                                     <div style={{ marginTop: 10, padding: '10px 12px', backgroundColor: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                                             <span style={{ fontSize: 12, fontWeight: 700, color: '#334155' }}>
@@ -1197,7 +1196,6 @@ export default function VideoCreator() {
                                         />
                                     </div>
 
-                                    {/* NÚT GROK AI VỚI HIỆU ỨNG AI GRADIENT GLOW */}
                                     <button
                                         type="button"
                                         disabled={isGeneratingGrok || isPreviewingVideo}
@@ -1213,7 +1211,6 @@ export default function VideoCreator() {
                                             : '✨ Grok AI'}
                                     </button>
 
-                                    {/* NÚT XEM TRƯỚC NHANH CANVAS */}
                                     <button
                                         type="button"
                                         disabled={isAiDirecting}
@@ -1221,7 +1218,7 @@ export default function VideoCreator() {
                                         style={styles.aiPreviewTriggerBtn}
                                     >
                                         {isAiDirecting
-                                            ? '🧠 Gemini AI đang phân tích...'
+                                            ? '🧠 AI đang phân tích...'
                                             : isPreviewingVideo
                                                 ? '⏹️ Dừng xem trước'
                                                 : '⚡ Xem trước góc máy (Canvas)'}
@@ -1235,7 +1232,7 @@ export default function VideoCreator() {
                     <div style={styles.card}>
                         <div style={styles.cardHeader}>
                             <span style={styles.cardStep}>02</span>
-                            <h3 style={styles.cardTitle}>Voice</h3>
+                            <h3 style={styles.cardTitle}>Voice & Kịch bản</h3>
                         </div>
 
                         <div style={styles.tabGroup}>
@@ -1312,7 +1309,6 @@ export default function VideoCreator() {
                                         {VOICE_PROVIDERS.map((p) => {
                                             const isSelected = selectedProvider === p.id;
                                             const isGemini = p.id === 'gemini';
-
                                             if (isGemini) {
                                                 return (
                                                     <button
@@ -1337,7 +1333,6 @@ export default function VideoCreator() {
                                                     </button>
                                                 );
                                             }
-
                                             return (
                                                 <button
                                                     key={p.id}
@@ -1368,18 +1363,18 @@ export default function VideoCreator() {
                                         </div>
                                         <div style={{ display: 'flex', gap: 8 }}>
                                             <input
-                                                type="text"
-                                                placeholder="Nhập Gemini API Key (AQ.Ab8...)"
+                                                type="password"
+                                                placeholder="Dán key (AIzaSy...)"
                                                 value={geminiApiKey}
                                                 onChange={(e) => setGeminiApiKey(e.target.value)}
                                                 style={styles.keyInput}
                                             />
                                             <button type="button" onClick={handleSaveGeminiKey} style={styles.saveBtn}>
-                                                Lưu
+                                                Lưu Key
                                             </button>
                                         </div>
                                         <div style={{ fontSize: 11.5, color: '#0284c7', marginTop: 6, fontWeight: 600 }}>
-                                            ⚡ Model: gemini-3.8-flash-tts
+                                            ⚡ Tự động dò tìm model khả dụng của Google
                                         </div>
                                     </div>
                                 ) : (
@@ -1396,7 +1391,7 @@ export default function VideoCreator() {
                                         </div>
                                         <div style={{ display: 'flex', gap: 8 }}>
                                             <input
-                                                type="text"
+                                                type="password"
                                                 placeholder="Nhập ElevenLabs API Key (sk_...)"
                                                 value={elevenLabsApiKey}
                                                 onChange={(e) => setElevenLabsApiKey(e.target.value)}
@@ -1443,7 +1438,7 @@ export default function VideoCreator() {
                                     </div>
                                 )}
 
-                                {/* KHU VỰC NHẬP / TẠO KỊCH BẢN TIẾNG THÁI (15-18S) */}
+                                {/* KHU VỰC NHẬP / TẠO KỊCH BẢN TIẾNG THÁI */}
                                 <div style={{ marginBottom: 12 }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, flexWrap: 'wrap', gap: 6 }}>
                                         <label style={{ ...styles.label, margin: 0 }}>
@@ -1451,12 +1446,11 @@ export default function VideoCreator() {
                                         </label>
 
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                            {/* BỘ ĐẾM THỜI GIAN */}
                                             <span style={{ fontSize: 11.5, color: '#64748b', backgroundColor: '#f1f5f9', padding: '2px 8px', borderRadius: 4 }}>
                                                 ~{estimatedSeconds} giây
                                             </span>
 
-                                            {/* NÚT AI TỰ ĐỘNG VIẾT KỊCH BẢN TỪ ẢNH */}
+                                            {/* NÚT AI TỰ ĐỘNG VIẾT KỊCH BẢN */}
                                             <button
                                                 type="button"
                                                 disabled={isWritingScript}
@@ -1477,10 +1471,13 @@ export default function VideoCreator() {
                                                     gap: 5,
                                                 }}
                                             >
-                                                {isWritingScript ? '🧠 AI đang viết bài 15-18s...' : '✨ AI Viết Theo Ảnh (15-18s)'}
+                                                {isWritingScript
+                                                    ? `🧠 ${scriptStatusText || 'Đang tạo văn bản...'}`
+                                                    : mediaType === 'video'
+                                                        ? '✨ AI Viết Theo Video (15s)'
+                                                        : '✨ AI Viết Theo Ảnh (15s)'}
                                             </button>
 
-                                            {/* NÚT XÓA KỊCH BẢN HIỆN TẠI */}
                                             <button
                                                 type="button"
                                                 title="Xóa kịch bản hiện tại"
@@ -1508,10 +1505,10 @@ export default function VideoCreator() {
                                         style={{ ...styles.textarea, fontSize: 13, lineHeight: 1.6 }}
                                         value={thaiScript}
                                         onChange={(e) => setThaiScript(e.target.value)}
-                                        placeholder="Bạn có thể tự nhập văn bản tiếng Thái tùy ý vào đây, hoặc bấm nút 'AI Viết Theo Ảnh (15-18s)' ở trên..."
+                                        placeholder="Bạn có thể tự nhập văn bản tiếng Thái tùy ý vào đây, hoặc bấm nút 'AI Viết' ở trên..."
                                     />
                                     <div style={{ fontSize: 11.5, color: '#64748b', marginTop: 4 }}>
-                                        💡 Có thể tự sửa/thêm văn bản theo ý muốn, hoặc dùng AI.
+                                        💡 {mediaType === 'video' ? 'Hệ thống tự cắt 1 khung hình từ video để AI nhận diện mẫu trang phục.' : 'Có thể tự sửa/thêm văn bản theo ý muốn, hoặc dùng AI tự động tạo.'}
                                     </div>
                                 </div>
                             </div>
@@ -1540,7 +1537,6 @@ export default function VideoCreator() {
                                             : '🔊 Nghe thử giọng đọc'}
                                 </button>
 
-                                {/* NÚT DỊCH / NÚT HỦY DỊCH NẾU ĐANG CHẠY */}
                                 {!isTranslating ? (
                                     <button
                                         type="button"
@@ -1561,7 +1557,7 @@ export default function VideoCreator() {
                                             transition: 'all 0.15s ease',
                                         }}
                                     >
-                                        🇻🇳 Dịch
+                                        🇻🇳 Dịch sang tiếng Việt
                                     </button>
                                 ) : (
                                     <button
@@ -1874,7 +1870,7 @@ export default function VideoCreator() {
                                 <div style={styles.screenEmpty}>
                                     <span style={{ fontSize: 30, opacity: 0.5 }}>🩳👖🧥👗</span>
                                     <p style={{ color: '#64748b', fontSize: 15, textAlign: 'center', marginTop: 12, fontWeight: 500 }}>
-                                        Chưa có tư liệu.<br />Kéo thả ảnh  vào bên trái.
+                                        Chưa có tư liệu.<br />Kéo thả ảnh hoặc video vào bên trái.
                                     </p>
                                 </div>
                             )}
@@ -2123,17 +2119,6 @@ const styles = {
         fontWeight: 700,
         cursor: 'pointer',
         transition: 'all 0.15s ease',
-    },
-    durationBadge: {
-        fontSize: 11.5,
-        fontWeight: 700,
-        backgroundColor: '#eef2ff',
-        color: '#4f46e5',
-        padding: '3px 8px',
-        borderRadius: 6,
-        borderWidth: 1,
-        borderStyle: 'solid',
-        borderColor: '#c7d2fe',
     },
     grokAiBtn: {
         width: '100%',
@@ -2545,11 +2530,6 @@ const styles = {
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: 4,
-    },
-    timelineTitle: {
-        fontSize: 12,
-        fontWeight: 700,
-        color: '#475569',
     },
     timelineTimestamp: {
         fontSize: 13,

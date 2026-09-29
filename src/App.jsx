@@ -13,6 +13,7 @@ import Invitation from "./pages/Invitation";
 import Invitation2 from "./pages/Invitation2"; // Import Invitation2
 import HomeMusicPlayer from "./components/HomeMusicPlayer";
 import VideoCreator from './pages/VideoCreator';
+import ImageDescriber from './pages/ImageDescriber';
 
 function App() {
   const location = useLocation();
@@ -60,6 +61,7 @@ function App() {
         />
 
         <Route path="/create-video" element={<VideoCreator />} />
+        <Route path="/image-describer" element={<ImageDescriber />} />
       </Routes>
     </>
   );
