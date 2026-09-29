@@ -95,7 +95,7 @@ export default function VideoCreator() {
 
     const [geminiCooldown, setGeminiCooldown] = useState(0);
 
-    // 1. KỊCH BẢN ĐỌC TIẾNG THÁI: ĐỂ TRỐNG MỖI LẦN TRUY CẬP
+    // Kịch bản đọc tiếng Thái (mặc định để trống)
     const [thaiScript, setThaiScript] = useState('');
     const [isGeneratingVoice, setIsGeneratingVoice] = useState(false);
     const [isWritingScript, setIsWritingScript] = useState(false);
@@ -746,7 +746,7 @@ export default function VideoCreator() {
                 );
 
                 currentScript = generatedScript.trim();
-                setThaiScript(currentScript); // Tự động điền kịch bản vào textarea
+                setThaiScript(currentScript);
             } catch (err) {
                 throw new Error('Không thể tự động viết kịch bản: ' + (err.message || 'Lỗi AI'));
             } finally {
@@ -808,6 +808,11 @@ export default function VideoCreator() {
             } finally {
                 setIsAiDirecting(false);
             }
+        }
+
+        // Đảm bảo canvas luôn tồn tại trước khi khởi tạo VideoRenderer
+        if (!previewCanvasRef.current) {
+            throw new Error('Khung hiển thị video chưa sẵn sàng. Vui lòng tải lại trang.');
         }
 
         const { width, height } = getVideoDimensions();
@@ -881,7 +886,6 @@ export default function VideoCreator() {
             return;
         }
 
-        // Nếu đã có nhạc nền, chạy tiếp bình thường
         startPreviewProcess();
     };
 
@@ -1344,7 +1348,6 @@ export default function VideoCreator() {
                                             </span>
                                             {xaiApiKey && <span style={{ fontSize: 11, color: '#10b981', fontWeight: 700 }}>✓ Đã lưu</span>}
                                         </div>
-                                        {/* 3. Ô KEY KHÔNG ẨN CHẤM TRÒN: type="text" */}
                                         <input
                                             type="text"
                                             placeholder="xai-..."
@@ -1520,7 +1523,6 @@ export default function VideoCreator() {
                                             {keySavedStatus && <span style={styles.savedBadge}>✓ Đã lưu</span>}
                                         </div>
                                         <div style={{ display: 'flex', gap: 8 }}>
-                                            {/* 3. Ô KEY KHÔNG ẨN CHẤM TRÒN: type="text" */}
                                             <input
                                                 type="text"
                                                 placeholder="Dán key (AIzaSy...)"
@@ -1549,7 +1551,6 @@ export default function VideoCreator() {
                                             )}
                                         </div>
                                         <div style={{ display: 'flex', gap: 8 }}>
-                                            {/* 3. Ô KEY KHÔNG ẨN CHẤM TRÒN: type="text" */}
                                             <input
                                                 type="text"
                                                 placeholder="Nhập ElevenLabs API Key (sk_...)"
@@ -1588,7 +1589,6 @@ export default function VideoCreator() {
                                 {selectedProvider === 'elevenlabs' && (
                                     <div style={{ marginBottom: 12 }}>
                                         <label style={styles.label}>Hoặc nhập Voice ID tùy chỉnh (Custom ID):</label>
-                                        {/* 3. Ô KEY KHÔNG ẨN CHẤM TRÒN: type="text" */}
                                         <input
                                             type="text"
                                             placeholder="Dán ID giọng bất kỳ (VD: 21m00Tcm4TlvDq8ikWAM)..."
@@ -1607,9 +1607,6 @@ export default function VideoCreator() {
                                         </label>
 
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                            <span style={{ fontSize: 11.5, color: '#64748b', backgroundColor: '#f1f5f9', padding: '2px 8px', borderRadius: 4 }}>
-                                                ~{estimatedSeconds} giây
-                                            </span>
 
                                             {/* NÚT AI TỰ ĐỘNG VIẾT KỊCH BẢN */}
                                             <button
@@ -1635,8 +1632,8 @@ export default function VideoCreator() {
                                                 {isWritingScript
                                                     ? `🧠 ${scriptStatusText || 'Đang tạo văn bản...'}`
                                                     : mediaType === 'video'
-                                                        ? '✨ AI Viết Theo Video (15s)'
-                                                        : '✨ AI Viết Theo Ảnh (15s)'}
+                                                        ? '✨ AI Viết Theo Video'
+                                                        : '✨ AI Viết Theo Ảnh'}
                                             </button>
 
                                             <button
@@ -2014,20 +2011,26 @@ export default function VideoCreator() {
                                         : styles.aspectRatio11),
                             }}
                         >
-                            {outputVideoUrl ? (
+                            {/* 1. Video xuất ra thành phẩm */}
+                            {outputVideoUrl && (
                                 <video src={outputVideoUrl} controls autoPlay loop style={styles.mockupScreen} />
-                            ) : mediaType === 'video' && mediaFiles.length > 0 && !isPreviewingVideo && !rendering ? (
-                                <video src={mediaFiles[0]} controls autoPlay loop muted style={styles.mockupScreen} />
-                            ) : (
-                                <canvas
-                                    ref={previewCanvasRef}
-                                    style={{
-                                        ...styles.mockupScreen,
-                                        display: mediaFiles.length > 0 ? 'block' : 'none',
-                                    }}
-                                />
                             )}
 
+                            {/* 2. Video xem trước tĩnh khi người dùng vừa upload video (chưa bấm preview) */}
+                            {!outputVideoUrl && mediaType === 'video' && mediaFiles.length > 0 && !isPreviewingVideo && !rendering && (
+                                <video src={mediaFiles[0]} controls autoPlay loop muted style={styles.mockupScreen} />
+                            )}
+
+                            {/* 3. Canvas luôn luôn nằm trong DOM (dùng style display để ẩn hiện, tránh lỗi getContext of null) */}
+                            <canvas
+                                ref={previewCanvasRef}
+                                style={{
+                                    ...styles.mockupScreen,
+                                    display: (!outputVideoUrl && (isPreviewingVideo || rendering || (mediaType === 'images' && mediaFiles.length > 0))) ? 'block' : 'none',
+                                }}
+                            />
+
+                            {/* 4. Trạng thái trống */}
                             {mediaFiles.length === 0 && !outputVideoUrl && (
                                 <div style={styles.screenEmpty}>
                                     <span style={{ fontSize: 30, opacity: 0.5 }}>🩳👖🧥👗</span>
@@ -2128,8 +2131,7 @@ export default function VideoCreator() {
                     <span style={styles.footerDot}>•</span>
                     <span style={styles.footerText}>Trình dựng Video AI</span>
                     <span style={styles.footerDot}>•</span>
-                    <span style={styles.footerVersion}>v2.0</span>
-                    <span style={styles.footerVersion}>Updated at 29/09/2026</span>
+                    <span style={styles.footerVersion}>v1.0</span>
                 </div>
 
                 <div style={styles.footerRight}>
