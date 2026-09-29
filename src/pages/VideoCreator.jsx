@@ -2131,7 +2131,8 @@ export default function VideoCreator() {
                     <span style={styles.footerDot}>•</span>
                     <span style={styles.footerText}>Trình dựng Video AI</span>
                     <span style={styles.footerDot}>•</span>
-                    <span style={styles.footerVersion}>v1.0</span>
+                    <span style={styles.footerVersion}>v2.0</span>
+                    <span style={styles.footerVersion}>Cập nhật: 29/09/2026</span>
                 </div>
 
                 <div style={styles.footerRight}>
