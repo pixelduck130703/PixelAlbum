@@ -2135,6 +2135,47 @@ export default function VideoCreator() {
                     <span style={styles.footerVersion}>Cập nhật: 29/09/2026</span>
                 </div>
 
+                {/* KHU VỰC LOGO CÔNG NGHỆ SỬ DỤNG TRONG DỰ ÁN */}
+                <div style={styles.footerCenterTech}>
+                    <div style={styles.techIconsList}>
+                        {/* React */}
+                        <span title="React.js (Frontend Framework)" style={styles.techBadge}>
+                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg" alt="React" style={styles.techIconImg} />
+                            <span>React</span>
+                        </span>
+
+                        {/* Node.js */}
+                        <span title="Node.js (Runtime)" style={styles.techBadge}>
+                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg" alt="NodeJS" style={styles.techIconImg} />
+                            <span>Node.js</span>
+                        </span>
+
+                        {/* Express */}
+                        <span title="ExpressJS (Backend API Service)" style={styles.techBadge}>
+                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/express/express-original.svg" alt="Express" style={{ ...styles.techIconImg, filter: 'invert(0.2)' }} />
+                            <span>Express</span>
+                        </span>
+
+                        {/* Google Gemini AI */}
+                        <span title="Google Gemini 2.5/3.8 Flash (AI Script & TTS)" style={styles.techBadge}>
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/8/8a/Google_Gemini_logo.svg" alt="Gemini AI" style={styles.techIconImg} />
+                            <span>Gemini</span>
+                        </span>
+
+                        {/* ElevenLabs TTS */}
+                        <span title="ElevenLabs (Multilingual AI Voice TTS)" style={styles.techBadge}>
+                            <span style={{ fontSize: 13, fontWeight: 900, color: '#000000', lineHeight: 1 }}>❙❙</span>
+                            <span>ElevenLabs</span>
+                        </span>
+
+                        {/* Web Audio & Canvas */}
+                        <span title="HTML5 Canvas & Web Audio API (Render Engine)" style={styles.techBadge}>
+                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg" alt="HTML5 Canvas" style={styles.techIconImg} />
+                            <span>Canvas 2D</span>
+                        </span>
+                    </div>
+                </div>
+
                 <div style={styles.footerRight}>
                     <span style={styles.footerText}>© Copyright © 2026 by Nguyễn Tuấn Hùng (Pixel)</span>
                 </div>
@@ -2905,5 +2946,69 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
         gap: 14,
+    },
+    appFooter: {
+        height: 48, // Tăng nhẹ chiều cao để chứa vừa logo
+        padding: '0 24px',
+        backgroundColor: '#ffffff',
+        borderTop: '1px solid #e2e8f0',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        fontSize: 12,
+        color: '#64748b',
+        flexShrink: 0,
+        zIndex: 10,
+        userSelect: 'none',
+        gap: 16,
+    },
+    footerLeft: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        whiteSpace: 'nowrap',
+    },
+    footerCenterTech: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        overflowX: 'auto',
+    },
+    techLabel: {
+        fontSize: 11.5,
+        fontWeight: 600,
+        color: '#94a3b8',
+        whiteSpace: 'nowrap',
+    },
+    techIconsList: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 6,
+    },
+    techBadge: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 5,
+        padding: '3px 8px',
+        backgroundColor: '#f8fafc',
+        border: '1px solid #e2e8f0',
+        borderRadius: 6,
+        fontSize: 11,
+        fontWeight: 600,
+        color: '#334155',
+        cursor: 'default',
+        transition: 'all 0.15s ease',
+        whiteSpace: 'nowrap',
+    },
+    techIconImg: {
+        width: 14,
+        height: 14,
+        objectFit: 'contain',
+    },
+    footerRight: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 14,
+        whiteSpace: 'nowrap',
     },
 };
