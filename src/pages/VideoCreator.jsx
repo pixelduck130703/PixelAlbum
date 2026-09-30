@@ -48,7 +48,43 @@ const DEFAULT_PRESET_BGMS = [
     },
 ];
 
+// NẠP JSZIP TỰ ĐỘNG ĐỂ ĐÓNG GÓI ZIP MÀ KHÔNG CẦN CÀI NPM
+const loadJSZip = () => {
+    return new Promise((resolve, reject) => {
+        if (window.JSZip) return resolve(window.JSZip);
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+        script.onload = () => resolve(window.JSZip);
+        script.onerror = () => reject(new Error('Không thể tải thư viện đóng gói ZIP.'));
+        document.body.appendChild(script);
+    });
+};
+
 export default function VideoCreator() {
+    // TAB ĐANG CHỌN (images | divide | video) ĐỂ ĐỔI MÀU NÚT NỔI BẬT
+    const [activeTab, setActiveTab] = useState('images');
+
+    // MODAL POPUP CẮT ẢNH (IMAGE DIVIDE MODAL)
+    const [isDivideModalOpen, setIsDivideModalOpen] = useState(false);
+    const [divideSourceImage, setDivideSourceImage] = useState(null);
+    const [divideSourceName, setDivideSourceName] = useState('');
+    const [divideRows, setDivideRows] = useState(2);
+    const [divideCols, setDivideCols] = useState(2);
+    const [isSplittingImage, setIsSplittingImage] = useState(false);
+    const [isZipping, setIsZipping] = useState(false);
+    const [dividedPieces, setDividedPieces] = useState([]);
+    const [isDraggingOverDivideModal, setIsDraggingOverDivideModal] = useState(false);
+    const divideFileInputRef = useRef(null);
+
+    // KÉO DI CHUYỂN CỬA SỔ POPUP CẮT ẢNH (DRAGGABLE POPUP)
+    const [modalPos, setModalPos] = useState({ x: 0, y: 0 });
+    const isDraggingWindowRef = useRef(false);
+    const dragStartPosRef = useRef({ startX: 0, startY: 0, initialX: 0, initialY: 0 });
+
+    // POPUP CẢNH BÁO TƯ LIỆU ĐÃ CÓ ẢNH
+    const [showMediaExistPopup, setShowMediaExistPopup] = useState(false);
+    const pendingPiecesRef = useRef([]);
+
     const [mediaType, setMediaType] = useState('images');
     const [mediaFiles, setMediaFiles] = useState([]);
     const [aspectRatio, setAspectRatio] = useState('9:16');
@@ -186,6 +222,42 @@ export default function VideoCreator() {
         }
     }, [bgmVolume]);
 
+    // XỬ LÝ KÉO DI CHUYỂN CỬA SỔ MODAL CẮT ẢNH
+    useEffect(() => {
+        const handleMouseMove = (e) => {
+            if (!isDraggingWindowRef.current) return;
+            const deltaX = e.clientX - dragStartPosRef.current.startX;
+            const deltaY = e.clientY - dragStartPosRef.current.startY;
+            setModalPos({
+                x: dragStartPosRef.current.initialX + deltaX,
+                y: dragStartPosRef.current.initialY + deltaY,
+            });
+        };
+
+        const handleMouseUp = () => {
+            isDraggingWindowRef.current = false;
+        };
+
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mouseup', handleMouseUp);
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, []);
+
+    const handleStartDragModal = (e) => {
+        // Chỉ kéo khi click vào thanh header (không click vào nút đóng)
+        if (e.target.tagName.toLowerCase() === 'button') return;
+        isDraggingWindowRef.current = true;
+        dragStartPosRef.current = {
+            startX: e.clientX,
+            startY: e.clientY,
+            initialX: modalPos.x,
+            initialY: modalPos.y,
+        };
+    };
+
     const handleSaveGeminiKey = () => {
         const clean = geminiApiKey.trim();
         localStorage.setItem('CUSTOM_GEMINI_KEY', clean);
@@ -240,6 +312,7 @@ export default function VideoCreator() {
         setIsPlayingVoicePreview(false);
         setIsPreviewPreparing(false);
         setShowNoBgmPrompt(false);
+        setShowMediaExistPopup(false);
         setPreviewCurrentTime(0);
         setProgress(0);
     };
@@ -266,6 +339,173 @@ export default function VideoCreator() {
             return customElevenVoiceId.trim();
         }
         return selectedVoiceId;
+    };
+
+    // LOGIC CHIA NHỎ ẢNH BẰNG CANVAS TRẢ VỀ MẢNG DATAURL
+    const executeDivideImage = async () => {
+        if (!divideSourceImage) return [];
+        const r = parseInt(divideRows, 10);
+        const c = parseInt(divideCols, 10);
+        if (isNaN(r) || isNaN(c) || r < 1 || c < 1 || r > 10 || c > 10) {
+            throw new Error('Số hàng và số cột phải từ 1 đến 10!');
+        }
+
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = reject;
+            img.src = divideSourceImage;
+        });
+
+        const pieceWidth = Math.floor(img.width / c);
+        const pieceHeight = Math.floor(img.height / r);
+        const newPieces = [];
+
+        for (let row = 0; row < r; row++) {
+            for (let col = 0; col < c; col++) {
+                const canvas = document.createElement('canvas');
+                canvas.width = pieceWidth;
+                canvas.height = pieceHeight;
+                const ctx = canvas.getContext('2d');
+
+                ctx.drawImage(
+                    img,
+                    col * pieceWidth,
+                    row * pieceHeight,
+                    pieceWidth,
+                    pieceHeight,
+                    0,
+                    0,
+                    pieceWidth,
+                    pieceHeight
+                );
+
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+                newPieces.push(dataUrl);
+            }
+        }
+        return newPieces;
+    };
+
+    const processDivideImageFile = (file) => {
+        if (!file || !file.type.startsWith('image/')) {
+            alert('Vui lòng chọn hoặc thả tệp hình ảnh hợp lệ (.jpg, .png, .webp)!');
+            return;
+        }
+        const url = URL.createObjectURL(file);
+        setDivideSourceImage(url);
+        setDivideSourceName(file.name);
+        setDividedPieces([]);
+    };
+
+    const handleDivideImageUpload = (e) => {
+        const file = e.target.files?.[0];
+        if (file) processDivideImageFile(file);
+    };
+
+    // XỬ LÝ KÉO THẢ TỆP ẢNH VÀO POPUP CẮT ẢNH
+    const handleDivideDrop = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDraggingOverDivideModal(false);
+        const file = e.dataTransfer?.files?.[0];
+        if (file) processDivideImageFile(file);
+    };
+
+    // HÀM XÓA ẢNH ĐANG CHỜ CẮT
+    const handleClearDivideImage = () => {
+        if (divideSourceImage?.startsWith('blob:')) {
+            try {
+                URL.revokeObjectURL(divideSourceImage);
+            } catch { }
+        }
+        setDivideSourceImage(null);
+        setDivideSourceName('');
+        setDividedPieces([]);
+        if (divideFileInputRef.current) {
+            divideFileInputRef.current.value = '';
+        }
+    };
+
+    // BẤM NÚT CHIA ẢNH TRONG POPUP
+    const handlePerformDivideImage = async () => {
+        if (!divideSourceImage) {
+            alert('Vui lòng tải lên ảnh cần chia nhỏ trước!');
+            return;
+        }
+        setIsSplittingImage(true);
+        try {
+            const pieces = await executeDivideImage();
+            setDividedPieces(pieces);
+
+            // NẾU ĐÃ CÓ TƯ LIỆU SẴN -> BẬT POPUP HỎI THAY THẾ
+            if (mediaFiles.length > 0) {
+                pendingPiecesRef.current = pieces;
+                setShowMediaExistPopup(true);
+            } else {
+                setMediaType('images');
+                setActiveTab('images');
+                setMediaFiles(pieces);
+                setIsDivideModalOpen(false); // Cắt xong tự đóng modal
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Không thể chia ảnh: ' + (err.message || 'Lỗi không xác định'));
+        } finally {
+            setIsSplittingImage(false);
+        }
+    };
+
+    // XỬ LÝ LỰA CHỌN THAY THẾ TOÀN BỘ TỪ POPUP
+    const handleConfirmOverwriteMedia = () => {
+        setMediaType('images');
+        setActiveTab('images');
+        setMediaFiles(pendingPiecesRef.current);
+        pendingPiecesRef.current = [];
+        setShowMediaExistPopup(false);
+        setIsDivideModalOpen(false);
+    };
+
+    // TẢI XUỐNG CÁC MẢNH ẢNH DƯỚI DẠNG FILE ZIP
+    const handleDownloadZip = async () => {
+        if (!divideSourceImage) {
+            alert('Vui lòng tải ảnh lên trước!');
+            return;
+        }
+
+        setIsZipping(true);
+        try {
+            let pieces = dividedPieces;
+            if (!pieces || pieces.length === 0) {
+                pieces = await executeDivideImage();
+                setDividedPieces(pieces);
+            }
+
+            const JSZip = await loadJSZip();
+            const zip = new JSZip();
+            const baseFileName = (divideSourceName || 'image').replace(/\.[^/.]+$/, '');
+
+            pieces.forEach((dataUrl, idx) => {
+                const base64Data = dataUrl.split(',')[1];
+                zip.file(`${baseFileName}_piece_${idx + 1}.jpg`, base64Data, { base64: true });
+            });
+
+            const content = await zip.generateAsync({ type: 'blob' });
+            const zipUrl = URL.createObjectURL(content);
+            const a = document.createElement('a');
+            a.href = zipUrl;
+            a.download = `${baseFileName}_divided_${divideRows}x${divideCols}.zip`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(zipUrl);
+        } catch (err) {
+            console.error(err);
+            alert('Lỗi đóng gói ZIP: ' + (err.message || 'Không thể tạo file ZIP.'));
+        } finally {
+            setIsZipping(false);
+        }
     };
 
     // 1. TƯ LIỆU ẢNH / VIDEO
@@ -717,12 +957,27 @@ export default function VideoCreator() {
 
     // HÀM CHUẨN BỊ SESSION: TỰ ĐỘNG VIẾT KỊCH BẢN VÀ TỰ TẠO GIỌNG ĐỌC NẾU THIẾU
     const prepareSession = async (isPreview = false) => {
+        let currentMedia = [...mediaFiles];
+
+        // TỰ ĐỘNG CẮT ẢNH NẾU NGƯỜI DÙNG ĐÃ CHỌN ẢNH CẮT NHƯNG CHƯA BẤM CẮT
+        if (currentMedia.length === 0 && divideSourceImage) {
+            setPreparingStatusText(`Đang tự động cắt ảnh thành ${divideRows * divideCols} ô...`);
+            const pieces = await executeDivideImage();
+            if (pieces.length > 0) {
+                setDividedPieces(pieces);
+                setMediaType('images');
+                setActiveTab('images');
+                setMediaFiles(pieces);
+                currentMedia = pieces;
+            }
+        }
+
         let currentScript = thaiScript?.trim() || '';
 
         // 1. NẾU CHỌN DÙNG VOICE AI MÀ CHƯA CÓ VĂN BẢN KỊCH BẢN -> TỰ ĐỘNG VIẾT KỊCH BẢN
         if (voiceSourceType === 'ai' && !currentScript) {
-            if (mediaFiles.length === 0) {
-                throw new Error('Vui lòng tải lên ít nhất 1 ảnh hoặc video để AI có thể viết kịch bản!');
+            if (currentMedia.length === 0) {
+                throw new Error('Vui lòng tải lên ảnh hoặc video để AI có thể viết kịch bản!');
             }
 
             setIsWritingScript(true);
@@ -730,11 +985,11 @@ export default function VideoCreator() {
             setPreparingStatusText('Đang phân tích thiết kế & tự động tạo kịch bản...');
 
             try {
-                let imageInput = mediaFiles[0];
+                let imageInput = currentMedia[0];
                 if (mediaType === 'video') {
                     setScriptStatusText('Đang trích xuất khung hình video...');
                     setPreparingStatusText('Đang trích xuất khung hình từ video...');
-                    imageInput = await extractFrameFromVideo(mediaFiles[0]);
+                    imageInput = await extractFrameFromVideo(currentMedia[0]);
                 }
 
                 setScriptStatusText('AI đang phân tích sản phẩm và viết kịch bản...');
@@ -801,7 +1056,7 @@ export default function VideoCreator() {
             try {
                 aiTimeline = await analyzeVideoScriptWithAi(
                     customScriptPrompt,
-                    mediaFiles.length,
+                    currentMedia.length,
                     geminiApiKey,
                     targetDuration
                 );
@@ -819,7 +1074,7 @@ export default function VideoCreator() {
         const renderer = new VideoRenderer(previewCanvasRef.current, { width, height });
         activeRendererRef.current = renderer;
 
-        return { mixer, renderer, audioStream, targetDuration, aiTimeline };
+        return { mixer, renderer, audioStream, targetDuration, aiTimeline, readyMedia: currentMedia };
     };
 
     // HÀM BẮT ĐẦU CHẠY PREVIEW THỰC SỰ
@@ -829,21 +1084,22 @@ export default function VideoCreator() {
 
         const needsScript = voiceSourceType === 'ai' && !thaiScript.trim();
         const needsVoice = voiceSourceType === 'ai';
+        const needsDivide = mediaFiles.length === 0 && divideSourceImage;
 
-        if (needsScript || needsVoice) {
+        if (needsScript || needsVoice || needsDivide) {
             setIsPreviewPreparing(true);
             setPreparingStatusText('Đang khởi tạo video...');
         }
 
         try {
-            const { mixer, renderer, targetDuration, aiTimeline } = await prepareSession(true);
+            const { mixer, renderer, targetDuration, aiTimeline, readyMedia } = await prepareSession(true);
             await mixer.play();
 
             setIsPreviewPreparing(false);
             setIsPreviewingVideo(true);
 
             renderer.startPreview({
-                files: mediaFiles,
+                files: readyMedia || mediaFiles,
                 effectMode,
                 selectedEffect,
                 aiTimeline,
@@ -875,7 +1131,7 @@ export default function VideoCreator() {
             return;
         }
 
-        if (mediaFiles.length === 0) {
+        if (mediaFiles.length === 0 && !divideSourceImage) {
             alert('Vui lòng tải lên ít nhất 1 ảnh hoặc video ở mục 01 để xem trước!');
             return;
         }
@@ -904,7 +1160,7 @@ export default function VideoCreator() {
     };
 
     const handleStartRender = async () => {
-        if (mediaFiles.length === 0) {
+        if (mediaFiles.length === 0 && !divideSourceImage) {
             alert('Vui lòng tải lên ít nhất 1 ảnh hoặc video!');
             return;
         }
@@ -915,11 +1171,11 @@ export default function VideoCreator() {
         setOutputVideoUrl(null);
 
         try {
-            const { mixer, renderer, audioStream, targetDuration, aiTimeline } = await prepareSession(false);
+            const { mixer, renderer, audioStream, targetDuration, aiTimeline, readyMedia } = await prepareSession(false);
             await mixer.play();
 
             renderer.startRender({
-                files: mediaFiles,
+                files: readyMedia || mediaFiles,
                 effectMode,
                 selectedEffect,
                 aiTimeline,
@@ -964,6 +1220,264 @@ export default function VideoCreator() {
                     100% { transform: rotate(360deg); }
                 }
             `}</style>
+
+            {/* POPUP MODAL CẮT ẢNH CHUYÊN DỤNG (HỖ TRỢ KÉO THẢ TỆP & DI CHUYỂN CỬA SỔ) */}
+            {isDivideModalOpen && (
+                <div style={styles.loadingOverlay}>
+                    <div
+                        style={{
+                            ...styles.dividerModalWindow,
+                            transform: `translate(${modalPos.x}px, ${modalPos.y}px)`,
+                        }}
+                    >
+                        {/* Header Modal: Cho phép nhấn giữ chuột để kéo di chuyển cửa sổ */}
+                        <div
+                            style={styles.dividerModalHeader}
+                            onMouseDown={handleStartDragModal}
+                        >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, pointerEvents: 'none' }}>
+                                <div style={styles.dividerIconBadge}>✂</div>
+                                <div>
+                                    <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: '#0f172a' }}>
+                                        Chia nhỏ hình ảnh (Image Divide)
+                                    </h3>
+                                    <span style={{ fontSize: 12, color: '#64748b' }}>
+                                        Kéo thả ảnh vào khung bên dưới để cắt
+                                    </span>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setIsDivideModalOpen(false);
+                                    setActiveTab(mediaType);
+                                }}
+                                style={styles.closeModalBtn}
+                                title="Đóng cửa sổ"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        {/* Thân Modal: Hỗ trợ Kéo - Thả ảnh trực tiếp từ máy tính */}
+                        {!divideSourceImage ? (
+                            <div
+                                style={{
+                                    ...styles.modalUploadDropArea,
+                                    borderColor: isDraggingOverDivideModal ? '#0284c7' : '#94a3b8',
+                                    backgroundColor: isDraggingOverDivideModal ? '#e0f2fe' : '#f8fafc',
+                                }}
+                                onClick={() => divideFileInputRef.current && divideFileInputRef.current.click()}
+                                onDragEnter={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setIsDraggingOverDivideModal(true);
+                                }}
+                                onDragOver={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    e.dataTransfer.dropEffect = 'copy';
+                                    setIsDraggingOverDivideModal(true);
+                                }}
+                                onDragLeave={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    if (!e.currentTarget.contains(e.relatedTarget)) {
+                                        setIsDraggingOverDivideModal(false);
+                                    }
+                                }}
+                                onDrop={handleDivideDrop}
+                            >
+                                <input
+                                    ref={divideFileInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    style={{ display: 'none' }}
+                                    onChange={handleDivideImageUpload}
+                                />
+                                <div style={styles.uploadIllustrationCircle}>
+                                    {isDraggingOverDivideModal ? '📥' : '🖼️'}
+                                </div>
+                                <h4 style={{ margin: '0 0 6px 0', fontSize: 15, fontWeight: 700, color: '#0284c7' }}>
+                                    {isDraggingOverDivideModal ? 'Thả tệp ảnh vào đây ngay!' : 'Bấm để chọn hoặc kéo thả ảnh vào đây'}
+                                </h4>
+                                <p style={{ margin: 0, fontSize: 12.5, color: '#64748b' }}>
+                                    Hỗ trợ định dạng JPG, PNG, WEBP. Ảnh sắc nét, giữ nguyên độ phân giải.
+                                </p>
+                            </div>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                                {/* Khung Xem trước với Lưới cắt Overlay trực quan */}
+                                <div style={styles.previewImageGridCard}>
+                                    <div style={styles.previewImageContainer}>
+                                        <img
+                                            src={divideSourceImage}
+                                            alt="Divide Source"
+                                            style={styles.previewDivideImg}
+                                        />
+                                        {/* Lưới cắt trực quan phủ lên ảnh */}
+                                        <div
+                                            style={{
+                                                ...styles.gridOverlayContainer,
+                                                gridTemplateRows: `repeat(${divideRows}, 1fr)`,
+                                                gridTemplateColumns: `repeat(${divideCols}, 1fr)`,
+                                            }}
+                                        >
+                                            {Array.from({ length: divideRows * divideCols }).map((_, idx) => (
+                                                <div key={idx} style={styles.gridOverlayCell}>
+                                                    <span style={styles.gridCellNumberBadge}>#{idx + 1}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Nút xóa ảnh nguồn */}
+                                    <button
+                                        type="button"
+                                        onClick={handleClearDivideImage}
+                                        style={styles.removeDivideImgBtn}
+                                        title="Xóa và chọn ảnh khác"
+                                    >
+                                        🗑️ Đổi ảnh khác
+                                    </button>
+                                </div>
+
+                                {/* Bảng điều khiển cấu hình hàng và cột */}
+                                <div style={styles.gridControlsPanel}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                                        <span style={{ fontSize: 13, fontWeight: 700, color: '#334155' }}>
+                                            Kích thước lưới chia:
+                                        </span>
+                                        <span style={styles.gridSummaryBadge}>
+                                            Tổng cộng: <b>{divideRows * divideCols} mảnh</b>
+                                        </span>
+                                    </div>
+
+                                    <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+                                        {/* Stepper Hàng */}
+                                        <div style={styles.stepperBox}>
+                                            <span style={styles.stepperLabel}>Số hàng:</span>
+                                            <div style={styles.stepperControlRow}>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setDivideRows((prev) => Math.max(1, prev - 1))}
+                                                    style={styles.stepperBtn}
+                                                >
+                                                    -
+                                                </button>
+                                                <span style={styles.stepperValue}>{divideRows}</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setDivideRows((prev) => Math.min(10, prev + 1))}
+                                                    style={styles.stepperBtn}
+                                                >
+                                                    +
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <span style={{ fontSize: 18, fontWeight: 800, color: '#94a3b8' }}>×</span>
+
+                                        {/* Stepper Cột */}
+                                        <div style={styles.stepperBox}>
+                                            <span style={styles.stepperLabel}>Số cột:</span>
+                                            <div style={styles.stepperControlRow}>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setDivideCols((prev) => Math.max(1, prev - 1))}
+                                                    style={styles.stepperBtn}
+                                                >
+                                                    -
+                                                </button>
+                                                <span style={styles.stepperValue}>{divideCols}</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setDivideCols((prev) => Math.min(10, prev + 1))}
+                                                    style={styles.stepperBtn}
+                                                >
+                                                    +
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Nút bấm hành động */}
+                                <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+                                    <button
+                                        type="button"
+                                        disabled={isSplittingImage}
+                                        onClick={handlePerformDivideImage}
+                                        style={styles.modalPrimaryActionBtn}
+                                    >
+                                        {isSplittingImage ? '⏳ Đang cắt ảnh...' : `✂️ Cắt ${divideRows * divideCols} ô & Thêm vào tư liệu`}
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        disabled={isZipping || isSplittingImage}
+                                        onClick={handleDownloadZip}
+                                        style={styles.modalSecondaryZipBtn}
+                                        title="Tải tệp ZIP về máy tính"
+                                    >
+                                        {isZipping ? '📦...' : '📦 Tải file ZIP'}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* POPUP THÔNG BÁO: TƯ LIỆU ĐÃ CÓ ẢNH KHI NGƯỜI DÙNG BẤM CHIA ẢNH */}
+            {showMediaExistPopup && (
+                <div style={styles.loadingOverlay}>
+                    <div style={styles.loadingModal}>
+                        <div style={{ fontSize: 42, marginBottom: 8 }}>⚠️</div>
+                        <h3 style={styles.loadingTitle}>Mục tư liệu đã có ảnh!</h3>
+                        <p style={styles.loadingSubtitle}>
+                            Hiện tại Mục 01 Tư liệu đang có <b>{mediaFiles.length} tệp</b>. Bạn có muốn thay thế toàn bộ bằng các mảnh ảnh vừa cắt này không?
+                        </p>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%', marginTop: 4 }}>
+                            <button
+                                type="button"
+                                onClick={handleConfirmOverwriteMedia}
+                                style={{
+                                    padding: '10px 14px',
+                                    borderRadius: 8,
+                                    border: 'none',
+                                    backgroundColor: '#0284c7',
+                                    color: '#ffffff',
+                                    fontSize: 13.5,
+                                    fontWeight: 700,
+                                    cursor: 'pointer',
+                                }}
+                            >
+                                🔄 Thay thế toàn bộ ({pendingPiecesRef.current.length} ảnh mới)
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    pendingPiecesRef.current = [];
+                                    setShowMediaExistPopup(false);
+                                }}
+                                style={{
+                                    padding: '8px 14px',
+                                    borderRadius: 8,
+                                    border: '1px solid #cbd5e1',
+                                    backgroundColor: '#ffffff',
+                                    color: '#64748b',
+                                    fontSize: 13,
+                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                }}
+                            >
+                                Hủy bỏ
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* POPUP THÔNG BÁO: CHƯA CÓ NHẠC NỀN */}
             {showNoBgmPrompt && (
@@ -1077,9 +1591,10 @@ export default function VideoCreator() {
                                     key={item.id}
                                     style={{
                                         ...styles.tabButton,
-                                        backgroundColor: aspectRatio === item.id ? '#ffffff' : 'transparent',
-                                        color: aspectRatio === item.id ? '#0284c7' : '#64748b',
-                                        boxShadow: aspectRatio === item.id ? '0 2px 6px rgba(2, 132, 199, 0.12)' : 'none',
+                                        backgroundColor: aspectRatio === item.id ? '#0284c7' : '#ffffff',
+                                        color: aspectRatio === item.id ? '#ffffff' : '#64748b',
+                                        fontWeight: aspectRatio === item.id ? 700 : 600,
+                                        boxShadow: aspectRatio === item.id ? '0 2px 6px rgba(2, 132, 199, 0.25)' : 'none',
                                     }}
                                     onClick={() => setAspectRatio(item.id)}
                                 >
@@ -1089,36 +1604,62 @@ export default function VideoCreator() {
                         </div>
                     </div>
 
-                    {/* Card 1: Tư liệu */}
+                    {/* Card 1: Tư liệu (3 NÚT NỔI BẬT MÀU KHI ĐƯỢC CHỌN) */}
                     <div style={styles.card}>
                         <div style={styles.cardHeader}>
                             <span style={styles.cardStep}>01</span>
                             <h3 style={styles.cardTitle}>Tư liệu</h3>
                         </div>
 
+                        {/* 3 NÚT LỰA CHỌN: ẢNH | CẮT ẢNH | VIDEO (ĐỔI MÀU NỔI BẬT RÕ RÀNG) */}
                         <div style={styles.tabGroup}>
                             <button
                                 style={{
                                     ...styles.tabButton,
-                                    backgroundColor: mediaType === 'images' ? '#ffffff' : 'transparent',
-                                    color: mediaType === 'images' ? '#0284c7' : '#64748b',
-                                    boxShadow: mediaType === 'images' ? '0 2px 6px rgba(2, 132, 199, 0.12)' : 'none',
+                                    backgroundColor: activeTab === 'images' ? '#0284c7' : '#ffffff',
+                                    color: activeTab === 'images' ? '#ffffff' : '#475569',
+                                    fontWeight: activeTab === 'images' ? 700 : 600,
+                                    boxShadow: activeTab === 'images' ? '0 2px 8px rgba(2, 132, 199, 0.3)' : 'none',
+                                    border: activeTab === 'images' ? 'none' : '1px solid #e2e8f0',
                                 }}
                                 onClick={() => {
+                                    setActiveTab('images');
                                     setMediaType('images');
                                     setMediaFiles([]);
                                 }}
                             >
                                 📸 Ảnh
                             </button>
+
+                            {/* NÚT CẮT ẢNH Ở GIỮA -> CHUYỂN MÀU NỔI BẬT & MỞ POPUP */}
                             <button
                                 style={{
                                     ...styles.tabButton,
-                                    backgroundColor: mediaType === 'video' ? '#ffffff' : 'transparent',
-                                    color: mediaType === 'video' ? '#0284c7' : '#64748b',
-                                    boxShadow: mediaType === 'video' ? '0 2px 6px rgba(2, 132, 199, 0.12)' : 'none',
+                                    backgroundColor: activeTab === 'divide' ? '#0284c7' : '#ffffff',
+                                    color: activeTab === 'divide' ? '#ffffff' : '#475569',
+                                    fontWeight: activeTab === 'divide' ? 700 : 600,
+                                    boxShadow: activeTab === 'divide' ? '0 2px 8px rgba(2, 132, 199, 0.3)' : 'none',
+                                    border: activeTab === 'divide' ? 'none' : '1px solid #e2e8f0',
                                 }}
                                 onClick={() => {
+                                    setActiveTab('divide');
+                                    setIsDivideModalOpen(true);
+                                }}
+                            >
+                                ✂️ Cắt ảnh
+                            </button>
+
+                            <button
+                                style={{
+                                    ...styles.tabButton,
+                                    backgroundColor: activeTab === 'video' ? '#0284c7' : '#ffffff',
+                                    color: activeTab === 'video' ? '#ffffff' : '#475569',
+                                    fontWeight: activeTab === 'video' ? 700 : 600,
+                                    boxShadow: activeTab === 'video' ? '0 2px 8px rgba(2, 132, 199, 0.3)' : 'none',
+                                    border: activeTab === 'video' ? 'none' : '1px solid #e2e8f0',
+                                }}
+                                onClick={() => {
+                                    setActiveTab('video');
                                     setMediaType('video');
                                     setMediaFiles([]);
                                 }}
@@ -1204,7 +1745,7 @@ export default function VideoCreator() {
                         )}
                     </div>
 
-                    {/* Card 2: Hiệu ứng chuyển cảnh & Grok AI */}
+                    {/* Card: Hiệu ứng chuyển cảnh & Grok AI (thuộc tư liệu hình ảnh) */}
                     {mediaType === 'images' && (
                         <div style={styles.card}>
                             <div style={styles.cardHeader}>
@@ -1389,7 +1930,7 @@ export default function VideoCreator() {
                         </div>
                     )}
 
-                    {/* Card 3: Giọng đọc AI & Kéo thả Voice */}
+                    {/* Card 2: Giọng đọc AI & Kéo thả Voice */}
                     <div style={styles.card}>
                         <div style={styles.cardHeader}>
                             <span style={styles.cardStep}>02</span>
@@ -1457,7 +1998,7 @@ export default function VideoCreator() {
                                             {voiceName ? `✓ ${voiceName}` : 'Bấm để chọn hoặc kéo thả file âm thanh vào đây'}
                                         </div>
                                         <div style={{ fontSize: 11.5, color: '#64748b', marginTop: 2 }}>
-                                            {isDraggingOverVoice ? 'Thả file giọng đọc vào đây ngay!' : 'Hỗ trợ định dạng MP3, WAV, M4A, OGG'}
+                                            Hỗ trợ định dạng MP3, WAV, M4A, OGG
                                         </div>
                                     </div>
                                 </div>
@@ -1607,6 +2148,9 @@ export default function VideoCreator() {
                                         </label>
 
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                            <span style={{ fontSize: 11.5, color: '#64748b', backgroundColor: '#f1f5f9', padding: '2px 8px', borderRadius: 4 }}>
+                                                ~{estimatedSeconds} giây
+                                            </span>
 
                                             {/* NÚT AI TỰ ĐỘNG VIẾT KỊCH BẢN */}
                                             <button
@@ -1658,7 +2202,7 @@ export default function VideoCreator() {
                                         </div>
                                     </div>
 
-                                    {/* 2. Ô VĂN BẢN ĐỂ TRỐNG MỖI LẦN TRUY CẬP */}
+                                    {/* Ô VĂN BẢN ĐỂ TRỐNG MỖI LẦN TRUY CẬP */}
                                     <textarea
                                         rows="5"
                                         style={{ ...styles.textarea, fontSize: 13, lineHeight: 1.6 }}
@@ -1716,7 +2260,7 @@ export default function VideoCreator() {
                                             transition: 'all 0.15s ease',
                                         }}
                                     >
-                                        🇻🇳 Dịch sang tiếng Việt
+                                        🇻🇳 Dịch
                                     </button>
                                 ) : (
                                     <button
@@ -1809,7 +2353,7 @@ export default function VideoCreator() {
                         </div>
                     </div>
 
-                    {/* Card 4: BGM */}
+                    {/* Card 3: Nhạc nền */}
                     <div style={styles.card}>
                         <div style={styles.cardHeader}>
                             <span style={styles.cardStep}>03</span>
@@ -1876,7 +2420,7 @@ export default function VideoCreator() {
                                             {bgmName ? `✓ ${bgmName}` : 'Bấm để chọn file nhạc hoặc kéo thả vào đây'}
                                         </div>
                                         <div style={{ fontSize: 11.5, color: '#64748b', marginTop: 2 }}>
-                                            {isDraggingOverBgm ? 'Thả tệp nhạc vào đây ngay!' : 'Hỗ trợ định dạng MP3, WAV, M4A, AAC'}
+                                            Hỗ trợ định dạng MP3, WAV, M4A, AAC
                                         </div>
                                     </div>
                                 </div>
@@ -1956,7 +2500,7 @@ export default function VideoCreator() {
                                                                 color: isPreviewPlaying ? '#ffffff' : '#0284c7',
                                                             }}
                                                         >
-                                                            {isPreviewPlaying ? '⏹️' : '▶️'}
+                                                            {isPreviewPlaying ? '⏹' : '▶'}
                                                         </button>
 
                                                         {!item.isDefault && (
@@ -2031,7 +2575,7 @@ export default function VideoCreator() {
                             />
 
                             {/* 4. Trạng thái trống */}
-                            {mediaFiles.length === 0 && !outputVideoUrl && (
+                            {mediaFiles.length === 0 && !outputVideoUrl && !divideSourceImage && (
                                 <div style={styles.screenEmpty}>
                                     <span style={{ fontSize: 30, opacity: 0.5 }}>🩳👖🧥👗</span>
                                     <p style={{ color: '#64748b', fontSize: 15, textAlign: 'center', marginTop: 12, fontWeight: 500 }}>
@@ -2040,7 +2584,7 @@ export default function VideoCreator() {
                                 </div>
                             )}
 
-                            {mediaFiles.length > 0 && !outputVideoUrl && (
+                            {(mediaFiles.length > 0 || divideSourceImage) && !outputVideoUrl && (
                                 <div key={aspectRatio} style={styles.previewBadge}>
                                     {isPreviewingVideo ? '🔊 Đang Preview' : rendering ? '⚙️ Đang Render...' : `Tỉ lệ ${aspectRatio}`}
                                 </div>
@@ -2097,7 +2641,7 @@ export default function VideoCreator() {
                                     cursor: 'pointer',
                                 }}
                             >
-                                {isPreviewingVideo ? '⏸️ Tạm dừng' : '▶️ Preview'}
+                                {isPreviewingVideo ? '⏸ Tạm dừng' : '▶️ Preview'}
                             </button>
                         )}
 
@@ -2132,7 +2676,7 @@ export default function VideoCreator() {
                     <span style={styles.footerText}>Trình dựng Video AI</span>
                     <span style={styles.footerDot}>•</span>
                     <span style={styles.footerVersion}>v2.0</span>
-                    <span style={styles.footerVersion}>Cập nhật: 29/09/2026</span>
+                    <span style={styles.footerVersion}>Cập nhật: 30/09/2026</span>
                 </div>
 
                 {/* KHU VỰC LOGO CÔNG NGHỆ SỬ DỤNG TRONG DỰ ÁN */}
@@ -2220,6 +2764,225 @@ const styles = {
         flexDirection: 'column',
         alignItems: 'center',
         textAlign: 'center',
+        position: 'relative',
+    },
+    closeModalBtn: {
+        background: '#f1f5f9',
+        border: 'none',
+        borderRadius: '50%',
+        width: 32,
+        height: 32,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: 'pointer',
+        fontSize: 14,
+        color: '#64748b',
+        fontWeight: 'bold',
+        transition: 'all 0.15s ease',
+    },
+    dividerModalWindow: {
+        backgroundColor: '#ffffff',
+        borderRadius: 20,
+        padding: '24px 28px',
+        width: '92%',
+        maxWidth: 500,
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.38), 0 0 0 1px rgba(0, 0, 0, 0.05)',
+        display: 'flex',
+        flexDirection: 'column',
+        boxSizing: 'border-box',
+        userSelect: 'none',
+        transition: 'box-shadow 0.2s ease',
+    },
+    dividerModalHeader: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingBottom: 14,
+        borderBottom: '1px solid #f1f5f9',
+        marginBottom: 16,
+        cursor: 'move', // Biểu tượng con trỏ kéo thả di chuyển
+    },
+    dividerIconBadge: {
+        width: 38,
+        height: 38,
+        borderRadius: 10,
+        background: 'linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: 20,
+        color: '#0284c7',
+        boxShadow: '0 2px 5px rgba(2, 132, 199, 0.15)',
+    },
+    modalUploadDropArea: {
+        borderWidth: 2,
+        borderStyle: 'dashed',
+        borderColor: '#94a3b8',
+        borderRadius: 16,
+        padding: '36px 20px',
+        textAlign: 'center',
+        backgroundColor: '#f8fafc',
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+        userSelect: 'none',
+    },
+    uploadIllustrationCircle: {
+        width: 60,
+        height: 60,
+        borderRadius: '50%',
+        backgroundColor: '#e0f2fe',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: 28,
+        margin: '0 auto 12px auto',
+    },
+    previewImageGridCard: {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        backgroundColor: '#f8fafc',
+        borderRadius: 14,
+        padding: 14,
+        border: '1px solid #e2e8f0',
+    },
+    previewImageContainer: {
+        position: 'relative',
+        display: 'inline-block',
+        lineHeight: 0,
+        borderRadius: 10,
+        overflow: 'hidden',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.12)',
+        maxWidth: '100%',
+    },
+    previewDivideImg: {
+        maxHeight: 180,
+        maxWidth: '100%',
+        objectFit: 'contain',
+        display: 'block',
+        pointerEvents: 'none',
+    },
+    gridOverlayContainer: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        display: 'grid',
+        pointerEvents: 'none',
+    },
+    gridOverlayCell: {
+        border: '1px dashed rgba(2, 132, 199, 0.85)',
+        backgroundColor: 'rgba(2, 132, 199, 0.08)',
+        position: 'relative',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxSizing: 'border-box',
+    },
+    gridCellNumberBadge: {
+        fontSize: 10.5,
+        fontWeight: 800,
+        color: '#ffffff',
+        backgroundColor: 'rgba(2, 132, 199, 0.85)',
+        padding: '1px 5px',
+        borderRadius: 4,
+        backdropFilter: 'blur(2px)',
+    },
+    removeDivideImgBtn: {
+        marginTop: 10,
+        padding: '5px 12px',
+        fontSize: 12,
+        fontWeight: 700,
+        backgroundColor: '#fee2e2',
+        color: '#dc2626',
+        border: 'none',
+        borderRadius: 6,
+        cursor: 'pointer',
+        transition: 'all 0.15s ease',
+    },
+    gridControlsPanel: {
+        backgroundColor: '#f8fafc',
+        borderRadius: 12,
+        padding: '12px 14px',
+        border: '1px solid #e2e8f0',
+    },
+    gridSummaryBadge: {
+        fontSize: 12,
+        color: '#0284c7',
+        backgroundColor: '#e0f2fe',
+        padding: '2px 8px',
+        borderRadius: 6,
+    },
+    stepperBox: {
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 4,
+    },
+    stepperLabel: {
+        fontSize: 12,
+        fontWeight: 600,
+        color: '#64748b',
+    },
+    stepperControlRow: {
+        display: 'flex',
+        alignItems: 'center',
+        backgroundColor: '#ffffff',
+        borderRadius: 8,
+        border: '1px solid #cbd5e1',
+        overflow: 'hidden',
+    },
+    stepperBtn: {
+        width: 36,
+        height: 36,
+        border: 'none',
+        backgroundColor: '#f1f5f9',
+        color: '#334155',
+        fontSize: 16,
+        fontWeight: 800,
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        transition: 'background-color 0.15s ease',
+    },
+    stepperValue: {
+        flex: 1,
+        textAlign: 'center',
+        fontSize: 14,
+        fontWeight: 800,
+        color: '#0f172a',
+    },
+    modalPrimaryActionBtn: {
+        flex: 1,
+        padding: '12px 16px',
+        background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+        color: '#ffffff',
+        border: 'none',
+        borderRadius: 10,
+        fontSize: 13.5,
+        fontWeight: 800,
+        cursor: 'pointer',
+        boxShadow: '0 4px 12px rgba(2, 132, 199, 0.3)',
+        transition: 'all 0.15s ease',
+    },
+    modalSecondaryZipBtn: {
+        padding: '12px 16px',
+        backgroundColor: '#10b981',
+        color: '#ffffff',
+        border: 'none',
+        borderRadius: 10,
+        fontSize: 13.5,
+        fontWeight: 700,
+        cursor: 'pointer',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)',
+        transition: 'all 0.15s ease',
+        whiteSpace: 'nowrap',
     },
     spinner: {
         width: 46,
@@ -2370,12 +3133,10 @@ const styles = {
     tabButton: {
         flex: 1,
         padding: '10px 12px',
-        border: 'none',
         borderRadius: 8,
         cursor: 'pointer',
         fontSize: 13,
-        fontWeight: 600,
-        transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
     },
     providerBtn: {
         flex: 1,
@@ -2904,7 +3665,7 @@ const styles = {
         boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)',
     },
     appFooter: {
-        height: 38,
+        height: 48,
         padding: '0 24px',
         backgroundColor: '#ffffff',
         borderTop: '1px solid #e2e8f0',
@@ -2916,11 +3677,13 @@ const styles = {
         flexShrink: 0,
         zIndex: 10,
         userSelect: 'none',
+        gap: 16,
     },
     footerLeft: {
         display: 'flex',
         alignItems: 'center',
         gap: 8,
+        whiteSpace: 'nowrap',
     },
     footerBrand: {
         fontWeight: 700,
@@ -2942,43 +3705,11 @@ const styles = {
         fontWeight: 600,
         color: '#475569',
     },
-    footerRight: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: 14,
-    },
-    appFooter: {
-        height: 48, // Tăng nhẹ chiều cao để chứa vừa logo
-        padding: '0 24px',
-        backgroundColor: '#ffffff',
-        borderTop: '1px solid #e2e8f0',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        fontSize: 12,
-        color: '#64748b',
-        flexShrink: 0,
-        zIndex: 10,
-        userSelect: 'none',
-        gap: 16,
-    },
-    footerLeft: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: 8,
-        whiteSpace: 'nowrap',
-    },
     footerCenterTech: {
         display: 'flex',
         alignItems: 'center',
         gap: 8,
         overflowX: 'auto',
-    },
-    techLabel: {
-        fontSize: 11.5,
-        fontWeight: 600,
-        color: '#94a3b8',
-        whiteSpace: 'nowrap',
     },
     techIconsList: {
         display: 'flex',
