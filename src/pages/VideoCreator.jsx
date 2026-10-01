@@ -247,7 +247,6 @@ export default function VideoCreator() {
     }, []);
 
     const handleStartDragModal = (e) => {
-        // Chỉ kéo khi click vào thanh header (không click vào nút đóng)
         if (e.target.tagName.toLowerCase() === 'button') return;
         isDraggingWindowRef.current = true;
         dragStartPosRef.current = {
@@ -315,6 +314,61 @@ export default function VideoCreator() {
         setShowMediaExistPopup(false);
         setPreviewCurrentTime(0);
         setProgress(0);
+    };
+
+    // HÀM RESET TẤT CẢ VỀ TRẠNG THÁI BAN ĐẦU ĐỂ TẠO VIDEO MỚI
+    const handleResetAll = () => {
+        const confirmReset = window.confirm('Bạn có chắc chắn muốn xóa tất cả và tạo video mới không? Toàn bộ tư liệu, kịch bản và âm thanh sẽ được làm mới.');
+        if (!confirmReset) return;
+
+        stopAllActivities();
+
+        // Thu hồi URLs để giải phóng RAM
+        if (outputVideoUrl && outputVideoUrl.startsWith('blob:')) {
+            try { URL.revokeObjectURL(outputVideoUrl); } catch { }
+        }
+        mediaFiles.forEach((url) => {
+            try {
+                if (url?.startsWith('blob:')) URL.revokeObjectURL(url);
+            } catch { }
+        });
+        if (voiceFile && voiceFile.startsWith('blob:')) {
+            try { URL.revokeObjectURL(voiceFile); } catch { }
+        }
+        if (divideSourceImage && divideSourceImage.startsWith('blob:')) {
+            try { URL.revokeObjectURL(divideSourceImage); } catch { }
+        }
+
+        // Reset toàn bộ States về mặc định ban đầu
+        setOutputVideoUrl(null);
+        setMediaFiles([]);
+        setThaiScript('');
+        setVietnameseScript('');
+        setVoiceFile(null);
+        setVoiceName('');
+        setVoiceSourceType('file');
+        setVoiceVolume(1.0);
+
+        setBgmFile(null);
+        setBgmName('');
+        setSelectedCustomBgmId('');
+        setBgmSourceType('file');
+        setBgmVolume(0.4);
+
+        setDivideSourceImage(null);
+        setDivideSourceName('');
+        setDividedPieces([]);
+        setDivideRows(2);
+        setDivideCols(2);
+
+        setMediaType('images');
+        setActiveTab('images');
+        setEffectMode('preset');
+        setSelectedEffect('kenburns');
+        setAspectRatio('9:16');
+        setProgress(0);
+        setPreviewCurrentTime(0);
+        setPreviewDuration(6);
     };
 
     const formatTime = (seconds) => {
@@ -2435,7 +2489,7 @@ export default function VideoCreator() {
                                                 backgroundColor: isPlayingUploadedBgmPreview ? '#ef4444' : '#0284c7',
                                             }}
                                         >
-                                            {isPlayingUploadedBgmPreview ? '⏹️ Dừng nghe' : '▶️ Nghe thử bài này'}
+                                            {isPlayingUploadedBgmPreview ? '⏹️ Dừng nghe' : '▶️️ Nghe thử bài này'}
                                         </button>
 
                                         <button
@@ -2630,7 +2684,7 @@ export default function VideoCreator() {
                     )}
 
                     <div style={styles.stageActionBar}>
-                        {!rendering && (
+                        {!rendering && !outputVideoUrl && (
                             <button
                                 onClick={handleTogglePreviewVideo}
                                 style={{
@@ -2645,24 +2699,38 @@ export default function VideoCreator() {
                             </button>
                         )}
 
-                        {!rendering ? (
+                        {!rendering && !outputVideoUrl && (
                             <button onClick={handleStartRender} style={styles.actionButton}>
                                 ⚡ Xuất Video ({aspectRatio})
                             </button>
-                        ) : (
+                        )}
+
+                        {rendering && (
                             <button onClick={handleCancelRender} style={styles.cancelButton}>
                                 🛑 HỦY
                             </button>
                         )}
 
+                        {/* NÚT TẢI XUỐNG VÀ NÚT TẠO VIDEO MỚI KHI RENDER XONG */}
                         {outputVideoUrl && !rendering && (
-                            <a
-                                href={outputVideoUrl}
-                                download={`ads_thoi_trang_${aspectRatio.replace(':', '_')}.mp4`}
-                                style={styles.downloadButton}
-                            >
-                                📥 Tải Video (.mp4)
-                            </a>
+                            <div style={{ display: 'flex', gap: 10, width: '100%' }}>
+                                <a
+                                    href={outputVideoUrl}
+                                    download={`ads_thoi_trang_${aspectRatio.replace(':', '_')}.mp4`}
+                                    style={styles.downloadButton}
+                                >
+                                    📥 Tải Video (.mp4)
+                                </a>
+
+                                <button
+                                    type="button"
+                                    onClick={handleResetAll}
+                                    style={styles.newVideoResetBtn}
+                                    title="Xóa toàn bộ tư liệu và tạo video mới từ đầu"
+                                >
+                                    🔄 Tạo video mới
+                                </button>
+                            </div>
                         )}
                     </div>
                 </div>
@@ -2801,7 +2869,7 @@ const styles = {
         paddingBottom: 14,
         borderBottom: '1px solid #f1f5f9',
         marginBottom: 16,
-        cursor: 'move', // Biểu tượng con trỏ kéo thả di chuyển
+        cursor: 'move',
     },
     dividerIconBadge: {
         width: 38,
@@ -3097,6 +3165,24 @@ const styles = {
         borderStyle: 'solid',
         borderColor: '#e2e8f0',
         boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+    },
+    deletePieceAbsoluteBtn: {
+        position: 'absolute',
+        top: 4,
+        right: 'calc(50% - 95px)',
+        background: '#ef4444',
+        color: '#fff',
+        border: 'none',
+        borderRadius: '50%',
+        width: 22,
+        height: 22,
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: 11,
+        fontWeight: 'bold',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
     },
     cardHeader: {
         display: 'flex',
@@ -3652,10 +3738,11 @@ const styles = {
         cursor: 'pointer',
     },
     downloadButton: {
+        flex: 1.2,
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '11px 18px',
+        padding: '11px 16px',
         borderRadius: 10,
         backgroundColor: '#10b981',
         color: '#ffffff',
@@ -3663,6 +3750,23 @@ const styles = {
         fontWeight: 700,
         textDecoration: 'none',
         boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)',
+        transition: 'all 0.15s ease',
+    },
+    newVideoResetBtn: {
+        flex: 1,
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '11px 16px',
+        borderRadius: 10,
+        border: '1px solid #cbd5e1',
+        backgroundColor: '#ffffff',
+        color: '#334155',
+        fontSize: 13.5,
+        fontWeight: 700,
+        cursor: 'pointer',
+        boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
+        transition: 'all 0.15s ease',
     },
     appFooter: {
         height: 48,
