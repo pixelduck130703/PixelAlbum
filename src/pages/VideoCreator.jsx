@@ -1134,6 +1134,7 @@ export default function VideoCreator() {
     // HÀM BẮT ĐẦU CHẠY PREVIEW THỰC SỰ
     const startPreviewProcess = async () => {
         stopAllActivities();
+        // Xóa outputVideoUrl tạm thời khi xem preview để khung hình Canvas hiển thị
         setOutputVideoUrl(null);
 
         const needsScript = voiceSourceType === 'ai' && !thaiScript.trim();
@@ -1464,7 +1465,7 @@ export default function VideoCreator() {
                                         onClick={handlePerformDivideImage}
                                         style={styles.modalPrimaryActionBtn}
                                     >
-                                        {isSplittingImage ? '⏳ Đang cắt ảnh...' : `✂️ Cắt ${divideRows * divideCols} ô & Thêm vào tư liệu`}
+                                        {isSplittingImage ? '⏳ Đang cắt ảnh...' : `✂️️ Cắt ${divideRows * divideCols} ô & Thêm vào tư liệu`}
                                     </button>
 
                                     <button
@@ -2290,7 +2291,7 @@ export default function VideoCreator() {
                                     {isGeneratingVoice
                                         ? '⚙️ Đang tạo âm thanh...'
                                         : isPlayingVoicePreview
-                                            ? '⏹️ Dừng nghe voice'
+                                            ? '⏹️️ Dừng nghe voice'
                                             : '🔊 Nghe thử giọng đọc'}
                                 </button>
 
@@ -2489,7 +2490,7 @@ export default function VideoCreator() {
                                                 backgroundColor: isPlayingUploadedBgmPreview ? '#ef4444' : '#0284c7',
                                             }}
                                         >
-                                            {isPlayingUploadedBgmPreview ? '⏹️ Dừng nghe' : '▶️️ Nghe thử bài này'}
+                                            {isPlayingUploadedBgmPreview ? '⏹️️ Dừng nghe' : '▶ Nghe thử bài này'}
                                         </button>
 
                                         <button
@@ -2609,8 +2610,8 @@ export default function VideoCreator() {
                                         : styles.aspectRatio11),
                             }}
                         >
-                            {/* 1. Video xuất ra thành phẩm */}
-                            {outputVideoUrl && (
+                            {/* 1. Video xuất ra thành phẩm (ẩn khi người dùng bấm xem preview để nhường chỗ cho Canvas) */}
+                            {outputVideoUrl && !isPreviewingVideo && (
                                 <video src={outputVideoUrl} controls autoPlay loop style={styles.mockupScreen} />
                             )}
 
@@ -2619,12 +2620,12 @@ export default function VideoCreator() {
                                 <video src={mediaFiles[0]} controls autoPlay loop muted style={styles.mockupScreen} />
                             )}
 
-                            {/* 3. Canvas luôn luôn nằm trong DOM (dùng style display để ẩn hiện, tránh lỗi getContext of null) */}
+                            {/* 3. Canvas luôn luôn nằm trong DOM (hiển thị khi Preview hoặc Render hoặc khi đang ở chế độ ảnh) */}
                             <canvas
                                 ref={previewCanvasRef}
                                 style={{
                                     ...styles.mockupScreen,
-                                    display: (!outputVideoUrl && (isPreviewingVideo || rendering || (mediaType === 'images' && mediaFiles.length > 0))) ? 'block' : 'none',
+                                    display: (isPreviewingVideo || rendering || (!outputVideoUrl && mediaType === 'images' && mediaFiles.length > 0)) ? 'block' : 'none',
                                 }}
                             />
 
@@ -2646,7 +2647,7 @@ export default function VideoCreator() {
                         </div>
                     </div>
 
-                    {!outputVideoUrl && (
+                    {(!outputVideoUrl || isPreviewingVideo) && (
                         <div style={styles.timelineScrubberCard}>
                             <div style={styles.timelineHeader}>
                                 <span style={styles.timelineTimestamp}>
@@ -2684,7 +2685,8 @@ export default function VideoCreator() {
                     )}
 
                     <div style={styles.stageActionBar}>
-                        {!rendering && !outputVideoUrl && (
+                        {/* NÚT PREVIEW LUÔN XUẤT HIỆN KHI KHÔNG TRONG QUÁ TRÌNH RENDER (KỂ CẢ ĐÃ CÓ VIDEO XUẤT XONG) */}
+                        {!rendering && (
                             <button
                                 onClick={handleTogglePreviewVideo}
                                 style={{
@@ -2699,21 +2701,23 @@ export default function VideoCreator() {
                             </button>
                         )}
 
-                        {!rendering && !outputVideoUrl && (
+                        {/* NÚT XUẤT VIDEO (KHI CHƯA RENDER HOẶC KHI ĐANG PREVIEW ĐỂ XUẤT LẠI) */}
+                        {!rendering && (!outputVideoUrl || isPreviewingVideo) && (
                             <button onClick={handleStartRender} style={styles.actionButton}>
                                 ⚡ Xuất Video ({aspectRatio})
                             </button>
                         )}
 
+                        {/* NÚT HỦY KHI ĐANG RENDER */}
                         {rendering && (
                             <button onClick={handleCancelRender} style={styles.cancelButton}>
                                 🛑 HỦY
                             </button>
                         )}
 
-                        {/* NÚT TẢI XUỐNG VÀ NÚT TẠO VIDEO MỚI KHI RENDER XONG */}
-                        {outputVideoUrl && !rendering && (
-                            <div style={{ display: 'flex', gap: 10, width: '100%' }}>
+                        {/* NÚT TẢI XUỐNG VÀ NÚT TẠO VIDEO MỚI KHI RENDER XONG (HIỂN THỊ KHI KHÔNG PREVIEW) */}
+                        {outputVideoUrl && !rendering && !isPreviewingVideo && (
+                            <div style={{ display: 'flex', gap: 10, flex: 2 }}>
                                 <a
                                     href={outputVideoUrl}
                                     download={`ads_thoi_trang_${aspectRatio.replace(':', '_')}.mp4`}
@@ -3742,7 +3746,7 @@ const styles = {
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '11px 16px',
+        padding: '11px 18px',
         borderRadius: 10,
         backgroundColor: '#10b981',
         color: '#ffffff',
