@@ -11,7 +11,7 @@ export class VideoRenderer {
     this.isCancelled = false;
     this.recorder = null;
     // FPS mục tiêu để tạo cảm giác giật giật (Stop-motion / Low FPS effect)
-    this.targetFps = 10; 
+    this.targetFps = 10;
   }
 
   // Chuyển progress liên tục (60 FPS) thành progress giật từng nấc theo FPS mục tiêu
@@ -20,17 +20,23 @@ export class VideoRenderer {
     return Math.floor(progress * totalFrames) / totalFrames;
   }
 
-  // Vẽ chuyển động camera giật nấc FPS
-  renderImageFrame(img, nextImg, rawProgress, effect, slideIndex = 0, focus = 'full', durationSec = 2) {
+  // Vẽ chuyển động camera giật nấc FPS (Sử dụng chính ảnh đầu tiên làm nền thay vì màu đen trống)
+  renderImageFrame(img, nextImg, rawProgress, effect, slideIndex = 0, focus = 'full', durationSec = 2, baseBackgroundImg = null) {
     const { ctx, width, height } = this;
     ctx.clearRect(0, 0, width, height);
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(0, 0, width, height);
+
+    // Vẽ ảnh nền cơ sở (ảnh đầu tiên) chống khung hình đen
+    if (baseBackgroundImg) {
+      this.drawImageCover(baseBackgroundImg);
+    } else {
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, width, height);
+    }
+
     if (!img) return;
 
     // LÀM GIẬT CHUYỂN ĐỘNG THEO FPS
     const progress = this.quantizeProgress(rawProgress, durationSec);
-
     let activeEffect = effect;
     if (effect === 'dynamic') {
       const dynamicList = ['kenburns', 'zoomout', 'pan', 'pulse', 'flash', 'spin'];
@@ -38,7 +44,6 @@ export class VideoRenderer {
     }
 
     ctx.save();
-
     let originX = width / 2;
     let originY = height / 2;
     if (focus === 'top') {
@@ -77,7 +82,7 @@ export class VideoRenderer {
     else if (activeEffect === 'crossfade') {
       this.drawImageCover(img);
       if (nextImg && progress > 0.7) {
-        const fadeAlpha = Math.floor(((progress - 0.7) / 0.3) * 5) / 5; // Giật độ mờ
+        const fadeAlpha = Math.floor(((progress - 0.7) / 0.3) * 5) / 5;
         ctx.globalAlpha = Math.min(Math.max(fadeAlpha, 0), 1);
         this.drawImageCover(nextImg);
       }
@@ -115,7 +120,6 @@ export class VideoRenderer {
     } else {
       this.drawImageCover(img);
     }
-
     ctx.restore();
   }
 
@@ -125,10 +129,8 @@ export class VideoRenderer {
     const mWidth = media.videoWidth || media.width;
     const mHeight = media.videoHeight || media.height;
     if (!mWidth || !mHeight) return;
-
     const mediaRatio = mWidth / mHeight;
     const screenRatio = width / height;
-
     let drawWidth, drawHeight, offsetX, offsetY;
     if (mediaRatio > screenRatio) {
       drawHeight = height;
@@ -141,7 +143,6 @@ export class VideoRenderer {
       offsetX = 0;
       offsetY = (height - drawHeight) / 2;
     }
-
     ctx.drawImage(media, offsetX, offsetY, drawWidth, drawHeight);
   }
 
@@ -149,13 +150,10 @@ export class VideoRenderer {
   preloadMediaItem(src) {
     return new Promise((resolve) => {
       if (!src) return resolve(null);
-
       const img = new Image();
       img.crossOrigin = 'anonymous';
       img.src = src;
-
       img.onload = () => resolve(img);
-
       img.onerror = () => {
         const video = document.createElement('video');
         video.crossOrigin = 'anonymous';
@@ -165,7 +163,6 @@ export class VideoRenderer {
         video.autoplay = true;
         video.loop = true;
         video.src = src;
-
         let isResolved = false;
         const onReady = () => {
           if (isResolved) return;
@@ -173,20 +170,17 @@ export class VideoRenderer {
           video.play().catch(() => {});
           resolve(video);
         };
-
         video.onloadeddata = onReady;
         video.oncanplay = onReady;
         video.onloadedmetadata = () => {
           if (video.duration) onReady();
         };
-
         video.onerror = () => {
           if (!isResolved) {
             isResolved = true;
             resolve(null);
           }
         };
-
         setTimeout(() => {
           if (!isResolved) {
             isResolved = true;
@@ -227,15 +221,21 @@ export class VideoRenderer {
     const isScript = effectMode === 'script' && aiTimeline && aiTimeline.length > 0;
     const finalDurationSec = totalDuration || 6;
     const durationMs = finalDurationSec * 1000;
-    const startTime = performance.now();
+    const baseFirstImage = mediaList[0];
 
+    // Vẽ khung hình đầu tiên ngay lập tức lên Canvas
+    if (baseFirstImage.tagName === 'VIDEO') {
+      this.drawImageCover(baseFirstImage);
+    } else {
+      this.renderImageFrame(baseFirstImage, mediaList[1] || baseFirstImage, 0, selectedEffect, 0, 'full', 2, baseFirstImage);
+    }
+
+    const startTime = performance.now();
     const loop = (now) => {
       if (this.isCancelled) return;
-
       const elapsed = now - startTime;
       const overallProgress = Math.min(elapsed / durationMs, 1);
       if (onProgress) onProgress(overallProgress);
-
       if (elapsed >= durationMs) {
         mediaList.forEach((m) => {
           if (m.tagName === 'VIDEO') m.pause();
@@ -243,22 +243,18 @@ export class VideoRenderer {
         if (onPreviewEnd) onPreviewEnd();
         return;
       }
-
       const currentMedia = mediaList[0];
 
       // Nếu là Video
       if (currentMedia && currentMedia.tagName === 'VIDEO') {
         this.ctx.clearRect(0, 0, this.width, this.height);
-        this.ctx.fillStyle = '#0f172a';
-        this.ctx.fillRect(0, 0, this.width, this.height);
-
+        this.drawImageCover(baseFirstImage);
         if (currentMedia.duration && !isNaN(currentMedia.duration)) {
           const targetSec = (elapsed / 1000) % currentMedia.duration;
           if (Math.abs(currentMedia.currentTime - targetSec) > 0.3) {
             currentMedia.currentTime = targetSec;
           }
         }
-
         this.drawImageCover(currentMedia);
       }
       // Nếu là Ảnh theo AI Timeline
@@ -286,7 +282,8 @@ export class VideoRenderer {
           activeScene.effect || 'kenburns',
           imgIdx,
           activeScene.focus || 'full',
-          activeScene.duration || 1.5
+          activeScene.duration || 1.5,
+          baseFirstImage
         );
       }
       // Nếu là Ảnh chạy Effect thông thường
@@ -301,13 +298,12 @@ export class VideoRenderer {
           selectedEffect,
           currentSlideIdx,
           'full',
-          slideDuration / 1000
+          slideDuration / 1000,
+          baseFirstImage
         );
       }
-
       this.animId = requestAnimationFrame(loop);
     };
-
     this.animId = requestAnimationFrame(loop);
   }
 
@@ -336,14 +332,21 @@ export class VideoRenderer {
     const isScript = effectMode === 'script' && aiTimeline && aiTimeline.length > 0;
     const finalDurationSec = totalDuration || 6;
     const durationMs = finalDurationSec * 1000;
-    const stream = this.canvas.captureStream(30);
+    const baseFirstImage = mediaList[0];
 
+    // VẼ KHUNG HÌNH ĐẦU TIÊN LÊN CANVAS TRƯỚC KHI BẮT ĐẦU RECORDER ĐỂ KHÔNG BỊ ĐEN
+    this.ctx.clearRect(0, 0, this.width, this.height);
+    if (baseFirstImage.tagName === 'VIDEO') {
+      this.drawImageCover(baseFirstImage);
+    } else {
+      this.renderImageFrame(baseFirstImage, mediaList[1] || baseFirstImage, 0, selectedEffect, 0, 'full', 2, baseFirstImage);
+    }
+
+    const stream = this.canvas.captureStream(30);
     if (audioStream) {
       audioStream.getAudioTracks().forEach((track) => stream.addTrack(track));
     }
-
     const recordedChunks = [];
-
     let mimeType = 'video/webm';
     if (MediaRecorder.isTypeSupported('video/mp4;codecs=avc1,mp4a.40.2')) {
       mimeType = 'video/mp4;codecs=avc1,mp4a.40.2';
@@ -354,11 +357,9 @@ export class VideoRenderer {
     }
 
     this.recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 5000000 });
-
     this.recorder.ondataavailable = (e) => {
       if (e.data && e.data.size > 0) recordedChunks.push(e.data);
     };
-
     this.recorder.onstop = () => {
       mediaList.forEach((m) => {
         if (m.tagName === 'VIDEO') m.pause();
@@ -381,21 +382,17 @@ export class VideoRenderer {
         this.recorder.stop();
         return;
       }
-
       const elapsed = now - startTime;
       const overallProgress = Math.min(elapsed / durationMs, 1);
       if (onProgress) onProgress(overallProgress);
-
       if (elapsed >= durationMs) {
         this.recorder.stop();
         return;
       }
-
       const currentMedia = mediaList[0];
       if (currentMedia && currentMedia.tagName === 'VIDEO') {
         this.ctx.clearRect(0, 0, this.width, this.height);
-        this.ctx.fillStyle = '#0f172a';
-        this.ctx.fillRect(0, 0, this.width, this.height);
+        this.drawImageCover(baseFirstImage);
         this.drawImageCover(currentMedia);
       } else if (isScript) {
         let accTime = 0;
@@ -421,7 +418,8 @@ export class VideoRenderer {
           activeScene.effect || 'kenburns',
           imgIdx,
           activeScene.focus || 'full',
-          activeScene.duration || 1.5
+          activeScene.duration || 1.5,
+          baseFirstImage
         );
       } else {
         const slideDuration = durationMs / mediaList.length;
@@ -434,13 +432,12 @@ export class VideoRenderer {
           selectedEffect,
           currentSlideIdx,
           'full',
-          slideDuration / 1000
+          slideDuration / 1000,
+          baseFirstImage
         );
       }
-
       this.animId = requestAnimationFrame(renderLoop);
     };
-
     this.animId = requestAnimationFrame(renderLoop);
   }
 
