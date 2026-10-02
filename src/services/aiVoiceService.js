@@ -4,8 +4,15 @@ export const VOICE_PROVIDERS = [
   { id: 'elevenlabs', name: 'ElevenLabs' },
 ];
 
-// DANH SÁCH TOÀN BỘ GIỌNG GOOGLE GEMINI TTS MỞ RỘNG (KÈM CHỈ ĐẠO BIỂU CẢM)
+// DANH SÁCH GIỌNG GEMINI TTS (MẶC ĐỊNH LÀ SADALTAGER Ở ĐẦU TIÊN)
 export const GEMINI_TTS_VOICES = [
+  { 
+    id: 'Sadaltager', 
+    name: 'Sadaltager (Nam - Tự nhiên, rõ chữ, cao độ vừa)', 
+    provider: 'gemini', 
+    gender: 'Male',
+    expression: 'Speak with a clear, confident, vibrant, authentic retail sales tone with natural Thai pacing and engaging emphasis.'
+  },
   { 
     id: 'Aoede', 
     name: 'Aoede (Nữ - Giọng cao, nhấn nhá TikTok, cực hút khách)', 
@@ -61,13 +68,6 @@ export const GEMINI_TTS_VOICES = [
     provider: 'gemini', 
     gender: 'Male',
     expression: 'Speak with a bold, firm, punchy, persuasive voice with crisp consonants and impactful sales urgency.'
-  },
-  { 
-    id: 'Sadaltager', 
-    name: 'Sadaltager (Nam - Tự nhiên, rõ chữ, cao độ vừa)', 
-    provider: 'gemini', 
-    gender: 'Male',
-    expression: 'Speak with a clear, friendly, dependable, authentic retail sales tone with natural Thai pacing.'
   },
   { 
     id: 'Charon', 
@@ -159,7 +159,6 @@ function createWavBlobFromPcm(pcmBytes, sampleRate = 24000, numChannels = 1) {
   return new Blob([buffer], { type: 'audio/wav' });
 }
 
-// LẤY DANH SÁCH MODEL ĐANG KHẢ DỤNG TỪ GOOGLE CHO API KEY
 async function getDynamicAvailableModels(apiKey) {
   const cleanKey = apiKey.trim();
   const listRes = await fetch(
@@ -200,16 +199,14 @@ async function getDynamicAvailableModels(apiKey) {
   return models;
 }
 
-// TẠO GIỌNG ĐỌC BẰNG GEMINI TTS VỚI EXPRESSION ĐƯỢC CẤU HÌNH THEO TỪNG GIỌNG
-async function generateGeminiTtsSpeech(text, voiceName = 'Aoede', apiKey) {
+async function generateGeminiTtsSpeech(text, voiceName = 'Sadaltager', apiKey) {
   const cleanKey = (apiKey || localStorage.getItem('CUSTOM_GEMINI_KEY') || localStorage.getItem('user_gemini_api_key') || '').trim();
   if (!cleanKey) {
     throw new Error('Vui lòng nhập API Key cho Google AI Studio!');
   }
 
-  // Tìm biểu cảm chỉ định riêng theo từng giọng
   const targetVoiceObj = GEMINI_TTS_VOICES.find((v) => v.id === voiceName);
-  const expression = targetVoiceObj?.expression || 'Speak with a high-pitched, clear, vibrant, energetic commercial advertising tone. Ensure crisp articulation and expressive emphasis for fashion products.';
+  const expression = targetVoiceObj?.expression || 'Speak with a clear, vibrant, authentic retail sales tone with natural Thai pacing.';
 
   let modelsToTry = ['gemini-2.5-flash', 'gemini-3.8-flash-tts', 'gemini-2.0-flash'];
   try {
@@ -234,7 +231,7 @@ async function generateGeminiTtsSpeech(text, voiceName = 'Aoede', apiKey) {
         speechConfig: {
           voiceConfig: {
             prebuiltVoiceConfig: {
-              voiceName: voiceName || 'Aoede',
+              voiceName: voiceName || 'Sadaltager',
             },
           },
         },
@@ -278,7 +275,6 @@ async function generateGeminiTtsSpeech(text, voiceName = 'Aoede', apiKey) {
   throw lastErr || new Error('Không thể tạo âm thanh từ Gemini TTS.');
 }
 
-// TẠO GIỌNG ĐỌC BẰNG ELEVENLABS
 async function generateElevenLabsSpeech(text, voiceId, apiKey) {
   const cleanKey = (apiKey || localStorage.getItem('CUSTOM_ELEVENLABS_KEY') || '').trim();
   if (!cleanKey) {
