@@ -61,6 +61,21 @@ const loadJSZip = () => {
 };
 
 export default function VideoCreator() {
+    // STATE KIỂM TRA THIẾT BỊ HOẶC MÀN HÌNH MOBILE
+    const [isMobileDevice, setIsMobileDevice] = useState(false);
+
+    useEffect(() => {
+        const checkDevice = () => {
+            const isTouchMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            const isSmallScreen = window.innerWidth < 1024;
+            setIsMobileDevice(isTouchMobile || isSmallScreen);
+        };
+
+        checkDevice();
+        window.addEventListener('resize', checkDevice);
+        return () => window.removeEventListener('resize', checkDevice);
+    }, []);
+
     // TAB ĐANG CHỌN (images | divide | video) ĐỂ ĐỔI MÀU NÚT NỔI BẬT
     const [activeTab, setActiveTab] = useState('images');
 
@@ -109,8 +124,8 @@ export default function VideoCreator() {
     const [grokStatusText, setGrokStatusText] = useState('');
     const [isAiDirecting, setIsAiDirecting] = useState(false);
 
-    // Mặc định chọn File MP3 trong máy
-    const [voiceSourceType, setVoiceSourceType] = useState('file');
+    // MẶC ĐỊNH CHỌN "AI ĐỌC TIẾNG THÁI"
+    const [voiceSourceType, setVoiceSourceType] = useState('ai');
     const [voiceFile, setVoiceFile] = useState(null);
     const [voiceName, setVoiceName] = useState('');
     const [voiceVolume, setVoiceVolume] = useState(1.0);
@@ -346,7 +361,7 @@ export default function VideoCreator() {
         setVietnameseScript('');
         setVoiceFile(null);
         setVoiceName('');
-        setVoiceSourceType('file');
+        setVoiceSourceType('ai'); // Mặc định về AI Đọc tiếng Thái
         setVoiceVolume(1.0);
 
         setBgmFile(null);
@@ -1276,6 +1291,19 @@ export default function VideoCreator() {
                 }
             `}</style>
 
+            {/* POPUP CHẶN TOÀN MÀN HÌNH NẾU MỞ BẰNG GIAO DIỆN MOBILE / TABLET NHỎ */}
+            {isMobileDevice && (
+                <div style={styles.mobileOverlay}>
+                    <div style={styles.mobileModal}>
+                        <div style={{ fontSize: 52, marginBottom: 12 }}>💻</div>
+                        <h2 style={styles.mobileTitle}>Chỉ hỗ trợ giao diện Desktop</h2>
+                        <p style={styles.mobileDesc}>
+                            Trình dựng Video AI yêu cầu không gian làm việc chuyên nghiệp trên màn hình lớn. Vui lòng mở trang web trên máy tính hoặc laptop để có trải nghiệm tốt nhất.
+                        </p>
+                    </div>
+                </div>
+            )}
+
             {/* POPUP MODAL CẮT ẢNH CHUYÊN DỤNG (HỖ TRỢ KÉO THẢ TỆP & DI CHUYỂN CỬA SỔ) */}
             {isDivideModalOpen && (
                 <div style={styles.loadingOverlay}>
@@ -1465,7 +1493,7 @@ export default function VideoCreator() {
                                         onClick={handlePerformDivideImage}
                                         style={styles.modalPrimaryActionBtn}
                                     >
-                                        {isSplittingImage ? '⏳ Đang cắt ảnh...' : `✂️️ Cắt ${divideRows * divideCols} ô & Thêm vào tư liệu`}
+                                        {isSplittingImage ? '⏳ Đang cắt ảnh...' : `✂️ Cắt ${divideRows * divideCols} ô & Thêm vào tư liệu`}
                                     </button>
 
                                     <button
@@ -1992,73 +2020,38 @@ export default function VideoCreator() {
                             <h3 style={styles.cardTitle}>Voice & Kịch bản</h3>
                         </div>
 
+                        {/* TAB VOICE: "AI ĐỌC TIẾNG THÁI" BÊN TRÁI (MẶC ĐỊNH) - "FILE MP3" BÊN PHẢI */}
                         <div style={styles.tabGroup}>
                             <button
                                 style={{
                                     ...styles.tabButton,
-                                    backgroundColor: voiceSourceType === 'file' ? '#ffffff' : 'transparent',
-                                    color: voiceSourceType === 'file' ? '#0284c7' : '#64748b',
-                                    boxShadow: voiceSourceType === 'file' ? '0 2px 6px rgba(2, 132, 199, 0.12)' : 'none',
-                                }}
-                                onClick={() => setVoiceSourceType('file')}
-                            >
-                                📁 File MP3 trong máy
-                            </button>
-                            <button
-                                style={{
-                                    ...styles.tabButton,
-                                    backgroundColor: voiceSourceType === 'ai' ? '#ffffff' : 'transparent',
-                                    color: voiceSourceType === 'ai' ? '#0284c7' : '#64748b',
-                                    boxShadow: voiceSourceType === 'ai' ? '0 2px 6px rgba(2, 132, 199, 0.12)' : 'none',
+                                    backgroundColor: voiceSourceType === 'ai' ? '#0284c7' : '#ffffff',
+                                    color: voiceSourceType === 'ai' ? '#ffffff' : '#475569',
+                                    fontWeight: voiceSourceType === 'ai' ? 700 : 600,
+                                    boxShadow: voiceSourceType === 'ai' ? '0 2px 8px rgba(2, 132, 199, 0.3)' : 'none',
+                                    border: voiceSourceType === 'ai' ? 'none' : '1px solid #e2e8f0',
                                 }}
                                 onClick={() => setVoiceSourceType('ai')}
                             >
                                 ✨ AI Đọc Tiếng Thái
                             </button>
+
+                            <button
+                                style={{
+                                    ...styles.tabButton,
+                                    backgroundColor: voiceSourceType === 'file' ? '#0284c7' : '#ffffff',
+                                    color: voiceSourceType === 'file' ? '#ffffff' : '#475569',
+                                    fontWeight: voiceSourceType === 'file' ? 700 : 600,
+                                    boxShadow: voiceSourceType === 'file' ? '0 2px 8px rgba(2, 132, 199, 0.3)' : 'none',
+                                    border: voiceSourceType === 'file' ? 'none' : '1px solid #e2e8f0',
+                                }}
+                                onClick={() => setVoiceSourceType('file')}
+                            >
+                                📁 File MP3 trong máy
+                            </button>
                         </div>
 
-                        {voiceSourceType === 'file' ? (
-                            <div style={{ marginBottom: 14 }}>
-                                <label style={styles.label}>Tải tệp MP3 / WAV giọng đọc từ máy tính:</label>
-                                <div
-                                    style={{
-                                        ...styles.audioDropZone,
-                                        borderColor: isDraggingOverVoice ? '#0284c7' : '#cbd5e1',
-                                        backgroundColor: isDraggingOverVoice ? '#e0f2fe' : '#f8fafc',
-                                    }}
-                                    onClick={() => voiceFileInputRef.current && voiceFileInputRef.current.click()}
-                                    onDragOver={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        e.dataTransfer.dropEffect = 'copy';
-                                        setIsDraggingOverVoice(true);
-                                    }}
-                                    onDragLeave={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        if (!e.currentTarget.contains(e.relatedTarget)) setIsDraggingOverVoice(false);
-                                    }}
-                                    onDrop={handleVoiceDrop}
-                                >
-                                    <input
-                                        ref={voiceFileInputRef}
-                                        type="file"
-                                        accept="audio/*"
-                                        style={{ display: 'none' }}
-                                        onChange={handleVoiceUpload}
-                                    />
-                                    <span style={{ fontSize: 24 }}>🎙️</span>
-                                    <div style={{ flex: 1, minWidth: 0 }}>
-                                        <div style={{ fontSize: 13.5, fontWeight: 600, color: voiceName ? '#0284c7' : '#334155', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                            {voiceName ? `✓ ${voiceName}` : 'Bấm để chọn hoặc kéo thả file âm thanh vào đây'}
-                                        </div>
-                                        <div style={{ fontSize: 11.5, color: '#64748b', marginTop: 2 }}>
-                                            Hỗ trợ định dạng MP3, WAV, M4A, OGG
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        ) : (
+                        {voiceSourceType === 'ai' ? (
                             <div style={{ marginBottom: 14 }}>
                                 <div style={{ marginBottom: 12 }}>
                                     <label style={styles.label}>Chọn nhà cung cấp Voice AI:</label>
@@ -2270,6 +2263,47 @@ export default function VideoCreator() {
                                     </div>
                                 </div>
                             </div>
+                        ) : (
+                            <div style={{ marginBottom: 14 }}>
+                                <label style={styles.label}>Tải tệp MP3 / WAV giọng đọc từ máy tính:</label>
+                                <div
+                                    style={{
+                                        ...styles.audioDropZone,
+                                        borderColor: isDraggingOverVoice ? '#0284c7' : '#cbd5e1',
+                                        backgroundColor: isDraggingOverVoice ? '#e0f2fe' : '#f8fafc',
+                                    }}
+                                    onClick={() => voiceFileInputRef.current && voiceFileInputRef.current.click()}
+                                    onDragOver={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        e.dataTransfer.dropEffect = 'copy';
+                                        setIsDraggingOverVoice(true);
+                                    }}
+                                    onDragLeave={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        if (!e.currentTarget.contains(e.relatedTarget)) setIsDraggingOverVoice(false);
+                                    }}
+                                    onDrop={handleVoiceDrop}
+                                >
+                                    <input
+                                        ref={voiceFileInputRef}
+                                        type="file"
+                                        accept="audio/*"
+                                        style={{ display: 'none' }}
+                                        onChange={handleVoiceUpload}
+                                    />
+                                    <span style={{ fontSize: 24 }}>🎙️</span>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                        <div style={{ fontSize: 13.5, fontWeight: 600, color: voiceName ? '#0284c7' : '#334155', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                            {voiceName ? `✓ ${voiceName}` : 'Bấm để chọn hoặc kéo thả file âm thanh vào đây'}
+                                        </div>
+                                        <div style={{ fontSize: 11.5, color: '#64748b', marginTop: 2 }}>
+                                            Hỗ trợ định dạng MP3, WAV, M4A, OGG
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         )}
 
                         {/* NÚT NGHE THỬ VÀ NÚT DỊCH NGHĨA TIẾNG VIỆT */}
@@ -2291,7 +2325,7 @@ export default function VideoCreator() {
                                     {isGeneratingVoice
                                         ? '⚙️ Đang tạo âm thanh...'
                                         : isPlayingVoicePreview
-                                            ? '⏹️️ Dừng nghe voice'
+                                            ? '⏹ Dừng nghe voice'
                                             : '🔊 Nghe thử giọng đọc'}
                                 </button>
 
@@ -2490,7 +2524,7 @@ export default function VideoCreator() {
                                                 backgroundColor: isPlayingUploadedBgmPreview ? '#ef4444' : '#0284c7',
                                             }}
                                         >
-                                            {isPlayingUploadedBgmPreview ? '⏹️️ Dừng nghe' : '▶ Nghe thử bài này'}
+                                            {isPlayingUploadedBgmPreview ? '⏹ Dừng nghe' : '▶ Nghe thử bài này'}
                                         </button>
 
                                         <button
@@ -2747,8 +2781,8 @@ export default function VideoCreator() {
                     <span style={styles.footerDot}>•</span>
                     <span style={styles.footerText}>Trình dựng Video AI</span>
                     <span style={styles.footerDot}>•</span>
-                    <span style={styles.footerVersion}>v2.1</span>
-                    <span style={styles.footerVersion}>Cập nhật: 01/10/2026</span>
+                    <span style={styles.footerVersion}>v2.2</span>
+                    <span style={styles.footerVersion}>Cập nhật: 02/10/2026</span>
                 </div>
 
                 {/* KHU VỰC LOGO CÔNG NGHỆ SỬ DỤNG TRONG DỰ ÁN */}
@@ -2811,6 +2845,42 @@ const styles = {
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         boxSizing: 'border-box',
         overflow: 'hidden',
+    },
+    mobileOverlay: {
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        backgroundColor: '#0f172a',
+        zIndex: 100000,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        boxSizing: 'border-box',
+    },
+    mobileModal: {
+        backgroundColor: '#1e293b',
+        borderRadius: 16,
+        padding: '32px 24px',
+        maxWidth: 380,
+        width: '100%',
+        textAlign: 'center',
+        border: '1px solid #334155',
+        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
+    },
+    mobileTitle: {
+        margin: '0 0 12px 0',
+        fontSize: 18,
+        fontWeight: 800,
+        color: '#ffffff',
+    },
+    mobileDesc: {
+        margin: 0,
+        fontSize: 14,
+        color: '#94a3b8',
+        lineHeight: 1.6,
     },
     loadingOverlay: {
         position: 'fixed',
