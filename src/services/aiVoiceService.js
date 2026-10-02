@@ -1,17 +1,81 @@
 // src/services/aiVoiceService.js
-
 export const VOICE_PROVIDERS = [
   { id: 'gemini', name: 'Google AI Studio' },
-  { id: 'elevenlabs', name: 'ElevenLabs (Chưa hay)' },
+  { id: 'elevenlabs', name: 'ElevenLabs' },
 ];
 
+// DANH SÁCH TOÀN BỘ GIỌNG GOOGLE GEMINI TTS MỞ RỘNG (KÈM CHỈ ĐẠO BIỂU CẢM)
 export const GEMINI_TTS_VOICES = [
-  { id: 'Sadaltager', name: 'Sadaltager (Nam - Hiểu biết, cao độ vừa)', provider: 'gemini', gender: 'Male' },
-  { id: 'Aoede', name: 'Aoede (Nữ - Truyền cảm, bán hàng sôi nổi)', provider: 'gemini', gender: 'Female' },
-  { id: 'Puck', name: 'Puck (Nam - Sôi nổi, cuốn hút)', provider: 'gemini', gender: 'Male' },
-  { id: 'Charon', name: 'Charon (Nam - Trầm ấm, uy tín)', provider: 'gemini', gender: 'Male' },
-  { id: 'Kore', name: 'Kore (Nữ - Êm dịu, tự nhiên)', provider: 'gemini', gender: 'Female' },
-  { id: 'Fenrir', name: 'Fenrir (Nam - Mạnh mẽ, dứt khoát)', provider: 'gemini', gender: 'Male' },
+  { 
+    id: 'Aoede', 
+    name: 'Aoede (Nữ - Giọng cao, nhấn nhá TikTok, cực hút khách)', 
+    provider: 'gemini', 
+    gender: 'Female',
+    expression: 'Speak with a high-pitched, vibrant, lively, upbeat Thai commercial sales cadence. Clear articulation, expressive emphasis, and enthusiastic fast-paced delivery.'
+  },
+  { 
+    id: 'Kore', 
+    name: 'Kore (Nữ - Trong trẻo, thanh lịch, thời trang Lookbook)', 
+    provider: 'gemini', 
+    gender: 'Female',
+    expression: 'Speak with a clear, bright, sweet, elegant commercial tone. Clear pronunciation, smooth rhythm, and sophisticated fashion retail emphasis.'
+  },
+  { 
+    id: 'Zephyr', 
+    name: 'Zephyr (Nữ - Tươi tắn, trẻ trung, tự nhiên sôi nổi)', 
+    provider: 'gemini', 
+    gender: 'Female',
+    expression: 'Speak with a cheerful, energetic, youthful, natural tone with lively rhythm and clear Thai diction.'
+  },
+  { 
+    id: 'Leda', 
+    name: 'Leda (Nữ - Ngọt ngào, truyền cảm, cuốn hút)', 
+    provider: 'gemini', 
+    gender: 'Female',
+    expression: 'Speak with a warm, melodic, attractive, soft-spoken yet persuasive commercial fashion advertising tone.'
+  },
+  { 
+    id: 'Calliope', 
+    name: 'Calliope (Nữ - Phát thanh viên, sắc sảo, dứt khoát)', 
+    provider: 'gemini', 
+    gender: 'Female',
+    expression: 'Speak with a professional, sharp, confident, broadcast-quality clear articulation with promotional punchiness.'
+  },
+  { 
+    id: 'Puck', 
+    name: 'Puck (Nam - Giọng cao năng động, thúc giục chốt đơn)', 
+    provider: 'gemini', 
+    gender: 'Male',
+    expression: 'Speak with an upbeat, fast-paced, enthusiastic retail commercial tone. High energy, sharp emphasis, and compelling call-to-action.'
+  },
+  { 
+    id: 'Orus', 
+    name: 'Orus (Nam - Tự tin, phong cách thể thao, nam tính trẻ trung)', 
+    provider: 'gemini', 
+    gender: 'Male',
+    expression: 'Speak with a confident, modern, vibrant, crisp commercial tone suitable for streetwear and active menswear.'
+  },
+  { 
+    id: 'Fenrir', 
+    name: 'Fenrir (Nam - Dứt khoát, uy lực, mạnh mẽ)', 
+    provider: 'gemini', 
+    gender: 'Male',
+    expression: 'Speak with a bold, firm, punchy, persuasive voice with crisp consonants and impactful sales urgency.'
+  },
+  { 
+    id: 'Sadaltager', 
+    name: 'Sadaltager (Nam - Tự nhiên, rõ chữ, cao độ vừa)', 
+    provider: 'gemini', 
+    gender: 'Male',
+    expression: 'Speak with a clear, friendly, dependable, authentic retail sales tone with natural Thai pacing.'
+  },
+  { 
+    id: 'Charon', 
+    name: 'Charon (Nam - Trầm ấm, sang trọng, thương hiệu cao cấp)', 
+    provider: 'gemini', 
+    gender: 'Male',
+    expression: 'Speak with a deep, sophisticated, calm, luxurious promotional tone for premium fashion.'
+  },
 ];
 
 export const GEMINI_VOICES = GEMINI_TTS_VOICES;
@@ -120,7 +184,6 @@ async function getDynamicAvailableModels(apiKey) {
     )
     .map((m) => m.name.replace('models/', ''));
 
-  // Ưu tiên các model flash và các thế hệ mới 2.5, 3.8
   models.sort((a, b) => {
     const getPriority = (name) => {
       if (name.includes('2.5-flash')) return 10;
@@ -137,21 +200,24 @@ async function getDynamicAvailableModels(apiKey) {
   return models;
 }
 
-// TẠO GIỌNG ĐỌC BẰNG GEMINI TTS
-async function generateGeminiTtsSpeech(text, voiceName = 'Sadaltager', apiKey, expression = 'Peppy, bright, enthusiastic') {
-  const cleanKey = (apiKey || localStorage.getItem('CUSTOM_GEMINI_KEY') || '').trim();
+// TẠO GIỌNG ĐỌC BẰNG GEMINI TTS VỚI EXPRESSION ĐƯỢC CẤU HÌNH THEO TỪNG GIỌNG
+async function generateGeminiTtsSpeech(text, voiceName = 'Aoede', apiKey) {
+  const cleanKey = (apiKey || localStorage.getItem('CUSTOM_GEMINI_KEY') || localStorage.getItem('user_gemini_api_key') || '').trim();
   if (!cleanKey) {
     throw new Error('Vui lòng nhập API Key cho Google AI Studio!');
   }
 
-  // Tự động tìm model TTS khả dụng
+  // Tìm biểu cảm chỉ định riêng theo từng giọng
+  const targetVoiceObj = GEMINI_TTS_VOICES.find((v) => v.id === voiceName);
+  const expression = targetVoiceObj?.expression || 'Speak with a high-pitched, clear, vibrant, energetic commercial advertising tone. Ensure crisp articulation and expressive emphasis for fashion products.';
+
   let modelsToTry = ['gemini-2.5-flash', 'gemini-3.8-flash-tts', 'gemini-2.0-flash'];
   try {
     const liveModels = await getDynamicAvailableModels(cleanKey);
     const liveFlash = liveModels.filter((m) => m.includes('flash'));
     if (liveFlash.length > 0) modelsToTry = [...liveFlash, ...modelsToTry];
   } catch (e) {
-    // fallback danh sách mặc định
+    // fallback
   }
 
   let lastErr = null;
@@ -160,7 +226,7 @@ async function generateGeminiTtsSpeech(text, voiceName = 'Sadaltager', apiKey, e
     const payload = {
       contents: [
         {
-          parts: [{ text: `[Tone: ${expression}]\n${text}` }],
+          parts: [{ text: `[Voice Direction: ${expression}]\n${text}` }],
         },
       ],
       generationConfig: {
@@ -168,7 +234,7 @@ async function generateGeminiTtsSpeech(text, voiceName = 'Sadaltager', apiKey, e
         speechConfig: {
           voiceConfig: {
             prebuiltVoiceConfig: {
-              voiceName: voiceName || 'Sadaltager',
+              voiceName: voiceName || 'Aoede',
             },
           },
         },
@@ -286,7 +352,6 @@ export async function generateThaiSpeechAudio(text, voiceId, options = {}) {
   return requestPromise;
 }
 
-// NÉN HÌNH ẢNH AN TOÀN TRÁNH NGHẼN BASE64
 async function compressImageForAI(url) {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -318,7 +383,6 @@ async function compressImageForAI(url) {
   });
 }
 
-// TRÍCH XUẤT 1 KHUNG HÌNH TỪ VIDEO
 export async function extractFrameFromVideo(videoUrl) {
   return new Promise((resolve, reject) => {
     const video = document.createElement('video');
@@ -384,7 +448,6 @@ export async function extractFrameFromVideo(videoUrl) {
   });
 }
 
-// PROMPT CHUYÊN SÂU TỪ CODE GỐC CỦA BẠN
 const HIDDEN_PROMPT = `Bạn là chuyên gia phân tích thiết kế thời trang nam và nữ, đồng thời là biên kịch quảng cáo chuyên nghiệp dành cho thị trường Thái Lan.
 Hãy phân tích thật kỹ sản phẩm thời trang trong HÌNH ẢNH hoặc VIDEO tôi cung cấp, sau đó tạo một đoạn mô tả quảng cáo bằng tiếng Thái để chuyển trực tiếp thành giọng đọc AI Voice, thời lượng khoảng 10-15 giây.
 
@@ -417,9 +480,6 @@ Không có tiêu đề, emoji, hashtag, dấu gạch đầu dòng, bản dịch 
 Lời thoại phải có nhịp ngắt tự nhiên, phù hợp để chuyển trực tiếp sang Text-to-Speech.
 Mở đầu bằng chi tiết nổi bật nhất của sản phẩm, tiếp tục mô tả ngắn gọn những đặc điểm quan trọng còn lại, nhấn mạnh phong cách thời trang và kết thúc bằng một câu kêu gọi khách hàng nhắn tin đặt mua ngay.`;
 
-/**
- * TỰ ĐỘNG TẠO KỊCH BẢN TỪ ẢNH / VIDEO (DÙNG THUẬT TOÁN DÒ TÌM MODEL DỰA THEO CODE CỦA BẠN)
- */
 export async function generateThaiScriptFromImage(imageUrl, apiKey = '', extraUserNote = '') {
   const cleanKey = (apiKey || localStorage.getItem('CUSTOM_GEMINI_KEY') || localStorage.getItem('user_gemini_api_key') || '').trim();
   if (!cleanKey) {
@@ -429,11 +489,9 @@ export async function generateThaiScriptFromImage(imageUrl, apiKey = '', extraUs
     throw new Error('Vui lòng tải lên ít nhất 1 ảnh hoặc video sản phẩm để AI nhận diện!');
   }
 
-  // Nén ảnh để tránh lỗi Base64 quá lớn
   const compressedDataUrl = await compressImageForAI(imageUrl);
   const base64Data = compressedDataUrl.split(',')[1];
 
-  // BƯỚC 1: Tự động hỏi Google xem API key này được phép dùng những model nào
   const availableModels = await getDynamicAvailableModels(cleanKey);
   if (availableModels.length === 0) {
     throw new Error('Không tìm thấy model nào khả dụng cho API Key này.');
@@ -461,13 +519,12 @@ export async function generateThaiScriptFromImage(imageUrl, apiKey = '', extraUs
 
   let lastErrMessage = '';
 
-  // BƯỚC 2: Thử lần lượt các model hợp lệ có sẵn (tự động fallback nếu model bận)
   for (const model of availableModels) {
     try {
       const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${cleanKey}`;
       
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 12000); // 12s ngắt nếu bị treo
+      const timeoutId = setTimeout(() => controller.abort(), 12000);
 
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -494,9 +551,6 @@ export async function generateThaiScriptFromImage(imageUrl, apiKey = '', extraUs
   throw new Error(lastErrMessage || 'Tất cả các model Google AI đều đang bận. Vui lòng bấm thử lại sau 5 giây!');
 }
 
-/**
- * DỊCH NGHĨA SANG TIẾNG VIỆT
- */
 export async function translateThaiToVietnamese(thaiText, apiKey = '', signal = null) {
   if (!thaiText || !thaiText.trim()) {
     throw new Error('Chưa có nội dung tiếng Thái để dịch!');
