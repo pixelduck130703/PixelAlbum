@@ -10,14 +10,11 @@ const cloudinary = require("./config/cloudinary");
 const DeviceDetector = require("device-detector-js");
 const geoip = require("geoip-lite");
 
-
 const musicUpload = multer({
   storage: multer.memoryStorage(),
-
   limits: {
     fileSize: 25 * 1024 * 1024,
   },
-
   fileFilter: (req, file, callback) => {
     const allowedMimeTypes = [
       "audio/mpeg",
@@ -70,7 +67,6 @@ const uploadMusicToCloudinary = (fileBuffer) => {
             reject(error);
             return;
           }
-
           resolve(result);
         }
       );
@@ -94,12 +90,12 @@ app.set("trust proxy", true);
 const deviceDetector = new DeviceDetector();
 
 /* ==========================
-   Middleware
+    Middleware
 ========================== */
 
 const allowedOrigins = [
   "http://localhost:5173",
-  "http://localhost:3000", // 👉 THÊM PORT 3000 (React)
+  "http://localhost:3000",
   "http://localhost:5174",
   "https://pixel-album.vercel.app",
   process.env.FRONTEND_URL,
@@ -124,12 +120,12 @@ app.use(
 
 app.use(express.json());
 
-// 👉 Gắn route TTS
+// Gắn route TTS
 const ttsRoute = require('./routes/tts');
 app.use('/api/tts', ttsRoute);
 
 /* ==========================
-   Hàm dùng chung
+    Hàm dùng chung
 ========================== */
 
 function normalizeSecurityAnswer(value) {
@@ -150,8 +146,6 @@ function normalizeOptionalDate(value) {
   return value ? String(value).slice(0, 10) : null;
 }
 
-// Hàm lấy địa chỉ IP chuẩn xác của client trên môi trường Cloud (Cloudflare, Render, Vercel, Proxy)
-// 1. Hàm trích xuất IP client sạch (bỏ port, bỏ ipv6 prefix, lấy IP công khai đầu tiên)
 function getClientIp(req) {
   let ip =
     req.headers["cf-connecting-ip"] ||
@@ -163,12 +157,10 @@ function getClientIp(req) {
     req.socket?.remoteAddress ||
     "";
 
-  // Bỏ prefix IPv6
   if (ip.startsWith("::ffff:")) {
     ip = ip.replace("::ffff:", "");
   }
 
-  // Bỏ port nếu có (dạng 113.160.22.1:45321)
   if (ip.includes(":") && !ip.includes("::")) {
     ip = ip.split(":")[0];
   }
@@ -176,11 +168,9 @@ function getClientIp(req) {
   return ip.trim();
 }
 
-// 2. Hàm tra cứu vị trí kết hợp geoip-lite và API miễn phí
 async function getIpLocation(ip) {
   if (!ip) return "Không rõ vị trí";
 
-  // Nhận diện localhost / mạng nội bộ
   if (
     ip === "127.0.0.1" ||
     ip === "::1" ||
@@ -191,7 +181,6 @@ async function getIpLocation(ip) {
     return "Localhost";
   }
 
-  // Thử tra cứu nhanh bằng geoip-lite trước
   try {
     const geo = geoip.lookup(ip);
     if (geo && (geo.city || geo.country)) {
@@ -200,14 +189,11 @@ async function getIpLocation(ip) {
       if (city && country) return `${city}, ${country}`;
       if (city || country) return city || country;
     }
-  } catch (e) {
-    // Bỏ qua lỗi geoip-lite
-  }
+  } catch (e) {}
 
-  // Nếu geoip-lite không ra, gọi API ipwho.is (miễn phí, nhanh, không cần API key)
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 1500); // timeout 1.5s để không nghẽn request
+    const timeout = setTimeout(() => controller.abort(), 1500);
 
     const res = await fetch(`http://ipwho.is/${ip}`, { signal: controller.signal });
     clearTimeout(timeout);
@@ -219,23 +205,113 @@ async function getIpLocation(ip) {
       if (city && country) return `${city}, ${country}`;
       return city || country || ip;
     }
-  } catch (err) {
-    // API timeout hoặc lỗi mạng
-  }
+  } catch (err) {}
 
-  return ip; // Fallback cuối cùng: hiển thị chính địa chỉ IP để không bao giờ bị rỗng
+  return ip;
 }
 
 /* ==========================
-   Trang chủ
+    Trang chủ
 ========================== */
 
 app.get("/", (req, res) => {
   res.send("🎂 Birthday Search API is running with PostgreSQL!");
 });
 
+/* ==========================================================
+    API THỐNG KÊ VIDEO CREATOR (POSTGRESQL / NEON)
+========================================================== */
+
+// Tự động kiểm tra và tạo bảng app_stats nếu chưa có
+async function ensureStatsTable() {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS app_stats (
+        stat_date DATE PRIMARY KEY DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date,
+        visits INT DEFAULT 0,
+        exports INT DEFAULT 0
+      );
+    `);
+  } catch (err) {
+    console.error("Lỗi khởi tạo bảng app_stats:", err);
+  }
+}
+ensureStatsTable();
+
+// 1. Lấy dữ liệu thống kê tổng hợp
+app.get("/api/stats", async (req, res) => {
+  try {
+    const totalVisitsRes = await pool.query(
+      "SELECT COALESCE(SUM(visits), 0)::BIGINT AS total_visits FROM app_stats"
+    );
+
+    const todayStatsRes = await pool.query(
+      `SELECT COALESCE(exports, 0)::INT AS exports 
+       FROM app_stats 
+       WHERE stat_date = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date`
+    );
+
+    const totalVisits = Number(totalVisitsRes.rows[0]?.total_visits || 0);
+    const todayExports = Number(todayStatsRes.rows[0]?.exports || 0);
+
+    return res.status(200).json({
+      success: true,
+      totalVisits,
+      todayExports,
+    });
+  } catch (error) {
+    console.error("Lỗi lấy thống kê app_stats:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Không thể lấy dữ liệu thống kê.",
+      error: error.message,
+    });
+  }
+});
+
+// 2. Ghi nhận 1 lượt truy cập trang
+app.post("/api/stats/visit", async (req, res) => {
+  try {
+    await pool.query(`
+      INSERT INTO app_stats (stat_date, visits, exports)
+      VALUES ((CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date, 1, 0)
+      ON CONFLICT (stat_date)
+      DO UPDATE SET visits = app_stats.visits + 1
+    `);
+
+    return res.status(200).json({ success: true, message: "Đã tăng lượt truy cập." });
+  } catch (error) {
+    console.error("Lỗi ghi nhận lượt truy cập:", error);
+    return res.status(500).json({ success: false, message: "Lỗi ghi nhận lượt truy cập." });
+  }
+});
+
+// 3. Ghi nhận 1 lượt xuất video thành công
+app.post("/api/stats/export", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      INSERT INTO app_stats (stat_date, visits, exports)
+      VALUES ((CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date, 0, 1)
+      ON CONFLICT (stat_date)
+      DO UPDATE SET exports = app_stats.exports + 1
+      RETURNING exports
+    `);
+
+    const newExportCount = Number(result.rows[0]?.exports || 0);
+    console.log(`[VIDEO EXPORTED] Đã xuất video thành công! Tổng số hôm nay: ${newExportCount}`);
+
+    return res.status(200).json({
+      success: true,
+      todayExports: newExportCount,
+    });
+  } catch (error) {
+    console.error("Lỗi ghi nhận xuất video:", error);
+    return res.status(500).json({ success: false, message: "Lỗi ghi nhận xuất video." });
+  }
+});
+
 /* ==========================
-   Kiểm tra PostgreSQL
+    Kiểm tra PostgreSQL
 ========================== */
 
 app.get("/api/test", async (req, res) => {
@@ -274,7 +350,7 @@ app.get("/api/test", async (req, res) => {
 });
 
 /* ==========================
-   API công khai cho Home
+    API công khai cho Home
 ========================== */
 
 app.get("/api/home-music", async (req, res) => {
@@ -314,7 +390,7 @@ app.get("/api/home-music", async (req, res) => {
 });
 
 /* ==========================
-   API chọn bài phát trên Home
+    API chọn bài phát trên Home
 ========================== */
 
 app.put(
@@ -388,7 +464,7 @@ app.put(
 );
 
 /* ==========================
-   API xóa bài hát
+    API xóa bài hát
 ========================== */
 
 app.delete(
@@ -456,7 +532,7 @@ app.delete(
 );
 
 /* ==========================
-   API sửa tên bài hát
+    API sửa tên bài hát
 ========================== */
 
 app.put(
@@ -517,7 +593,7 @@ app.put(
 );
 
 /* ==========================
-   API thêm bài hát
+    API thêm bài hát
 ========================== */
 
 app.post(
@@ -613,7 +689,7 @@ app.post(
 );
 
 /* ==========================
-   API lấy danh sách nhạc
+    API lấy danh sách nhạc
 ========================== */
 
 app.get(
@@ -656,7 +732,7 @@ app.get(
 );
 
 /* ==========================
-   Lấy tất cả người
+    Lấy tất cả người
 ========================== */
 
 app.get("/api/people", async (req, res) => {
@@ -693,8 +769,9 @@ app.get("/api/people", async (req, res) => {
 });
 
 /* ==========================
-   Lấy người theo ID
+    Lấy người theo ID / publicId
 ========================== */
+
 app.get("/api/people/public/:publicId", async (req, res) => {
   try {
     const result = await pool.query(
@@ -800,7 +877,7 @@ app.get("/api/people/:id", async (req, res) => {
 });
 
 /* ==========================
-   Tìm theo ngày sinh
+    Tìm theo ngày sinh
 ========================== */
 
 app.get("/api/birthday/:birthday", async (req, res) => {
@@ -839,7 +916,7 @@ app.get("/api/birthday/:birthday", async (req, res) => {
 });
 
 /* ==========================
-   Thêm người mới
+    Thêm người mới
 ========================== */
 
 app.post(
@@ -959,7 +1036,7 @@ app.post(
 );
 
 /* ==========================
-   Dashboard
+    Dashboard
 ========================== */
 
 app.get("/api/dashboard", verifyAdminToken, async (req, res) => {
@@ -1009,7 +1086,7 @@ app.get("/api/dashboard", verifyAdminToken, async (req, res) => {
 });
 
 /* ==========================
-   Cập nhật người
+    Cập nhật người
 ========================== */
 
 app.put(
@@ -1154,7 +1231,7 @@ app.put(
 );
 
 /* ==========================
-   Xóa người
+    Xóa người
 ========================== */
 
 app.delete(
@@ -1196,7 +1273,7 @@ app.delete(
 );
 
 /* ==========================
-   Đăng nhập Admin (Dùng Database + bcryptjs)
+    Đăng nhập Admin
 ========================== */
 
 app.post("/api/admin/login", async (req, res) => {
@@ -1288,8 +1365,9 @@ app.post("/api/admin/login", async (req, res) => {
 });
 
 /* ==========================
-   Xác thực album
+    Xác thực album
 ========================== */
+
 app.post(
   "/api/people/public/:publicId/verify-album",
   async (req, res) => {
@@ -1462,7 +1540,7 @@ app.post(
 );
 
 /* ==========================
-   API xuất Excel
+    API xuất Excel
 ========================== */
 
 app.get(
@@ -1487,7 +1565,6 @@ app.get(
       `);
 
       const workbook = new ExcelJS.Workbook();
-
       workbook.creator = "Pixel Album";
       workbook.created = new Date();
 
@@ -1507,31 +1584,19 @@ app.get(
       ];
 
       const headerRow = worksheet.getRow(1);
-
-      headerRow.font = {
-        bold: true,
-        color: { argb: "FFFFFFFF" },
-      };
-
+      headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
       headerRow.fill = {
         type: "pattern",
         pattern: "solid",
         fgColor: { argb: "FF16A34A" },
       };
-
-      headerRow.alignment = {
-        vertical: "middle",
-        horizontal: "center",
-      };
-
+      headerRow.alignment = { vertical: "middle", horizontal: "center" };
       headerRow.height = 25;
 
       const formatDate = (value) => {
         if (!value) return "";
         const date = new Date(value);
-        if (Number.isNaN(date.getTime())) {
-          return value;
-        }
+        if (Number.isNaN(date.getTime())) return value;
         return date.toLocaleDateString("vi-VN");
       };
 
@@ -1550,17 +1615,8 @@ app.get(
         });
       });
 
-      worksheet.autoFilter = {
-        from: "A1",
-        to: "J1",
-      };
-
-      worksheet.views = [
-        {
-          state: "frozen",
-          ySplit: 1,
-        },
-      ];
+      worksheet.autoFilter = { from: "A1", to: "J1" };
+      worksheet.views = [{ state: "frozen", ySplit: 1 }];
 
       worksheet.eachRow((row, rowNumber) => {
         row.alignment = {
@@ -1580,29 +1636,24 @@ app.get(
       });
 
       const buffer = await workbook.xlsx.writeBuffer();
-
       const fileName = `DanhSachAlbum-${new Date()
         .toISOString()
         .slice(0, 10)}.xlsx`;
 
       res.status(200);
-
       res.setHeader(
         "Content-Type",
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
       );
-
       res.setHeader(
         "Content-Disposition",
         `attachment; filename="${fileName}"`
       );
-
       res.setHeader("Content-Length", buffer.length);
 
       return res.send(Buffer.from(buffer));
     } catch (error) {
       console.error("Lỗi xuất Excel:", error);
-
       return res.status(500).json({
         message: "Không thể xuất file Excel",
         error: error.message,
@@ -1612,7 +1663,7 @@ app.get(
 );
 
 /* ==========================
-   API tăng lượt truy cập website
+    API tăng lượt truy cập website
 ========================== */
 
 app.post("/api/visits", async (req, res) => {
@@ -1648,9 +1699,7 @@ app.post("/api/visits", async (req, res) => {
     });
   } catch (error) {
     await client.query("ROLLBACK");
-
     console.error("Lỗi tăng lượt truy cập:", error);
-
     return res.status(500).json({
       message: "Không thể cập nhật lượt truy cập",
     });
@@ -1660,7 +1709,7 @@ app.post("/api/visits", async (req, res) => {
 });
 
 /* ==========================
-   API lấy dữ liệu biểu đồ số lần truy cập web
+    API lấy dữ liệu biểu đồ số lần truy cập web
 ========================== */
 
 app.get(
@@ -1671,8 +1720,8 @@ app.get(
       const daysValue = Number(req.query.days);
       const days =
         Number.isInteger(daysValue) &&
-          daysValue >= 7 &&
-          daysValue <= 365
+        daysValue >= 7 &&
+        daysValue <= 365
           ? daysValue
           : 30;
 
@@ -1708,7 +1757,6 @@ app.get(
       });
     } catch (error) {
       console.error("Lỗi lấy biểu đồ lượt truy cập:", error);
-
       return res.status(500).json({
         message: "Không thể tải biểu đồ lượt truy cập",
       });
@@ -1717,7 +1765,7 @@ app.get(
 );
 
 /* ==========================
-   API lấy số lượt truy cập web
+    API lấy số lượt truy cập web
 ========================== */
 
 app.get("/api/visits", async (req, res) => {
@@ -1733,7 +1781,6 @@ app.get("/api/visits", async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-
     res.status(500).json({
       visits: 0,
     });
@@ -1741,7 +1788,7 @@ app.get("/api/visits", async (req, res) => {
 });
 
 /* ==========================
-   API ghi nhận số lượt truy cập album (Kèm IP & Vị trí GeoIP)
+    API ghi nhận số lượt truy cập album
 ========================== */
 
 app.post(
@@ -1751,42 +1798,24 @@ app.post(
 
     try {
       const { publicId } = req.params;
-
-      /* 0. IP & Vị trí */
-      /* 0. IP & Vị trí */
       const clientIp = getClientIp(req);
       const clientLocation = await getIpLocation(clientIp);
 
-      console.log("================ IP DEBUG ================");
-      console.log("x-forwarded-for:", req.headers["x-forwarded-for"]);
-      console.log("cf-connecting-ip:", req.headers["cf-connecting-ip"]);
-      console.log("x-real-ip:", req.headers["x-real-ip"]);
-      console.log("req.ip:", req.ip);
-      console.log("FINAL CLIENT IP:", clientIp);
-      console.log("FINAL LOCATION:", clientLocation);
-      console.log("==========================================");
-
-      console.log(`[ALBUM VIEW] PublicID: ${publicId} | IP: ${clientIp} | Location: ${clientLocation}`);
-
-      /* 1. User Agent & Hints */
       const userAgent = req.headers["user-agent"] || "";
       const clientHints =
         req.body?.clientHints && typeof req.body.clientHints === "object"
           ? req.body.clientHints
           : {};
 
-      /* 2. Device Detector */
       const detected = deviceDetector.parse(userAgent);
       const browserInfo = detected?.client || {};
       const deviceInfo = detected?.device || {};
       const osInfo = detected?.os || {};
 
-      /* 3. Browser */
       const browser = browserInfo.name || "Không xác định";
       const browserVersion =
         clientHints.uaFullVersion || browserInfo.version || "";
 
-      /* 4. Device Type */
       let deviceType =
         deviceInfo.type ||
         (clientHints.mobile === true ? "smartphone" : "desktop");
@@ -1797,15 +1826,12 @@ app.post(
         deviceInfo.model || clientHints.model || ""
       ).trim();
 
-      /* 5. OS */
       const os = osInfo.name || clientHints.platform || "Không xác định";
       const osVersion = osInfo.version || clientHints.platformVersion || "";
 
-      /* 6. CPU & Bitness */
       const cpu = clientHints.architecture || "";
       const bitness = clientHints.bitness || "";
 
-      /* 7. Loại thiết bị tiếng Việt */
       let deviceTypeText;
       switch (deviceType) {
         case "smartphone":
@@ -1841,7 +1867,6 @@ app.post(
           deviceTypeText = "Máy tính";
       }
 
-      /* 8. Tên thiết bị */
       let deviceName = "";
       if (deviceVendor && deviceModel) {
         if (deviceModel.toLowerCase().includes(deviceVendor.toLowerCase())) {
@@ -1867,7 +1892,6 @@ app.post(
         deviceName = deviceTypeText;
       }
 
-      /* 9. Chi tiết phiên xem */
       const viewDetail = {
         ipAddress: clientIp,
         location: clientLocation,
@@ -1888,7 +1912,6 @@ app.post(
 
       await client.query("BEGIN");
 
-      /* 10. Tìm người */
       const personResult = await client.query(
         `
         SELECT id, name, album, "albumViews"
@@ -1915,7 +1938,6 @@ app.post(
         });
       }
 
-      /* 11. Tăng albumViews */
       const updatedPerson = await client.query(
         `
         UPDATE people
@@ -1926,7 +1948,6 @@ app.post(
         [person.id]
       );
 
-      /* 12. Tăng view theo ngày chung */
       await client.query(`
         INSERT INTO album_view_daily (view_date, views)
         VALUES ((NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh')::date, 1)
@@ -1934,7 +1955,6 @@ app.post(
         DO UPDATE SET views = album_view_daily.views + 1
       `);
 
-      /* 13. Lưu chi tiết album kèm IP và Location (Bảo vệ giá trị IP khi Conflict) */
       await client.query(
         `
         INSERT INTO album_view_by_person_daily (
@@ -2021,8 +2041,8 @@ app.post(
           viewDetail.bitness,
           JSON.stringify(viewDetail.clientHints),
           viewDetail.userAgent,
-          clientIp,       // $15
-          clientLocation, // $16
+          clientIp,
+          clientLocation,
         ]
       );
 
@@ -2035,12 +2055,9 @@ app.post(
     } catch (error) {
       try {
         await client.query("ROLLBACK");
-      } catch {
-        // Bỏ qua lỗi rollback
-      }
+      } catch {}
 
       console.error("Lỗi ghi nhận lượt xem album:", error);
-
       return res.status(500).json({
         message: "Không thể ghi nhận lượt xem album.",
       });
@@ -2051,7 +2068,7 @@ app.post(
 );
 
 /* ==========================
-   API lấy số lượt truy cập album
+    API lấy số lượt truy cập album
 ========================== */
 
 app.get(
@@ -2060,11 +2077,10 @@ app.get(
   async (req, res) => {
     try {
       const requestedDays = Number(req.query.days);
-
       const days =
         Number.isInteger(requestedDays) &&
-          requestedDays >= 7 &&
-          requestedDays <= 365
+        requestedDays >= 7 &&
+        requestedDays <= 365
           ? requestedDays
           : 30;
 
@@ -2085,7 +2101,7 @@ app.get(
           COALESCE(album_view_daily.views, 0)::integer AS views
         FROM date_range
         LEFT JOIN album_view_daily
-          ON album_view_daily.view_date = date_range.view_date
+          ON album_view_daily.view_date = date_range.visit_date
         ORDER BY date_range.view_date ASC
         `,
         [days]
@@ -2100,7 +2116,6 @@ app.get(
       });
     } catch (error) {
       console.error("Lỗi lấy biểu đồ lượt mở album:", error);
-
       return res.status(500).json({
         message: "Không thể tải biểu đồ lượt mở album",
       });
@@ -2109,7 +2124,7 @@ app.get(
 );
 
 /* ==========================
-   EVENTS - Sự kiện thủ công
+    EVENTS - Sự kiện thủ công
 ========================== */
 
 app.get("/api/events", async (req, res) => {
@@ -2123,7 +2138,6 @@ app.get("/api/events", async (req, res) => {
     return res.json(result.rows);
   } catch (error) {
     console.error("Lỗi lấy danh sách sự kiện:", error);
-
     return res.status(500).json({
       message: "Không thể tải danh sách sự kiện.",
     });
@@ -2149,7 +2163,6 @@ app.get("/api/events/today", async (req, res) => {
     return res.json(result.rows);
   } catch (error) {
     console.error("Lỗi lấy sự kiện hôm nay:", error);
-
     return res.status(500).json({
       message: "Không thể tải sự kiện hôm nay.",
     });
@@ -2170,7 +2183,6 @@ app.get(
       return res.json(result.rows);
     } catch (error) {
       console.error("Lỗi lấy danh sách sự kiện admin:", error);
-
       return res.status(500).json({
         message: "Không thể tải danh sách sự kiện.",
       });
@@ -2221,7 +2233,6 @@ app.post(
       });
     } catch (error) {
       console.error("Lỗi thêm sự kiện:", error);
-
       return res.status(500).json({
         message: "Không thể thêm sự kiện.",
       });
@@ -2291,7 +2302,6 @@ app.put(
       });
     } catch (error) {
       console.error("Lỗi sửa sự kiện:", error);
-
       return res.status(500).json({
         message: "Không thể cập nhật sự kiện.",
       });
@@ -2332,7 +2342,6 @@ app.delete(
       });
     } catch (error) {
       console.error("Lỗi xóa sự kiện:", error);
-
       return res.status(500).json({
         message: "Không thể xóa sự kiện.",
       });
@@ -2341,7 +2350,7 @@ app.delete(
 );
 
 /* ==========================
-   API lấy lịch sử xem của 1 album (Kèm IP)
+    API lấy lịch sử xem của 1 album
 ========================== */
 
 app.get(
@@ -2394,7 +2403,6 @@ app.get(
       });
     } catch (error) {
       console.error("Lỗi lấy lịch sử xem album:", error);
-
       return res.status(500).json({
         message: "Không thể tải lịch sử xem album.",
       });
@@ -2403,7 +2411,7 @@ app.get(
 );
 
 /* ==========================================================
-   1. API LƯU XÁC NHẬN THAM DỰ + LỜI CHÚC
+    1. API LƯU XÁC NHẬN THAM DỰ + LỜI CHÚC
 ========================================================== */
 
 app.post("/api/graduation-rsvp", async (req, res) => {
@@ -2510,7 +2518,6 @@ app.post("/api/graduation-rsvp", async (req, res) => {
     });
   } catch (error) {
     console.error("Lỗi lưu xác nhận tham dự:", error);
-
     return res.status(500).json({
       success: false,
       message: "Không thể lưu xác nhận tham dự.",
@@ -2519,7 +2526,7 @@ app.post("/api/graduation-rsvp", async (req, res) => {
 });
 
 /* ==========================================================
-   2. API LẤY DANH SÁCH RSVP + LỜI CHÚC CHO ADMIN
+    2. API LẤY DANH SÁCH RSVP CHO ADMIN
 ========================================================== */
 
 app.get("/api/admin/graduation-rsvps", async (req, res) => {
@@ -2560,7 +2567,6 @@ app.get("/api/admin/graduation-rsvps", async (req, res) => {
     });
   } catch (error) {
     console.error("Lỗi lấy danh sách xác nhận tham dự:", error);
-
     return res.status(500).json({
       success: false,
       message: "Không thể tải danh sách xác nhận tham dự.",
@@ -2570,7 +2576,7 @@ app.get("/api/admin/graduation-rsvps", async (req, res) => {
 });
 
 /* ==========================================================
-   3. API XÓA RSVP
+    3. API XÓA RSVP
 ========================================================== */
 
 app.delete(
@@ -2609,7 +2615,6 @@ app.delete(
       });
     } catch (error) {
       console.error("Lỗi xóa xác nhận tham dự:", error);
-
       return res.status(500).json({
         success: false,
         message: "Không thể xóa phản hồi.",
@@ -2620,8 +2625,9 @@ app.delete(
 );
 
 /* ==========================================================
-   API ĐỔI MẬT KHẨU QUẢN TRỊ (Đã bao gồm tự động khởi tạo)
+    API ĐỔI MẬT KHẨU QUẢN TRỊ
 ========================================================== */
+
 app.put("/api/admin/change-password", async (req, res) => {
   try {
     const { oldPassword, newPassword } = req.body;
@@ -2698,7 +2704,7 @@ app.put("/api/admin/change-password", async (req, res) => {
 });
 
 /* ==========================
-   Middleware xử lý lỗi CORS
+    Middleware xử lý lỗi CORS
 ========================== */
 
 app.use((error, req, res, next) => {
@@ -2708,12 +2714,11 @@ app.use((error, req, res, next) => {
       message: error.message,
     });
   }
-
   next(error);
 });
 
 /* ==========================
-   API lấy album được xem hôm nay (Kèm IP)
+    API lấy album được xem hôm nay
 ========================== */
 
 app.get(
@@ -2785,7 +2790,6 @@ app.get(
       });
     } catch (error) {
       console.error("Lỗi lấy lịch sử xem album:", error);
-
       return res.status(500).json({
         message: "Không thể tải lịch sử xem album.",
       });
@@ -2794,7 +2798,7 @@ app.get(
 );
 
 /* ==========================
-   API lấy thông báo cho Home
+    API lấy thông báo cho Home
 ========================== */
 
 app.get("/api/announcement", async (req, res) => {
@@ -2821,7 +2825,6 @@ app.get("/api/announcement", async (req, res) => {
     });
   } catch (error) {
     console.error("Lỗi lấy thông báo:", error);
-
     return res.status(500).json({
       message: "Không thể tải thông báo.",
     });
@@ -2829,7 +2832,7 @@ app.get("/api/announcement", async (req, res) => {
 });
 
 /* ==========================
-   API admin cập nhật thông báo
+    API admin cập nhật thông báo
 ========================== */
 
 app.put(
@@ -2871,7 +2874,6 @@ app.put(
       });
     } catch (error) {
       console.error("Lỗi cập nhật thông báo:", error);
-
       return res.status(500).json({
         message: "Không thể cập nhật thông báo.",
       });
@@ -2880,7 +2882,7 @@ app.put(
 );
 
 /* ==========================
-   Khởi động server
+    Khởi động server
 ========================== */
 
 const PORT = process.env.PORT || 5000;
@@ -2899,7 +2901,6 @@ async function startServer() {
       "❌ Không thể khởi động server:",
       error
     );
-
     process.exit(1);
   }
 }
