@@ -68,6 +68,10 @@ export default function VideoCreator() {
     const [totalVisits, setTotalVisits] = useState(0);
     const [todayExports, setTodayExports] = useState(0);
 
+    // Dùng ref để ngăn React StrictMode gọi 2 lần trong cùng một lần mount
+    const hasSentVisitRef = useRef(false);
+
+    // 1. Hàm lấy dữ liệu thống kê từ Neon Database
     const fetchStats = async () => {
         try {
             const res = await api.get('/stats');
@@ -80,6 +84,7 @@ export default function VideoCreator() {
         }
     };
 
+    // 2. Xử lý ghi nhận lượt truy cập (Chỉ tăng khi mở tab mới, F5 không tăng)
     useEffect(() => {
         const checkDevice = () => {
             const isTouchMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -89,12 +94,24 @@ export default function VideoCreator() {
         checkDevice();
         window.addEventListener('resize', checkDevice);
 
-        // Ghi nhận lượt truy cập và nạp số liệu thống kê qua Axios instance chuẩn
-        api.post('/stats/visit')
-            .catch(() => {})
-            .finally(() => {
-                fetchStats();
-            });
+        // Kiểm tra xem tab trình duyệt này đã từng tính 1 lượt xem chưa
+        const isTabVisited = sessionStorage.getItem('VIDEO_CREATOR_TAB_VISITED');
+
+        if (!isTabVisited && !hasSentVisitRef.current) {
+            hasSentVisitRef.current = true;
+            // Đánh dấu tab này đã tính lượt xem
+            sessionStorage.setItem('VIDEO_CREATOR_TAB_VISITED', 'true');
+
+            // Gửi API tăng view cho tab mới
+            api.post('/stats/visit')
+                .catch((err) => console.error('Lỗi tăng visit:', err))
+                .finally(() => {
+                    fetchStats();
+                });
+        } else {
+            // Nếu là reload (F5) trong cùng 1 tab: CHỈ LẤY SỐ LIỆU, KHÔNG TĂNG LƯỢT XEM
+            fetchStats();
+        }
 
         return () => window.removeEventListener('resize', checkDevice);
     }, []);
@@ -2515,18 +2532,18 @@ export default function VideoCreator() {
                                 <div style={styles.statsItemBox}>
                                     <div style={styles.statsIconBoxBlue}>👀</div>
                                     <div style={{ flex: 1, minWidth: 0 }}>
-                                        <div style={styles.statsLabel}>Tổng lượt xem</div>
+                                        <div style={styles.statsLabel}>Lượt truy cập</div>
                                         <div style={styles.statsValuePrimary}>
-                                            {totalVisits.toLocaleString('vi-VN')}
+                                            {totalVisits.toLocaleString('vi-VN')} lần
                                         </div>
                                     </div>
                                 </div>
                                 <div style={styles.statsItemBox}>
                                     <div style={styles.statsIconBoxGreen}>🎬</div>
                                     <div style={{ flex: 1, minWidth: 0 }}>
-                                        <div style={styles.statsLabel}>Video xuất hôm nay</div>
+                                        <div style={styles.statsLabel}>Đã tạo hôm nay</div>
                                         <div style={styles.statsValueSuccess}>
-                                            {todayExports.toLocaleString('vi-VN')}
+                                            {todayExports.toLocaleString('vi-VN')} videos
                                         </div>
                                     </div>
                                 </div>
