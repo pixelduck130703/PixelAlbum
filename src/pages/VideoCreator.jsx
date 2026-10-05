@@ -63,7 +63,7 @@ const loadJSZip = () => {
 
 export default function VideoCreator() {
     const [isMobileDevice, setIsMobileDevice] = useState(false);
-    
+
     // THỐNG KÊ LƯỢT TRUY CẬP VÀ SỐ VIDEO XUẤT TỪ DATABASE (ĐỒNG BỘ NEON PRODUCTION)
     const [totalVisits, setTotalVisits] = useState(0);
     const [todayExports, setTodayExports] = useState(0);
@@ -230,6 +230,32 @@ export default function VideoCreator() {
     const bgmFileInputRef = useRef(null);
     const activeRendererRef = useRef(null);
     const activeMixerRef = useRef(null);
+
+    const [currentTime, setCurrentTime] = React.useState(new Date());
+
+    React.useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentTime(new Date());
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, []);
+
+    // Định dạng giờ:phút:giây
+    const timeString = currentTime.toLocaleTimeString('vi-VN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+    });
+
+    // Định dạng ngày/tháng/năm
+    const dateString = currentTime.toLocaleDateString('vi-VN', {
+        weekday: 'short',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+    });
 
     useEffect(() => {
         if (geminiCooldown <= 0) return;
@@ -1155,7 +1181,7 @@ export default function VideoCreator() {
         setOutputVideoUrl(null);
         try {
             const { mixer, renderer, audioStream, targetDuration, aiTimeline, readyMedia } = await prepareSession(false);
-            
+
             setIsPreviewPreparing(false);
             setRendering(true);
             await mixer.play();
@@ -1543,6 +1569,7 @@ export default function VideoCreator() {
             )}
             {/* HEADER */}
             <header style={styles.topNavbar}>
+                {/* Góc trái: Nút Trang chủ */}
                 <button
                     type="button"
                     onClick={() => (window.location.href = '/')}
@@ -1551,9 +1578,22 @@ export default function VideoCreator() {
                     <span>🏠</span>
                     <span>Trang chủ</span>
                 </button>
+
+                {/* Chính giữa: Logo & Tiêu đề */}
                 <div style={styles.headerCenter}>
                     <span style={styles.brandBadge}>VALLEY TEAM</span>
-                    <h1 style={styles.appTitle}>Dựng Video</h1>
+                    <h1 style={styles.appTitle}>TOOL DỰNG VIDEO</h1>
+                </div>
+
+                {/* Góc phải: Đồng hồ điện tử */}
+                <div style={styles.headerRight}>
+                    <div style={styles.clockContainer}>
+                        <span style={styles.clockPulseDot} />
+                        <div style={styles.clockTextGroup}>
+                            <span style={styles.clockTime}>{timeString}</span>
+                            <span style={styles.clockDate}>{dateString}</span>
+                        </div>
+                    </div>
                 </div>
             </header>
             {/* WORKSPACE BODY */}
@@ -2638,8 +2678,8 @@ export default function VideoCreator() {
                     <span style={styles.footerDot}>•</span>
                     <span style={styles.footerText}>Trình dựng Video AI</span>
                     <span style={styles.footerDot}>•</span>
-                    <span style={styles.footerVersion}>v2.2</span>
-                    <span style={styles.footerVersion}>Cập nhật: 04/10/2026</span>
+                    <span style={styles.footerVersion}>Version 3.0</span>
+                    <span style={styles.footerVersion}>Cập nhật: 05/10/2026</span>
                 </div>
                 <div style={styles.footerCenterTech}>
                     <div style={styles.techIconsList}>
@@ -3822,5 +3862,91 @@ const styles = {
         alignItems: 'center',
         gap: 14,
         whiteSpace: 'nowrap',
+    },
+    topNavbar: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '10px 20px',
+        backgroundColor: '#ffffff',
+        borderBottom: '1px solid #e2e8f0',
+        position: 'relative',
+    },
+    homeBtn: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 6,
+        padding: '8px 14px',
+        backgroundColor: '#f1f5f9',
+        border: '1px solid #cbd5e1',
+        borderRadius: 8,
+        fontSize: 13,
+        fontWeight: 600,
+        color: '#334155',
+        cursor: 'pointer',
+    },
+    headerCenter: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        position: 'absolute',
+        left: '50%',
+        transform: 'translateX(-50%)', // Đảm bảo luôn nằm chính giữa thanh bar
+    },
+    brandBadge: {
+        backgroundColor: '#db2777',
+        color: '#ffffff',
+        padding: '4px 10px',
+        borderRadius: 6,
+        fontSize: 12,
+        fontWeight: 800,
+        letterSpacing: 0.5,
+    },
+    appTitle: {
+        fontSize: 18,
+        fontWeight: 800,
+        color: '#0f172a',
+        margin: 0,
+        letterSpacing: 0.5,
+    },
+    headerRight: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+    },
+    clockContainer: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 10,
+        padding: '6px 14px',
+        borderRadius: 10,
+        backgroundColor: '#f8fafc',
+        border: '1px solid #e2e8f0',
+        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
+    },
+    clockPulseDot: {
+        width: 8,
+        height: 8,
+        borderRadius: '50%',
+        backgroundColor: '#10b981', // Chấm xanh báo trạng thái thời gian thực
+        boxShadow: '0 0 0 2px rgba(16, 185, 129, 0.2)',
+    },
+    clockTextGroup: {
+        display: 'flex',
+        flexDirection: 'column',
+        lineHeight: 1.15,
+    },
+    clockTime: {
+        fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+        fontSize: 13,
+        fontWeight: 700,
+        color: '#0f172a',
+        letterSpacing: '0.02em',
+    },
+    clockDate: {
+        fontSize: 11,
+        color: '#64748b',
+        fontWeight: 500,
+        textTransform: 'capitalize',
     },
 };
