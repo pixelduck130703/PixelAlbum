@@ -1,5 +1,4 @@
 require("dotenv").config();
-
 const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
@@ -26,15 +25,12 @@ const musicUpload = multer({
       "audio/mp4",
       "audio/x-m4a",
     ];
-
     const fileName = String(file.originalname || "").toLowerCase();
-
     const hasAllowedExtension =
       fileName.endsWith(".mp3") ||
       fileName.endsWith(".wav") ||
       fileName.endsWith(".flac") ||
       fileName.endsWith(".m4a");
-
     if (
       allowedMimeTypes.includes(file.mimetype) ||
       hasAllowedExtension
@@ -42,7 +38,6 @@ const musicUpload = multer({
       callback(null, true);
       return;
     }
-
     callback(
       new Error(
         "Chỉ chấp nhận file MP3, WAV, FLAC hoặc M4A."
@@ -70,7 +65,6 @@ const uploadMusicToCloudinary = (fileBuffer) => {
           resolve(result);
         }
       );
-
     uploadStream.end(fileBuffer);
   });
 };
@@ -79,20 +73,15 @@ const {
   pool,
   initializeDatabase,
 } = require("./database/db");
-
 const verifyAdminToken = require("./middleware/auth");
 
 const app = express();
-
-// Kích hoạt trust proxy TRƯỚC mọi middleware để Express đọc đúng IP từ header proxy
 app.set("trust proxy", true);
-
 const deviceDetector = new DeviceDetector();
 
 /* ==========================
     Middleware
 ========================== */
-
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
@@ -107,9 +96,7 @@ app.use(
       if (!origin || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
-
       console.error("CORS chặn origin:", origin);
-
       return callback(
         new Error("Nguồn truy cập không được CORS cho phép.")
       );
@@ -117,17 +104,19 @@ app.use(
     credentials: true,
   })
 );
-
 app.use(express.json());
 
-// Gắn route TTS
-const ttsRoute = require('./routes/tts');
-app.use('/api/tts', ttsRoute);
+// Gắn route TTS (nếu có file riêng)
+try {
+  const ttsRoute = require('./routes/tts');
+  app.use('/api/tts', ttsRoute);
+} catch (e) {
+  // Bỏ qua nếu route TTS được xử lý trực tiếp
+}
 
 /* ==========================
     Hàm dùng chung
 ========================== */
-
 function normalizeSecurityAnswer(value) {
   return String(value || "")
     .trim()
@@ -136,16 +125,13 @@ function normalizeSecurityAnswer(value) {
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/\s+/g, " ");
 }
-
 function normalizeOptionalText(value) {
   const normalized = String(value || "").trim();
   return normalized || null;
 }
-
 function normalizeOptionalDate(value) {
   return value ? String(value).slice(0, 10) : null;
 }
-
 function getClientIp(req) {
   let ip =
     req.headers["cf-connecting-ip"] ||
@@ -156,21 +142,16 @@ function getClientIp(req) {
     req.ip ||
     req.socket?.remoteAddress ||
     "";
-
   if (ip.startsWith("::ffff:")) {
     ip = ip.replace("::ffff:", "");
   }
-
   if (ip.includes(":") && !ip.includes("::")) {
     ip = ip.split(":")[0];
   }
-
   return ip.trim();
 }
-
 async function getIpLocation(ip) {
   if (!ip) return "Không rõ vị trí";
-
   if (
     ip === "127.0.0.1" ||
     ip === "::1" ||
@@ -180,7 +161,6 @@ async function getIpLocation(ip) {
   ) {
     return "Localhost";
   }
-
   try {
     const geo = geoip.lookup(ip);
     if (geo && (geo.city || geo.country)) {
@@ -190,14 +170,11 @@ async function getIpLocation(ip) {
       if (city || country) return city || country;
     }
   } catch (e) {}
-
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 1500);
-
     const res = await fetch(`http://ipwho.is/${ip}`, { signal: controller.signal });
     clearTimeout(timeout);
-
     const data = await res.json();
     if (data && data.success) {
       const city = data.city || "";
@@ -206,24 +183,21 @@ async function getIpLocation(ip) {
       return city || country || ip;
     }
   } catch (err) {}
-
   return ip;
 }
 
 /* ==========================
     Trang chủ
 ========================== */
-
 app.get("/", (req, res) => {
   res.send("🎂 Birthday Search API is running with PostgreSQL!");
 });
 
 /* ==========================================================
-    API THỐNG KÊ VIDEO CREATOR (POSTGRESQL / NEON)
+    API THỐNG KÊ VIDEO CREATOR (TƯƠNG THÍCH NEON & LOCAL)
 ========================================================== */
-
-// Tự động kiểm tra và tạo bảng app_stats nếu chưa có
-async function ensureStatsTable() {
+// 1. Lấy dữ liệu thống kê tổng hợp (tự tạo bảng nếu chưa có trên Neon)
+app.get("/api/stats", async (req, res) => {
   try {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS app_stats (
@@ -232,19 +206,17 @@ async function ensureStatsTable() {
         exports INT DEFAULT 0
       );
     `);
-  } catch (err) {
-    console.error("Lỗi khởi tạo bảng app_stats:", err);
-  }
-}
-ensureStatsTable();
 
-// 1. Lấy dữ liệu thống kê tổng hợp
-app.get("/api/stats", async (req, res) => {
-  try {
+    // Đảm bảo luôn có bản ghi cho ngày hôm nay
+    await pool.query(`
+      INSERT INTO app_stats (stat_date, visits, exports)
+      VALUES ((CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date, 0, 0)
+      ON CONFLICT (stat_date) DO NOTHING;
+    `);
+
     const totalVisitsRes = await pool.query(
       "SELECT COALESCE(SUM(visits), 0)::BIGINT AS total_visits FROM app_stats"
     );
-
     const todayStatsRes = await pool.query(
       `SELECT COALESCE(exports, 0)::INT AS exports 
        FROM app_stats 
@@ -269,16 +241,23 @@ app.get("/api/stats", async (req, res) => {
   }
 });
 
-// 2. Ghi nhận 1 lượt truy cập trang
+// 2. Ghi nhận lượt truy cập trang
 app.post("/api/stats/visit", async (req, res) => {
   try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS app_stats (
+        stat_date DATE PRIMARY KEY DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date,
+        visits INT DEFAULT 0,
+        exports INT DEFAULT 0
+      );
+    `);
+
     await pool.query(`
       INSERT INTO app_stats (stat_date, visits, exports)
       VALUES ((CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date, 1, 0)
       ON CONFLICT (stat_date)
       DO UPDATE SET visits = app_stats.visits + 1
     `);
-
     return res.status(200).json({ success: true, message: "Đã tăng lượt truy cập." });
   } catch (error) {
     console.error("Lỗi ghi nhận lượt truy cập:", error);
@@ -286,9 +265,17 @@ app.post("/api/stats/visit", async (req, res) => {
   }
 });
 
-// 3. Ghi nhận 1 lượt xuất video thành công
+// 3. Ghi nhận lượt xuất video thành công
 app.post("/api/stats/export", async (req, res) => {
   try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS app_stats (
+        stat_date DATE PRIMARY KEY DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date,
+        visits INT DEFAULT 0,
+        exports INT DEFAULT 0
+      );
+    `);
+
     const result = await pool.query(`
       INSERT INTO app_stats (stat_date, visits, exports)
       VALUES ((CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date, 0, 1)
@@ -296,10 +283,8 @@ app.post("/api/stats/export", async (req, res) => {
       DO UPDATE SET exports = app_stats.exports + 1
       RETURNING exports
     `);
-
     const newExportCount = Number(result.rows[0]?.exports || 0);
     console.log(`[VIDEO EXPORTED] Đã xuất video thành công! Tổng số hôm nay: ${newExportCount}`);
-
     return res.status(200).json({
       success: true,
       todayExports: newExportCount,
@@ -313,7 +298,6 @@ app.post("/api/stats/export", async (req, res) => {
 /* ==========================
     Kiểm tra PostgreSQL
 ========================== */
-
 app.get("/api/test", async (req, res) => {
   try {
     const result = await pool.query(`
@@ -332,16 +316,14 @@ app.get("/api/test", async (req, res) => {
       FROM people
       ORDER BY id DESC
     `);
-
     res.json({
       success: true,
-      database: "PostgreSQL Docker",
+      database: "PostgreSQL",
       total: result.rowCount,
       people: result.rows,
     });
   } catch (error) {
     console.error("Lỗi kiểm tra PostgreSQL:", error);
-
     res.status(500).json({
       success: false,
       error: error.message,
@@ -352,7 +334,6 @@ app.get("/api/test", async (req, res) => {
 /* ==========================
     API công khai cho Home
 ========================== */
-
 app.get("/api/home-music", async (req, res) => {
   try {
     const result = await pool.query(`
@@ -366,23 +347,19 @@ app.get("/api/home-music", async (req, res) => {
       WHERE hm.id = 1
       LIMIT 1
     `);
-
     const track = result.rows[0];
-
     if (!track?.id || !track?.musicUrl) {
       return res.json({
         enabled: false,
         track: null,
       });
     }
-
     return res.json({
       enabled: true,
       track,
     });
   } catch (error) {
     console.error("Lỗi lấy nhạc trang chủ:", error);
-
     return res.status(500).json({
       message: "Không thể lấy nhạc trang chủ.",
     });
@@ -392,14 +369,12 @@ app.get("/api/home-music", async (req, res) => {
 /* ==========================
     API chọn bài phát trên Home
 ========================== */
-
 app.put(
   "/api/admin/home-music",
   verifyAdminToken,
   async (req, res) => {
     try {
       const rawTrackId = req.body.trackId;
-
       if (
         rawTrackId === null ||
         rawTrackId === undefined ||
@@ -412,32 +387,26 @@ app.put(
             updated_at = CURRENT_TIMESTAMP
           WHERE id = 1
         `);
-
         return res.json({
           message: "Đã tắt nhạc nền trang chủ.",
           trackId: null,
         });
       }
-
       const trackId = Number(rawTrackId);
-
       if (!Number.isInteger(trackId) || trackId <= 0) {
         return res.status(400).json({
           message: "Bài hát không hợp lệ.",
         });
       }
-
       const trackResult = await pool.query(
         `SELECT id FROM music_tracks WHERE id = $1`,
         [trackId]
       );
-
       if (!trackResult.rows[0]) {
         return res.status(404).json({
           message: "Không tìm thấy bài hát.",
         });
       }
-
       await pool.query(
         `
         UPDATE home_music
@@ -448,14 +417,12 @@ app.put(
         `,
         [trackId]
       );
-
       return res.json({
         message: "Đã cập nhật nhạc nền trang chủ.",
         trackId,
       });
     } catch (error) {
       console.error("Lỗi chọn nhạc nền:", error);
-
       return res.status(500).json({
         message: "Không thể cập nhật nhạc nền.",
       });
@@ -466,22 +433,18 @@ app.put(
 /* ==========================
     API xóa bài hát
 ========================== */
-
 app.delete(
   "/api/admin/music/:id",
   verifyAdminToken,
   async (req, res) => {
     const client = await pool.connect();
-
     try {
       const trackId = Number(req.params.id);
-
       if (!Number.isInteger(trackId) || trackId <= 0) {
         return res.status(400).json({
           message: "ID bài hát không hợp lệ.",
         });
       }
-
       const trackResult = await client.query(
         `
         SELECT
@@ -494,15 +457,12 @@ app.delete(
         `,
         [trackId]
       );
-
       const track = trackResult.rows[0];
-
       if (!track) {
         return res.status(404).json({
           message: "Không tìm thấy bài hát.",
         });
       }
-
       await cloudinary.uploader.destroy(
         track.publicId,
         {
@@ -510,18 +470,15 @@ app.delete(
           invalidate: true,
         }
       );
-
       await client.query(
         `DELETE FROM music_tracks WHERE id = $1`,
         [trackId]
       );
-
       return res.json({
         message: "Xóa bài hát thành công.",
       });
     } catch (error) {
       console.error("Lỗi xóa bài hát:", error);
-
       return res.status(500).json({
         message: "Không thể xóa bài hát.",
       });
@@ -534,7 +491,6 @@ app.delete(
 /* ==========================
     API sửa tên bài hát
 ========================== */
-
 app.put(
   "/api/admin/music/:id",
   verifyAdminToken,
@@ -542,19 +498,16 @@ app.put(
     try {
       const trackId = Number(req.params.id);
       const name = String(req.body.name || "").trim();
-
       if (!Number.isInteger(trackId) || trackId <= 0) {
         return res.status(400).json({
           message: "ID bài hát không hợp lệ.",
         });
       }
-
       if (!name) {
         return res.status(400).json({
           message: "Tên bài hát không được để trống.",
         });
       }
-
       const result = await pool.query(
         `
         UPDATE music_tracks
@@ -571,20 +524,17 @@ app.put(
         `,
         [name, trackId]
       );
-
       if (!result.rows[0]) {
         return res.status(404).json({
           message: "Không tìm thấy bài hát.",
         });
       }
-
       return res.json({
         message: "Đổi tên bài hát thành công.",
         track: result.rows[0],
       });
     } catch (error) {
       console.error("Lỗi sửa bài hát:", error);
-
       return res.status(500).json({
         message: "Không thể sửa bài hát.",
       });
@@ -595,34 +545,27 @@ app.put(
 /* ==========================
     API thêm bài hát
 ========================== */
-
 app.post(
   "/api/admin/music",
   verifyAdminToken,
   musicUpload.single("music"),
   async (req, res) => {
     let uploadedPublicId = null;
-
     try {
       const name = String(req.body.name || "").trim();
-
       if (!name) {
         return res.status(400).json({
           message: "Vui lòng nhập tên bài hát.",
         });
       }
-
       if (!req.file) {
         return res.status(400).json({
           message: "Vui lòng chọn file nhạc.",
         });
       }
-
       const uploadResult =
         await uploadMusicToCloudinary(req.file.buffer);
-
       uploadedPublicId = uploadResult.public_id;
-
       const result = await pool.query(
         `
         INSERT INTO music_tracks (
@@ -645,14 +588,12 @@ app.post(
           uploadResult.public_id,
         ]
       );
-
       return res.status(201).json({
         message: "Thêm bài hát thành công.",
         track: result.rows[0],
       });
     } catch (error) {
       console.error("Lỗi thêm bài hát:", error);
-
       if (uploadedPublicId) {
         try {
           await cloudinary.uploader.destroy(
@@ -669,7 +610,6 @@ app.post(
           );
         }
       }
-
       if (error instanceof multer.MulterError) {
         return res.status(400).json({
           message:
@@ -678,7 +618,6 @@ app.post(
               : error.message,
         });
       }
-
       return res.status(500).json({
         message:
           error.message ||
@@ -691,7 +630,6 @@ app.post(
 /* ==========================
     API lấy danh sách nhạc
 ========================== */
-
 app.get(
   "/api/admin/music",
   verifyAdminToken,
@@ -708,14 +646,12 @@ app.get(
         FROM music_tracks
         ORDER BY created_at DESC, id DESC
       `);
-
       const selectedResult = await pool.query(`
         SELECT track_id AS "trackId"
         FROM home_music
         WHERE id = 1
         LIMIT 1
       `);
-
       return res.json({
         tracks: tracksResult.rows,
         selectedTrackId:
@@ -723,7 +659,6 @@ app.get(
       });
     } catch (error) {
       console.error("Lỗi tải danh sách nhạc:", error);
-
       return res.status(500).json({
         message: "Không thể tải danh sách nhạc.",
       });
@@ -734,7 +669,6 @@ app.get(
 /* ==========================
     Lấy tất cả người
 ========================== */
-
 app.get("/api/people", async (req, res) => {
   try {
     const result = await pool.query(`
@@ -757,11 +691,9 @@ app.get("/api/people", async (req, res) => {
         COALESCE("albumViews", 0) DESC,
         id DESC;
     `);
-
     return res.json(result.rows);
   } catch (error) {
     console.error("Lỗi lấy danh sách người:", error);
-
     return res.status(500).json({
       message: "Lỗi máy chủ",
     });
@@ -771,7 +703,6 @@ app.get("/api/people", async (req, res) => {
 /* ==========================
     Lấy người theo ID / publicId
 ========================== */
-
 app.get("/api/people/public/:publicId", async (req, res) => {
   try {
     const result = await pool.query(
@@ -805,18 +736,15 @@ app.get("/api/people/public/:publicId", async (req, res) => {
       `,
       [req.params.publicId]
     );
-
     if (result.rows.length === 0) {
       return res.status(404).json({
         success: false,
         message: "Không tìm thấy người.",
       });
     }
-
     res.json(result.rows[0]);
   } catch (error) {
     console.error(error);
-
     res.status(500).json({
       success: false,
       message: "Không thể lấy thông tin người.",
@@ -856,18 +784,15 @@ app.get("/api/people/:id", async (req, res) => {
       `,
       [req.params.id]
     );
-
     if (result.rows.length === 0) {
       return res.status(404).json({
         success: false,
         message: "Không tìm thấy người.",
       });
     }
-
     res.json(result.rows[0]);
   } catch (error) {
     console.error("Lỗi lấy thông tin người:", error);
-
     res.status(500).json({
       success: false,
       message: "Không thể lấy thông tin người.",
@@ -879,7 +804,6 @@ app.get("/api/people/:id", async (req, res) => {
 /* ==========================
     Tìm theo ngày sinh
 ========================== */
-
 app.get("/api/birthday/:birthday", async (req, res) => {
   try {
     const result = await pool.query(
@@ -902,11 +826,9 @@ app.get("/api/birthday/:birthday", async (req, res) => {
       `,
       [req.params.birthday]
     );
-
     res.json(result.rows);
   } catch (error) {
     console.error("Lỗi tìm theo ngày sinh:", error);
-
     res.status(500).json({
       success: false,
       message: "Không thể tìm theo ngày sinh.",
@@ -918,7 +840,6 @@ app.get("/api/birthday/:birthday", async (req, res) => {
 /* ==========================
     Thêm người mới
 ========================== */
-
 app.post(
   "/api/people",
   verifyAdminToken,
@@ -937,20 +858,16 @@ app.post(
         securityQuestion,
         securityAnswer,
       } = req.body;
-
       if (!name || !name.trim()) {
         return res.status(400).json({
           success: false,
           message: "Họ tên không được để trống.",
         });
       }
-
       const normalizedBirthday =
         normalizeOptionalDate(birthday);
-
       const normalizedDeathDate =
         normalizeOptionalDate(deathDate);
-
       if (
         normalizedBirthday &&
         normalizedDeathDate &&
@@ -961,13 +878,10 @@ app.post(
           message: "Ngày mất không thể trước ngày sinh.",
         });
       }
-
       const question =
         normalizeOptionalText(securityQuestion);
-
       const answer =
         normalizeSecurityAnswer(securityAnswer);
-
       if (question && !answer) {
         return res.status(400).json({
           success: false,
@@ -975,13 +889,10 @@ app.post(
             "Đã nhập câu hỏi thì phải nhập câu trả lời.",
         });
       }
-
       let hashedAnswer = null;
-
       if (question) {
         hashedAnswer = await bcrypt.hash(answer, 10);
       }
-
       const result = await pool.query(
         `
         INSERT INTO people (
@@ -1017,7 +928,6 @@ app.post(
           hashedAnswer,
         ]
       );
-
       res.status(201).json({
         success: true,
         message: "Thêm người thành công.",
@@ -1025,7 +935,6 @@ app.post(
       });
     } catch (error) {
       console.error("Lỗi thêm người:", error);
-
       res.status(500).json({
         success: false,
         message: "Không thể thêm người.",
@@ -1038,7 +947,6 @@ app.post(
 /* ==========================
     Dashboard
 ========================== */
-
 app.get("/api/dashboard", verifyAdminToken, async (req, res) => {
   try {
     const result = await pool.query(`
@@ -1068,16 +976,13 @@ app.get("/api/dashboard", verifyAdminToken, async (req, res) => {
         )::BIGINT AS "totalAlbumViews"
       FROM people
     `);
-
     const stats = result.rows[0];
-
     res.json({
       ...stats,
       totalAlbumViews: Number(stats.totalAlbumViews || 0),
     });
   } catch (error) {
     console.error("Lỗi lấy thống kê dashboard:", error);
-
     res.status(500).json({
       message: "Không thể lấy thống kê dashboard.",
       error: error.message,
@@ -1088,7 +993,6 @@ app.get("/api/dashboard", verifyAdminToken, async (req, res) => {
 /* ==========================
     Cập nhật người
 ========================== */
-
 app.put(
   "/api/people/:id",
   verifyAdminToken,
@@ -1107,20 +1011,16 @@ app.put(
         securityQuestion,
         securityAnswer,
       } = req.body;
-
       if (!name || !name.trim()) {
         return res.status(400).json({
           success: false,
           message: "Họ tên không được để trống.",
         });
       }
-
       const normalizedBirthday =
         normalizeOptionalDate(birthday);
-
       const normalizedDeathDate =
         normalizeOptionalDate(deathDate);
-
       if (
         normalizedBirthday &&
         normalizedDeathDate &&
@@ -1131,7 +1031,6 @@ app.put(
           message: "Ngày mất không thể trước ngày sinh.",
         });
       }
-
       const currentResult = await pool.query(
         `
         SELECT
@@ -1142,24 +1041,18 @@ app.put(
         `,
         [req.params.id]
       );
-
       if (currentResult.rows.length === 0) {
         return res.status(404).json({
           success: false,
           message: "Không tìm thấy người cần sửa.",
         });
       }
-
       const currentPerson = currentResult.rows[0];
-
       const question =
         normalizeOptionalText(securityQuestion);
-
       const newAnswer =
         normalizeSecurityAnswer(securityAnswer);
-
       let storedAnswer = currentPerson.securityAnswer;
-
       if (!question) {
         storedAnswer = null;
       } else if (newAnswer) {
@@ -1171,7 +1064,6 @@ app.put(
             "Vui lòng nhập câu trả lời xác thực.",
         });
       }
-
       const updateResult = await pool.query(
         `
         UPDATE people
@@ -1206,21 +1098,18 @@ app.put(
           req.params.id,
         ]
       );
-
       if (updateResult.rows.length === 0) {
         return res.status(404).json({
           success: false,
           message: "Không tìm thấy người cần sửa.",
         });
       }
-
       res.json({
         success: true,
         message: "Cập nhật thành công.",
       });
     } catch (error) {
       console.error("Lỗi cập nhật người:", error);
-
       res.status(500).json({
         success: false,
         message: "Không thể cập nhật dữ liệu.",
@@ -1233,7 +1122,6 @@ app.put(
 /* ==========================
     Xóa người
 ========================== */
-
 app.delete(
   "/api/people/:id",
   verifyAdminToken,
@@ -1247,14 +1135,12 @@ app.delete(
         `,
         [req.params.id]
       );
-
       if (result.rows.length === 0) {
         return res.status(404).json({
           success: false,
           message: "Không tìm thấy người cần xóa.",
         });
       }
-
       res.json({
         success: true,
         message: "Xóa thành công.",
@@ -1262,7 +1148,6 @@ app.delete(
       });
     } catch (error) {
       console.error("Lỗi xóa người:", error);
-
       res.status(500).json({
         success: false,
         message: "Không thể xóa dữ liệu.",
@@ -1275,27 +1160,22 @@ app.delete(
 /* ==========================
     Đăng nhập Admin
 ========================== */
-
 app.post("/api/admin/login", async (req, res) => {
   try {
     const { username, password } = req.body;
-
     if (!username || !password) {
       return res.status(400).json({
         success: false,
         message: "Vui lòng nhập tài khoản và mật khẩu.",
       });
     }
-
     const validUsername = process.env.ADMIN_USERNAME || "admin";
-
     if (username !== validUsername) {
       return res.status(401).json({
         success: false,
         message: "Tài khoản hoặc mật khẩu không đúng.",
       });
     }
-
     await pool.query(`
       CREATE TABLE IF NOT EXISTS admin_passwords (
           id SERIAL PRIMARY KEY,
@@ -1303,17 +1183,13 @@ app.post("/api/admin/login", async (req, res) => {
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
-
     let passResult = await pool.query(
       `SELECT id, password_hash FROM admin_passwords ORDER BY id DESC LIMIT 1`
     );
-
     let currentPassHash;
-
     if (passResult.rowCount === 0) {
       const defaultPassword = process.env.ADMIN_PASSWORD || "admin123";
       currentPassHash = await bcrypt.hash(defaultPassword, 10);
-
       await pool.query(
         `INSERT INTO admin_passwords (password_hash) VALUES ($1)`,
         [currentPassHash]
@@ -1321,23 +1197,19 @@ app.post("/api/admin/login", async (req, res) => {
     } else {
       currentPassHash = passResult.rows[0].password_hash;
     }
-
     const isMatch = await bcrypt.compare(password, currentPassHash);
-
     if (!isMatch) {
       return res.status(401).json({
         success: false,
         message: "Tài khoản hoặc mật khẩu không đúng.",
       });
     }
-
     if (!process.env.JWT_SECRET) {
       return res.status(500).json({
         success: false,
         message: "Server chưa cấu hình JWT_SECRET.",
       });
     }
-
     const token = jwt.sign(
       {
         role: "admin",
@@ -1348,7 +1220,6 @@ app.post("/api/admin/login", async (req, res) => {
         expiresIn: "30d",
       }
     );
-
     return res.json({
       success: true,
       message: "Đăng nhập thành công.",
@@ -1367,13 +1238,11 @@ app.post("/api/admin/login", async (req, res) => {
 /* ==========================
     Xác thực album
 ========================== */
-
 app.post(
   "/api/people/public/:publicId/verify-album",
   async (req, res) => {
     try {
       const answer = normalizeSecurityAnswer(req.body.answer);
-
       const result = await pool.query(
         `
         SELECT
@@ -1385,37 +1254,31 @@ app.post(
         `,
         [req.params.publicId]
       );
-
       if (result.rows.length === 0) {
         return res.status(404).json({
           success: false,
           message: "Không tìm thấy người.",
         });
       }
-
       const person = result.rows[0];
-
       if (!person.album) {
         return res.status(404).json({
           success: false,
           message: "Người này chưa có album.",
         });
       }
-
       if (!person.securityQuestion) {
         return res.json({
           success: true,
           album: person.album,
         });
       }
-
       if (!answer) {
         return res.status(400).json({
           success: false,
           message: "Vui lòng nhập câu trả lời.",
         });
       }
-
       if (!person.securityAnswer) {
         return res.status(500).json({
           success: false,
@@ -1423,29 +1286,22 @@ app.post(
             "Câu hỏi xác thực chưa được cấu hình đầy đủ.",
         });
       }
-
       const correct = await bcrypt.compare(
         answer,
         person.securityAnswer
       );
-
       if (!correct) {
         return res.status(401).json({
           success: false,
           message: "Câu trả lời không chính xác.",
         });
       }
-
       return res.json({
         success: true,
         album: person.album,
       });
     } catch (error) {
-      console.error(
-        "Lỗi xác thực album bằng publicId:",
-        error
-      );
-
+      console.error("Lỗi xác thực album bằng publicId:", error);
       return res.status(500).json({
         success: false,
         message: "Không thể xác thực album.",
@@ -1460,7 +1316,6 @@ app.post(
   async (req, res) => {
     try {
       const answer = normalizeSecurityAnswer(req.body.answer);
-
       const result = await pool.query(
         `
         SELECT
@@ -1472,37 +1327,31 @@ app.post(
         `,
         [req.params.id]
       );
-
       if (result.rows.length === 0) {
         return res.status(404).json({
           success: false,
           message: "Không tìm thấy người.",
         });
       }
-
       const person = result.rows[0];
-
       if (!person.album) {
         return res.status(404).json({
           success: false,
           message: "Người này chưa có album.",
         });
       }
-
       if (!person.securityQuestion) {
         return res.json({
           success: true,
           album: person.album,
         });
       }
-
       if (!answer) {
         return res.status(400).json({
           success: false,
           message: "Vui lòng nhập câu trả lời.",
         });
       }
-
       if (!person.securityAnswer) {
         return res.status(500).json({
           success: false,
@@ -1510,26 +1359,22 @@ app.post(
             "Câu hỏi xác thực chưa được cấu hình đầy đủ.",
         });
       }
-
       const correct = await bcrypt.compare(
         answer,
         person.securityAnswer
       );
-
       if (!correct) {
         return res.status(401).json({
           success: false,
           message: "Câu trả lời không chính xác.",
         });
       }
-
       res.json({
         success: true,
         album: person.album,
       });
     } catch (error) {
       console.error("Lỗi xác thực album:", error);
-
       res.status(500).json({
         success: false,
         message: "Không thể xác thực album.",
@@ -1542,7 +1387,6 @@ app.post(
 /* ==========================
     API xuất Excel
 ========================== */
-
 app.get(
   "/api/admin/export-excel",
   verifyAdminToken,
@@ -1563,13 +1407,10 @@ app.get(
         FROM people
         ORDER BY id DESC
       `);
-
       const workbook = new ExcelJS.Workbook();
       workbook.creator = "Pixel Album";
       workbook.created = new Date();
-
       const worksheet = workbook.addWorksheet("Danh sách album");
-
       worksheet.columns = [
         { header: "STT", key: "stt", width: 8 },
         { header: "Họ và tên", key: "name", width: 28 },
@@ -1582,7 +1423,6 @@ app.get(
         { header: "Ảnh đại diện", key: "avatar", width: 45 },
         { header: "Liên kết album", key: "album", width: 45 },
       ];
-
       const headerRow = worksheet.getRow(1);
       headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
       headerRow.fill = {
@@ -1592,14 +1432,12 @@ app.get(
       };
       headerRow.alignment = { vertical: "middle", horizontal: "center" };
       headerRow.height = 25;
-
       const formatDate = (value) => {
         if (!value) return "";
         const date = new Date(value);
         if (Number.isNaN(date.getTime())) return value;
         return date.toLocaleDateString("vi-VN");
       };
-
       result.rows.forEach((person, index) => {
         worksheet.addRow({
           stt: index + 1,
@@ -1614,17 +1452,14 @@ app.get(
           album: person.album || "",
         });
       });
-
       worksheet.autoFilter = { from: "A1", to: "J1" };
       worksheet.views = [{ state: "frozen", ySplit: 1 }];
-
       worksheet.eachRow((row, rowNumber) => {
         row.alignment = {
           vertical: "middle",
           horizontal: rowNumber === 1 ? "center" : "left",
           wrapText: true,
         };
-
         row.eachCell((cell) => {
           cell.border = {
             top: { style: "thin", color: { argb: "FFD1D5DB" } },
@@ -1634,12 +1469,10 @@ app.get(
           };
         });
       });
-
       const buffer = await workbook.xlsx.writeBuffer();
       const fileName = `DanhSachAlbum-${new Date()
         .toISOString()
         .slice(0, 10)}.xlsx`;
-
       res.status(200);
       res.setHeader(
         "Content-Type",
@@ -1650,7 +1483,6 @@ app.get(
         `attachment; filename="${fileName}"`
       );
       res.setHeader("Content-Length", buffer.length);
-
       return res.send(Buffer.from(buffer));
     } catch (error) {
       console.error("Lỗi xuất Excel:", error);
@@ -1665,13 +1497,10 @@ app.get(
 /* ==========================
     API tăng lượt truy cập website
 ========================== */
-
 app.post("/api/visits", async (req, res) => {
   const client = await pool.connect();
-
   try {
     await client.query("BEGIN");
-
     const totalResult = await client.query(`
       INSERT INTO website_stats (id, visits)
       VALUES (1, 1)
@@ -1680,7 +1509,6 @@ app.post("/api/visits", async (req, res) => {
       SET visits = website_stats.visits + 1
       RETURNING visits
     `);
-
     await client.query(`
       INSERT INTO website_visit_daily (visit_date, visits)
       VALUES (
@@ -1691,9 +1519,7 @@ app.post("/api/visits", async (req, res) => {
       DO UPDATE
       SET visits = website_visit_daily.visits + 1
     `);
-
     await client.query("COMMIT");
-
     return res.json({
       visits: Number(totalResult.rows[0].visits),
     });
@@ -1711,7 +1537,6 @@ app.post("/api/visits", async (req, res) => {
 /* ==========================
     API lấy dữ liệu biểu đồ số lần truy cập web
 ========================== */
-
 app.get(
   "/api/admin/visit-chart",
   verifyAdminToken,
@@ -1724,7 +1549,6 @@ app.get(
         daysValue <= 365
           ? daysValue
           : 30;
-
       const result = await pool.query(
         `
         WITH date_range AS (
@@ -1747,7 +1571,6 @@ app.get(
         `,
         [days]
       );
-
       return res.json({
         days,
         data: result.rows.map((item) => ({
@@ -1767,7 +1590,6 @@ app.get(
 /* ==========================
     API lấy số lượt truy cập web
 ========================== */
-
 app.get("/api/visits", async (req, res) => {
   try {
     const result = await pool.query(`
@@ -1775,7 +1597,6 @@ app.get("/api/visits", async (req, res) => {
       FROM website_stats
       WHERE id = 1
     `);
-
     res.json({
       visits: Number(result.rows[0].visits),
     });
@@ -1790,48 +1611,38 @@ app.get("/api/visits", async (req, res) => {
 /* ==========================
     API ghi nhận số lượt truy cập album
 ========================== */
-
 app.post(
   "/api/people/public/:publicId/album-view",
   async (req, res) => {
     const client = await pool.connect();
-
     try {
       const { publicId } = req.params;
       const clientIp = getClientIp(req);
       const clientLocation = await getIpLocation(clientIp);
-
       const userAgent = req.headers["user-agent"] || "";
       const clientHints =
         req.body?.clientHints && typeof req.body.clientHints === "object"
           ? req.body.clientHints
           : {};
-
       const detected = deviceDetector.parse(userAgent);
       const browserInfo = detected?.client || {};
       const deviceInfo = detected?.device || {};
       const osInfo = detected?.os || {};
-
       const browser = browserInfo.name || "Không xác định";
       const browserVersion =
         clientHints.uaFullVersion || browserInfo.version || "";
-
       let deviceType =
         deviceInfo.type ||
         (clientHints.mobile === true ? "smartphone" : "desktop");
-
       deviceType = String(deviceType || "").trim().toLowerCase();
       const deviceVendor = String(deviceInfo.brand || "").trim();
       const deviceModel = String(
         deviceInfo.model || clientHints.model || ""
       ).trim();
-
       const os = osInfo.name || clientHints.platform || "Không xác định";
       const osVersion = osInfo.version || clientHints.platformVersion || "";
-
       const cpu = clientHints.architecture || "";
       const bitness = clientHints.bitness || "";
-
       let deviceTypeText;
       switch (deviceType) {
         case "smartphone":
@@ -1866,7 +1677,6 @@ app.post(
         default:
           deviceTypeText = "Máy tính";
       }
-
       let deviceName = "";
       if (deviceVendor && deviceModel) {
         if (deviceModel.toLowerCase().includes(deviceVendor.toLowerCase())) {
@@ -1891,7 +1701,6 @@ app.post(
       } else {
         deviceName = deviceTypeText;
       }
-
       const viewDetail = {
         ipAddress: clientIp,
         location: clientLocation,
@@ -1909,9 +1718,7 @@ app.post(
         clientHints,
         userAgent,
       };
-
       await client.query("BEGIN");
-
       const personResult = await client.query(
         `
         SELECT id, name, album, "albumViews"
@@ -1921,23 +1728,19 @@ app.post(
         `,
         [publicId]
       );
-
       if (personResult.rows.length === 0) {
         await client.query("ROLLBACK");
         return res.status(404).json({
           message: "Không tìm thấy album.",
         });
       }
-
       const person = personResult.rows[0];
-
       if (!person.album || !String(person.album).trim()) {
         await client.query("ROLLBACK");
         return res.status(400).json({
           message: "Người này chưa có liên kết album.",
         });
       }
-
       const updatedPerson = await client.query(
         `
         UPDATE people
@@ -1947,14 +1750,12 @@ app.post(
         `,
         [person.id]
       );
-
       await client.query(`
         INSERT INTO album_view_daily (view_date, views)
         VALUES ((NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh')::date, 1)
         ON CONFLICT (view_date)
         DO UPDATE SET views = album_view_daily.views + 1
       `);
-
       await client.query(
         `
         INSERT INTO album_view_by_person_daily (
@@ -2045,9 +1846,7 @@ app.post(
           clientLocation,
         ]
       );
-
       await client.query("COMMIT");
-
       return res.json({
         message: "Đã ghi nhận lượt xem album.",
         albumViews: Number(updatedPerson.rows[0]?.albumViews || 0),
@@ -2056,7 +1855,6 @@ app.post(
       try {
         await client.query("ROLLBACK");
       } catch {}
-
       console.error("Lỗi ghi nhận lượt xem album:", error);
       return res.status(500).json({
         message: "Không thể ghi nhận lượt xem album.",
@@ -2070,7 +1868,6 @@ app.post(
 /* ==========================
     API lấy số lượt truy cập album
 ========================== */
-
 app.get(
   "/api/admin/album-view-chart",
   verifyAdminToken,
@@ -2083,7 +1880,6 @@ app.get(
         requestedDays <= 365
           ? requestedDays
           : 30;
-
       const result = await pool.query(
         `
         WITH date_range AS (
@@ -2101,12 +1897,11 @@ app.get(
           COALESCE(album_view_daily.views, 0)::integer AS views
         FROM date_range
         LEFT JOIN album_view_daily
-          ON album_view_daily.view_date = date_range.visit_date
+          ON album_view_daily.view_date = date_range.view_date
         ORDER BY date_range.view_date ASC
         `,
         [days]
       );
-
       return res.status(200).json({
         days,
         data: result.rows.map((item) => ({
@@ -2126,7 +1921,6 @@ app.get(
 /* ==========================
     EVENTS - Sự kiện thủ công
 ========================== */
-
 app.get("/api/events", async (req, res) => {
   try {
     const result = await pool.query(`
@@ -2134,7 +1928,6 @@ app.get("/api/events", async (req, res) => {
       FROM events
       ORDER BY month ASC, day ASC, id ASC
     `);
-
     return res.json(result.rows);
   } catch (error) {
     console.error("Lỗi lấy danh sách sự kiện:", error);
@@ -2143,7 +1936,6 @@ app.get("/api/events", async (req, res) => {
     });
   }
 });
-
 app.get("/api/events/today", async (req, res) => {
   try {
     const result = await pool.query(`
@@ -2159,7 +1951,6 @@ app.get("/api/events/today", async (req, res) => {
         )::integer
       ORDER BY id ASC
     `);
-
     return res.json(result.rows);
   } catch (error) {
     console.error("Lỗi lấy sự kiện hôm nay:", error);
@@ -2168,7 +1959,6 @@ app.get("/api/events/today", async (req, res) => {
     });
   }
 });
-
 app.get(
   "/api/admin/events",
   verifyAdminToken,
@@ -2179,7 +1969,6 @@ app.get(
         FROM events
         ORDER BY month ASC, day ASC, id ASC
       `);
-
       return res.json(result.rows);
     } catch (error) {
       console.error("Lỗi lấy danh sách sự kiện admin:", error);
@@ -2189,7 +1978,6 @@ app.get(
     }
   }
 );
-
 app.post(
   "/api/admin/events",
   verifyAdminToken,
@@ -2199,25 +1987,21 @@ app.post(
       const month = Number(req.body.month);
       const title = String(req.body.title || "").trim();
       const icon = String(req.body.icon || "📅").trim();
-
       if (!Number.isInteger(day) || day < 1 || day > 31) {
         return res.status(400).json({
           message: "Ngày không hợp lệ.",
         });
       }
-
       if (!Number.isInteger(month) || month < 1 || month > 12) {
         return res.status(400).json({
           message: "Tháng không hợp lệ.",
         });
       }
-
       if (!title) {
         return res.status(400).json({
           message: "Tiêu đề sự kiện không được để trống.",
         });
       }
-
       const result = await pool.query(
         `
         INSERT INTO events (day, month, title, icon)
@@ -2226,7 +2010,6 @@ app.post(
         `,
         [day, month, title, icon || "📅"]
       );
-
       return res.status(201).json({
         message: "Thêm sự kiện thành công.",
         event: result.rows[0],
@@ -2239,7 +2022,6 @@ app.post(
     }
   }
 );
-
 app.put(
   "/api/admin/events/:id",
   verifyAdminToken,
@@ -2250,31 +2032,26 @@ app.put(
       const month = Number(req.body.month);
       const title = String(req.body.title || "").trim();
       const icon = String(req.body.icon || "📅").trim();
-
       if (!Number.isInteger(id) || id <= 0) {
         return res.status(400).json({
           message: "ID sự kiện không hợp lệ.",
         });
       }
-
       if (!Number.isInteger(day) || day < 1 || day > 31) {
         return res.status(400).json({
           message: "Ngày không hợp lệ.",
         });
       }
-
       if (!Number.isInteger(month) || month < 1 || month > 12) {
         return res.status(400).json({
           message: "Tháng không hợp lệ.",
         });
       }
-
       if (!title) {
         return res.status(400).json({
           message: "Tiêu đề sự kiện không được để trống.",
         });
       }
-
       const result = await pool.query(
         `
         UPDATE events
@@ -2289,13 +2066,11 @@ app.put(
         `,
         [day, month, title, icon || "📅", id]
       );
-
       if (!result.rows[0]) {
         return res.status(404).json({
           message: "Không tìm thấy sự kiện.",
         });
       }
-
       return res.json({
         message: "Cập nhật sự kiện thành công.",
         event: result.rows[0],
@@ -2308,20 +2083,17 @@ app.put(
     }
   }
 );
-
 app.delete(
   "/api/admin/events/:id",
   verifyAdminToken,
   async (req, res) => {
     try {
       const id = Number(req.params.id);
-
       if (!Number.isInteger(id) || id <= 0) {
         return res.status(400).json({
           message: "ID sự kiện không hợp lệ.",
         });
       }
-
       const result = await pool.query(
         `
         DELETE FROM events
@@ -2330,13 +2102,11 @@ app.delete(
         `,
         [id]
       );
-
       if (!result.rows[0]) {
         return res.status(404).json({
           message: "Không tìm thấy sự kiện.",
         });
       }
-
       return res.json({
         message: "Xóa sự kiện thành công.",
       });
@@ -2352,20 +2122,17 @@ app.delete(
 /* ==========================
     API lấy lịch sử xem của 1 album
 ========================== */
-
 app.get(
   "/api/admin/people/:id/album-history",
   verifyAdminToken,
   async (req, res) => {
     try {
       const personId = Number(req.params.id);
-
       if (!Number.isInteger(personId) || personId <= 0) {
         return res.status(400).json({
           message: "ID album không hợp lệ.",
         });
       }
-
       const result = await pool.query(
         `
         SELECT
@@ -2381,7 +2148,6 @@ app.get(
         `,
         [personId]
       );
-
       const data = result.rows.map((item) => ({
         date: item.date,
         views: Number(item.views) || 0,
@@ -2390,12 +2156,10 @@ app.get(
         viewTimes: Array.isArray(item.viewTimes) ? item.viewTimes : [],
         viewDetails: Array.isArray(item.viewDetails) ? item.viewDetails : [],
       }));
-
       const totalViews = data.reduce(
         (total, item) => total + item.views,
         0
       );
-
       return res.json({
         totalViews,
         totalDays: data.length,
@@ -2413,70 +2177,59 @@ app.get(
 /* ==========================================================
     1. API LƯU XÁC NHẬN THAM DỰ + LỜI CHÚC
 ========================================================== */
-
 app.post("/api/graduation-rsvp", async (req, res) => {
   try {
     const invitationId = String(
       req.body?.invitationId || req.body?.invitation_id || "graduation-01"
     ).trim();
-
     const name = String(req.body?.name || "").trim();
     const attendance = String(req.body?.attendance || "").trim();
     const guests = String(req.body?.guests || "alone").trim();
     const wishes = String(req.body?.wishes || "").trim();
-
     if (!invitationId) {
       return res.status(400).json({
         success: false,
         message: "Thiếu thông tin thiệp mời.",
       });
     }
-
     if (!name) {
       return res.status(400).json({
         success: false,
         message: "Vui lòng nhập họ và tên.",
       });
     }
-
     if (!["yes", "maybe", "no"].includes(attendance)) {
       return res.status(400).json({
         success: false,
         message: "Trạng thái tham dự không hợp lệ.",
       });
     }
-
     if (!["alone", "plus_one", "group"].includes(guests)) {
       return res.status(400).json({
         success: false,
         message: "Thông tin người đi cùng không hợp lệ.",
       });
     }
-
     if (invitationId.length > 100) {
       return res.status(400).json({
         success: false,
         message: "ID thiệp không hợp lệ.",
       });
     }
-
     if (name.length > 150) {
       return res.status(400).json({
         success: false,
         message: "Họ tên quá dài.",
       });
     }
-
     if (wishes.length > 2000) {
       return res.status(400).json({
         success: false,
         message: "Lời chúc không được vượt quá 2000 ký tự.",
       });
     }
-
     const ipAddress = getClientIp(req);
     const userAgent = req.headers["user-agent"] || null;
-
     const result = await pool.query(
       `
       INSERT INTO graduation_rsvps (
@@ -2510,7 +2263,6 @@ app.post("/api/graduation-rsvp", async (req, res) => {
         userAgent,
       ]
     );
-
     return res.status(201).json({
       success: true,
       message: "Xác nhận tham dự đã được gửi thành công.",
@@ -2528,13 +2280,11 @@ app.post("/api/graduation-rsvp", async (req, res) => {
 /* ==========================================================
     2. API LẤY DANH SÁCH RSVP CHO ADMIN
 ========================================================== */
-
 app.get("/api/admin/graduation-rsvps", async (req, res) => {
   try {
     const invitationId = String(
       req.query?.invitationId || req.query?.invitation_id || ""
     ).trim();
-
     let query = `
       SELECT
         id,
@@ -2548,18 +2298,13 @@ app.get("/api/admin/graduation-rsvps", async (req, res) => {
         submitted_at AS "submittedAt"
       FROM graduation_rsvps
     `;
-
     const params = [];
-
     if (invitationId) {
       query += ` WHERE invitation_id = $1 `;
       params.push(invitationId);
     }
-
     query += ` ORDER BY submitted_at DESC `;
-
     const result = await pool.query(query, params);
-
     return res.status(200).json({
       success: true,
       total: result.rowCount,
@@ -2578,20 +2323,17 @@ app.get("/api/admin/graduation-rsvps", async (req, res) => {
 /* ==========================================================
     3. API XÓA RSVP
 ========================================================== */
-
 app.delete(
   "/api/admin/graduation-rsvps/:id",
   async (req, res) => {
     try {
       const { id } = req.params;
-
       if (!id || isNaN(Number(id))) {
         return res.status(400).json({
           success: false,
           message: "ID phản hồi không hợp lệ.",
         });
       }
-
       const deleteResult = await pool.query(
         `
         DELETE FROM graduation_rsvps
@@ -2600,14 +2342,12 @@ app.delete(
         `,
         [id]
       );
-
       if (deleteResult.rowCount === 0) {
         return res.status(404).json({
           success: false,
           message: "Không tìm thấy phản hồi cần xóa.",
         });
       }
-
       return res.status(200).json({
         success: true,
         message: "Đã xóa phản hồi thành công.",
@@ -2627,25 +2367,21 @@ app.delete(
 /* ==========================================================
     API ĐỔI MẬT KHẨU QUẢN TRỊ
 ========================================================== */
-
 app.put("/api/admin/change-password", async (req, res) => {
   try {
     const { oldPassword, newPassword } = req.body;
-
     if (!oldPassword || !newPassword) {
       return res.status(400).json({
         success: false,
         message: "Vui lòng nhập đầy đủ mật khẩu cũ và mới.",
       });
     }
-
     if (newPassword.length < 6) {
       return res.status(400).json({
         success: false,
         message: "Mật khẩu mới phải có ít nhất 6 ký tự.",
       });
     }
-
     await pool.query(`
       CREATE TABLE IF NOT EXISTS admin_passwords (
           id SERIAL PRIMARY KEY,
@@ -2653,18 +2389,14 @@ app.put("/api/admin/change-password", async (req, res) => {
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
-
     let passResult = await pool.query(
       `SELECT id, password_hash FROM admin_passwords ORDER BY id DESC LIMIT 1`
     );
-
     let currentPassHash;
     let recordId;
-
     if (passResult.rowCount === 0) {
       const defaultPassword = "admin123";
       currentPassHash = await bcrypt.hash(defaultPassword, 10);
-
       const insertRes = await pool.query(
         `INSERT INTO admin_passwords (password_hash) VALUES ($1) RETURNING id, password_hash`,
         [currentPassHash]
@@ -2674,7 +2406,6 @@ app.put("/api/admin/change-password", async (req, res) => {
       recordId = passResult.rows[0].id;
       currentPassHash = passResult.rows[0].password_hash;
     }
-
     const isMatch = await bcrypt.compare(oldPassword, currentPassHash);
     if (!isMatch) {
       return res.status(400).json({
@@ -2682,13 +2413,11 @@ app.put("/api/admin/change-password", async (req, res) => {
         message: "Mật khẩu hiện tại không chính xác. (Nếu chưa đổi lần nào, mật khẩu mặc định là admin123)",
       });
     }
-
     const newPasswordHash = await bcrypt.hash(newPassword, 10);
     await pool.query(
       `UPDATE admin_passwords SET password_hash = $1, updated_at = NOW() WHERE id = $2`,
       [newPasswordHash, recordId]
     );
-
     return res.status(200).json({
       success: true,
       message: "Đổi mật khẩu thành công.",
@@ -2706,7 +2435,6 @@ app.put("/api/admin/change-password", async (req, res) => {
 /* ==========================
     Middleware xử lý lỗi CORS
 ========================== */
-
 app.use((error, req, res, next) => {
   if (error.message.includes("CORS")) {
     return res.status(403).json({
@@ -2720,7 +2448,6 @@ app.use((error, req, res, next) => {
 /* ==========================
     API lấy album được xem hôm nay
 ========================== */
-
 app.get(
   "/api/admin/album-views",
   verifyAdminToken,
@@ -2728,7 +2455,6 @@ app.get(
     try {
       const requestedDate = String(req.query.date || "").trim();
       let selectedDate = requestedDate;
-
       if (!/^\d{4}-\d{2}-\d{2}$/.test(selectedDate)) {
         const todayResult = await pool.query(`
           SELECT
@@ -2737,10 +2463,8 @@ app.get(
               'YYYY-MM-DD'
             ) AS date
         `);
-
         selectedDate = todayResult.rows[0].date;
       }
-
       const result = await pool.query(
         `
         SELECT
@@ -2768,7 +2492,6 @@ app.get(
         `,
         [selectedDate]
       );
-
       const data = result.rows.map((person) => ({
         ...person,
         todayViews: Number(person.todayViews) || 0,
@@ -2776,12 +2499,10 @@ app.get(
         viewTimes: Array.isArray(person.viewTimes) ? person.viewTimes : [],
         viewDetails: Array.isArray(person.viewDetails) ? person.viewDetails : [],
       }));
-
       const totalViews = data.reduce(
         (total, person) => total + Number(person.todayViews || 0),
         0
       );
-
       return res.json({
         date: selectedDate,
         totalAlbums: data.length,
@@ -2800,7 +2521,6 @@ app.get(
 /* ==========================
     API lấy thông báo cho Home
 ========================== */
-
 app.get("/api/announcement", async (req, res) => {
   try {
     const result = await pool.query(`
@@ -2811,14 +2531,12 @@ app.get("/api/announcement", async (req, res) => {
       WHERE id = 1
       LIMIT 1
     `);
-
     if (result.rows.length === 0) {
       return res.json({
         content: "",
         updatedAt: null,
       });
     }
-
     return res.json({
       content: result.rows[0].content || "",
       updatedAt: result.rows[0].updatedAt || null,
@@ -2834,14 +2552,12 @@ app.get("/api/announcement", async (req, res) => {
 /* ==========================
     API admin cập nhật thông báo
 ========================== */
-
 app.put(
   "/api/admin/announcement",
   verifyAdminToken,
   async (req, res) => {
     try {
       const content = String(req.body?.content || "").trim();
-
       const result = await pool.query(
         `
         INSERT INTO announcements (
@@ -2864,7 +2580,6 @@ app.put(
         `,
         [content || null]
       );
-
       return res.json({
         message: content
           ? "Đã cập nhật thông báo."
@@ -2884,12 +2599,19 @@ app.put(
 /* ==========================
     Khởi động server
 ========================== */
-
 const PORT = process.env.PORT || 5000;
-
 async function startServer() {
   try {
     await initializeDatabase();
+    
+    // Tự động kiểm tra và khởi tạo bảng app_stats trước khi mở cổng
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS app_stats (
+        stat_date DATE PRIMARY KEY DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date,
+        visits INT DEFAULT 0,
+        exports INT DEFAULT 0
+      );
+    `);
 
     app.listen(PORT, "0.0.0.0", () => {
       console.log(
@@ -2904,5 +2626,4 @@ async function startServer() {
     process.exit(1);
   }
 }
-
 startServer();
