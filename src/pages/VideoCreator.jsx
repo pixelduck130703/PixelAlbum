@@ -16,10 +16,11 @@ import {
 } from '../services/aiVoiceService';
 import { generateGrokMotionVideo } from '../services/grokVideoService';
 
-// ĐỊNH TUYẾN URL GỌI VÀO SERVER EXPRESS (PORT 5000 KHI CHẠY LOCALHOST)
+// ĐỊNH TUYẾN URL GỌI VÀO SERVER EXPRESS (THAY LINK PRODUCTION BACKEND CỦA BẠN VÀO ĐÂY NẾU CẦN)
+const PRODUCTION_BACKEND_URL = ''; 
 const API_BASE_URL = window.location.hostname === 'localhost' 
     ? 'http://localhost:5000' 
-    : '';
+    : (import.meta.env?.VITE_API_URL || PRODUCTION_BACKEND_URL);
 
 // KHO NHẠC MẪU CÓ SẴN (Trong thư mục public/music/)
 const DEFAULT_PRESET_BGMS = [
@@ -76,9 +77,12 @@ export default function VideoCreator() {
         try {
             const res = await fetch(`${API_BASE_URL}/api/stats`);
             if (res.ok) {
-                const data = await res.json();
-                setTotalVisits(data.totalVisits || 0);
-                setTodayExports(data.todayExports || 0);
+                const contentType = res.headers.get("content-type");
+                if (contentType && contentType.includes("application/json")) {
+                    const data = await res.json();
+                    setTotalVisits(data.totalVisits || 0);
+                    setTodayExports(data.todayExports || 0);
+                }
             }
         } catch (e) {
             console.error('Không thể tải dữ liệu thống kê từ database:', e);
@@ -112,10 +116,10 @@ export default function VideoCreator() {
         return () => window.removeEventListener('resize', checkDevice);
     }, []);
 
-    // TAB ĐANG CHỌN (images | divide | video)
+    // TAB ĐANG CHỌN (images | divide | video)[cite: 5]
     const [activeTab, setActiveTab] = useState('images');
 
-    // MODAL POPUP CẮT ẢNH
+    // MODAL POPUP CẮT ẢNH[cite: 5]
     const [isDivideModalOpen, setIsDivideModalOpen] = useState(false);
     const [divideSourceImage, setDivideSourceImage] = useState(null);
     const [divideSourceName, setDivideSourceName] = useState('');
@@ -127,12 +131,12 @@ export default function VideoCreator() {
     const [isDraggingOverDivideModal, setIsDraggingOverDivideModal] = useState(false);
     const divideFileInputRef = useRef(null);
 
-    // KÉO DI CHUYỂN CỬA SỔ POPUP
+    // KÉO DI CHUYỂN CỬA SỔ POPUP[cite: 5]
     const [modalPos, setModalPos] = useState({ x: 0, y: 0 });
     const isDraggingWindowRef = useRef(false);
     const dragStartPosRef = useRef({ startX: 0, startY: 0, initialX: 0, initialY: 0 });
 
-    // POPUP CẢNH BÁO TƯ LIỆU ĐÃ CÓ ẢNH
+    // POPUP CẢNH BÁO TƯ LIỆU ĐÃ CÓ ẢNH[cite: 5]
     const [showMediaExistPopup, setShowMediaExistPopup] = useState(false);
     const pendingPiecesRef = useRef([]);
 
@@ -140,7 +144,7 @@ export default function VideoCreator() {
     const [mediaFiles, setMediaFiles] = useState([]);
     const [aspectRatio, setAspectRatio] = useState('9:16');
 
-    // Kéo thả files
+    // Kéo thả files[cite: 5]
     const [isDraggingOverUpload, setIsDraggingOverUpload] = useState(false);
     const [isDraggingOverVoice, setIsDraggingOverVoice] = useState(false);
     const [isDraggingOverBgm, setIsDraggingOverBgm] = useState(false);
@@ -151,7 +155,7 @@ export default function VideoCreator() {
         'Người mẫu mỉm cười nhẹ, xoay nhẹ người sang trái khoe trọn form dáng trang phục, vạt áo cử động tự nhiên mượt mà.'
     );
 
-    // xAI Grok API States
+    // xAI Grok API States[cite: 5]
     const [xaiApiKey, setXaiApiKey] = useState(
         localStorage.getItem('CUSTOM_XAI_KEY') || ''
     );
@@ -264,7 +268,7 @@ export default function VideoCreator() {
         }
     }, [bgmVolume]);
 
-    // KÉO DI CHUYỂN CỬA SỔ POPUP
+    // KÉO DI CHUYỂN CỬA SỔ POPUP[cite: 5]
     useEffect(() => {
         const handleMouseMove = (e) => {
             if (!isDraggingWindowRef.current) return;
@@ -1235,14 +1239,14 @@ export default function VideoCreator() {
 
         stopAllActivities();
 
-        // NẾU CHƯA CÓ KỊCH BẢN HOẶC CẦN NẠP VOICE/CẮT ẢNH -> HIỂN THỊ POPUP LOADING QUÁ TRÌNH NHƯ LÚC ẤN PREVIEW
+        // HIỂN THỊ POPUP QUÁ TRÌNH (GIỐNG PREVIEW) NẾU DỮ LIỆU CHƯA NẠP SẴN
         const needsScript = voiceSourceType === 'ai' && !thaiScript.trim();
         const needsVoice = voiceSourceType === 'ai';
         const needsDivide = mediaFiles.length === 0 && divideSourceImage;
 
         if (needsScript || needsVoice || needsDivide) {
             setIsPreviewPreparing(true);
-            setPreparingStatusText('Đang khởi tạo dữ liệu render video...');
+            setPreparingStatusText('Đang chuẩn bị dữ liệu render video...');
         }
 
         setProgress(0);
@@ -1251,7 +1255,7 @@ export default function VideoCreator() {
         try {
             const { mixer, renderer, audioStream, targetDuration, aiTimeline, readyMedia } = await prepareSession(false);
             
-            // Dữ liệu đã chuẩn bị xong -> đóng popup chuẩn bị và chuyển sang chế độ rendering
+            // Đóng popup chuẩn bị, chuyển sang thanh progress render thực tế
             setIsPreviewPreparing(false);
             setRendering(true);
 
@@ -1271,7 +1275,7 @@ export default function VideoCreator() {
                     setRendering(false);
                     setProgress(100);
 
-                    // GHI NHẬN VIDEO XUẤT RA VÀO DATABASE POSTGRESQL & TỰ ĐỘNG CẬP NHẬT GIAO DIỆN
+                    // GHI NHẬN SỐ VIDEO ĐƯỢC XUẤT RA VÀO DATABASE
                     try {
                         const res = await fetch(`${API_BASE_URL}/api/stats/export`, { method: 'POST' });
                         if (res.ok) {
@@ -1631,7 +1635,7 @@ export default function VideoCreator() {
                 </div>
             )}
 
-            {/* POPUP THÔNG BÁO: ĐANG TẠO VIDEO, VUI LÒNG CHỜ (DÙNG CHO CẢ PREVIEW LẪN RENDER BAN ĐẦU) */}
+            {/* POPUP THÔNG BÁO: ĐANG TẠO VIDEO, VUI LÒNG CHỜ (DÙNG CHUNG CHO PREVIEW VÀ RENDER) */}
             {isPreviewPreparing && (
                 <div style={styles.loadingOverlay}>
                     <div style={styles.loadingModal}>
@@ -1745,7 +1749,7 @@ export default function VideoCreator() {
                                     setIsDivideModalOpen(true);
                                 }}
                             >
-                                ✂ Cắt ảnh
+                                ✂️ Cắt ảnh
                             </button>
 
                             <button
@@ -1810,7 +1814,7 @@ export default function VideoCreator() {
                                         style={styles.clearAllBtn}
                                         title="Xóa tất cả ảnh/video đã tải lên"
                                     >
-                                        🗑 Xóa tất cả ({mediaFiles.length})
+                                        🗑️ Xóa tất cả ({mediaFiles.length})
                                     </button>
                                 </div>
 
@@ -2306,7 +2310,7 @@ export default function VideoCreator() {
                                         style={{ display: 'none' }}
                                         onChange={handleVoiceUpload}
                                     />
-                                    <span style={{ fontSize: 24 }}>🎙</span>
+                                    <span style={{ fontSize: 24 }}>🎙️</span>
                                     <div style={{ flex: 1, minWidth: 0 }}>
                                         <div style={{ fontSize: 13.5, fontWeight: 600, color: voiceName ? '#0284c7' : '#334155', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                             {voiceName ? `✓ ${voiceName}` : 'Bấm để chọn hoặc kéo thả file âm thanh vào đây'}
@@ -2642,10 +2646,10 @@ export default function VideoCreator() {
                     </div>
                 </div>
 
-                {/* CỘT PHẢI: KHU VỰC PREVIEW VIDEO (VIDEO CHÍNH GIỮA TUYỆT ĐỐI - THỐNG KÊ CĂN PHẢI GỌN GÀNG) */}
+                {/* CỘT PHẢI: KHU VỰC PREVIEW VIDEO (VIDEO CHÍNH GIỮA TUYỆT ĐỐI - THỐNG KÊ THU GỌN BÊN PHẢI) */}
                 <div style={styles.previewStage}>
                     <div style={styles.stageCanvasWrapper}>
-                        {/* 1. KHUNG MOCKUP VIDEO CĂN CHÍNH GIỮA TÂM TUYỆT ĐỐI BẰNG ABSOLUTE */}
+                        {/* 1. KHUNG MOCKUP VIDEO CĂN CHÍNH GIỮA TÂM TUYỆT ĐỐI */}
                         <div
                             style={{
                                 ...styles.mockupContainer,
@@ -2688,13 +2692,13 @@ export default function VideoCreator() {
                             )}
                         </div>
 
-                        {/* 2. Ô THỐNG KÊ THU GỌN BÊN PHẢI (WIDTH 175PX, TÁCH BIỆT HOÀN TOÀN KHÔNG ĐÈ LÊN VIDEO) */}
+                        {/* 2. Ô THỐNG KÊ THU GỌN GÓC PHẢI (WIDTH 175PX, HOÀN TOÀN KHÔNG ĐÈ LÊN VIDEO) */}
                         <aside style={styles.statsPanelAside}>
                             <div style={styles.statsCard}>
                                 <div style={styles.statsItemBox}>
                                     <div style={styles.statsIconBoxBlue}>👀</div>
                                     <div style={{ flex: 1, minWidth: 0 }}>
-                                        <div style={styles.statsLabel}>Lượt truy cập</div>
+                                        <div style={styles.statsLabel}>Tổng lượt xem</div>
                                         <div style={styles.statsValuePrimary}>
                                             {totalVisits.toLocaleString('vi-VN')}
                                         </div>
@@ -2704,7 +2708,7 @@ export default function VideoCreator() {
                                 <div style={styles.statsItemBox}>
                                     <div style={styles.statsIconBoxGreen}>🎬</div>
                                     <div style={{ flex: 1, minWidth: 0 }}>
-                                        <div style={styles.statsLabel}>Đã xuất hôm nay</div>
+                                        <div style={styles.statsLabel}>Video xuất hôm nay</div>
                                         <div style={styles.statsValueSuccess}>
                                             {todayExports.toLocaleString('vi-VN')}
                                         </div>
@@ -3650,19 +3654,15 @@ const styles = {
         boxSizing: 'border-box',
         overflowY: 'auto',
     },
-
-    // BỐ CỤC CHỨA KHUNG VIDEO VÀ THỐNG KÊ (VIDEO Ở CHÍNH GIỮA TÂM)
     stageCanvasWrapper: {
         flex: 1,
         width: '100%',
-        minHeight: 0,
-        position: 'relative',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        minHeight: 0,
+        position: 'relative',
     },
-
-    // KHUNG MOCKUP ĐIỆN THOẠI CĂN GIỮA TUYỆT ĐỐI (KHÔNG BỊ LỆCH BỞI BẢNG BÊN PHẢI)
     mockupContainer: {
         position: 'absolute',
         left: '50%',
@@ -3681,29 +3681,24 @@ const styles = {
         willChange: 'width, height',
         zIndex: 5,
     },
-
     aspectRatio916: {
         height: 'calc(100vh - 310px)',
         width: 'calc((100vh - 310px) * 9 / 16)',
         maxWidth: '100%',
         borderRadius: 22,
     },
-
     aspectRatio34: {
         height: 'calc(100vh - 310px)',
         width: 'calc((100vh - 310px) * 3 / 4)',
         maxWidth: '100%',
         borderRadius: 16,
     },
-
-    // GIỮ NGUYÊN KÍCH THƯỚC CHUẨN CỦA TỈ LỆ 1:1
     aspectRatio11: {
         height: 'calc(100vh - 310px)',
         width: 'calc(100vh - 310px)',
         maxWidth: '100%',
         borderRadius: 16,
     },
-
     mockupScreen: {
         width: '100%',
         height: '100%',
@@ -3736,8 +3731,6 @@ const styles = {
         boxSizing: 'border-box',
         backgroundColor: '#ffffff',
     },
-
-    // THU NHỎ BẢNG THỐNG KÊ (WIDTH 175PX, ĐẶT SÁT MÉP PHẢI, HOÀN TOÀN TÁCH BIỆT)
     statsPanelAside: {
         position: 'absolute',
         right: 16,
@@ -3818,7 +3811,6 @@ const styles = {
         letterSpacing: -0.5,
         lineHeight: 1.1,
     },
-
     timelineScrubberCard: {
         width: '100%',
         maxWidth: 580,
