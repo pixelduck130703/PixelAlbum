@@ -206,7 +206,7 @@ async function generateGeminiTtsSpeech(text, voiceName = 'Orus', apiKey) {
   }
 
   // Một hướng dẫn đọc chung cho tất cả giọng Gemini.
-  const expression = 'An energetic and persuasive male voice for fashion product review, upbeat tempo, confident and enthusiastic tone, engaging style for e-commerce promotion.';
+  const expression = 'Dynamic fashion review voice, modern Thai e-commerce style, upbeat rhythm, highly confident, friendly yet aggressive selling tone, sharp and engaging pronunciation.';
 
   let modelsToTry = ['gemini-2.5-flash', 'gemini-3.8-flash-tts', 'gemini-2.0-flash'];
   try {
