@@ -1,4 +1,3 @@
-// src/services/aiVoiceService.js
 export const VOICE_PROVIDERS = [
   { id: 'gemini', name: 'Google AI Studio' },
   { id: 'elevenlabs', name: 'ElevenLabs' },
@@ -11,70 +10,70 @@ export const GEMINI_TTS_VOICES = [
     name: 'Sadaltager (Nam - Tự nhiên, rõ chữ, cao độ vừa)', 
     provider: 'gemini', 
     gender: 'Male',
-    expression: 'Speak with a clear, confident, vibrant, authentic retail sales tone with natural Thai pacing and engaging emphasis.'
+
   },
   { 
     id: 'Aoede', 
     name: 'Aoede (Nữ - Giọng cao, nhấn nhá TikTok, cực hút khách)', 
     provider: 'gemini', 
     gender: 'Female',
-    expression: 'Speak with a high-pitched, vibrant, lively, upbeat Thai commercial sales cadence. Clear articulation, expressive emphasis, and enthusiastic fast-paced delivery.'
+
   },
   { 
     id: 'Kore', 
     name: 'Kore (Nữ - Trong trẻo, thanh lịch, thời trang Lookbook)', 
     provider: 'gemini', 
     gender: 'Female',
-    expression: 'Speak with a clear, bright, sweet, elegant commercial tone. Clear pronunciation, smooth rhythm, and sophisticated fashion retail emphasis.'
+
   },
   { 
     id: 'Zephyr', 
     name: 'Zephyr (Nữ - Tươi tắn, trẻ trung, tự nhiên sôi nổi)', 
     provider: 'gemini', 
     gender: 'Female',
-    expression: 'Speak with a cheerful, energetic, youthful, natural tone with lively rhythm and clear Thai diction.'
+
   },
   { 
     id: 'Leda', 
     name: 'Leda (Nữ - Ngọt ngào, truyền cảm, cuốn hút)', 
     provider: 'gemini', 
     gender: 'Female',
-    expression: 'Speak with a warm, melodic, attractive, soft-spoken yet persuasive commercial fashion advertising tone.'
+
   },
   { 
     id: 'Calliope', 
     name: 'Calliope (Nữ - Phát thanh viên, sắc sảo, dứt khoát)', 
     provider: 'gemini', 
     gender: 'Female',
-    expression: 'Speak with a professional, sharp, confident, broadcast-quality clear articulation with promotional punchiness.'
+
   },
   { 
     id: 'Puck', 
     name: 'Puck (Nam - Giọng cao năng động, thúc giục chốt đơn)', 
     provider: 'gemini', 
     gender: 'Male',
-    expression: 'Speak with an upbeat, fast-paced, enthusiastic retail commercial tone. High energy, sharp emphasis, and compelling call-to-action.'
+
   },
   { 
     id: 'Orus', 
     name: 'Orus (Nam - Tự tin, phong cách thể thao, nam tính trẻ trung)', 
     provider: 'gemini', 
     gender: 'Male',
-    expression: 'Speak with a confident, modern, vibrant, crisp commercial tone suitable for streetwear and active menswear.'
+
   },
   { 
     id: 'Fenrir', 
     name: 'Fenrir (Nam - Dứt khoát, uy lực, mạnh mẽ)', 
     provider: 'gemini', 
     gender: 'Male',
-    expression: 'Speak with a bold, firm, punchy, persuasive voice with crisp consonants and impactful sales urgency.'
+
   },
   { 
     id: 'Charon', 
     name: 'Charon (Nam - Trầm ấm, sang trọng, thương hiệu cao cấp)', 
     provider: 'gemini', 
     gender: 'Male',
-    expression: 'Speak with a deep, sophisticated, calm, luxurious promotional tone for premium fashion.'
+
   },
 ];
 
@@ -205,8 +204,8 @@ async function generateGeminiTtsSpeech(text, voiceName = 'Sadaltager', apiKey) {
     throw new Error('Vui lòng nhập API Key cho Google AI Studio!');
   }
 
-  const targetVoiceObj = GEMINI_TTS_VOICES.find((v) => v.id === voiceName);
-  const expression = targetVoiceObj?.expression || 'Speak with a clear, vibrant, authentic retail sales tone with natural Thai pacing.';
+  // Một hướng dẫn đọc chung cho tất cả giọng Gemini.
+  const expression = 'An energetic and persuasive male voice for fashion product review, upbeat tempo, confident and enthusiastic tone, engaging style for e-commerce promotion.';
 
   let modelsToTry = ['gemini-2.5-flash', 'gemini-3.8-flash-tts', 'gemini-2.0-flash'];
   try {
@@ -518,7 +517,7 @@ export async function generateThaiScriptFromImage(imageUrl, apiKey = '', extraUs
   for (const model of availableModels) {
     try {
       const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${cleanKey}`;
-      
+
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 12000);
 

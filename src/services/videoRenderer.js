@@ -1,4 +1,3 @@
-// src/services/videoRenderer.js
 export class VideoRenderer {
   constructor(canvas, { width = 720, height = 1280 } = {}) {
     this.canvas = canvas;
@@ -37,7 +36,8 @@ export class VideoRenderer {
     const progress = this.quantizeProgress(rawProgress, durationSec);
     let activeEffect = effect;
     if (effect === 'dynamic') {
-      const dynamicList = ['kenburns', 'zoomout', 'pan', 'pulse', 'flash', 'spin'];
+      // Mỗi ảnh một hiệu ứng; lặp lại sau mỗi 4 ảnh.
+      const dynamicList = ['kenburns', 'zoomout', 'panleft', 'panright'];
       activeEffect = dynamicList[slideIndex % dynamicList.length];
     }
 
@@ -61,6 +61,19 @@ export class VideoRenderer {
       ctx.translate(originX, originY);
       ctx.scale(scale, scale);
       ctx.translate(-originX, -originY);
+      this.drawImageCover(img);
+    } else if (activeEffect === 'panleft' || activeEffect === 'panright' ||
+               activeEffect === 'turnleft' || activeEffect === 'turnright') {
+      // Lia ngang: giữ ảnh thẳng, không xoay và không dịch theo chiều dọc.
+      const direction = (activeEffect === 'panleft' || activeEffect === 'turnleft') ? -1 : 1;
+      const scale = 1.15;
+      const safeProgress = Math.min(Math.max(progress, 0), 1);
+      // Giữ biên độ nhỏ hơn phần ảnh dư sau khi phóng để không lộ mép.
+      const maxOffset = width * (scale - 1) / 2 * 0.9;
+      const offsetX = direction * (safeProgress * 2 - 1) * maxOffset;
+      ctx.translate(width / 2 + offsetX, height / 2);
+      ctx.scale(scale, scale);
+      ctx.translate(-width / 2, -height / 2);
       this.drawImageCover(img);
     } else if (activeEffect === 'pan') {
       const scale = 1.15;

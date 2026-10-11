@@ -139,9 +139,11 @@ export default function VideoCreator() {
     // POPUP CẢNH BÁO TƯ LIỆU ĐÃ CÓ ẢNH
     const [showMediaExistPopup, setShowMediaExistPopup] = useState(false);
     const pendingPiecesRef = useRef([]);
+    const pendingSourceNameRef = useRef('');
 
     const [mediaType, setMediaType] = useState('images');
     const [mediaFiles, setMediaFiles] = useState([]);
+    const [mediaFileNames, setMediaFileNames] = useState([]);
     const [aspectRatio, setAspectRatio] = useState('9:16');
 
     // Kéo thả files
@@ -194,7 +196,7 @@ export default function VideoCreator() {
     const [bgmSourceType, setBgmSourceType] = useState('file');
     const [bgmFile, setBgmFile] = useState(null);
     const [bgmName, setBgmName] = useState('');
-    const [bgmVolume, setBgmVolume] = useState(0.4);
+    const [bgmVolume, setBgmVolume] = useState(0.3);
     const [isPlayingUploadedBgmPreview, setIsPlayingUploadedBgmPreview] = useState(false);
     const uploadedBgmPreviewAudioRef = useRef(null);
 
@@ -221,6 +223,82 @@ export default function VideoCreator() {
     const [rendering, setRendering] = useState(false);
     const [progress, setProgress] = useState(0);
     const [outputVideoUrl, setOutputVideoUrl] = useState(null);
+    const [outputVideoName, setOutputVideoName] = useState('video.mp4');
+    const [isSavingVideo, setIsSavingVideo] = useState(false);
+    const savingVideoRef = useRef(false);
+
+    // Giữ nguyên tên gốc (kể cả dấu tiếng Việt/Thái), chỉ thay phần mở rộng.
+    const getVideoFileName = () => {
+        const sourceName = mediaFiles.length > 0 ? mediaFileNames[0] : divideSourceName;
+        const name = sourceName || 'video';
+        const dotIndex = name.lastIndexOf('.');
+        const baseName = dotIndex > 0 ? name.slice(0, dotIndex) : name;
+        return `${baseName}.mp4`;
+    };
+
+    const handleSaveVideo = async () => {
+        if (!outputVideoUrl || savingVideoRef.current) return;
+        savingVideoRef.current = true;
+        setIsSavingVideo(true);
+        let writable = null;
+        try {
+            let fileHandle = null;
+            let downloadName = outputVideoName || 'video.mp4';
+            if (window.isSecureContext && typeof window.showSaveFilePicker === 'function') {
+                // Mở ngay trong lần bấm nút, trước khi tải dữ liệu video.
+                fileHandle = await window.showSaveFilePicker({
+                    suggestedName: downloadName,
+                    types: [{ description: 'Video MP4', accept: { 'video/mp4': ['.mp4'] } }],
+                });
+            } else {
+                const enteredName = window.prompt(
+                    'Nhập tên video muốn lưu. Nơi lưu sẽ theo cài đặt tải xuống của trình duyệt.',
+                    downloadName
+                );
+                if (enteredName === null) return;
+                downloadName = enteredName.trim();
+                if (!downloadName) {
+                    alert('Vui lòng nhập tên file video.');
+                    return;
+                }
+                if (!/\.mp4$/i.test(downloadName)) downloadName += '.mp4';
+            }
+
+            const response = await fetch(outputVideoUrl);
+            if (!response.ok) throw new Error(`Không thể tải dữ liệu video (HTTP ${response.status}).`);
+            const blob = await response.blob();
+            if (fileHandle) {
+                writable = await fileHandle.createWritable();
+                await writable.write(blob);
+                await writable.close();
+                writable = null;
+            } else {
+                const downloadUrl = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                try {
+                    link.href = downloadUrl;
+                    link.download = downloadName;
+                    document.body.appendChild(link);
+                    link.click();
+                } finally {
+                    link.remove();
+                    setTimeout(() => URL.revokeObjectURL(downloadUrl), 60000);
+                }
+            }
+        } catch (err) {
+            if (writable) {
+                try { await writable.abort(); } catch { }
+            }
+            // Hủy hộp thoại thì dừng, không tự động tải file.
+            if (err.name !== 'AbortError') {
+                console.error('Lỗi lưu video:', err);
+                alert('Không thể lưu video: ' + (err.message || 'Vui lòng thử lại.'));
+            }
+        } finally {
+            savingVideoRef.current = false;
+            setIsSavingVideo(false);
+        }
+    };
 
     const [draggedIndex, setDraggedIndex] = useState(null);
 
@@ -399,6 +477,10 @@ export default function VideoCreator() {
         }
         setOutputVideoUrl(null);
         setMediaFiles([]);
+        setMediaFileNames([]);
+        setOutputVideoName('video.mp4');
+        pendingPiecesRef.current = [];
+        pendingSourceNameRef.current = '';
         setThaiScript('');
         setVietnameseScript('');
         setVoiceFile(null);
@@ -539,11 +621,13 @@ export default function VideoCreator() {
             setDividedPieces(pieces);
             if (mediaFiles.length > 0) {
                 pendingPiecesRef.current = pieces;
+                pendingSourceNameRef.current = divideSourceName;
                 setShowMediaExistPopup(true);
             } else {
                 setMediaType('images');
                 setActiveTab('images');
                 setMediaFiles(pieces);
+                setMediaFileNames(pieces.map(() => divideSourceName));
                 setIsDivideModalOpen(false);
             }
         } catch (err) {
@@ -558,6 +642,8 @@ export default function VideoCreator() {
         setMediaType('images');
         setActiveTab('images');
         setMediaFiles(pendingPiecesRef.current);
+        setMediaFileNames(pendingPiecesRef.current.map(() => pendingSourceNameRef.current));
+        pendingSourceNameRef.current = '';
         pendingPiecesRef.current = [];
         setShowMediaExistPopup(false);
         setIsDivideModalOpen(false);
@@ -615,6 +701,7 @@ export default function VideoCreator() {
             }
             const urls = validFiles.map((file) => URL.createObjectURL(file));
             setMediaFiles((prev) => [...prev, ...urls]);
+            setMediaFileNames((prev) => [...prev, ...validFiles.map((file) => file.name)]);
         } catch (err) {
             console.error(err);
             alert('Không thể đọc file. Vui lòng thử lại!');
@@ -638,6 +725,7 @@ export default function VideoCreator() {
             } catch { }
         });
         setMediaFiles([]);
+        setMediaFileNames([]);
         setOutputVideoUrl(null);
     };
 
@@ -836,12 +924,17 @@ export default function VideoCreator() {
         if (moved) {
             updated.splice(dropIndex, 0, moved);
             setMediaFiles(updated);
+            const updatedNames = [...mediaFileNames];
+            const [movedName] = updatedNames.splice(draggedIndex, 1);
+            updatedNames.splice(dropIndex, 0, movedName);
+            setMediaFileNames(updatedNames);
         }
         setDraggedIndex(null);
     };
 
     const removeMedia = (index) => {
         setMediaFiles((prev) => prev.filter((_, i) => i !== index));
+        setMediaFileNames((prev) => prev.filter((_, i) => i !== index));
     };
 
     const handleAutoGenerateThaiScript = async () => {
@@ -966,6 +1059,7 @@ export default function VideoCreator() {
             return;
         }
         stopAllActivities();
+        const downloadName = getVideoFileName();
         setIsGeneratingGrok(true);
         setGrokStatusText('Đang kết nối xAI Grok...');
         try {
@@ -977,6 +1071,7 @@ export default function VideoCreator() {
                 onStatusUpdate: (msg) => setGrokStatusText(msg),
             });
             setOutputVideoUrl(videoResultUrl);
+            setOutputVideoName(downloadName);
             setPreviewDuration(6);
             alert('Đã tạo thành công video nhân vật chuyển động bằng Grok AI!');
         } catch (err) {
@@ -1004,6 +1099,7 @@ export default function VideoCreator() {
                 setMediaType('images');
                 setActiveTab('images');
                 setMediaFiles(pieces);
+                setMediaFileNames(pieces.map(() => divideSourceName));
                 currentMedia = pieces;
             }
         }
@@ -1180,6 +1276,7 @@ export default function VideoCreator() {
         setProgress(0);
         setOutputVideoUrl(null);
         try {
+            const downloadName = getVideoFileName();
             const { mixer, renderer, audioStream, targetDuration, aiTimeline, readyMedia } = await prepareSession(false);
 
             setIsPreviewPreparing(false);
@@ -1196,6 +1293,7 @@ export default function VideoCreator() {
                 onComplete: async (videoUrl) => {
                     mixer.stop();
                     setOutputVideoUrl(videoUrl);
+                    setOutputVideoName(downloadName);
                     setRendering(false);
                     setProgress(100);
                     // GHI NHẬN SỐ VIDEO ĐƯỢC XUẤT RA VÀO DATABASE THÔNG QUA AXIOS INSTANCE
@@ -1648,6 +1746,7 @@ export default function VideoCreator() {
                                     setActiveTab('images');
                                     setMediaType('images');
                                     setMediaFiles([]);
+                                    setMediaFileNames([]);
                                 }}
                             >
                                 📸 Ảnh
@@ -1681,6 +1780,7 @@ export default function VideoCreator() {
                                     setActiveTab('video');
                                     setMediaType('video');
                                     setMediaFiles([]);
+                                    setMediaFileNames([]);
                                 }}
                             >
                                 🎬 Video
@@ -2651,13 +2751,14 @@ export default function VideoCreator() {
                         )}
                         {outputVideoUrl && !rendering && !isPreviewingVideo && (
                             <div style={{ display: 'flex', gap: 10, flex: 2 }}>
-                                <a
-                                    href={outputVideoUrl}
-                                    download={`ads_thoi_trang_${aspectRatio.replace(':', '_')}.mp4`}
-                                    style={styles.downloadButton}
+                                <button
+                                    type="button"
+                                    onClick={handleSaveVideo}
+                                    disabled={isSavingVideo}
+                                    style={{ ...styles.downloadButton, border: 'none', opacity: isSavingVideo ? 0.6 : 1 }}
                                 >
-                                    📥 Tải Video (.mp4)
-                                </a>
+                                    {isSavingVideo ? '⏳ Đang lưu...' : '📥 Lưu Video (.mp4)'}
+                                </button>
                                 <button
                                     type="button"
                                     onClick={handleResetAll}
