@@ -3,74 +3,75 @@ export const VOICE_PROVIDERS = [
   { id: 'elevenlabs', name: 'ElevenLabs' },
 ];
 
-// DANH SÁCH GIỌNG GEMINI TTS (MẶC ĐỊNH LÀ SADALTAGER Ở ĐẦU TIÊN)
+// DANH SÁCH GIỌNG GEMINI TTS (MẶC ĐỊNH LÀ ORUS Ở ĐẦU TIÊN)
 export const GEMINI_TTS_VOICES = [
   { 
+    id: 'Orus', 
+    name: 'Orus (Nam)', 
+    provider: 'gemini', 
+    gender: 'Male',
+
+  },
+  { 
     id: 'Sadaltager', 
-    name: 'Sadaltager (Nam - Tự nhiên, rõ chữ, cao độ vừa)', 
+    name: 'Sadaltager (Nam)', 
     provider: 'gemini', 
     gender: 'Male',
 
   },
   { 
     id: 'Aoede', 
-    name: 'Aoede (Nữ - Giọng cao, nhấn nhá TikTok, cực hút khách)', 
+    name: 'Aoede (Nữ)', 
     provider: 'gemini', 
     gender: 'Female',
 
   },
   { 
     id: 'Kore', 
-    name: 'Kore (Nữ - Trong trẻo, thanh lịch, thời trang Lookbook)', 
+    name: 'Kore (Nữ)', 
     provider: 'gemini', 
     gender: 'Female',
 
   },
   { 
     id: 'Zephyr', 
-    name: 'Zephyr (Nữ - Tươi tắn, trẻ trung, tự nhiên sôi nổi)', 
+    name: 'Zephyr (Nữ)', 
     provider: 'gemini', 
     gender: 'Female',
 
   },
   { 
     id: 'Leda', 
-    name: 'Leda (Nữ - Ngọt ngào, truyền cảm, cuốn hút)', 
+    name: 'Leda (Nữ)', 
     provider: 'gemini', 
     gender: 'Female',
 
   },
   { 
     id: 'Calliope', 
-    name: 'Calliope (Nữ - Phát thanh viên, sắc sảo, dứt khoát)', 
+    name: 'Calliope (Nữ)', 
     provider: 'gemini', 
     gender: 'Female',
 
   },
   { 
     id: 'Puck', 
-    name: 'Puck (Nam - Giọng cao năng động, thúc giục chốt đơn)', 
+    name: 'Puck (Nam)', 
     provider: 'gemini', 
     gender: 'Male',
 
   },
-  { 
-    id: 'Orus', 
-    name: 'Orus (Nam - Tự tin, phong cách thể thao, nam tính trẻ trung)', 
-    provider: 'gemini', 
-    gender: 'Male',
 
-  },
   { 
     id: 'Fenrir', 
-    name: 'Fenrir (Nam - Dứt khoát, uy lực, mạnh mẽ)', 
+    name: 'Fenrir (Nam)', 
     provider: 'gemini', 
     gender: 'Male',
 
   },
   { 
     id: 'Charon', 
-    name: 'Charon (Nam - Trầm ấm, sang trọng, thương hiệu cao cấp)', 
+    name: 'Charon (Nam)', 
     provider: 'gemini', 
     gender: 'Male',
 
@@ -80,14 +81,14 @@ export const GEMINI_TTS_VOICES = [
 export const GEMINI_VOICES = GEMINI_TTS_VOICES;
 
 export const DEFAULT_ELEVENLABS_PREMADES = [
-  { id: 'JBFqnCBsd6RMkjVDRZzb', name: 'George (Nam - Trầm ấm, tự nhiên)', provider: 'elevenlabs', gender: 'Male' },
-  { id: 'pFZP5JQG7iQjIQuC4Bku', name: 'Lily (Nữ - Trong trẻo, truyền cảm)', provider: 'elevenlabs', gender: 'Female' },
-  { id: 'XrExE9yKIg1WjnnlVkGX', name: 'Matilda (Nữ - Tự nhiên, thanh lịch)', provider: 'elevenlabs', gender: 'Female' },
-  { id: 'CwhRBWXzGAHq8TQ4Fs17', name: 'Roger (Nam - Sôi nổi, bán hàng)', provider: 'elevenlabs', gender: 'Male' },
-  { id: 'FGY2WhTYpPnrIDTdsKH5', name: 'Laura (Nữ - Tươi sáng, quảng cáo)', provider: 'elevenlabs', gender: 'Female' },
-  { id: 'onwK4e9ZLuTAKqWW03F9', name: 'Daniel (Nam - Uy tín, phát thanh)', provider: 'elevenlabs', gender: 'Male' },
-  { id: '21m00Tcm4TlvDq8ikWAM', name: 'Rachel (Nữ - Truyền cảm)', provider: 'elevenlabs', gender: 'Female' },
-  { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Bella (Nữ - Trẻ trung)', provider: 'elevenlabs', gender: 'Female' },
+  { id: 'JBFqnCBsd6RMkjVDRZzb', name: 'George (Nam)', provider: 'elevenlabs', gender: 'Male' },
+  { id: 'pFZP5JQG7iQjIQuC4Bku', name: 'Lily (Nữ)', provider: 'elevenlabs', gender: 'Female' },
+  { id: 'XrExE9yKIg1WjnnlVkGX', name: 'Matilda (Nữ)', provider: 'elevenlabs', gender: 'Female' },
+  { id: 'CwhRBWXzGAHq8TQ4Fs17', name: 'Roger (Nam)', provider: 'elevenlabs', gender: 'Male' },
+  { id: 'FGY2WhTYpPnrIDTdsKH5', name: 'Laura (Nữ)', provider: 'elevenlabs', gender: 'Female' },
+  { id: 'onwK4e9ZLuTAKqWW03F9', name: 'Daniel (Nam)', provider: 'elevenlabs', gender: 'Male' },
+  { id: '21m00Tcm4TlvDq8ikWAM', name: 'Rachel (Nữ)', provider: 'elevenlabs', gender: 'Female' },
+  { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Bella (Nữ)', provider: 'elevenlabs', gender: 'Female' },
 ];
 
 export const DEFAULT_ELEVENLABS_VOICES = DEFAULT_ELEVENLABS_PREMADES;
@@ -116,7 +117,7 @@ export async function fetchAllElevenLabsVoices(apiKey) {
     if (data.voices && data.voices.length > 0) {
       return data.voices.map((v) => ({
         id: v.voice_id,
-        name: `${v.name} (${v.category || 'Custom'})`,
+        name: `${v.name} (${String(v.labels?.gender || '').toLowerCase() === 'male' ? 'Nam' : String(v.labels?.gender || '').toLowerCase() === 'female' ? 'Nữ' : 'Chưa rõ giới tính'})`,
         provider: 'elevenlabs',
         gender: v.labels?.gender || 'Unknown',
       }));
@@ -198,7 +199,7 @@ async function getDynamicAvailableModels(apiKey) {
   return models;
 }
 
-async function generateGeminiTtsSpeech(text, voiceName = 'Sadaltager', apiKey) {
+async function generateGeminiTtsSpeech(text, voiceName = 'Orus', apiKey) {
   const cleanKey = (apiKey || localStorage.getItem('CUSTOM_GEMINI_KEY') || localStorage.getItem('user_gemini_api_key') || '').trim();
   if (!cleanKey) {
     throw new Error('Vui lòng nhập API Key cho Google AI Studio!');
@@ -230,7 +231,7 @@ async function generateGeminiTtsSpeech(text, voiceName = 'Sadaltager', apiKey) {
         speechConfig: {
           voiceConfig: {
             prebuiltVoiceConfig: {
-              voiceName: voiceName || 'Sadaltager',
+              voiceName: voiceName || 'Orus',
             },
           },
         },

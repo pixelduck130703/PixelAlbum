@@ -2688,6 +2688,15 @@ export default function VideoCreator() {
                                     </div>
                                 </div>
                             </div>
+                            {/* SỬA NỘI DUNG THÔNG BÁO TẠI ĐÂY */}
+                            <section style={styles.updateNoticeCard} aria-label="Thông báo cập nhật">
+                                <h3 style={styles.updateNoticeTitle}>📢 Thông báo cập nhật</h3>
+                                <div style={styles.updateNoticeBody}>
+                                    {`• Chỉnh giọng đọc.
+• Đã thêm tính năng đổi tên khi lưu video.
+• Hiệu ứng tự động: Zoom In → Zoom Out → Lia trái → Lia phải.`}
+                                </div>
+                            </section>
                         </aside>
                     </div>
                     {(!outputVideoUrl || isPreviewingVideo) && (
@@ -2779,8 +2788,8 @@ export default function VideoCreator() {
                     <span style={styles.footerDot}>•</span>
                     <span style={styles.footerText}>Trình dựng Video AI</span>
                     <span style={styles.footerDot}>•</span>
-                    <span style={styles.footerVersion}>Version 3.0</span>
-                    <span style={styles.footerVersion}>Cập nhật: 05/10/2026</span>
+                    <span style={styles.footerVersion}>Version 4.0</span>
+                    <span style={styles.footerVersion}>Cập nhật: 11/10/2026</span>
                 </div>
                 <div style={styles.footerCenterTech}>
                     <div style={styles.techIconsList}>
@@ -3676,10 +3685,49 @@ const styles = {
         right: 16,
         top: '50%',
         transform: 'translateY(-50%)',
+        width: 175,
+        maxHeight: 'calc(100% - 24px)',
+        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 12,
         zIndex: 10,
         pointerEvents: 'auto',
     },
+    updateNoticeCard: {
+        position: 'relative',
+        flexShrink: 0,
+        width: 175,
+        boxSizing: 'border-box',
+        backgroundColor: '#ffffff',
+        border: '1px solid #bae6fd',
+        borderRadius: 14,
+        boxShadow: '0 6px 18px rgba(15, 23, 42, 0.06)',
+        overflow: 'hidden',
+    },
+    updateNoticeTitle: {
+        margin: 0,
+        padding: '11px 12px',
+        backgroundColor: '#eff6ff',
+        borderBottom: '1px solid #dbeafe',
+        color: '#0369a1',
+        fontSize: 12,
+        fontWeight: 800,
+        lineHeight: 1.5,
+        overflowWrap: 'anywhere',
+    },
+    updateNoticeBody: {
+        padding: '12px',
+        maxHeight: 180,
+        overflowY: 'auto',
+        whiteSpace: 'pre-wrap',
+        overflowWrap: 'anywhere',
+        color: '#475569',
+        fontSize: 12,
+        lineHeight: 1.65,
+    },
     statsCard: {
+        flexShrink: 0,
         backgroundColor: 'rgba(255, 255, 255, 0.95)',
         backdropFilter: 'blur(12px)',
         borderRadius: 14,
