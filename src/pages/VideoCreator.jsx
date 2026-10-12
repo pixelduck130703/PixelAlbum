@@ -63,10 +63,21 @@ const loadJSZip = () => {
 
 export default function VideoCreator() {
     const [isMobileDevice, setIsMobileDevice] = useState(false);
+    const [mobileNoticeDismissed, setMobileNoticeDismissed] = useState(false);
 
     // THỐNG KÊ LƯỢT TRUY CẬP VÀ SỐ VIDEO XUẤT TỪ DATABASE (ĐỒNG BỘ NEON PRODUCTION)
     const [totalVisits, setTotalVisits] = useState(0);
     const [todayExports, setTodayExports] = useState(0);
+    // Tổng toàn thời gian do backend trả về; null nghĩa là chưa có dữ liệu.
+    const [totalExports, setTotalExports] = useState(null);
+    const readTotalExports = (data) => {
+        const value = data?.totalExports;
+        if (typeof value !== 'number' && typeof value !== 'string') return null;
+        if (typeof value === 'string' && !value.trim()) return null;
+        const count = Number(value);
+        return Number.isSafeInteger(count) && count >= 0 ? count : null;
+    };
+
 
     // Dùng ref để ngăn React StrictMode gọi 2 lần trong cùng một lần mount
     const hasSentVisitRef = useRef(false);
@@ -77,6 +88,7 @@ export default function VideoCreator() {
             const res = await api.get('/stats');
             if (res.data) {
                 setTotalVisits(Number(res.data.totalVisits) || 0);
+                setTotalExports(readTotalExports(res.data));
                 setTodayExports(Number(res.data.todayExports) || 0);
             }
         } catch (e) {
@@ -1301,6 +1313,13 @@ export default function VideoCreator() {
                         const res = await api.post('/stats/export');
                         if (res.data) {
                             setTodayExports(Number(res.data.todayExports) || 0);
+                            const total = readTotalExports(res.data);
+                            if (total !== null) {
+                                setTotalExports(total);
+                            } else {
+                                // Endpoint ghi nhận có thể chỉ trả thống kê hôm nay.
+                                fetchStats();
+                            }
                         } else {
                             fetchStats();
                         }
@@ -1340,15 +1359,38 @@ export default function VideoCreator() {
                     100% { transform: rotate(360deg); }
                 }
             `}</style>
-            {/* POPUP CHẶN MÀN HÌNH MOBILE / TABLET NHỎ */}
-            {isMobileDevice && (
+            {/* CẢNH BÁO MOBILE: cho phép bỏ qua và tiếp tục sử dụng */}
+            {isMobileDevice && !mobileNoticeDismissed && (
                 <div style={styles.mobileOverlay}>
-                    <div style={styles.mobileModal}>
-                        <div style={{ fontSize: 52, marginBottom: 12 }}>💻</div>
-                        <h2 style={styles.mobileTitle}>Chỉ hỗ trợ giao diện Desktop</h2>
-                        <p style={styles.mobileDesc}>
-                            Trình dựng Video AI yêu cầu không gian làm việc chuyên nghiệp trên màn hình lớn. Vui lòng mở trang web trên máy tính hoặc laptop để có trải nghiệm tốt nhất.
+                    <div
+                        style={styles.mobileModal}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="mobile-notice-title"
+                        aria-describedby="mobile-notice-description"
+                        onKeyDown={(e) => {
+                            if (e.key === 'Escape') setMobileNoticeDismissed(true);
+                            // Popup chỉ có một nút: giữ focus trong popup khi nhấn Tab.
+                            if (e.key === 'Tab') e.preventDefault();
+                        }}
+                    >
+                        <div style={{ fontSize: 48, marginBottom: 12 }}>📱</div>
+                        <h2 id="mobile-notice-title" style={styles.mobileTitle}>
+                            Chưa tối ưu cho thiết bị di động
+                        </h2>
+                        <p id="mobile-notice-description" style={styles.mobileDesc}>
+                            Giao diện chưa được tối ưu cho điện thoại và màn hình nhỏ.
+                            Bạn vẫn có thể tiếp tục sử dụng, nhưng một số thao tác có thể bất tiện.
+                            Nên dùng máy tính để có trải nghiệm tốt hơn.
                         </p>
+                        <button
+                            type="button"
+                            autoFocus
+                            onClick={() => setMobileNoticeDismissed(true)}
+                            style={styles.mobileContinueButton}
+                        >
+                            Bỏ qua và tiếp tục
+                        </button>
                     </div>
                 </div>
             )}
@@ -1674,13 +1716,31 @@ export default function VideoCreator() {
                     style={styles.homeBtn}
                 >
                     <span>🏠</span>
-                    <span>Trang chủ</span>
                 </button>
 
                 {/* Chính giữa: Logo & Tiêu đề */}
                 <div style={styles.headerCenter}>
-                    <span style={styles.brandBadge}>VALLEY TEAM</span>
-                    <h1 style={styles.appTitle}>TOOL DỰNG VIDEO</h1>
+                    <img
+                        src="/images/Valley.png"
+                        alt="VALLEY TEAM"
+                        style={{
+                            height: 28,
+                            width: 'auto',
+                            objectFit: 'contain',
+                            display: 'block',
+                        }}
+                    />
+                    <h1 style={styles.appTitle}>VALLEY TEAM - GROW TOGETHER • GO FURTHER</h1>
+                    <img
+                        src="/images/Valley.png"
+                        alt="VALLEY TEAM"
+                        style={{
+                            height: 28,
+                            width: 'auto',
+                            objectFit: 'contain',
+                            display: 'block',
+                        }}
+                    />
                 </div>
 
                 {/* Góc phải: Đồng hồ điện tử */}
@@ -2658,6 +2718,16 @@ export default function VideoCreator() {
                                     <p style={{ color: '#64748b', fontSize: 15, textAlign: 'center', marginTop: 12, fontWeight: 500 }}>
                                         Chưa có tư liệu.<br />Kéo thả ảnh hoặc video vào bên trái.
                                     </p>
+                                    <img
+                                        src="/images/Valley.png"
+                                        alt="VALLEY TEAM"
+                                        style={{
+                                            height: 28,
+                                            width: 'auto',
+                                            objectFit: 'contain',
+                                            display: 'block',
+                                        }}
+                                    />
                                 </div>
                             )}
                             {(mediaFiles.length > 0 || divideSourceImage) && !outputVideoUrl && (
@@ -2687,13 +2757,25 @@ export default function VideoCreator() {
                                         </div>
                                     </div>
                                 </div>
+                                <div style={styles.statsItemBox}>
+                                    <div style={styles.statsIconBoxBlue}>📊</div>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                        <div style={styles.statsLabel}>Tổng video đã tạo</div>
+                                        <div
+                                            style={styles.statsValuePrimary}
+                                            title={totalExports === null ? 'Chưa có dữ liệu tổng video' : 'Tổng video đã tạo từ trước đến nay'}
+                                        >
+                                            {totalExports === null ? '—' : `${totalExports.toLocaleString('vi-VN')} videos`}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             {/* SỬA NỘI DUNG THÔNG BÁO TẠI ĐÂY */}
                             <section style={styles.updateNoticeCard} aria-label="Thông báo cập nhật">
                                 <h3 style={styles.updateNoticeTitle}>📢 Thông báo cập nhật</h3>
                                 <div style={styles.updateNoticeBody}>
-                                    {`• Chỉnh giọng đọc.
-• Đã thêm tính năng đổi tên khi lưu video.
+                                    {`• Chỉnh lại giọng đọc.
+• Lấy tên file đầu vào hoặc đổi được tên file khi tải video.
 • Hiệu ứng tự động: Zoom In → Zoom Out → Lia trái → Lia phải.`}
                                 </div>
                             </section>
@@ -2784,9 +2866,18 @@ export default function VideoCreator() {
             {/* FOOTER */}
             <footer style={styles.appFooter}>
                 <div style={styles.footerLeft}>
-                    <span style={styles.footerBrand}>VALLEY TEAM</span>
+                    <img
+                        src="/images/Valley.png"
+                        alt="VALLEY TEAM"
+                        style={{
+                            height: 28,
+                            width: 'auto',
+                            objectFit: 'contain',
+                            display: 'block',
+                        }}
+                    />
                     <span style={styles.footerDot}>•</span>
-                    <span style={styles.footerText}>Trình dựng Video AI</span>
+                    <span style={styles.footerText}>TOOL DỰNG VIDEO</span>
                     <span style={styles.footerDot}>•</span>
                     <span style={styles.footerVersion}>Version 4.0</span>
                     <span style={styles.footerVersion}>Cập nhật: 11/10/2026</span>
@@ -2845,7 +2936,7 @@ const styles = {
         left: 0,
         width: '100vw',
         height: '100vh',
-        backgroundColor: '#0f172a',
+        backgroundColor: 'rgba(15, 23, 42, 0.75)',
         zIndex: 100000,
         display: 'flex',
         alignItems: 'center',
@@ -2859,9 +2950,25 @@ const styles = {
         padding: '32px 24px',
         maxWidth: 380,
         width: '100%',
+        boxSizing: 'border-box',
+        maxHeight: 'calc(100dvh - 48px)',
+        overflowY: 'auto',
         textAlign: 'center',
         border: '1px solid #334155',
         boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
+    },
+    mobileContinueButton: {
+        marginTop: 22,
+        padding: '13px 18px',
+        minHeight: 48,
+        width: '100%',
+        border: 'none',
+        borderRadius: 10,
+        backgroundColor: '#0284c7',
+        color: '#ffffff',
+        fontSize: 15,
+        fontWeight: 700,
+        cursor: 'pointer',
     },
     mobileTitle: {
         margin: '0 0 12px 0',
@@ -3966,6 +4073,7 @@ const styles = {
     footerText: {
         color: '#64748b',
         fontWeight: 500,
+         fontWeight: 'bold',
     },
     footerVersion: {
         backgroundColor: '#f1f5f9',

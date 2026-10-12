@@ -197,46 +197,57 @@ app.get("/", (req, res) => {
     API THỐNG KÊ VIDEO CREATOR (TƯƠNG THÍCH NEON & LOCAL)
 ========================================================== */
 // 1. Lấy dữ liệu thống kê tổng hợp (tự tạo bảng nếu chưa có trên Neon)
+// 1. Lấy thống kê
 app.get("/api/stats", async (req, res) => {
   try {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS app_stats (
-        stat_date DATE PRIMARY KEY DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date,
+        stat_date DATE PRIMARY KEY
+          DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date,
         visits INT DEFAULT 0,
         exports INT DEFAULT 0
       );
     `);
 
-    // Đảm bảo luôn có bản ghi cho ngày hôm nay
+    // Đảm bảo có bản ghi cho ngày hôm nay
     await pool.query(`
       INSERT INTO app_stats (stat_date, visits, exports)
-      VALUES ((CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date, 0, 0)
+      VALUES (
+        (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date,
+        0,
+        0
+      )
       ON CONFLICT (stat_date) DO NOTHING;
     `);
 
-    const totalVisitsRes = await pool.query(
-      "SELECT COALESCE(SUM(visits), 0)::BIGINT AS total_visits FROM app_stats"
-    );
-    const todayStatsRes = await pool.query(
-      `SELECT COALESCE(exports, 0)::INT AS exports 
-       FROM app_stats 
-       WHERE stat_date = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date`
-    );
+    const result = await pool.query(`
+      SELECT
+        COALESCE(SUM(visits), 0)::BIGINT AS total_visits,
+        COALESCE(SUM(exports), 0)::BIGINT AS total_exports,
+        COALESCE(
+          SUM(exports) FILTER (
+            WHERE stat_date =
+              (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date
+          ),
+          0
+        )::BIGINT AS today_exports
+      FROM app_stats;
+    `);
 
-    const totalVisits = Number(totalVisitsRes.rows[0]?.total_visits || 0);
-    const todayExports = Number(todayStatsRes.rows[0]?.exports || 0);
+    const stats = result.rows[0];
 
     return res.status(200).json({
       success: true,
-      totalVisits,
-      todayExports,
+      totalVisits: Number(stats?.total_visits || 0),
+      todayExports: Number(stats?.today_exports || 0),
+      totalExports: Number(stats?.total_exports || 0),
     });
   } catch (error) {
     console.error("Lỗi lấy thống kê app_stats:", error);
+
     return res.status(500).json({
       success: false,
       message: "Không thể lấy dữ liệu thống kê.",
-      error: error.message,
     });
   }
 });
@@ -246,7 +257,8 @@ app.post("/api/stats/visit", async (req, res) => {
   try {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS app_stats (
-        stat_date DATE PRIMARY KEY DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date,
+        stat_date DATE PRIMARY KEY
+          DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date,
         visits INT DEFAULT 0,
         exports INT DEFAULT 0
       );
@@ -254,14 +266,26 @@ app.post("/api/stats/visit", async (req, res) => {
 
     await pool.query(`
       INSERT INTO app_stats (stat_date, visits, exports)
-      VALUES ((CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date, 1, 0)
+      VALUES (
+        (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date,
+        1,
+        0
+      )
       ON CONFLICT (stat_date)
-      DO UPDATE SET visits = app_stats.visits + 1
+      DO UPDATE SET visits = COALESCE(app_stats.visits, 0) + 1;
     `);
-    return res.status(200).json({ success: true, message: "Đã tăng lượt truy cập." });
+
+    return res.status(200).json({
+      success: true,
+      message: "Đã tăng lượt truy cập.",
+    });
   } catch (error) {
     console.error("Lỗi ghi nhận lượt truy cập:", error);
-    return res.status(500).json({ success: false, message: "Lỗi ghi nhận lượt truy cập." });
+
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi ghi nhận lượt truy cập.",
+    });
   }
 });
 
@@ -270,7 +294,8 @@ app.post("/api/stats/export", async (req, res) => {
   try {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS app_stats (
-        stat_date DATE PRIMARY KEY DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date,
+        stat_date DATE PRIMARY KEY
+          DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date,
         visits INT DEFAULT 0,
         exports INT DEFAULT 0
       );
@@ -278,20 +303,43 @@ app.post("/api/stats/export", async (req, res) => {
 
     const result = await pool.query(`
       INSERT INTO app_stats (stat_date, visits, exports)
-      VALUES ((CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date, 0, 1)
+      VALUES (
+        (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date,
+        0,
+        1
+      )
       ON CONFLICT (stat_date)
-      DO UPDATE SET exports = app_stats.exports + 1
-      RETURNING exports
+      DO UPDATE SET exports = COALESCE(app_stats.exports, 0) + 1
+      RETURNING exports;
     `);
-    const newExportCount = Number(result.rows[0]?.exports || 0);
-    console.log(`[VIDEO EXPORTED] Đã xuất video thành công! Tổng số hôm nay: ${newExportCount}`);
+
+    const todayExports = Number(result.rows[0]?.exports || 0);
+
+    const totalResult = await pool.query(`
+      SELECT COALESCE(SUM(exports), 0)::BIGINT AS total_exports
+      FROM app_stats;
+    `);
+
+    const totalExports = Number(
+      totalResult.rows[0]?.total_exports || 0
+    );
+
+    console.log(
+      `[VIDEO EXPORTED] Hôm nay: ${todayExports} | Tổng: ${totalExports}`
+    );
+
     return res.status(200).json({
       success: true,
-      todayExports: newExportCount,
+      todayExports,
+      totalExports,
     });
   } catch (error) {
     console.error("Lỗi ghi nhận xuất video:", error);
-    return res.status(500).json({ success: false, message: "Lỗi ghi nhận xuất video." });
+
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi ghi nhận xuất video.",
+    });
   }
 });
 
