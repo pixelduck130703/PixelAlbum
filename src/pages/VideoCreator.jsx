@@ -314,6 +314,42 @@ export default function VideoCreator() {
 
     const [draggedIndex, setDraggedIndex] = useState(null);
 
+    const [hideStatsPanel, setHideStatsPanel] = useState(true);
+    const stageCanvasWrapperRef = useRef(null);
+    const previewMockupRef = useRef(null);
+    const statsPanelRef = useRef(null);
+
+    React.useLayoutEffect(() => {
+        const stage = stageCanvasWrapperRef.current;
+        const preview = previewMockupRef.current;
+        const panel = statsPanelRef.current;
+        if (!stage || !preview || !panel) return;
+
+        const checkPanelOverlap = () => {
+            const videoRect = preview.getBoundingClientRect();
+            const panelRect = panel.getBoundingClientRect();
+            const gap = 12;
+            const overlaps = panelRect.left < videoRect.right + gap &&
+                panelRect.right > videoRect.left - gap &&
+                panelRect.top < videoRect.bottom + gap &&
+                panelRect.bottom > videoRect.top - gap;
+            setHideStatsPanel(overlaps);
+        };
+
+        checkPanelOverlap();
+        const observer = typeof ResizeObserver !== 'undefined'
+            ? new ResizeObserver(checkPanelOverlap)
+            : null;
+        observer?.observe(stage);
+        observer?.observe(preview);
+        observer?.observe(panel);
+        window.addEventListener('resize', checkPanelOverlap);
+        return () => {
+            observer?.disconnect();
+            window.removeEventListener('resize', checkPanelOverlap);
+        };
+    }, [aspectRatio]);
+
     const previewCanvasRef = useRef(null);
     const fileInputRef = useRef(null);
     const voiceFileInputRef = useRef(null);
@@ -2782,9 +2818,10 @@ export default function VideoCreator() {
                 </div>
                 {/* CỘT PHẢI: KHU VỰC PREVIEW VIDEO */}
                 <div style={styles.previewStage}>
-                    <div style={styles.stageCanvasWrapper}>
+                    <div ref={stageCanvasWrapperRef} style={styles.stageCanvasWrapper}>
                         {/* 1. KHUNG MOCKUP VIDEO CĂN CHÍNH GIỮA */}
                         <div
+                            ref={previewMockupRef}
                             style={{
                                 ...styles.mockupContainer,
                                 ...(aspectRatio === '9:16'
@@ -2832,7 +2869,16 @@ export default function VideoCreator() {
                             )}
                         </div>
                         {/* 2. Ô THỐNG KÊ THU GỌN GÓC PHẢI */}
-                        <aside style={styles.statsPanelAside}>
+                        <aside
+                            ref={statsPanelRef}
+                            aria-hidden={hideStatsPanel}
+                            style={{
+                                ...styles.statsPanelAside,
+                                // Giữ kích thước để đo và tự hiện lại khi đủ chỗ.
+                                visibility: hideStatsPanel ? 'hidden' : 'visible',
+                                pointerEvents: hideStatsPanel ? 'none' : 'auto',
+                            }}
+                        >
                             <div style={styles.statsCard}>
                                 <div style={styles.statsItemBox}>
                                     <div style={styles.statsIconBoxBlue}>👀</div>
@@ -2844,15 +2890,6 @@ export default function VideoCreator() {
                                     </div>
                                 </div>
                                 <div style={styles.statsItemBox}>
-                                    <div style={styles.statsIconBoxGreen}>🎬</div>
-                                    <div style={{ flex: 1, minWidth: 0 }}>
-                                        <div style={styles.statsLabel}>Đã tạo hôm nay</div>
-                                        <div style={styles.statsValueSuccess}>
-                                            {todayExports.toLocaleString('vi-VN')} videos
-                                        </div>
-                                    </div>
-                                </div>
-                                <div style={styles.statsItemBox}>
                                     <div style={styles.statsIconBoxBlue}>📊</div>
                                     <div style={{ flex: 1, minWidth: 0 }}>
                                         <div style={styles.statsLabel}>Tổng video đã tạo</div>
@@ -2860,7 +2897,16 @@ export default function VideoCreator() {
                                             style={styles.statsValuePrimary}
                                             title={totalExports === null ? 'Chưa có dữ liệu tổng video' : 'Tổng video đã tạo từ trước đến nay'}
                                         >
-                                            {totalExports === null ? '—' : `${totalExports.toLocaleString('vi-VN')} videos`}
+                                            {totalExports === null ? '0' : `${totalExports.toLocaleString('vi-VN')} vids`}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style={styles.statsItemBox}>
+                                    <div style={styles.statsIconBoxGreen}>🎬</div>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                        <div style={styles.statsLabel}>Đã tạo hôm nay</div>
+                                        <div style={styles.statsValueSuccess}>
+                                            {todayExports.toLocaleString('vi-VN')} vids
                                         </div>
                                     </div>
                                 </div>
@@ -2871,7 +2917,8 @@ export default function VideoCreator() {
                                 <div style={styles.updateNoticeBody}>
                                     {`• Thêm tính năng không dùng voice.
 • Khi không dùng voice thời lượng video sẽ bằng thời lượng nhạc nền.
-• Chỉnh lại hiệu ứng (tối đa 5 giây 1 ảnh).`}
+• Chỉnh lại hiệu ứng (tối đa 5 giây 1 ảnh).
+• Tối ưu giao diện hiển thị.`}
                                 </div>
                             </section>
                         </aside>
