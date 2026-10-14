@@ -1013,6 +1013,7 @@ export default function VideoCreator() {
     };
 
     const togglePreviewVoice = async () => {
+        if (voiceSourceType === 'none') return;
         if (isPlayingVoicePreview) {
             if (previewAudioRef.current) {
                 previewAudioRef.current.pause();
@@ -1101,6 +1102,66 @@ export default function VideoCreator() {
         return { width: 720, height: 1280 };
     };
 
+    // Âm thanh PCM im lặng giúp giữ nguyên giao diện AudioMixer hiện tại.
+    // Chế độ không voice dùng thời lượng nhạc nền, hoặc 6 giây khi không có nhạc.
+    const createSilentVoiceSource = (duration = 6) => {
+        const sampleRate = 8000;
+        const sampleCount = Math.ceil(sampleRate * duration);
+        const bytes = new Uint8Array(44 + sampleCount);
+        const view = new DataView(bytes.buffer);
+        const writeText = (offset, text) => {
+            for (let i = 0; i < text.length; i++) bytes[offset + i] = text.charCodeAt(i);
+        };
+        writeText(0, 'RIFF');
+        view.setUint32(4, 36 + sampleCount, true);
+        writeText(8, 'WAVE');
+        writeText(12, 'fmt ');
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true);
+        view.setUint16(22, 1, true);
+        view.setUint32(24, sampleRate, true);
+        view.setUint32(28, sampleRate, true);
+        view.setUint16(32, 1, true);
+        view.setUint16(34, 8, true);
+        writeText(36, 'data');
+        view.setUint32(40, sampleCount, true);
+        bytes.fill(128, 44);
+        let binary = '';
+        for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+        return 'data:audio/wav;base64,' + btoa(binary);
+    };
+
+    const readBackgroundMusicDuration = (src) => new Promise((resolve, reject) => {
+        const audio = new Audio();
+        let timer;
+        const cleanup = () => {
+            clearTimeout(timer);
+            audio.onloadedmetadata = null;
+            audio.ondurationchange = null;
+            audio.onerror = null;
+            audio.removeAttribute('src');
+            audio.load();
+        };
+        const onReady = () => {
+            const duration = audio.duration;
+            if (Number.isFinite(duration) && duration > 0) {
+                cleanup();
+                resolve(duration);
+            }
+        };
+        const onError = () => {
+            cleanup();
+            reject(new Error('Không đọc được thời lượng nhạc nền. Vui lòng chọn lại bài nhạc rồi thử lại.'));
+        };
+        audio.preload = 'metadata';
+        audio.onloadedmetadata = onReady;
+        audio.ondurationchange = onReady;
+        audio.onerror = onError;
+        timer = setTimeout(onError, 20000);
+        audio.src = src;
+        audio.load();
+    });
+
     const prepareSession = async (isPreview = false) => {
         let currentMedia = [...mediaFiles];
         if (currentMedia.length === 0 && divideSourceImage) {
@@ -1146,7 +1207,12 @@ export default function VideoCreator() {
                 setScriptStatusText('');
             }
         }
-        let finalVoiceSrc = voiceFile;
+        let noVoiceDuration = 6;
+        if (voiceSourceType === 'none' && bgmFile) {
+            setPreparingStatusText('Đang đọc thời lượng nhạc nền...');
+            noVoiceDuration = await readBackgroundMusicDuration(bgmFile);
+        }
+        let finalVoiceSrc = voiceSourceType === 'none' ? createSilentVoiceSource(noVoiceDuration) : voiceFile;
         if (voiceSourceType === 'ai') {
             if (!currentScript) {
                 throw new Error('Không có nội dung kịch bản để tạo giọng đọc!');
@@ -1175,9 +1241,11 @@ export default function VideoCreator() {
         setPreparingStatusText('Đang đồng bộ âm thanh & khung hình...');
         const mixer = new AudioMixer();
         activeMixerRef.current = mixer;
-        const audioStream = mixer.setup(finalVoiceSrc, bgmFile, bgmVolume, voiceVolume, isPreview);
+        const audioStream = mixer.setup(finalVoiceSrc, bgmFile, bgmVolume, voiceSourceType === 'none' ? 0 : voiceVolume, isPreview);
         let voiceDuration = await mixer.getVoiceDuration();
-        let targetDuration = Math.max(Math.ceil(voiceDuration) || 6, 3);
+        let targetDuration = voiceSourceType === 'none'
+            ? noVoiceDuration
+            : Math.max(Math.ceil(voiceDuration) || 6, 3);
         setPreviewDuration(targetDuration);
         let aiTimeline = null;
         if (effectMode === 'script') {
@@ -2105,7 +2173,7 @@ export default function VideoCreator() {
                             <h3 style={styles.cardTitle}>Voice & Kịch bản</h3>
                         </div>
                         {/* TAB VOICE */}
-                        <div style={styles.tabGroup}>
+                        <div style={{ ...styles.tabGroup, flexWrap: 'wrap' }}>
                             <button
                                 style={{
                                     ...styles.tabButton,
@@ -2117,7 +2185,7 @@ export default function VideoCreator() {
                                 }}
                                 onClick={() => setVoiceSourceType('ai')}
                             >
-                                ✨ AI Đọc Tiếng Thái
+                                ✨ AI Đọc
                             </button>
                             <button
                                 style={{
@@ -2130,10 +2198,33 @@ export default function VideoCreator() {
                                 }}
                                 onClick={() => setVoiceSourceType('file')}
                             >
-                                📁 File MP3 trong máy
+                                📁 File MP3
+                            </button>
+                            <button
+                                type="button"
+                                disabled={rendering}
+                                style={{
+                                    ...styles.tabButton,
+                                    backgroundColor: voiceSourceType === 'none' ? '#0284c7' : '#ffffff',
+                                    color: voiceSourceType === 'none' ? '#ffffff' : '#475569',
+                                    fontWeight: voiceSourceType === 'none' ? 700 : 600,
+                                    boxShadow: voiceSourceType === 'none' ? '0 2px 8px rgba(2, 132, 199, 0.3)' : 'none',
+                                    border: voiceSourceType === 'none' ? 'none' : '1px solid #e2e8f0',
+                                }}
+                                onClick={() => {
+                                    setVoiceSourceType('none');
+                                    stopAllActivities();
+                                    setOutputVideoUrl(null);
+                                }}
+                            >
+                                🔇 Không dùng
                             </button>
                         </div>
-                        {voiceSourceType === 'ai' ? (
+                        {voiceSourceType === 'none' ? (
+                            <div style={{ marginBottom: 14, padding: 12, borderRadius: 8, backgroundColor: '#f0f9ff', color: '#475569', fontSize: 13 }}>
+                                Preview và xuất video không có giọng đọc. Thời lượng video bằng thời lượng nhạc nền đã chọn; nếu không chọn nhạc nền, video dài 6 giây.
+                            </div>
+                        ) : voiceSourceType === 'ai' ? (
                             <div style={{ marginBottom: 14 }}>
                                 <div style={{ marginBottom: 12 }}>
                                     <label style={styles.label}>Chọn nhà cung cấp Voice AI:</label>
@@ -2376,11 +2467,13 @@ export default function VideoCreator() {
                                 </div>
                             </div>
                         )}
+                        {voiceSourceType !== 'none' && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
                             <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
                                 <button
                                     type="button"
                                     onClick={togglePreviewVoice}
+                                    disabled={voiceSourceType === 'none'}
                                     style={{
                                         ...styles.previewVoiceBtn,
                                         backgroundColor: isPlayingVoicePreview
@@ -2397,7 +2490,7 @@ export default function VideoCreator() {
                                             ? '⏹ Dừng nghe voice'
                                             : '🔊 Nghe thử giọng đọc'}
                                 </button>
-                                {!isTranslating ? (
+                                {voiceSourceType === 'ai' && (!isTranslating ? (
                                     <button
                                         type="button"
                                         onClick={handleTranslateToVietnamese}
@@ -2440,15 +2533,16 @@ export default function VideoCreator() {
                                     >
                                         🛑 Hủy dịch
                                     </button>
-                                )}
-                                {selectedProvider === 'gemini' && geminiCooldown > 0 && (
+                                ))}
+                                {voiceSourceType === 'ai' && selectedProvider === 'gemini' && geminiCooldown > 0 && (
                                     <span style={styles.cooldownBadge}>
                                         ⏳ Google chờ: {geminiCooldown}s
                                     </span>
                                 )}
                             </div>
                         </div>
-                        {(vietnameseScript || isTranslating) && (
+                        )}
+                        {voiceSourceType === 'ai' && (vietnameseScript || isTranslating) && (
                             <div style={{ marginBottom: 14 }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                                     <label style={{ ...styles.label, margin: 0, color: '#059669' }}>
@@ -2499,6 +2593,7 @@ export default function VideoCreator() {
                                 min="0"
                                 max="1.5"
                                 step="0.05"
+                                disabled={voiceSourceType === 'none'}
                                 value={voiceVolume}
                                 onChange={(e) => setVoiceVolume(parseFloat(e.target.value))}
                                 style={{ width: '100%', height: 6, accentColor: '#db2777' }}
@@ -2774,9 +2869,9 @@ export default function VideoCreator() {
                             <section style={styles.updateNoticeCard} aria-label="Thông báo cập nhật">
                                 <h3 style={styles.updateNoticeTitle}>📢 Thông báo cập nhật</h3>
                                 <div style={styles.updateNoticeBody}>
-                                    {`• Chỉnh lại giọng đọc.
-• Lấy tên file đầu vào hoặc đổi được tên file khi tải video.
-• Hiệu ứng tự động: Zoom In → Zoom Out → Lia trái → Lia phải.`}
+                                    {`• Thêm tính năng không dùng voice.
+• Khi không dùng voice thời lượng video sẽ bằng thời lượng nhạc nền.
+• Chỉnh lại hiệu ứng (tối đa 5 giây 1 ảnh).`}
                                 </div>
                             </section>
                         </aside>
@@ -2880,7 +2975,7 @@ export default function VideoCreator() {
                     <span style={styles.footerText}>TOOL DỰNG VIDEO</span>
                     <span style={styles.footerDot}>•</span>
                     <span style={styles.footerVersion}>Version 4.0</span>
-                    <span style={styles.footerVersion}>Cập nhật: 11/10/2026</span>
+                    <span style={styles.footerVersion}>Cập nhật: 14/10/2026</span>
                 </div>
                 <div style={styles.footerCenterTech}>
                     <div style={styles.techIconsList}>

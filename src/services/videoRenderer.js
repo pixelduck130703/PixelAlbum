@@ -1,3 +1,4 @@
+// src/services/videoRenderer.js
 export class VideoRenderer {
   constructor(canvas, { width = 720, height = 1280 } = {}) {
     this.canvas = canvas;
@@ -291,15 +292,17 @@ export class VideoRenderer {
           baseFirstMedia
         );
       } else {
-        const slideDuration = durationMs / mediaList.length;
-        const currentSlideIdx = Math.min(Math.floor(elapsed / slideDuration), mediaList.length - 1);
-        const slideProgress = (elapsed - currentSlideIdx * slideDuration) / slideDuration;
+        // Mỗi ảnh tối đa 5 giây; lặp lại danh sách cho đến hết video.
+        const slideDuration = Math.min(durationMs / mediaList.length, 5000);
+        const slideSequenceIndex = Math.floor(elapsed / slideDuration);
+        const currentSlideIdx = slideSequenceIndex % mediaList.length;
+        const slideProgress = (elapsed - slideSequenceIndex * slideDuration) / slideDuration;
         this.renderImageFrame(
           mediaList[currentSlideIdx],
           mediaList[currentSlideIdx + 1] || mediaList[0],
           slideProgress,
           selectedEffect,
-          currentSlideIdx,
+          slideSequenceIndex,
           'full',
           slideDuration / 1000,
           baseFirstMedia
@@ -425,15 +428,17 @@ export class VideoRenderer {
           baseFirstMedia
         );
       } else {
-        const slideDuration = durationMs / mediaList.length;
-        const currentSlideIdx = Math.min(Math.floor(elapsed / slideDuration), mediaList.length - 1);
-        const slideProgress = (elapsed - currentSlideIdx * slideDuration) / slideDuration;
+        // Mỗi ảnh tối đa 5 giây; lặp lại danh sách cho đến hết video.
+        const slideDuration = Math.min(durationMs / mediaList.length, 5000);
+        const slideSequenceIndex = Math.floor(elapsed / slideDuration);
+        const currentSlideIdx = slideSequenceIndex % mediaList.length;
+        const slideProgress = (elapsed - slideSequenceIndex * slideDuration) / slideDuration;
         this.renderImageFrame(
           mediaList[currentSlideIdx],
           mediaList[currentSlideIdx + 1] || mediaList[0],
           slideProgress,
           selectedEffect,
-          currentSlideIdx,
+          slideSequenceIndex,
           'full',
           slideDuration / 1000,
           baseFirstMedia
