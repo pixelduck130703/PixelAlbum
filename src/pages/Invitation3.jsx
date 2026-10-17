@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 const INVITATION_ID = "graduation-03";
 
-const GRADUATION_DATE = new Date("2026-11-01T11:00:00+07:00");
+const GRADUATION_DATE = new Date("2026-11-01T10:00:00+07:00");
 const GRADUATE_NAME = "TRẦN THỊ DIỄM";
 const GRADUATE_IMAGE = "/images/graduation-avatar-3.png";
 const PHONE_NUMBER = "0867 039 962";
@@ -172,7 +172,7 @@ const TRANSLATIONS = {
         eventDateLabel: "Ngày tổ chức",
         eventDate: "Chủ Nhật, 01/11/2026",
         eventTimeLabel: "Thời gian",
-        eventTime: "11h00",
+        eventTime: "10h00",
         locationLabel: "Địa điểm",
         locationLine1: "Vườn Sinh Viên",
         locationLine2: "Trường Đại học Thang Long",
@@ -233,7 +233,7 @@ const TRANSLATIONS = {
         eventDateLabel: "Date",
         eventDate: "Sunday, November 1, 2026",
         eventTimeLabel: "Time",
-        eventTime: "11:00 AM",
+        eventTime: "10:00 AM",
         locationLabel: "Venue",
         locationLine1: "Student Garden",
         locationLine2: "Thang Long University",
@@ -294,7 +294,7 @@ const TRANSLATIONS = {
         eventDateLabel: "Veranstaltungsdatum",
         eventDate: "Sonntag, 1. November 2026",
         eventTimeLabel: "Uhrzeit",
-        eventTime: "11:00 Uhr",
+        eventTime: "10:00 Uhr",
         locationLabel: "Veranstaltungsort",
         locationLine1: "Studentengarten",
         locationLine2: "Thang-Long-Universität",
@@ -354,7 +354,7 @@ const TRANSLATIONS = {
         eventDateLabel: "举办日期",
         eventDate: "2026年11月1日，星期日",
         eventTimeLabel: "具体时间",
-        eventTime: "11:00",
+        eventTime: "10:00",
         locationLabel: "典礼地点",
         locationLine1: "学生花园",
         locationLine2: "升龙大学（Thang Long University）",
