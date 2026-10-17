@@ -1958,7 +1958,7 @@ function GraduationSash({ side }) {
                                     <br />
                                     Tiên phong
                                     <br />
-                                    Dẫn dầu
+                                    Dẫn đầu
                                 </p>
                             </div>
                         </>
