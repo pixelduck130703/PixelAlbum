@@ -10,10 +10,12 @@ import Dashboard from "./pages/admin/Dashboard";
 import Login from "./pages/admin/Login";
 import ProtectedRoute from "./components/admin/ProtectedRoute";
 import Invitation from "./pages/Invitation";
-import Invitation2 from "./pages/Invitation2"; // Import Invitation2
+import Invitation2 from "./pages/Invitation2";
+import Invitation3 from "./pages/Invitation3";
 import HomeMusicPlayer from "./components/HomeMusicPlayer";
-import VideoCreator from './pages/VideoCreator';
-import ImageDescriber from './pages/ImageDescriber';
+import VideoCreator from "./pages/VideoCreator";
+import ImageDescriber from "./pages/ImageDescriber";
+import NewYear2027 from "./pages/NewYear2027";
 
 function App() {
   const location = useLocation();
@@ -39,16 +41,19 @@ function App() {
           element={<Login />}
         />
 
-        {/* Bản thiệp mời 1 */}
         <Route
           path="/invitation"
           element={<Invitation />}
         />
 
-        {/* Bản thiệp mời 2 mới thêm */}
         <Route
           path="/invitation2"
           element={<Invitation2 />}
+        />
+
+        <Route
+          path="/invitation3"
+          element={<Invitation3 />}
         />
 
         <Route
@@ -60,8 +65,20 @@ function App() {
           }
         />
 
-        <Route path="/create-video" element={<VideoCreator />} />
-        <Route path="/image-describer" element={<ImageDescriber />} />
+        <Route
+          path="/create-video"
+          element={<VideoCreator />}
+        />
+
+        <Route
+          path="/image-describer"
+          element={<ImageDescriber />}
+        />
+
+        <Route
+          path="/new-year-2027"
+          element={<NewYear2027 />}
+        />
       </Routes>
     </>
   );
