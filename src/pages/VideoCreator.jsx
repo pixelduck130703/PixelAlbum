@@ -1814,14 +1814,13 @@ export default function VideoCreator() {
             {/* HEADER */}
             <header style={styles.topNavbar}>
                 {/* Góc trái: Nút Trang chủ */}
-                <button
+                {/*<button
                     type="button"
                     onClick={() => (window.location.href = '/')}
                     style={styles.homeBtn}
                 >
                     <span>🏠</span>
-                </button>
-
+                </button>*/}
                 {/* Chính giữa: Logo & Tiêu đề */}
                 <div style={styles.headerCenter}>
                     <img
@@ -2322,7 +2321,7 @@ export default function VideoCreator() {
                                         <div style={{ display: 'flex', gap: 8 }}>
                                             <input
                                                 type="text"
-                                                placeholder="Dán key (AIzaSy...)"
+                                                placeholder="Dán key"
                                                 value={geminiApiKey}
                                                 onChange={(e) => setGeminiApiKey(e.target.value)}
                                                 style={styles.keyInput}
@@ -2339,7 +2338,7 @@ export default function VideoCreator() {
                                     <div style={{ ...styles.keyConfigBox, borderColor: '#a7f3d0', backgroundColor: '#f0fdf4' }}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                                             <span style={{ fontSize: 13, fontWeight: 700, color: '#065f46' }}>
-                                                🔓 ElevenLabs API Key:
+                                                🔑 ElevenLabs API Key:
                                             </span>
                                             {keySavedStatus && (
                                                 <span style={{ ...styles.savedBadge, backgroundColor: '#bbf7d0', color: '#15803d' }}>
@@ -2360,7 +2359,7 @@ export default function VideoCreator() {
                                                 onClick={handleSaveElevenKey}
                                                 style={{ ...styles.saveBtn, backgroundColor: '#059669' }}
                                             >
-                                                Lưu & Nạp
+                                                Lưu Key
                                             </button>
                                         </div>
                                     </div>
@@ -2915,8 +2914,7 @@ export default function VideoCreator() {
                             <section style={styles.updateNoticeCard} aria-label="Thông báo cập nhật">
                                 <h3 style={styles.updateNoticeTitle}>📢 Thông báo cập nhật</h3>
                                 <div style={styles.updateNoticeBody}>
-                                    {`• Thêm tính năng không dùng voice.
-• Khi không dùng voice thời lượng video sẽ bằng thời lượng nhạc nền.
+                                    {`• Sửa logic fix lỗi video bị lag khi xuất video.
 • Chỉnh lại hiệu ứng (tối đa 5 giây 1 ảnh).
 • Tối ưu giao diện hiển thị.`}
                                 </div>
@@ -3021,8 +3019,8 @@ export default function VideoCreator() {
                     <span style={styles.footerDot}>•</span>
                     <span style={styles.footerText}>TOOL DỰNG VIDEO</span>
                     <span style={styles.footerDot}>•</span>
-                    <span style={styles.footerVersion}>Version 4.0</span>
-                    <span style={styles.footerVersion}>Cập nhật: 14/10/2026</span>
+                    <span style={styles.footerVersion}>Version 4.1</span>
+                    <span style={styles.footerVersion}>Cập nhật: 29/10/2026</span>
                 </div>
                 <div style={styles.footerCenterTech}>
                     <div style={styles.techIconsList}>

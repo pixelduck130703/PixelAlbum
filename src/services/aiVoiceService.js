@@ -1,6 +1,6 @@
 export const VOICE_PROVIDERS = [
   { id: 'gemini', name: 'Google AI Studio' },
-  { id: 'elevenlabs', name: 'ElevenLabs' },
+  { id: 'elevenlabs', name: 'ElevenLabs (Chưa hay)' },
 ];
 
 // DANH SÁCH GIỌNG GEMINI TTS (MẶC ĐỊNH LÀ ORUS Ở ĐẦU TIÊN)
