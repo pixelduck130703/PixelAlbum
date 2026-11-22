@@ -3,7 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import api from "../services/api";
 import { Solar, Lunar } from "lunar-javascript";
 import confetti from "canvas-confetti";
-import { createPreparedAlbumLocation, hasAlbumLocationConsent } from "../services/albumLocation";
+import { hasAlbumLocationConsent } from "../services/albumLocation";
+import { getVisitorLocation, getCachedAlbumLocation } from "../services/visitorLocation";
 import { queueAlbumView, recordAndOpenAlbum } from "../services/albumNavigation";
 
 async function getClientHints() {
@@ -45,7 +46,7 @@ async function getClientHints() {
   }
 }
 
-function Detail() {
+function Detail({ locationChoice, onReviewLocation }) {
   const { publicId } = useParams();
   const navigate = useNavigate();
 
@@ -58,32 +59,29 @@ function Detail() {
   const [verifyError, setVerifyError] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [openingAlbum, setOpeningAlbum] = useState(false);
-  const preparedLocation = useRef(null);
   const preparedHints = useRef(null);
   const hasAlbum = Boolean(person?.hasAlbum || person?.album);
 
   useEffect(() => {
     if (!hasAlbum || loading) return;
     let active = true;
-    const preparation = createPreparedAlbumLocation({ hasConsent: hasAlbumLocationConsent });
-    preparedLocation.current = preparation;
     preparedHints.current = null;
     void getClientHints().then(hints => { if (active) preparedHints.current = hints; });
-    const prepare = () => { if (document.visibilityState !== "hidden") void preparation.prepare(); };
+    const prepare = () => {
+      if (document.visibilityState !== "hidden" && locationChoice === "both" && !getCachedAlbumLocation()) void getVisitorLocation().catch(() => {});
+    };
     prepare();
     document.addEventListener("visibilitychange", prepare);
     window.addEventListener("focus", prepare);
     window.addEventListener("storage", prepare);
     return () => {
       active = false;
-      preparation.dispose();
-      preparedLocation.current = null;
       preparedHints.current = null;
       document.removeEventListener("visibilitychange", prepare);
       window.removeEventListener("focus", prepare);
       window.removeEventListener("storage", prepare);
     };
-  }, [publicId, hasAlbum, loading]);
+  }, [publicId, hasAlbum, loading, locationChoice]);
 
   useEffect(() => {
     const loadPerson = async () => {
@@ -396,7 +394,7 @@ function Detail() {
   const openRecordedAlbum = (url) => recordAndOpenAlbum({
     url,
     getHints: () => preparedHints.current,
-    getLocation: () => preparedLocation.current?.get(),
+    getLocation: getCachedAlbumLocation,
     hasConsent: hasAlbumLocationConsent,
     postView: (body) => queueAlbumView(api.getUri({ url: `/people/public/${publicId}/album-view` }), body),
     navigate: (albumUrl) => window.location.assign(albumUrl),
@@ -784,6 +782,8 @@ function Detail() {
           </div>
         </div>
       </div>
+
+      <div className="pb-4 text-center"><button type="button" onClick={onReviewLocation} className="text-xs text-slate-500 underline underline-offset-2">Quyền vị trí</button></div>
 
       {verifyOpen && (
         <div

@@ -1,20 +1,12 @@
-// v2 thông báo rõ việc chuẩn bị tạm tọa độ khi vào trang chi tiết, trước khi bấm.
-const CONSENT_KEY = 'pixelalbum.album-location-consent.v2';
+import { getVisitorLocationPreference, saveVisitorLocationPreference } from './visitorLocation.js';
 
 // Chỉ lưu lựa chọn, không lưu tọa độ vào localStorage.
 export function hasAlbumLocationConsent(storage) {
-  try {
-    return (storage ?? globalThis.localStorage).getItem(CONSENT_KEY) === 'granted';
-  } catch { return false; }
+  return getVisitorLocationPreference(storage) === 'both';
 }
 
 export function setAlbumLocationConsent(allowed, storage) {
-  try {
-    const store = storage ?? globalThis.localStorage;
-    if (allowed === true) store.setItem(CONSENT_KEY, 'granted');
-    else store.removeItem(CONSENT_KEY);
-    return hasAlbumLocationConsent(store) === (allowed === true);
-  } catch { return false; }
+  return saveVisitorLocationPreference(allowed === true ? 'both' : 'none', storage);
 }
 
 // Chỉ chuẩn bị vị trí gần đúng trong bộ nhớ (không gửi mạng, không localStorage).

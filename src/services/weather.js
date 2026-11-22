@@ -1,27 +1,7 @@
 // Public Open-Meteo endpoints: non-commercial use, no API key required.
-let pendingLocation;
+export { getVisitorLocation } from './visitorLocation.js';
 const cache = new Map();
 const CACHE_MS = 10 * 60 * 1000;
-
-export function getVisitorLocation() {
-  if (!window.isSecureContext) return Promise.reject(new Error('Định vị cần HTTPS hoặc localhost.'));
-  if (!navigator.geolocation) return Promise.reject(new Error('Trình duyệt không hỗ trợ định vị. Hãy tìm thành phố bên dưới.'));
-  // Share in-flight requests, including React StrictMode's development remount.
-  if (!pendingLocation) {
-    pendingLocation = new Promise((resolve, reject) => {
-      navigator.geolocation.getCurrentPosition(
-        ({ coords }) => resolve({ latitude: coords.latitude, longitude: coords.longitude, label: 'Vị trí của bạn' }),
-        (error) => reject(new Error({
-          1: 'Quyền vị trí đang bị chặn. Bạn có thể cho phép trong cài đặt trang web hoặc tìm thành phố bên dưới.',
-          2: 'Chưa xác định được vị trí. Hãy bật dịch vụ vị trí hoặc tìm thành phố bên dưới.',
-          3: 'Lấy vị trí quá lâu. Bạn có thể thử lại hoặc tìm thành phố bên dưới.',
-        }[error.code] || 'Không thể lấy vị trí.')),
-        { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 },
-      );
-    }).finally(() => { pendingLocation = null; });
-  }
-  return pendingLocation;
-}
 
 async function fetchJSON(url, signal) {
   const controller = new AbortController();

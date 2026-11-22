@@ -3,7 +3,6 @@ import api from "../services/api";
 
 import Navbar from "../components/Navbar";
 import WeatherCard from "../components/WeatherCard";
-import AlbumLocationPreference from "../components/AlbumLocationPreference";
 import Footer from "../components/Footer";
 import SearchBox from "../components/SearchBox";
 import AboutMe from "../components/AboutMe";
@@ -18,7 +17,6 @@ import HomeStatistics from "../components/HomeStatistics";
 import DailyQuote from "../components/DailyQuote";
 import Announcement from "../components/Announcement";
 import ScrollReveal from "../components/ScrollReveal";
-import WelcomePopup from "../components/WelcomePopup";
 import HomePartners from "../components/HomePartners";
 
 const today = new Date();
@@ -84,7 +82,7 @@ const weekdays = [
   "Thứ Bảy",
 ];
 
-function Home() {
+function Home({ locationChoice, onReviewLocation }) {
   const [people, setPeople] = useState([]);
 
   // ================================
@@ -558,9 +556,6 @@ function Home() {
     <div className="flex min-h-screen flex-col bg-slate-100">
       <Navbar />
 
-      {/* Popup chào mừng */}
-      <WelcomePopup />
-
       {/* Popup kết quả tìm kiếm */}
       <SearchResult
         loading={loading}
@@ -586,7 +581,7 @@ function Home() {
       </ScrollReveal>
 
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-8 pt-2 sm:px-6 sm:pb-10 sm:pt-4">
-        <WeatherCard />
+        <WeatherCard locationChoice={locationChoice} onReviewLocation={onReviewLocation} />
 
         {/* THỐNG KÊ */}
         <ScrollReveal direction="up">
@@ -677,7 +672,7 @@ function Home() {
         </ScrollReveal>
       </main>
 
-      <AlbumLocationPreference />
+      <button type="button" onClick={onReviewLocation} className="mx-auto mb-3 text-xs text-slate-500 underline underline-offset-2">Quyền vị trí</button>
       <Footer />
     </div>
   );

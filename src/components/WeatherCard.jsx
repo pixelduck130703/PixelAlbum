@@ -5,46 +5,12 @@ import {
   getWeather,
   searchCities,
 } from '../services/weather';
+import { resolveVisitorCityName } from '../services/visitorLocation';
 
 const value = (number, unit) =>
   Number.isFinite(number)
     ? `${Math.round(number)}${unit}`
     : '—';
-
-// Hàm phụ trợ: Dịch ngược tọa độ (lat, lon) ra tên Thành phố/Tỉnh nếu service gốc trả về "Vị trí của bạn"
-async function resolveCityName(location, signal) {
-  if (
-    location?.label &&
-    location.label.toLowerCase() !== 'vị trí của bạn' &&
-    location.label.toLowerCase() !== 'your location'
-  ) {
-    return location.label;
-  }
-
-  const lat = location?.latitude ?? location?.lat;
-  const lon = location?.longitude ?? location?.lon;
-
-  if (Number.isFinite(lat) && Number.isFinite(lon)) {
-    try {
-      const res = await fetch(
-        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=vi`,
-        { signal }
-      );
-      if (res.ok) {
-        const geo = await res.json();
-        const city =
-          geo.city ||
-          geo.principalSubdivision ||
-          geo.locality;
-        if (city) return city.replace(/^Thành phố\s+|^Tỉnh\s+/i, '');
-      }
-    } catch {
-      // Bỏ qua nếu lỗi mạng hoặc bị abort
-    }
-  }
-
-  return location?.label || 'Không xác định';
-}
 
 const ANIMATION_STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&display=swap');
@@ -244,7 +210,7 @@ function WeatherEffects({ type }) {
   return null;
 }
 
-export default function WeatherCard() {
+export default function WeatherCard({ locationChoice, onReviewLocation }) {
   const [request, setRequest] = useState({
     location: null,
     version: 0,
@@ -274,14 +240,15 @@ export default function WeatherCard() {
 
     async function load() {
       try {
-        const location =
-          request.location || (await getVisitorLocation());
+        const location = request.location || (locationChoice === 'both' || locationChoice === 'weather'
+          ? await getVisitorLocation() : null);
+        if (!location) throw new Error('Bạn có thể chọn quyền vị trí hoặc tìm thành phố.');
 
         if (!active) return;
 
         const [data, resolvedLabel] = await Promise.all([
           getWeather(location, controller.signal),
-          resolveCityName(location, controller.signal),
+          resolveVisitorCityName(location),
         ]);
 
         if (active) {
@@ -310,13 +277,17 @@ export default function WeatherCard() {
       active = false;
       controller.abort();
     };
-  }, [request]);
+  }, [request, locationChoice]);
 
   useEffect(() => {
     return () => searchController.current?.abort();
   }, []);
 
   function selectLocation(location = null) {
+    if (!location) {
+      if (locationChoice !== 'both' && locationChoice !== 'weather') { onReviewLocation?.(); return; }
+      void getVisitorLocation({ allowPrompt: true }).catch(() => {});
+    }
     setSearch({ loading: false, results: [], error: '' });
     setQuery('');
     setShowSearch(false);

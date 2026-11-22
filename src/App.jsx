@@ -3,6 +3,7 @@ import {
   Route,
   useLocation,
 } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 import Home from "./pages/Home";
 import Detail from "./pages/Detail";
@@ -17,6 +18,8 @@ import VideoCreator from "./pages/VideoCreator";
 import ImageDescriber from "./pages/ImageDescriber";
 import NewYear2027 from "./pages/NewYear2027";
 import SalesDashboard from "./pages/SalesDashboard";
+import VisitorLocationDialog from "./components/VisitorLocationDialog";
+import { getVisitorLocationPreference, saveVisitorLocationPreference, clearVisitorLocation, getVisitorLocation, VISITOR_LOCATION_KEY } from "./services/visitorLocation";
 
 function App() {
   const location = useLocation();
@@ -24,17 +27,43 @@ function App() {
   const showMusic =
     location.pathname === "/" ||
     location.pathname.startsWith("/person/");
+  const [locationChoice, setLocationChoice] = useState(getVisitorLocationPreference);
+  const [reviewLocation, setReviewLocation] = useState(false);
+
+  useEffect(() => {
+    const sync = event => {
+      if (event.key !== VISITOR_LOCATION_KEY && event.key !== null) return;
+      clearVisitorLocation();
+      setLocationChoice(getVisitorLocationPreference());
+    };
+    window.addEventListener("storage", sync);
+    return () => window.removeEventListener("storage", sync);
+  }, []);
+
+  function chooseLocation(choice) {
+    clearVisitorLocation();
+    const saved = saveVisitorLocationPreference(choice);
+    setLocationChoice(saved ? choice : "none");
+    setReviewLocation(false);
+    if (saved && choice !== "none") void getVisitorLocation({ allowPrompt: true }).catch(() => {});
+  }
+
+  const openLocationSettings = () => setReviewLocation(true);
 
   return (
     <>
       <HomeMusicPlayer visible={showMusic} />
+      {showMusic && (locationChoice === null || reviewLocation) && (
+        <VisitorLocationDialog currentChoice={locationChoice} review={reviewLocation} onChoose={chooseLocation} onClose={() => reviewLocation ? setReviewLocation(false) : chooseLocation("none")} />
+      )}
 
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/sales-dashboard" element={<SalesDashboard />} />
+        <Route path="/" element={<Home locationChoice={locationChoice} onReviewLocation={openLocationSettings} />} />
 
         <Route
           path="/person/:publicId"
-          element={<Detail />}
+          element={<Detail locationChoice={locationChoice} onReviewLocation={openLocationSettings} />}
         />
 
         <Route
@@ -79,13 +108,6 @@ function App() {
         <Route
           path="/new-year-2027"
           element={<NewYear2027 />}
-        />
-
-        <Route
-          path="/sales-dashboard"
-          element={
-              <SalesDashboard />
-          }
         />
       </Routes>
     </>

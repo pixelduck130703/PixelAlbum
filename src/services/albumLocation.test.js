@@ -34,7 +34,7 @@ test('homepage album consent is opt-in, remembered across views, and revocable',
   assert.equal(setAlbumLocationConsent(true, storage), true);
   assert.equal(hasAlbumLocationConsent(storage), true);
   assert.equal(hasAlbumLocationConsent(storage), true);
-  assert.deepEqual([...entries.values()], ['granted']);
+  assert.deepEqual([...entries.values()], ['both']);
   assert.equal(setAlbumLocationConsent(false, storage), true);
   assert.equal(hasAlbumLocationConsent(storage), false);
   const blocked = { getItem: () => { throw Error('blocked'); }, setItem: () => { throw Error('blocked'); } };
