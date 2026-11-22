@@ -189,7 +189,7 @@ export default function VideoCreator() {
         localStorage.getItem('CUSTOM_GEMINI_KEY') || localStorage.getItem('user_gemini_api_key') || ''
     );
     const [elevenLabsApiKey, setElevenLabsApiKey] = useState(
-        localStorage.getItem('CUSTOM_ELEVENLABS_KEY') || 'sk_1b9707067e6f7cce7ceee1c56d2018865aae6f3319c0d1c3'
+        localStorage.getItem('CUSTOM_ELEVENLABS_KEY') || ''
     );
     const [elevenVoiceList, setElevenVoiceList] = useState(DEFAULT_ELEVENLABS_PREMADES || []);
     const [keySavedStatus, setKeySavedStatus] = useState(false);
@@ -1462,6 +1462,32 @@ export default function VideoCreator() {
                     0% { transform: rotate(0deg); }
                     100% { transform: rotate(360deg); }
                 }
+                .vc-sales-link {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 8px;
+                    flex-shrink: 0;
+                    padding: 9px 13px;
+                    border-radius: 9px;
+                    border: 1px solid #bfdbfe;
+                    background: #eff6ff;
+                    color: #1d4ed8;
+                    font-size: 13px;
+                    font-weight: 700;
+                    white-space: nowrap;
+                    text-decoration: none;
+                    transition: background 0.15s, border-color 0.15s;
+                }
+                .vc-sales-link:hover { background: #dbeafe; border-color: #93c5fd; }
+                .vc-sales-link:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+                .vc-sales-short { display: none; }
+                @media (max-width: 768px) {
+                    .vc-top-navbar { padding: 8px 10px !important; }
+                    .vc-sales-link { padding: 8px; gap: 5px; font-size: 12px; }
+                    .vc-sales-full { display: none; }
+                    .vc-sales-short { display: inline; }
+                    .vc-header-center > img { display: none !important; }
+                }
             `}</style>
             {/* CẢNH BÁO MOBILE: cho phép bỏ qua và tiếp tục sử dụng */}
             {isMobileDevice && !mobileNoticeDismissed && (
@@ -1812,17 +1838,17 @@ export default function VideoCreator() {
                 </div>
             )}
             {/* HEADER */}
-            <header style={styles.topNavbar}>
-                {/* Góc trái: Nút Trang chủ */}
-                {/*<button
-                    type="button"
-                    onClick={() => (window.location.href = '/')}
-                    style={styles.homeBtn}
-                >
-                    <span>🏠</span>
-                </button>*/}
+            <header className="vc-top-navbar" style={styles.topNavbar}>
+                {/* Mở báo cáo trong tab mới để giữ nguyên tiến trình tạo video hiện tại. */}
+                <a className="vc-sales-link" href="/sales-dashboard" target="_blank" rel="noopener noreferrer" title="Mở thống kê doanh số trong tab mới" aria-label="Thống kê doanh số (mở tab mới)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M3 3v18h18M7 15l4-4 4 3 5-7" />
+                    </svg>
+                    <span className="vc-sales-full">Thống kê doanh số</span>
+                    <span className="vc-sales-short" aria-hidden="true">Doanh số</span>
+                </a>
                 {/* Chính giữa: Logo & Tiêu đề */}
-                <div style={styles.headerCenter}>
+                <div className="vc-header-center" style={styles.headerCenter}>
                     <img
                         src="/images/Valley.png"
                         alt="VALLEY TEAM"
@@ -2914,8 +2940,8 @@ export default function VideoCreator() {
                             <section style={styles.updateNoticeCard} aria-label="Thông báo cập nhật">
                                 <h3 style={styles.updateNoticeTitle}>📢 Thông báo cập nhật</h3>
                                 <div style={styles.updateNoticeBody}>
-                                    {`• Sửa logic fix lỗi video bị lag khi xuất video.
-• Chỉnh lại hiệu ứng (tối đa 5 giây 1 ảnh).
+                                    {`• Thêm trang thống kê doanh thu bán hàng (Sales Dashboard).
+• Sửa logic fix lỗi video bị lag khi xuất video.
 • Tối ưu giao diện hiển thị.`}
                                 </div>
                             </section>
@@ -3019,8 +3045,8 @@ export default function VideoCreator() {
                     <span style={styles.footerDot}>•</span>
                     <span style={styles.footerText}>TOOL DỰNG VIDEO</span>
                     <span style={styles.footerDot}>•</span>
-                    <span style={styles.footerVersion}>Version 4.1</span>
-                    <span style={styles.footerVersion}>Cập nhật: 29/10/2026</span>
+                    <span style={styles.footerVersion}>Version 4.2</span>
+                    <span style={styles.footerVersion}>Cập nhật: 22/11/2026</span>
                 </div>
                 <div style={styles.footerCenterTech}>
                     <div style={styles.techIconsList}>
@@ -4264,6 +4290,8 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
+        gap: 12,
+        flexShrink: 0,
         padding: '10px 20px',
         backgroundColor: '#ffffff',
         borderBottom: '1px solid #e2e8f0',
@@ -4285,10 +4313,10 @@ const styles = {
     headerCenter: {
         display: 'flex',
         alignItems: 'center',
+        justifyContent: 'center',
         gap: 12,
-        position: 'absolute',
-        left: '50%',
-        transform: 'translateX(-50%)', // Đảm bảo luôn nằm chính giữa thanh bar
+        flex: 1,
+        minWidth: 0,
     },
     brandBadge: {
         backgroundColor: '#db2777',
@@ -4305,11 +4333,16 @@ const styles = {
         color: '#0f172a',
         margin: 0,
         letterSpacing: 0.5,
+        minWidth: 0,
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
     },
     headerRight: {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'flex-end',
+        flexShrink: 0,
     },
     clockContainer: {
         display: 'inline-flex',
