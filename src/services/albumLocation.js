@@ -1,4 +1,5 @@
-const CONSENT_KEY = 'pixelalbum.album-location-consent.v1';
+// v2 thông báo rõ việc chuẩn bị tạm tọa độ khi vào trang chi tiết, trước khi bấm.
+const CONSENT_KEY = 'pixelalbum.album-location-consent.v2';
 
 // Chỉ lưu lựa chọn, không lưu tọa độ vào localStorage.
 export function hasAlbumLocationConsent(storage) {
@@ -14,6 +15,40 @@ export function setAlbumLocationConsent(allowed, storage) {
     else store.removeItem(CONSENT_KEY);
     return hasAlbumLocationConsent(store) === (allowed === true);
   } catch { return false; }
+}
+
+// Chỉ chuẩn bị vị trí gần đúng trong bộ nhớ (không gửi mạng, không localStorage).
+export function createPreparedAlbumLocation({ hasConsent, browser = globalThis.navigator, secure = globalThis.isSecureContext, now = Date.now, ttl = 120000 } = {}) {
+  let permission = null;
+  let cached = null;
+  let disposed = false;
+  let pending = null;
+  const get = () => {
+    if (disposed || !hasConsent() || permission?.state !== 'granted' || !cached || now() >= cached.expiresAt) {
+      cached = null;
+      return null;
+    }
+    return cached.value;
+  };
+  const prepare = () => {
+    if (get() || disposed || !hasConsent() || !secure || !browser?.permissions?.query || !browser?.geolocation?.getCurrentPosition) return Promise.resolve();
+    if (pending) return pending;
+    pending = (async () => {
+      try {
+        permission = await browser.permissions.query({ name: 'geolocation' });
+        if (disposed || !hasConsent() || permission.state !== 'granted') return;
+        const position = await new Promise((resolve, reject) => browser.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: false, timeout: 5000, maximumAge: 60000 }));
+        if (disposed || !hasConsent() || permission.state !== 'granted') return;
+        const { latitude, longitude } = position.coords || {};
+        if (!Number.isFinite(latitude) || Math.abs(latitude) > 90 || !Number.isFinite(longitude) || Math.abs(longitude) > 180) return;
+        const timestamp = Number.isFinite(position.timestamp) ? Math.min(now(), position.timestamp) : now();
+        cached = { expiresAt: timestamp + ttl, value: { consent: true, latitude: Number(latitude.toFixed(2)), longitude: Number(longitude.toFixed(2)), label: '' } };
+      } catch { /* Không có vị trí: dùng IP. */ }
+      finally { pending = null; }
+    })();
+    return pending;
+  };
+  return { prepare, get, dispose: () => { disposed = true; cached = null; permission = null; } };
 }
 
 // Chỉ dùng vị trí cho lượt xem khi có đồng ý riêng, không tái sử dụng ngầm

@@ -30,8 +30,10 @@ test('album view persists shared location or IP per event and clears the last IP
     const post = (body) => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     assert.equal((await post({})).status, 200);
     assert.equal((await post({ sharedLocation: { consent: true, latitude: 21.031234, longitude: 105.851234, label: 'Hà Nội' } })).status, 200);
+    assert.equal((await fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ sharedLocation: { consent: true, latitude: 21.03, longitude: 105.85, label: '' } }) })).status, 200);
+    assert.equal((await fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: 'invalid' })).status, 400);
     const inserts = queries.filter((q) => q.sql.includes('INSERT INTO album_view_by_person_daily'));
-    assert.equal(inserts.length, 2);
+    assert.equal(inserts.length, 3);
     assert.equal(inserts[0].values[14], '192.0.2.10');
     assert.equal(inserts[0].values[16], 'ip');
     assert.equal(inserts[1].values[14], null);
@@ -39,7 +41,10 @@ test('album view persists shared location or IP per event and clears the last IP
     assert.deepEqual(JSON.parse(inserts[1].values[17]), { latitude: 21.03, longitude: 105.85, label: 'Hà Nội', consent: true });
     assert.match(inserts[1].sql, /ip_address = EXCLUDED\.ip_address/);
     assert.equal(ipCalls, 1);
-    assert.equal(queries.filter((q) => q.sql === 'COMMIT').length, 2);
+    assert.equal(inserts[2].values[14], null);
+    assert.equal(inserts[2].values[15], '21.03, 105.85');
+    assert.equal(inserts[2].values[16], 'shared');
+    assert.equal(queries.filter((q) => q.sql === 'COMMIT').length, 3);
   } finally {
     if (server) await new Promise((resolve) => server.close(resolve));
     if (originalDb) require.cache[dbPath] = originalDb; else delete require.cache[dbPath];

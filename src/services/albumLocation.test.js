@@ -1,6 +1,31 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { getSharedAlbumLocation, albumLocationDisplay, hasAlbumLocationConsent, setAlbumLocationConsent } from './albumLocation.js';
+import { getSharedAlbumLocation, albumLocationDisplay, hasAlbumLocationConsent, setAlbumLocationConsent, createPreparedAlbumLocation } from './albumLocation.js';
+
+test('prepared location is local, rounded, fresh and consent/permission limited', async () => {
+  let permitted = false, clock = 1000, requests = 0;
+  const permission = { state: 'granted' };
+  const browser = { permissions: { query: async () => permission }, geolocation: { getCurrentPosition: callback => { requests++; callback({ coords: { latitude: 21.031234, longitude: 105.851234 }, timestamp: clock }); } } };
+  const preparation = createPreparedAlbumLocation({ hasConsent: () => permitted, browser, secure: true, now: () => clock, ttl: 100 });
+  await preparation.prepare();
+  assert.equal(requests, 0);
+  permitted = true;
+  await preparation.prepare();
+  assert.deepEqual(preparation.get(), { consent: true, latitude: 21.03, longitude: 105.85, label: '' });
+  permission.state = 'denied';
+  assert.equal(preparation.get(), null);
+  permission.state = 'granted';
+  await preparation.prepare();
+  clock += 101;
+  assert.equal(preparation.get(), null);
+  await preparation.prepare();
+  permitted = false;
+  assert.equal(preparation.get(), null);
+  preparation.dispose();
+  permitted = true;
+  await preparation.prepare();
+  assert.equal(preparation.get(), null);
+});
 
 test('homepage album consent is opt-in, remembered across views, and revocable', () => {
   const entries = new Map();

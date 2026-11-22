@@ -1,4 +1,5 @@
-const router = require("express").Router();
+const express = require("express");
+const router = express.Router();
 const { pool } = require("../database/db");
 const verifyAdminToken = require("../middleware/auth");
 const bcrypt = require("bcryptjs");
@@ -154,6 +155,18 @@ router.post(
 
 router.post(
   "/api/people/public/:publicId/album-view",
+  express.text({ type: "text/plain", limit: "16kb" }),
+  (req, res, next) => {
+    if (typeof req.body === "string") {
+      try {
+        req.body = JSON.parse(req.body);
+        if (!req.body || typeof req.body !== "object" || Array.isArray(req.body)) throw new Error("Invalid body");
+      } catch {
+        return res.status(400).json({ success: false, message: "Dữ liệu lượt xem không hợp lệ." });
+      }
+    }
+    next();
+  },
   async (req, res) => {
     const client = await pool.connect();
     try {

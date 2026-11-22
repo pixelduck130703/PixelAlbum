@@ -16,6 +16,16 @@ export default function AlbumLocationPreference() {
     const saved = setAlbumLocationConsent(next);
     setAllowed(hasAlbumLocationConsent());
     setError(saved ? '' : 'Không lưu được lựa chọn. Hãy kiểm tra cài đặt lưu trữ của trình duyệt.');
+    // Chỉ xin quyền trình duyệt khi khách chủ động bật lựa chọn này.
+    if (saved && next) {
+      if (!window.isSecureContext || !navigator.geolocation) {
+        setError('Trình duyệt không hỗ trợ định vị an toàn. Lượt xem sẽ dùng IP.');
+      } else {
+        navigator.geolocation.getCurrentPosition(() => {}, () => {
+          if (hasAlbumLocationConsent()) setError('Chưa lấy được vị trí. Hãy kiểm tra quyền Vị trí của website trong trình duyệt.');
+        }, { enableHighAccuracy: false, timeout: 5000, maximumAge: 60000 });
+      }
+    }
   }
 
   return (
@@ -27,7 +37,7 @@ export default function AlbumLocationPreference() {
         <span className="font-semibold text-slate-800">Cho phép chia sẻ vị trí gần đúng khi xem album (không bắt buộc)</span>
       </label>
       <p id="album-location-explanation" className="mt-1 pl-7 text-xs leading-relaxed">
-        Khi mở album, nếu trình duyệt đã cấp quyền vị trí, tỉnh/thành và tọa độ làm tròn khoảng 1 km sẽ được lưu trong lịch sử cho quản trị viên xem thay cho IP, kể cả xem trên Google Maps. Tọa độ đã làm tròn được gửi tới dịch vụ tra tên địa điểm và tới Google Maps khi quản trị viên mở bản đồ. Nếu không bật hoặc không lấy được vị trí, hệ thống dùng IP như trước. Lựa chọn được ghi nhớ trên trình duyệt này; bạn có thể tắt tại đây bất cứ lúc nào. Không ảnh hưởng đến việc mở album.
+        Khi bật lựa chọn này, trình duyệt có thể yêu cầu cấp quyền vị trí. Khi vào trang chi tiết có album, nếu quyền đã được cấp, website chuẩn bị tọa độ làm tròn khoảng 1 km trong bộ nhớ tạm để mở album nhanh. Chỉ khi bạn bấm xem album, tọa độ gần đây mới được gửi và lưu trong lịch sử cho quản trị viên xem thay cho IP, kể cả trên Google Maps. Nếu không bật hoặc vị trí chưa sẵn sàng, hệ thống dùng IP như trước. Lựa chọn được ghi nhớ trên trình duyệt này; bạn có thể tắt tại đây bất cứ lúc nào. Không ảnh hưởng đến việc mở album.
       </p>
       {error && <p role="alert" className="mt-1 pl-7 text-xs text-red-600">{error}</p>}
       </section>

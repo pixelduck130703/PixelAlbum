@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../services/api";
 import { Solar, Lunar } from "lunar-javascript";
 import confetti from "canvas-confetti";
-import { getSharedAlbumLocation, hasAlbumLocationConsent } from "../services/albumLocation";
-import { recordAndOpenAlbum } from "../services/albumNavigation";
+import { createPreparedAlbumLocation, hasAlbumLocationConsent } from "../services/albumLocation";
+import { queueAlbumView, recordAndOpenAlbum } from "../services/albumNavigation";
 
 async function getClientHints() {
   if (!navigator.userAgentData) {
@@ -58,6 +58,32 @@ function Detail() {
   const [verifyError, setVerifyError] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [openingAlbum, setOpeningAlbum] = useState(false);
+  const preparedLocation = useRef(null);
+  const preparedHints = useRef(null);
+  const hasAlbum = Boolean(person?.hasAlbum || person?.album);
+
+  useEffect(() => {
+    if (!hasAlbum || loading) return;
+    let active = true;
+    const preparation = createPreparedAlbumLocation({ hasConsent: hasAlbumLocationConsent });
+    preparedLocation.current = preparation;
+    preparedHints.current = null;
+    void getClientHints().then(hints => { if (active) preparedHints.current = hints; });
+    const prepare = () => { if (document.visibilityState !== "hidden") void preparation.prepare(); };
+    prepare();
+    document.addEventListener("visibilitychange", prepare);
+    window.addEventListener("focus", prepare);
+    window.addEventListener("storage", prepare);
+    return () => {
+      active = false;
+      preparation.dispose();
+      preparedLocation.current = null;
+      preparedHints.current = null;
+      document.removeEventListener("visibilitychange", prepare);
+      window.removeEventListener("focus", prepare);
+      window.removeEventListener("storage", prepare);
+    };
+  }, [publicId, hasAlbum, loading]);
 
   useEffect(() => {
     const loadPerson = async () => {
@@ -369,19 +395,14 @@ function Detail() {
 
   const openRecordedAlbum = (url) => recordAndOpenAlbum({
     url,
-    getHints: getClientHints,
-    getLocation: () => getSharedAlbumLocation(hasAlbumLocationConsent()),
+    getHints: () => preparedHints.current,
+    getLocation: () => preparedLocation.current?.get(),
     hasConsent: hasAlbumLocationConsent,
-    postView: (body) => fetch(api.getUri({ url: `/people/public/${publicId}/album-view` }), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      keepalive: true,
-    }),
+    postView: (body) => queueAlbumView(api.getUri({ url: `/people/public/${publicId}/album-view` }), body),
     navigate: (albumUrl) => window.location.assign(albumUrl),
   });
 
-  const redirectToAlbum = async (albumUrl) => {
+  const redirectToAlbum = (albumUrl) => {
     const normalizedUrl = normalizeAlbumUrl(albumUrl);
 
     if (!normalizedUrl || openingAlbum) {
@@ -391,7 +412,7 @@ function Detail() {
     setOpeningAlbum(true);
 
     try {
-      await openRecordedAlbum(normalizedUrl);
+      openRecordedAlbum(normalizedUrl);
     } catch (err) {
       console.error(err);
     } finally {
@@ -455,7 +476,7 @@ function Detail() {
       setVerifyAnswer("");
       setOpeningAlbum(true);
 
-      await openRecordedAlbum(albumUrl);
+      openRecordedAlbum(albumUrl);
     } catch (error) {
       setVerifyError(
         error.response?.data?.message ||
