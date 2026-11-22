@@ -264,6 +264,11 @@ async function initializeDatabase() {
       DEFAULT '[]'::jsonb
   `);
 
+  await pool.query(`
+    ALTER TABLE album_view_by_person_daily
+    ADD COLUMN IF NOT EXISTS ip_address TEXT
+  `);
+
   console.log(
     "✅ Bảng album_view_by_person_daily đã sẵn sàng"
   );

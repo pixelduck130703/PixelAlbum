@@ -4,6 +4,7 @@ const verifyAdminToken = require("../middleware/auth");
 const bcrypt = require("bcryptjs");
 const { normalizeSecurityAnswer } = require("../utils/normalizers");
 const { getClientIp, getIpLocation, deviceDetector } = require("../services/visitorInfo");
+const { resolveAlbumLocation } = require("../services/albumLocation");
 
 router.post(
   "/api/people/public/:publicId/verify-album",
@@ -157,8 +158,7 @@ router.post(
     const client = await pool.connect();
     try {
       const { publicId } = req.params;
-      const clientIp = getClientIp(req);
-      const clientLocation = await getIpLocation(clientIp);
+      const { ipAddress: clientIp, location: clientLocation, locationSource, sharedLocation } = await resolveAlbumLocation(req, getClientIp, getIpLocation);
       const userAgent = req.headers["user-agent"] || "";
       const clientHints =
         req.body?.clientHints && typeof req.body.clientHints === "object"
@@ -319,6 +319,8 @@ router.post(
               'viewedAt', NOW(),
               'ipAddress', $15::text,
               'location', $16::text,
+              'locationSource', $17::text,
+              'sharedLocation', $18::jsonb,
               'browser', $2::text,
               'browserVersion', $3::text,
               'deviceType', $4::text,
@@ -339,7 +341,7 @@ router.post(
         DO UPDATE SET
           views = album_view_by_person_daily.views + 1,
           last_viewed_at = NOW(),
-          ip_address = COALESCE(NULLIF($15::text, ''), album_view_by_person_daily.ip_address),
+          ip_address = EXCLUDED.ip_address,
           view_times = array_append(
             COALESCE(album_view_by_person_daily.view_times, '{}'::timestamptz[]),
             NOW()
@@ -351,6 +353,8 @@ router.post(
               'viewedAt', NOW(),
               'ipAddress', $15::text,
               'location', $16::text,
+              'locationSource', $17::text,
+              'sharedLocation', $18::jsonb,
               'browser', $2::text,
               'browserVersion', $3::text,
               'deviceType', $4::text,
@@ -384,6 +388,8 @@ router.post(
           viewDetail.userAgent,
           clientIp,
           clientLocation,
+          locationSource,
+          sharedLocation ? JSON.stringify(sharedLocation) : null,
         ]
       );
       await client.query("COMMIT");

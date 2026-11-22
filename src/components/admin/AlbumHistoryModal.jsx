@@ -8,9 +8,9 @@ import {
   FaDesktop,
   FaMobileAlt,
   FaTabletAlt,
-  FaMapMarkerAlt,
 } from "react-icons/fa";
 import api from "../../services/api";
+import AlbumLocationBadge from "./AlbumLocationBadge";
 
 function AlbumHistoryModal({
   open,
@@ -254,14 +254,6 @@ function AlbumHistoryModal({
                                 "Không xác định";
                               const deviceType = detail?.deviceType || "";
                               const os = detail?.os || "";
-                              const ipAddress =
-                                detail?.ipAddress ||
-                                item.ip_address ||
-                                item.ipAddress ||
-                                "";
-                              const location =
-                                detail?.location ||
-                                (ipAddress ? ipAddress : "Không rõ vị trí");
 
                               return (
                                 <div
@@ -289,19 +281,7 @@ function AlbumHistoryModal({
                                     {/* Khối Badges: Vị trí (Location), Thiết bị, Hệ điều hành */}
                                     <div className="flex shrink-0 flex-row items-center gap-1.5 sm:gap-2">
                                       {/* Badge Vị trí (Thay thế cho IP) */}
-                                      <span
-                                        className={`inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold whitespace-nowrap sm:rounded-full sm:gap-1.5 sm:px-2.5 sm:py-1 sm:text-xs ${
-                                          detail?.location && detail.location !== "Không xác định"
-                                            ? "bg-rose-100 text-rose-800"
-                                            : "bg-blue-100 text-blue-800"
-                                        }`}
-                                        title={ipAddress ? `IP: ${ipAddress}` : "Chưa có IP"}
-                                      >
-                                        <FaMapMarkerAlt className="shrink-0 text-rose-600 text-[10px]" />
-                                        <span className="max-w-[130px] truncate sm:max-w-none">
-                                          {location}
-                                        </span>
-                                      </span>
+                                      <AlbumLocationBadge detail={detail} daily={item} />
 
                                       {/* Badge Thiết bị */}
                                       <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-violet-100/90 px-2 py-0.5 text-[10px] font-semibold text-violet-800 whitespace-nowrap sm:rounded-full sm:gap-1.5 sm:px-2.5 sm:py-1 sm:text-xs">

@@ -3,6 +3,7 @@ import api from "../services/api";
 
 import Navbar from "../components/Navbar";
 import WeatherCard from "../components/WeatherCard";
+import AlbumLocationPreference from "../components/AlbumLocationPreference";
 import Footer from "../components/Footer";
 import SearchBox from "../components/SearchBox";
 import AboutMe from "../components/AboutMe";
@@ -586,6 +587,7 @@ function Home() {
 
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-8 pt-2 sm:px-6 sm:pb-10 sm:pt-4">
         <WeatherCard />
+        <AlbumLocationPreference />
 
         {/* THỐNG KÊ */}
         <ScrollReveal direction="up">

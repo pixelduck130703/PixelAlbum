@@ -1,24 +1,26 @@
 const geoip = require("geoip-lite");
+const { isIP } = require("node:net");
 const DeviceDetector = require("device-detector-js");
 const deviceDetector = new DeviceDetector();
 
+function normalizeIp(value) {
+  if (typeof value !== 'string') return '';
+  let ip = value.split(',')[0].trim();
+  if (ip.startsWith('::ffff:') && isIP(ip.slice(7)) === 4) ip = ip.slice(7);
+  if (isIP(ip)) return ip;
+  // Không cắt địa chỉ IPv6 đầy đủ khi xử lý dạng IP:port.
+  const bracketed = /^\[([^\]]+)\](?::\d+)?$/.exec(ip);
+  if (bracketed && isIP(bracketed[1]) === 6) return bracketed[1];
+  const ipv4Port = /^(\d+\.\d+\.\d+\.\d+):\d+$/.exec(ip);
+  return ipv4Port && isIP(ipv4Port[1]) === 4 ? ipv4Port[1] : '';
+}
+
 function getClientIp(req) {
-  let ip =
-    req.headers["cf-connecting-ip"] ||
-    req.headers["x-real-ip"] ||
-    (req.headers["x-forwarded-for"]
-      ? req.headers["x-forwarded-for"].split(",")[0].trim()
-      : null) ||
-    req.ip ||
-    req.socket?.remoteAddress ||
-    "";
-  if (ip.startsWith("::ffff:")) {
-    ip = ip.replace("::ffff:", "");
+  for (const value of [req.headers['cf-connecting-ip'], req.headers['x-real-ip'], req.headers['x-forwarded-for'], req.ip, req.socket?.remoteAddress]) {
+    const ip = normalizeIp(value);
+    if (ip) return ip;
   }
-  if (ip.includes(":") && !ip.includes("::")) {
-    ip = ip.split(":")[0];
-  }
-  return ip.trim();
+  return '';
 }
 async function getIpLocation(ip) {
   if (!ip) return "Không rõ vị trí";
@@ -56,4 +58,4 @@ async function getIpLocation(ip) {
   return ip;
 }
 
-module.exports = { getClientIp, getIpLocation, deviceDetector };
+module.exports = { getClientIp, getIpLocation, deviceDetector, normalizeIp };

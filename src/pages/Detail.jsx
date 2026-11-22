@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import api from "../services/api";
 import { Solar, Lunar } from "lunar-javascript";
 import confetti from "canvas-confetti";
+import { getSharedAlbumLocation, hasAlbumLocationConsent } from "../services/albumLocation";
 
 async function getClientHints() {
   if (!navigator.userAgentData) {
@@ -367,9 +368,13 @@ function Detail() {
 
   const recordAlbumView = async () => {
     try {
-      const clientHints = await getClientHints();
+      const [clientHints, sharedLocation] = await Promise.all([
+        getClientHints(),
+        getSharedAlbumLocation(hasAlbumLocationConsent()),
+      ]);
       await api.post(`/people/public/${publicId}/album-view`, {
         clientHints,
+        ...(sharedLocation && hasAlbumLocationConsent() ? { sharedLocation } : {}),
       });
     } catch (error) {
       console.error("Lỗi tăng lượt xem album:", error);
