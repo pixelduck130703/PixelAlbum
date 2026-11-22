@@ -47,26 +47,37 @@ async function requestPancake(path, params = [], allowMissingSuccess = false) {
   return result.data;
 }
 
-function normalizeEmployees(users) {
+function normalizeEmployeeRecords(users) {
   const byId = new Map();
   for (const row of users) {
     const id = String(row?.user_id || row?.user?.id || '');
     const name = String(row?.user?.name || row?.name || '').trim().replace(/\s+/g, ' ');
-    if (id && name) byId.set(id, { id, name });
+    if (id && name) byId.set(id, { id, name, departmentName: typeof row?.department?.name === 'string' ? row.department.name : '' });
   }
   const counts = new Map();
   for (const { name } of byId.values()) counts.set(name, (counts.get(name) || 0) + 1);
   return [...byId.values()].map((u) => ({ ...u, name: counts.get(u.name) > 1 ? `${u.name} (${u.id.slice(-8)})` : u.name })).sort((a, b) => a.name.localeCompare(b.name, 'vi'));
 }
 
+function publicEmployees(records) { return records.map(({ id, name }) => ({ id, name })); }
+
+function normalizeEmployees(users) { return publicEmployees(normalizeEmployeeRecords(users)); }
+
 let employeeCache = null;
-async function getEmployees() {
+let employeePending = null;
+async function getEmployeeRecords() {
   if (employeeCache && Date.now() < employeeCache.expires) return employeeCache.data;
-  const data = normalizeEmployees(await requestPancake('users'));
-  if (!data.length) throw new PancakeError('Pancake không trả danh sách nhân viên.');
-  employeeCache = { data, expires: Date.now() + 60000 };
-  return data;
+  if (employeePending) return employeePending;
+  employeePending = (async () => {
+    const data = normalizeEmployeeRecords(await requestPancake('users'));
+    if (!data.length) throw new PancakeError('Pancake không trả danh sách nhân viên.');
+    employeeCache = { data, expires: Date.now() + 60000 };
+    return data;
+  })();
+  try { return await employeePending; } finally { employeePending = null; }
 }
+
+async function getEmployees() { return publicEmployees(await getEmployeeRecords()); }
 
 // API /warehouses trả data[] (không bắt buộc có success). Chỉ trả tên và ID, không trả địa chỉ/số điện thoại.
 function normalizeWarehouses(rows) {
@@ -107,7 +118,7 @@ async function assertWarehouse(warehouseId = '', warehouses = getWarehouses) {
   return warehouseId;
 }
 
-// Chỉ lọc danh sách nhân viên theo báo cáo có phát sinh tại kho. Không dùng kho để tính tổng doanh số cá nhân.
+// V10: nhân viên có phát sinh trong báo cáo kho, không suy đoán theo tên hoặc bộ phận.
 function selectWarehouseEmployees(raw, employees, warehouseId) {
   const ids = new Set();
   for (const row of raw) {
@@ -122,25 +133,36 @@ function selectWarehouseEmployees(raw, employees, warehouseId) {
 }
 
 const warehouseEmployeeCache = new Map();
-async function getWarehouseEmployees(month, warehouseId, now = new Date()) {
-  const { first, end, today } = monthRange(month, now);
+const warehouseEmployeePending = new Map();
+async function getWarehouseEmployeesForRange(start, end, warehouseId, now = new Date()) {
+  validateRankingRange(start, end, now);
   await assertWarehouse(warehouseId);
   const employees = await getEmployees();
   if (!warehouseId) return employees;
-  if (first > today) return [];
-  const key = `${month}:${warehouseId}`;
+  const key = `${start}:${end}:${warehouseId}`;
   const cached = warehouseEmployeeCache.get(key);
   if (cached && Date.now() < cached.expires) return cached.data;
-  const raw = await requestPancake('analytics/sale', [
-    ['since', new Date(`${first}T00:00:00+07:00`).toISOString()],
-    ['until', new Date(Math.min(now.getTime(), new Date(`${end}T23:59:59+07:00`).getTime())).toISOString()],
-    ['split_by[]', 'User.id'], ['split_by[]', 'Order.warehouse_id'], ['filter[Order.warehouse_id][]', warehouseId],
-    ['select_fields[]', 'price'], ['select_fields[]', 'order_count'], ['user_type', 'marketer'], ['success_status', '1'], ['success_record', 'inserted_at'],
-  ]);
-  const data = selectWarehouseEmployees(raw, employees, warehouseId);
-  if (warehouseEmployeeCache.size >= 128) warehouseEmployeeCache.delete(warehouseEmployeeCache.keys().next().value);
-  warehouseEmployeeCache.set(key, { data, expires: Date.now() + 60000 });
-  return data;
+  if (warehouseEmployeePending.has(key)) return warehouseEmployeePending.get(key);
+  const pending = (async () => {
+    const raw = await requestPancake('analytics/sale', [
+      ['since', new Date(`${start}T00:00:00+07:00`).toISOString()],
+      ['until', new Date(Math.min(now.getTime(), new Date(`${end}T23:59:59+07:00`).getTime())).toISOString()],
+      ['split_by[]', 'User.id'], ['split_by[]', 'Order.warehouse_id'], ['filter[Order.warehouse_id][]', warehouseId],
+      ['select_fields[]', 'price'], ['select_fields[]', 'order_count'], ['user_type', 'marketer'], ['success_status', '1'], ['success_record', 'inserted_at'],
+    ]);
+    const data = selectWarehouseEmployees(raw, employees, warehouseId);
+    if (warehouseEmployeeCache.size >= 128) warehouseEmployeeCache.delete(warehouseEmployeeCache.keys().next().value);
+    warehouseEmployeeCache.set(key, { data, expires: Date.now() + 60000 });
+    return data;
+  })();
+  warehouseEmployeePending.set(key, pending);
+  try { return await pending; } finally { warehouseEmployeePending.delete(key); }
+}
+
+async function getWarehouseEmployees(month, warehouseId, now = new Date()) {
+  const { first, end, today } = monthRange(month, now);
+  if (first > today) { await assertWarehouse(warehouseId); return warehouseId ? [] : getEmployees(); }
+  return getWarehouseEmployeesForRange(first, end, warehouseId, now);
 }
 
 function normalizeDailySales(data, employeeId, first, end, warehouseId = '') {
@@ -188,4 +210,42 @@ async function getDailySales(month, employeeId, now = new Date(), warehouseId = 
   return normalizeDailySales(raw, employeeId, first, end, warehouseId);
 }
 
-module.exports = { PancakeError, monthRange, normalizeEmployees, normalizeDailySales, normalizeWarehouses, getEmployees, getWarehouses, validateWarehouseId, assertWarehouse, getDailySales, getWarehouseEmployees, selectWarehouseEmployees };
+function validateRankingRange(start, end, now = new Date()) {
+  const valid = (d) => typeof d === 'string' && /^(20\d{2}|2100)-\d{2}-\d{2}$/.test(d) && Number.isFinite(Date.parse(d)) && new Date(d).toISOString().slice(0, 10) === d;
+  if (!valid(start) || !valid(end) || start > end || end > bangkokDate(now) || (Date.parse(end) - Date.parse(start)) / 86400000 >= 366) {
+    throw new PancakeError('Chọn khoảng ngày hợp lệ, không quá 366 ngày và không ở tương lai.', 400);
+  }
+}
+
+function normalizeRanking(raw, employees) {
+  const totals = new Map(employees.map(({ id, name }) => [id, { employeeId: id, name, orders: 0, price: 0 }]));
+  for (const row of raw) {
+    if (!row || !Object.hasOwn(row, 'User.id')) throw new PancakeError('Pancake không trả nhóm nhân viên hợp lệ.');
+    const user = row?.['User.id'];
+    // Nhóm đơn hàng không có nhân viên phụ trách không được tính cho ai.
+    if (user == null || user === '') continue;
+    const id = typeof user === 'object' && user !== null ? String(user.id || user.user_id || '') : String(user || '');
+    if (!id) throw new PancakeError('Pancake không trả nhóm nhân viên hợp lệ.');
+    const total = totals.get(id);
+    if (!total) continue;
+    const { price, order_count: orders } = row.success || {};
+    if (!Number.isFinite(price) || !Number.isSafeInteger(orders) || orders < 0) throw new PancakeError('Pancake trả dòng thống kê không hợp lệ.');
+    total.price += price;
+    total.orders += orders;
+    if (!Number.isFinite(total.price) || !Number.isSafeInteger(total.orders)) throw new PancakeError('Tổng doanh số không hợp lệ.');
+  }
+  return [...totals.values()].map(({ price, ...row }) => ({ ...row, revenueThb: price / 100 }));
+}
+
+async function getRanking(start, end, now = new Date()) {
+  validateRankingRange(start, end, now);
+  const [employees, raw] = await Promise.all([getEmployees(), requestPancake('analytics/sale', [
+    ['since', new Date(`${start}T00:00:00+07:00`).toISOString()],
+    ['until', new Date(Math.min(now.getTime(), new Date(`${end}T23:59:59+07:00`).getTime())).toISOString()],
+    ['split_by[]', 'User.id'], ['select_fields[]', 'price'], ['select_fields[]', 'order_count'],
+    ['user_type', 'marketer'], ['success_status', '1'], ['success_record', 'inserted_at'],
+  ])]);
+  return normalizeRanking(raw, employees);
+}
+
+module.exports = { PancakeError, monthRange, normalizeEmployees, normalizeEmployeeRecords, normalizeDailySales, normalizeWarehouses, getEmployees, getWarehouses, validateWarehouseId, assertWarehouse, getDailySales, getWarehouseEmployees, getWarehouseEmployeesForRange, selectWarehouseEmployees, validateRankingRange, normalizeRanking, getRanking };

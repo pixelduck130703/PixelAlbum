@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { monthRange, normalizeEmployees, normalizeDailySales, getEmployees, getWarehouses, getDailySales, selectWarehouseEmployees, getWarehouseEmployees } = require('../services/pancakeSales');
+const { monthRange, normalizeEmployees, normalizeEmployeeRecords, normalizeDailySales, getEmployees, getWarehouses, getDailySales, selectWarehouseEmployees, getWarehouseEmployees } = require('../services/pancakeSales');
 
 const employeeId = 'test-employee';
 test('Bangkok date boundaries and leap year', () => {
@@ -35,7 +35,7 @@ test('mock upstream: exact API contract, no real calls', async () => {
     const u = new URL(url);
     assert.equal(u.hostname, 'pos.pages.fm');
     assert.equal(u.searchParams.get('api_key'), 'TEST_KEY_ONLY');
-    if (u.pathname.endsWith('/users')) return new Response(JSON.stringify({ success: true, data: [{ user_id: employeeId, user: { name: 'Test' } }] }));
+    if (u.pathname.endsWith('/users')) return new Response(JSON.stringify({ success: true, data: [{ user_id: employeeId, user: { name: 'Test' }, department: { id: 1, name: 'NTC' } }] }));
     if (u.pathname.endsWith('/warehouses')) return Response.json({ data: [{ id: 'ntc', name: 'NTC', phone: 'private' }] });
     assert.ok(u.pathname.endsWith('/analytics/sale'));
     calledAnalytics = true;
@@ -44,23 +44,20 @@ test('mock upstream: exact API contract, no real calls', async () => {
     assert.equal(u.searchParams.get('until'), '2026-11-22T08:00:00.000Z');
     const warehouse = u.searchParams.get('filter[Order.warehouse_id][]');
     const groups = u.searchParams.getAll('split_by[]');
-    if (!groups.includes('Time.day')) {
-      assert.deepEqual(groups, ['User.id', 'Order.warehouse_id']);
-      assert.equal(warehouse, 'ntc');
-      assert.equal(u.searchParams.get('filter[User.id][]'), null);
-      return Response.json({ success: true, data: [{ 'User.id': employeeId, 'Order.warehouse_id': warehouse }] });
-    }
-    assert.equal(u.searchParams.get('filter[User.id][]'), employeeId);
-    assert.deepEqual(groups, ['Time.day', 'User.id', ...(warehouse ? ['Order.warehouse_id'] : [])]);
+    const rankingScope = !u.searchParams.has('filter[User.id][]');
+    if (!rankingScope) assert.equal(u.searchParams.get('filter[User.id][]'), employeeId);
+    assert.deepEqual(groups, rankingScope ? ['User.id', 'Order.warehouse_id'] : ['Time.day', 'User.id', ...(warehouse ? ['Order.warehouse_id'] : [])]);
     assert.ok(!warehouse || warehouse === 'ntc');
     return Response.json({ success: true, data: [{ 'User.id': employeeId, 'Time.day': '2026-11-19', ...(warehouse ? { 'Order.warehouse_id': { id: warehouse } } : {}), success: { price: warehouse ? 100000 : 1928600, order_count: warehouse ? 3 : 23 } }] });
   };
   try {
     assert.deepEqual(await getEmployees(), [{ id: employeeId, name: 'Test' }]);
     assert.deepEqual(await getWarehouses(), [{ id: 'ntc', name: 'NTC' }]);
+    assert.deepEqual(await getWarehouseEmployees('2026-11', 'ntc', new Date('2026-11-22T08:00:00Z')), [{ id: employeeId, name: 'Test' }]);
+    assert.equal(calledAnalytics, true, 'Nhân viên theo kho được tìm từ báo cáo doanh số');
     assert.deepEqual(await getDailySales('2026-11', employeeId, new Date('2026-11-22T08:00:00Z')), [{ date: '2026-11-19', revenueThb: 19286, orders: 23 }]);
     assert.ok(calledAnalytics);
-    assert.deepEqual(await getWarehouseEmployees('2026-11', 'ntc', new Date('2026-11-22T08:00:00Z')), [{ id: employeeId, name: 'Test' }]);
+    await assert.rejects(getWarehouseEmployees('2026-11', 'unknown', new Date('2026-11-22T08:00:00Z')), /Kho không tồn tại/);
     assert.deepEqual(await getDailySales('2026-11', employeeId, new Date('2026-11-22T08:00:00Z'), 'ntc'), [{ date: '2026-11-19', revenueThb: 1000, orders: 3 }]);
     await assert.rejects(getDailySales('2026-11', employeeId, new Date('2026-11-22T08:00:00Z'), 'unknown'), /Kho không tồn tại/);
     assert.deepEqual(await getDailySales('2026-12', employeeId, new Date('2026-11-22T08:00:00Z')), []);
@@ -68,13 +65,18 @@ test('mock upstream: exact API contract, no real calls', async () => {
   } finally { global.fetch = originalFetch; }
 });
 
-test('warehouse list only returns employee IDs present in selected warehouse report', () => {
-  const employees = [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }];
-  const row = (id, warehouse) => ({ 'User.id': { id }, 'Order.warehouse_id': warehouse });
-  assert.deepEqual(selectWarehouseEmployees([row('a', 'valley'), row('a', 'valley')], employees, 'valley'), [employees[0]]);
-  assert.deepEqual(selectWarehouseEmployees([row('b', 'ntc')], employees, 'ntc'), [employees[1]]);
-  assert.deepEqual(selectWarehouseEmployees([], employees, 'ntc'), []);
-  assert.throws(() => selectWarehouseEmployees([row('b', 'ntc')], employees, 'valley'), /đúng kho/);
+test('V10 warehouse filter matches activity IDs only, not department or names', () => {
+  const employees = normalizeEmployeeRecords([
+    { user_id: 'a', user: { name: 'A', email: 'private' }, department: { name: '  VaLLeY ' } },
+    { user_id: 'b', user: { name: 'B VALLEY' }, department: { name: 'NTC' } },
+    { user_id: 'c', user: { name: 'C' }, sale_group: { name: 'VALLEY' } },
+    { user_id: 'd', user: { name: 'D' }, department: { name: 'VALLEY 2' } },
+    { user_id: 'e', user: { name: 'E' }, department: { name: 'VALLEY' } },
+  ]);
+  const raw = [{ 'User.id': 'b', 'Order.warehouse_id': 'valley' }, { 'User.id': { id: 'c' }, 'Order.warehouse_id': { id: 'valley' } }, { 'User.id': 'unknown', 'Order.warehouse_id': 'valley' }];
+  assert.deepEqual(selectWarehouseEmployees(raw, employees, 'valley').map(e => e.id), ['b','c']);
+  assert.deepEqual(selectWarehouseEmployees([], employees, 'vinny'), []);
+  assert.throws(() => selectWarehouseEmployees(raw, employees, 'ntc'), /đúng kho/);
 });
 
 test('warehouse-specific analytics rejects wrong or absent warehouse dimension', () => {

@@ -1,8 +1,9 @@
 import api from './api';
 
-export async function fetchSalesEmployees(warehouseId, month, signal) {
-  const { data } = await api.get('/sales/employees', { params: { warehouseId, month }, signal, timeout: 60000 });
-  if (data?.success !== true || data.warehouseId !== warehouseId || (warehouseId && data.month !== month) || !Array.isArray(data.employees) || data.employees.some((u) => typeof u?.id !== 'string' || typeof u?.name !== 'string')) {
+export async function fetchSalesEmployees(warehouseId, month, signal, start, end) {
+  const { data } = await api.get('/sales/employees', { params: { warehouseId, month, start, end }, signal, timeout: 60000 });
+  const matches = !warehouseId || (start ? data?.start === start && data?.end === end : data?.month === month);
+  if (data?.success !== true || data.warehouseId !== warehouseId || data.filterBy !== (warehouseId ? 'activity' : 'all') || !matches || !Array.isArray(data.employees) || data.employees.some((u) => typeof u?.id !== 'string' || typeof u?.name !== 'string')) {
     throw new Error('Danh sách nhân viên Pancake không hợp lệ.');
   }
   return data.employees;
@@ -20,6 +21,14 @@ export async function fetchDailySales(month, employeeId, signal) {
     throw new Error('Dữ liệu doanh số không khớp với nhân viên hoặc tháng đã chọn.');
   }
   return { rows: data.rows, updatedAt: data.updatedAt };
+}
+
+export async function fetchSalesRanking(start, end, signal) {
+  const { data } = await api.get('/sales/ranking', { params: { start, end }, signal, timeout: 60000 });
+  if (data?.success !== true || data.start !== start || data.end !== end || !Number.isFinite(Date.parse(data.updatedAt)) || typeof data.targetError !== 'boolean' || !Array.isArray(data.rows) || data.rows.some((r) => typeof r?.employeeId !== 'string' || typeof r.name !== 'string' || !Number.isFinite(r.revenueThb) || !Number.isSafeInteger(r.orders) || r.orders < 0 || !(r.targetVnd === null || (Number.isFinite(r.targetVnd) && r.targetVnd > 0)) || !(r.completion === null || Number.isFinite(r.completion)))) {
+    throw new Error('Dữ liệu bảng xếp hạng không hợp lệ.');
+  }
+  return data;
 }
 
 export async function fetchExchangeRate(signal) {

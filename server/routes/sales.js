@@ -1,8 +1,9 @@
 const router = require('express').Router();
 const verifyAdminToken = require('../middleware/auth');
-const { PancakeError, getEmployees, getWarehouses, getDailySales, getWarehouseEmployees, validateWarehouseId } = require('../services/pancakeSales');
+const { PancakeError, getEmployees, getWarehouses, getDailySales, getWarehouseEmployees, getWarehouseEmployeesForRange, validateWarehouseId } = require('../services/pancakeSales');
 const { getExchangeRate } = require('../services/exchangeRate');
 const { createSalesTargetsRouter } = require('./salesTargets');
+const { getLeaderboard } = require('../services/salesRanking');
 
 // Chỉ các endpoint GET báo cáo được phép xem công khai nếu chủ hệ thống chủ động bật.
 // Mặc định vẫn yêu cầu JWT. Không thay đổi middleware của các route khác.
@@ -26,9 +27,11 @@ function handleError(error, res) {
 
 router.get('/api/sales/employees', salesReadAccess, async (req, res) => {
   try {
-    const { month, warehouseId = '' } = req.query;
+    const { warehouseId = '', month, start, end } = req.query;
     validateWarehouseId(warehouseId);
-    res.json({ success: true, warehouseId, ...(warehouseId ? { month } : {}), employees: warehouseId ? await getWarehouseEmployees(month, warehouseId) : await getEmployees() });
+    if (!warehouseId) return res.json({ success: true, warehouseId, filterBy: 'all', employees: await getEmployees() });
+    if (start !== undefined || end !== undefined) return res.json({ success: true, warehouseId, filterBy: 'activity', start, end, employees: await getWarehouseEmployeesForRange(start, end, warehouseId) });
+    res.json({ success: true, warehouseId, filterBy: 'activity', month, employees: await getWarehouseEmployees(month, warehouseId) });
   }
   catch (error) { handleError(error, res); }
 });
@@ -43,6 +46,13 @@ router.get('/api/sales/daily', salesReadAccess, async (req, res) => {
     const { month, employeeId } = req.query;
     const rows = await getDailySales(month, employeeId);
     res.json({ success: true, month, employeeId, rows, updatedAt: new Date().toISOString() });
+  } catch (error) { handleError(error, res); }
+});
+
+router.get('/api/sales/ranking', salesReadAccess, async (req, res) => {
+  try {
+    const { start, end } = req.query;
+    res.json({ success: true, start, end, ...(await getLeaderboard(start, end)) });
   } catch (error) { handleError(error, res); }
 });
 

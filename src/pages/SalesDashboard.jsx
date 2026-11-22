@@ -2,8 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import EmployeeSearch from '../components/EmployeeSearch';
 import EmployeeTargetManager from '../components/EmployeeTargetManager';
+import SalesRanking from '../components/SalesRanking';
 import {
-  DEFAULT_EMPLOYEE_ID, PROGRESS_COLORS, todayInBangkok, shiftMonth, progressColor,
+  PROGRESS_COLORS, todayInBangkok, shiftMonth, progressColor,
   buildRows, calculateSummary, groupWeeklyRows, formatChartRevenue, getEmployeeTarget,
 } from './salesDashboardModel';
 import { fetchSalesEmployees, fetchSalesWarehouses, fetchDailySales, fetchExchangeRate, fetchEmployeeTargets, saveEmployeeTargets, salesErrorMessage } from '../services/salesService';
@@ -68,7 +69,7 @@ export default function SalesDashboard() {
   const lookupMonth = month > today.slice(0, 7) ? today.slice(0, 7) : month;
   const scope = warehouseId === null ? '' : warehouseId ? `${warehouseId}:${lookupMonth}` : 'all';
   const employees = employeeState.scope === scope ? employeeState.items : [];
-  const employee = employees.some((u) => u.id === chosenEmployee) ? chosenEmployee : (employees.find((u) => u.id === DEFAULT_EMPLOYEE_ID)?.id || employees[0]?.id || '');
+  const employee = employees.some((u) => u.id === chosenEmployee) ? chosenEmployee : '';
   const warehouseOptions = [{ id: '', name: 'Tất cả các kho' }, ...warehouseState.items];
   const listReady = warehouseId !== null && employeeState.scope === scope && employeeState.version === refresh;
   const noEmployees = listReady && !employeeState.error && !employees.length;
@@ -147,6 +148,11 @@ export default function SalesDashboard() {
     return () => controller.abort();
   }, [month, employee, key, requestKey]);
 
+  function changeWarehouse(value) {
+    if (value !== warehouseId) setEmployee('');
+    setWarehouseId(value);
+  }
+
   async function saveTargets(targetMonth, changes) {
     const result = await saveEmployeeTargets(targetMonth, changes);
     targetRequest.current?.abort();
@@ -175,17 +181,17 @@ export default function SalesDashboard() {
 
   return <main className="sd-root">
     <header className="sd-topbar">
-      <div className="sd-brand"><span className="sd-brand-mark"><Icon type="chart" size={22}/></span><div><strong>Sales Dashboard</strong><small>PIXELALBUM · MARKETING</small></div></div>
+      <div className="sd-brand"><span className="sd-brand-mark"><Icon type="chart" size={22}/></span><div><strong>Dashboard</strong></div></div>
       <Link className="sd-back" to="/admin"><Icon type="arrow" size={17}/> Quản trị</Link>
     </header>
     <div className="sd-shell">
       <div className="sd-heading">
-        <div><div className="sd-overline">BÁO CÁO DOANH SỐ</div><h1>Tổng quan tháng {Number(monthNumber)}/{year}</h1><p>Theo dõi kết quả bán hàng và mục tiêu từng nhân viên.</p></div>
+        <div><div className="sd-overline">BÁO CÁO DOANH SỐ</div><h1>Tổng quan tháng {Number(monthNumber)}/{year}</h1></div>
         <button type="button" className="sd-primary" disabled={loading} onClick={() => setRefresh((n) => n + 1)}><Icon type="refresh"/> {loading ? 'Đang tải...' : 'Đồng bộ ngay'}</button>
       </div>
       <div className="sd-filterbar">
-        <EmployeeSearch employees={warehouseOptions} value={warehouseId} onChange={setWarehouseId} label="KHO HÀNG" noun="kho" emptyLabel="VALLEY" disabled={!warehouseState.loaded && !warehouseState.error}/>
-        <EmployeeSearch employees={employees} value={employee} onChange={setEmployee}/>
+        <EmployeeSearch employees={warehouseOptions} value={warehouseId} onChange={changeWarehouse} label="KHO HÀNG" noun="kho" emptyLabel="VALLEY" disabled={!warehouseState.loaded && !warehouseState.error}/>
+        <EmployeeSearch employees={employees} value={employee} onChange={setEmployee} emptyLabel={listReady ? 'Chọn nhân viên' : 'Chưa tải nhân viên'}/>
         <label className="sd-field"><span>THÁNG BÁO CÁO</span><div className="sd-month"><button aria-label="Tháng trước" type="button" onClick={() => setMonth(shiftMonth(month, -1))}><Icon type="left"/></button><input aria-label="Tháng báo cáo" type="month" value={month} onChange={(e) => e.target.value && setMonth(e.target.value)}/><button aria-label="Tháng sau" type="button" onClick={() => setMonth(shiftMonth(month, 1))}><Icon type="right"/></button></div></label>
         <div className="sd-field"><span>MỤC TIÊU (VND)</span><a className="sd-target-link" href="#sd-employee-targets"><span>{goalLabel}</span><small>Chỉnh sửa ↓</small></a></div>
         <div className={`sd-status ${error ? 'sd-status-error' : ready ? 'sd-status-ok' : ''}`} role="status"><span className="sd-dot"/> {error ? 'Lỗi kết nối' : loading ? 'Đang đồng bộ' : 'Pancake POS'}<small>{hasCurrentData && !error && salesState.updatedAt ? new Date(salesState.updatedAt).toLocaleString('vi-VN', {timeZone:'Asia/Bangkok'}) : 'Tự tải mỗi 1 phút'}</small></div>
@@ -193,7 +199,8 @@ export default function SalesDashboard() {
       {error && <div className="sd-alert" role="alert">{error} <button type="button" onClick={() => setRefresh((n) => n + 1)}>Thử lại</button></div>}
       {warehouseState.error && <div className="sd-alert" role="alert">Không tải được danh sách kho: {warehouseState.error}</div>}
       {warehouseState.loaded && warehouseId === null && <div className="sd-alert" role="alert">Không tìm thấy kho VALLEY. Hãy chọn một kho trong danh sách.</div>}
-      {noEmployees && <div className="sd-alert sd-alert-neutral">Kho chưa có nhân viên phát sinh trong kỳ {lookupMonth}. Chọn tháng khác hoặc Tất cả các kho.</div>}
+      
+      {listReady && employees.length > 0 && !employee && <div className="sd-alert sd-alert-neutral">Hãy chọn nhân viên để xem báo cáo cá nhân.</div>}
       {warehouseId && <p className="sd-filter-note">Kho chỉ lọc nhân viên có phát sinh trong báo cáo tháng {lookupMonth}. Doanh số và mục tiêu vẫn tính theo nhân viên trên tất cả các kho.</p>}
       {targetError && <div className="sd-alert" role="alert">{targetError}{monthTargets ? ' · Mục tiêu đang hiển thị là dữ liệu đã tải trước đó.' : ''} <button type="button" onClick={() => setRefresh((n) => n + 1)}>Thử lại</button></div>}
       {ready && !error && !salesState.rows.length && <div className="sd-alert sd-alert-neutral">Pancake chưa trả bản ghi cho nhân viên và tháng này. Các ngày chưa có dữ liệu được giữ trống.</div>}
@@ -251,7 +258,8 @@ export default function SalesDashboard() {
       <section className="sd-panel sd-chart-panel"><div className="sd-section-heading"><div><h2>Biểu đồ doanh số</h2><p>Doanh số ngày · THB</p></div><span className="sd-chart-unit">฿</span></div>
         <div className="sd-chart" aria-label="Biểu đồ doanh số theo ngày">{rows.map((r) => <div key={r.date} className="sd-bar-col" title={`${r.date}: ${thb(r.revenueThb)}`}><div className="sd-bar-space"><div className={`sd-bar ${r.date === today ? 'sd-bar-current' : ''}`} style={{ height: `${r.recorded && r.revenueThb > 0 ? Math.max(2, r.revenueThb / maxRevenue * 100) : 0}%` }}>{r.recorded && <span className="sd-bar-label">{formatChartRevenue(r.revenueThb)}</span>}</div></div><small>{r.day}</small></div>)}</div>
       </section>
-      <EmployeeTargetManager employees={employees} month={month} onMonthChange={setMonth} warehouseId={warehouseId} warehouseOptions={warehouseOptions} onWarehouseChange={setWarehouseId} targets={monthTargets} legacyTargets={legacySettings.targets} error={targetError} canEdit={targetState.month === month && targetState.canEdit && !targetError} onSave={saveTargets} rate={rate}/>
+      <SalesRanking warehouseOptions={warehouseOptions} refresh={refresh} rate={rate}/>
+      <EmployeeTargetManager employees={employees} month={month} onMonthChange={setMonth} warehouseId={warehouseId} warehouseOptions={warehouseOptions} onWarehouseChange={changeWarehouse} targets={monthTargets} legacyTargets={legacySettings.targets} error={targetError} canEdit={targetState.month === month && targetState.canEdit && !targetError} onSave={saveTargets} rate={rate}/>
       <footer className="sd-footer">Pancake POS · Đồng bộ mỗi 1 phút khi dashboard mở · Múi giờ Asia/Bangkok · Mục tiêu lưu trong cơ sở dữ liệu</footer>
     </div>
   </main>;

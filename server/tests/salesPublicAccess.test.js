@@ -11,7 +11,7 @@ test('sales access is private by default and public only when enabled', async ()
     const parsed = new URL(url);
     if (parsed.hostname === 'open.er-api.com') return Response.json({ result: 'success', base_code: 'THB', rates: { VND: 801.25 }, time_last_update_unix: Math.floor(Date.now() / 1000), time_next_update_unix: Math.floor(Date.now() / 1000) + 86400 });
     if (parsed.hostname !== 'pos.pages.fm') return originalFetch(url, options);
-    if (parsed.pathname.endsWith('/users')) return new Response(JSON.stringify({ success: true, data: [{ user_id: 'employee-1', user: { name: 'HÙNG BLACK VL' } }] }));
+    if (parsed.pathname.endsWith('/users')) return new Response(JSON.stringify({ success: true, data: [{ user_id: 'employee-1', user: { name: 'HÙNG BLACK VL' }, department: { name: 'NTC' } }] }));
     if (parsed.pathname.endsWith('/warehouses')) return Response.json({ data: [{ id: 'ntc', name: 'NTC', phone: 'private' }] });
     const warehouse = parsed.searchParams.get('filter[Order.warehouse_id][]');
     return Response.json({ success: true, data: [{ 'User.id': 'employee-1', 'Time.day': '2026-01-01', ...(warehouse ? { 'Order.warehouse_id': warehouse } : {}), success: { price: 123400, order_count: 2 } }] });
@@ -34,7 +34,10 @@ test('sales access is private by default and public only when enabled', async ()
     const daily = await fetch(`${base}/daily?month=2026-01&employeeId=employee-1`);
     assert.equal(daily.status, 200);
     assert.deepEqual((await daily.json()).rows, [{ date: '2026-01-01', orders: 2, revenueThb: 1234 }]);
-    assert.deepEqual((await (await fetch(`${base}/employees?month=2026-01&warehouseId=ntc`)).json()).employees, [{ id: 'employee-1', name: 'HÙNG BLACK VL' }]);
+    assert.equal((await fetch(`${base}/employees?warehouseId=ntc`)).status, 400);
+    assert.deepEqual(await (await fetch(`${base}/employees?warehouseId=ntc&month=2026-01`)).json(), { success: true, warehouseId: 'ntc', filterBy: 'activity', month: '2026-01', employees: [{ id: 'employee-1', name: 'HÙNG BLACK VL' }] });
+    assert.deepEqual((await (await fetch(`${base}/employees?month=2100-01&warehouseId=ntc`)).json()).employees, []);
+    assert.deepEqual(await (await fetch(`${base}/employees?warehouseId=ntc&start=2025-12-30&end=2026-01-02`)).json(), { success: true, warehouseId: 'ntc', filterBy: 'activity', start: '2025-12-30', end: '2026-01-02', employees: [{ id: 'employee-1', name: 'HÙNG BLACK VL' }] });
     assert.equal((await fetch(`${base}/employees?month=2026-01&warehouseId=unknown`)).status, 400);
     assert.deepEqual((await (await fetch(`${base}/daily?month=2026-01&employeeId=employee-1&warehouseId=ntc`)).json()).rows, [{ date: '2026-01-01', orders: 2, revenueThb: 1234 }]);
     const exchange = await fetch(`${base}/exchange-rate`);
