@@ -92,7 +92,7 @@ export default function SalesRanking({ warehouseOptions, refresh, rate = 780 }) 
   const totalRevenue = rows.reduce((sum, row) => sum + row.revenueThb, 0);
   const assignedTargets = rows.filter((row) => row.targetVnd > 0);
   const totalTarget = assignedTargets.reduce((sum, row) => sum + row.targetVnd, 0);
-  return <section className="sd-panel sd-ranking-panel" aria-label="Bảng xếp hạng nhân viên">
+  return <section className="sd-panel sd-ranking-panel" id="sd-ranking" aria-label="Bảng xếp hạng nhân viên">
     <div className="sd-section-heading"><div><h2>Bảng xếp hạng nhân viên</h2><p>Doanh số giảm dần · Bộ lọc độc lập với báo cáo phía trên</p></div><button type="button" className="sd-secondary" onClick={() => setRetry((n) => n + 1)}>↻ Làm mới</button></div>
     <div className="sd-ranking-filters">
       <EmployeeSearch employees={warehouseOptions} value={warehouseId} onChange={changeWarehouse} label="KHO HÀNG" noun="kho" emptyLabel="VALLEY" />
@@ -112,15 +112,15 @@ export default function SalesRanking({ warehouseOptions, refresh, rate = 780 }) 
         <tbody>
           {rows.map((row, index) => <tr key={row.employeeId}>
             <td><span className={`sd-ranking-position sd-rank-${index + 1}`}>{String(index + 1).padStart(2, '0')}</span><strong>{row.name}</strong></td>
-            <td>{format.format(row.orders)}</td>
-            <td className="sd-ranking-money"><strong className="sd-ranking-revenue">฿{format.format(row.revenueThb)}</strong></td>
-            <td className="sd-ranking-money"><strong className="sd-ranking-revenue-vnd">{money.format(row.revenueThb * rate)} ₫</strong></td>
-            {showCompletion && <td className="sd-ranking-money">{row.targetVnd > 0 ? <strong className="sd-ranking-target">{money.format(row.targetVnd)} ₫</strong> : <span className="sd-ranking-unset">{data.targetError ? 'Không tải được' : 'Chưa đặt'}</span>}</td>}
-            {showCompletion && <td>{row.completion === null ? <span className="sd-ranking-unset">{data.targetError ? 'Không tải được' : 'Chưa đặt'}</span> : <div className="sd-ranking-progress" title={`Mục tiêu: ${money.format(row.targetVnd)} ₫`}><span style={{ width: `${Math.max(0, Math.min(100, row.completion * 100))}%`, background: progressColor(row.completion) }}/><strong>{format.format(row.completion * 100)}%</strong></div>}</td>}
+            <td data-label="Đơn hàng">{format.format(row.orders)}</td>
+            <td data-label="Doanh số THB" className="sd-ranking-money"><strong className="sd-ranking-revenue">฿{format.format(row.revenueThb)}</strong></td>
+            <td data-label="Doanh số VND" className="sd-ranking-money"><strong className="sd-ranking-revenue-vnd">{money.format(row.revenueThb * rate)} ₫</strong></td>
+            {showCompletion && <td data-label="Mục tiêu VND" className="sd-ranking-money">{row.targetVnd > 0 ? <strong className="sd-ranking-target">{money.format(row.targetVnd)} ₫</strong> : <span className="sd-ranking-unset">{data.targetError ? 'Không tải được' : 'Chưa đặt'}</span>}</td>}
+            {showCompletion && <td data-label="Hoàn thành">{row.completion === null ? <span className="sd-ranking-unset">{data.targetError ? 'Không tải được' : 'Chưa đặt'}</span> : <div className="sd-ranking-progress" title={`Mục tiêu: ${money.format(row.targetVnd)} ₫`}><span style={{ width: `${Math.max(0, Math.min(100, row.completion * 100))}%`, background: progressColor(row.completion) }}/><strong>{format.format(row.completion * 100)}%</strong></div>}</td>}
           </tr>)}
           {!rows.length && <tr><td colSpan={showCompletion ? 6 : 4} className="sd-ranking-empty">{invalid || error || employeeError ? 'Chưa có dữ liệu hiển thị.' : loading ? 'Đang tải dữ liệu...' : 'Chưa chọn nhân viên hoặc không có nhân viên phù hợp.'}</td></tr>}
         </tbody>
-        {rows.length > 0 && <tfoot><tr><td>TỔNG ({rows.length})</td><td>{format.format(totalOrders)}</td><td className="sd-ranking-money">฿{format.format(totalRevenue)}</td><td className="sd-ranking-money">{money.format(totalRevenue * rate)} ₫</td>{showCompletion && <><td className="sd-ranking-money">{data.targetError ? 'Không tải được' : assignedTargets.length ? <>{money.format(totalTarget)} ₫{assignedTargets.length < rows.length && <small className="sd-ranking-target-count">{assignedTargets.length}/{rows.length} đã đặt</small>}</> : 'Chưa đặt'}</td><td>—</td></>}</tr></tfoot>}
+        {rows.length > 0 && <tfoot><tr><td>TỔNG ({rows.length})</td><td data-label="Đơn hàng">{format.format(totalOrders)}</td><td data-label="Doanh số THB" className="sd-ranking-money">฿{format.format(totalRevenue)}</td><td data-label="Doanh số VND" className="sd-ranking-money">{money.format(totalRevenue * rate)} ₫</td>{showCompletion && <><td data-label="Mục tiêu VND" className="sd-ranking-money">{data.targetError ? 'Không tải được' : assignedTargets.length ? <>{money.format(totalTarget)} ₫{assignedTargets.length < rows.length && <small className="sd-ranking-target-count">{assignedTargets.length}/{rows.length} đã đặt</small>}</> : 'Chưa đặt'}</td><td data-label="Hoàn thành">—</td></>}</tr></tfoot>}
       </table>
     </div>
     <p className="sd-ranking-note">Tỷ giá quy đổi: 1 THB = {rate} VND. {showCompletion && `Hoàn thành = doanh số tháng × ${rate} ÷ mục tiêu tháng. Không có mục tiêu dương thì hiển thị “Chưa đặt”. `}Kho lọc nhân viên có phát sinh {lookupMonth ? `trong tháng ${lookupMonth}` : 'trong khoảng ngày đã chọn'}, doanh số tính trên tất cả các kho.</p>

@@ -200,6 +200,9 @@ export default function SalesDashboard() {
         <div><div className="sd-overline">BÁO CÁO DOANH SỐ</div><h1>Tổng quan tháng {Number(monthNumber)}/{year}</h1><p>Theo dõi kết quả bán hàng và mục tiêu từng nhân viên.</p></div>
         <button type="button" className="sd-primary" disabled={loading} onClick={() => setRefresh((n) => n + 1)}><Icon type="refresh"/> {loading ? 'Đang tải...' : 'Đồng bộ ngay'}</button>
       </div>
+      <nav className="sd-mobile-only sd-mobile-nav" aria-label="Đi nhanh đến báo cáo">
+        <a href="#sd-summary">Thống kê</a><a href="#sd-daily">Theo ngày</a><a href="#sd-chart">Biểu đồ</a><a href="#sd-ranking">Xếp hạng</a><a href="#sd-employee-targets">Mục tiêu</a>
+      </nav>
       <div className="sd-filterbar">
         <EmployeeSearch employees={warehouseOptions} value={warehouseId} onChange={changeWarehouse} label="KHO HÀNG" noun="kho" emptyLabel="VALLEY" disabled={!warehouseState.loaded && !warehouseState.error}/>
         <EmployeeSearch employees={employees} value={employee} onChange={changeEmployee} emptyLabel={listReady ? 'Chọn nhân viên' : 'Chưa tải nhân viên'}/>
@@ -233,9 +236,9 @@ export default function SalesDashboard() {
       </section>
 
       <div className="sd-main-grid">
-        <section className="sd-panel sd-table-panel">
+        <section className="sd-panel sd-table-panel" id="sd-daily">
           <div className="sd-section-heading"><div><h2>Doanh số từng ngày</h2><p>Chi tiết theo lịch tháng · THB và VND</p></div><button type="button" className="sd-secondary" disabled={!ready || !!error || !summary.recordedDays} onClick={exportCsv}><Icon type="download"/> Xuất CSV</button></div>
-          <div className="sd-table-wrap"><table className="sd-table"><thead><tr><th>Ngày</th><th>Số đơn</th><th>Doanh số THB</th><th>Doanh số VND</th><th>Tổng tuần VND</th></tr></thead>
+          <div className="sd-table-wrap"><table className="sd-table sd-table-desktop"><thead><tr><th>Ngày</th><th>Số đơn</th><th>Doanh số THB</th><th>Doanh số VND</th><th>Tổng tuần VND</th></tr></thead>
             {weekGroups.map((week, weekIndex) => <tbody key={week.startDate} className={`sd-week-group ${weekIndex % 2 ? 'sd-week-alt' : ''}`}>
               {week.rows.map((r, index) => <tr key={r.date} className={`${r.date === today ? 'sd-today' : ''} ${!r.recorded ? 'sd-future' : ''}`}>
                 <td><div className="sd-date"><b>{String(r.day).padStart(2, '0')}</b><span>{dayNames[r.weekday]}{r.date === today && <small>Hôm nay</small>}</span></div></td>
@@ -246,10 +249,22 @@ export default function SalesDashboard() {
                 </td>}
               </tr>)}
             </tbody>)}
-          <tfoot><tr><td>TỔNG THÁNG</td><td>{number(summary.orders)}</td><td>{thb(summary.revenueThb)}</td><td className="sd-month-total">{vnd(summary.revenueVnd)}</td><td>{vnd(summary.revenueVnd)}</td></tr></tfoot></table></div>
+          <tfoot><tr><td>TỔNG THÁNG</td><td>{number(summary.orders)}</td><td>{thb(summary.revenueThb)}</td><td className="sd-month-total">{vnd(summary.revenueVnd)}</td><td>{vnd(summary.revenueVnd)}</td></tr></tfoot></table>
+          <table className="sd-table sd-table-mobile sd-mobile-only" aria-label="Doanh số từng ngày trên điện thoại">
+            <colgroup><col className="sd-mobile-col-day"/><col className="sd-mobile-col-thb"/><col className="sd-mobile-col-week"/></colgroup>
+            <thead><tr><th scope="col">Ngày</th><th scope="col">Doanh số THB</th><th scope="col">Tổng tuần VND</th></tr></thead>
+            {weekGroups.map((week, weekIndex) => <tbody key={week.startDate} className={`sd-week-group ${weekIndex % 2 ? 'sd-week-alt' : ''}`}>
+              {week.rows.map((r, index) => <tr key={r.date} className={`${r.date === today ? 'sd-today' : ''} ${!r.recorded ? 'sd-future' : ''}`}>
+                <td><div className="sd-date"><b aria-label={r.date === today ? `Ngày ${r.day}, hôm nay` : `Ngày ${r.day}`}>{String(r.day).padStart(2, '0')}</b></div></td>
+                <td className="sd-mobile-daily-thb">{thb(r.revenueThb)}</td>
+                {index === 0 && <td rowSpan={week.rows.length} className={`sd-week-total ${week.totalVnd == null ? 'sd-week-empty' : ''}`}><div className="sd-week-content"><small>{shortDate(week.startDate)}{week.startDate !== week.endDate ? ` – ${shortDate(week.endDate)}` : ''}</small><strong>{vnd(week.totalVnd)}</strong></div></td>}
+              </tr>)}
+            </tbody>)}
+            <tfoot><tr><td>TỔNG THÁNG</td><td>{thb(summary.revenueThb)}</td><td>{vnd(summary.revenueVnd)}</td></tr></tfoot>
+          </table></div>
         </section>
 
-          <section className="sd-panel sd-summary"><div className="sd-section-heading"><div><h2>Thống kê mục tiêu</h2><p>Quy đổi theo tỷ giá cố định 780</p></div></div>
+          <section className="sd-panel sd-summary" id="sd-summary"><div className="sd-section-heading"><div><h2>Thống kê mục tiêu</h2><p>Quy đổi theo tỷ giá cố định 780</p></div></div>
             <div className="sd-summary-stats">
               <div className="sd-stats-header"><span>Chỉ số</span><span>THB</span><span>VND</span></div>
               <StatsRow title="Tỷ giá" left="฿1" right={vnd(rate)}/>
@@ -266,7 +281,8 @@ export default function SalesDashboard() {
             <div className="sd-rate-source"><a href="https://www.exchangerate-api.com" target="_blank" rel="noreferrer">Rates By Exchange Rate API</a> · Tỷ giá tham khảo, cập nhật hằng ngày</div>
           </section>
       </div>
-      <section className="sd-panel sd-chart-panel"><div className="sd-section-heading"><div><h2>Biểu đồ doanh số</h2><p>Doanh số ngày · THB</p></div><span className="sd-chart-unit">฿</span></div>
+      <section className="sd-panel sd-chart-panel" id="sd-chart"><div className="sd-section-heading"><div><h2>Biểu đồ doanh số</h2><p>Doanh số ngày · THB</p></div><span className="sd-chart-unit">฿</span></div>
+        <p className="sd-mobile-only sd-mobile-chart-hint">Vuốt ngang để xem đủ các ngày trong tháng →</p>
         <div className="sd-chart" aria-label="Biểu đồ doanh số theo ngày">{rows.map((r) => <div key={r.date} className="sd-bar-col" title={`${r.date}: ${thb(r.revenueThb)}`}><div className="sd-bar-space"><div className={`sd-bar ${r.date === today ? 'sd-bar-current' : ''}`} style={{ height: `${r.recorded && r.revenueThb > 0 ? Math.max(2, r.revenueThb / maxRevenue * 100) : 0}%` }}>{r.recorded && <span className="sd-bar-label">{formatChartRevenue(r.revenueThb)}</span>}</div></div><small>{r.day}</small></div>)}</div>
       </section>
       <SalesRanking warehouseOptions={warehouseOptions} refresh={refresh} rate={rate}/>

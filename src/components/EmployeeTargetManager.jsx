@@ -59,7 +59,7 @@ export default function EmployeeTargetManager({ employees, month, onMonthChange,
     {!error && targets && !canEdit && <p className="sd-target-notice">Chế độ chỉ xem. <Link to="/admin/login" onClick={() => localStorage.removeItem('adminToken')}>Đăng nhập quản trị để sửa mục tiêu</Link>, sau đó quay lại báo cáo.</p>}
     {editable && importable.length > 0 && <p className="sd-target-notice">Tìm thấy {importable.length} mục tiêu V5 trên máy này chưa có trong CSDL. <button type="button" className="sd-secondary" onClick={() => setDrafts((previous) => ({ ...previous, ...Object.fromEntries(importable) }))}>Nhập mục tiêu cũ</button> · Kiểm tra rồi nhấn Lưu mục tiêu.</p>}
     <form onSubmit={save}>
-      <div className="sd-target-table-wrap"><table className="sd-target-table">
+      <div className="sd-target-table-wrap" tabIndex={0} role="region" aria-label="Cuộn danh sách mục tiêu"><table className="sd-target-table">
         <thead><tr><th>Nhân viên</th><th>Mục tiêu tháng (VND)</th><th>Quy đổi THB (780)</th><th>Trạng thái</th></tr></thead>
         <tbody>{visible.map((person) => {
           const key = employeeTargetKey(person.id, month);
@@ -69,9 +69,9 @@ export default function EmployeeTargetManager({ employees, month, onMonthChange,
           const amount = edited ? parseTargetDraft(value) : saved;
           return <tr key={person.id}>
             <td><strong>{person.name}</strong></td>
-            <td><input aria-label={`Mục tiêu ${person.name} tháng ${month}`} aria-invalid={edited && amount == null} disabled={!editable} placeholder="Chưa đặt" inputMode="numeric" value={value} onChange={(event) => { setDrafts((previous) => ({ ...previous, [key]: event.target.value })); setNotice(null); }}/></td>
-            <td className="sd-target-thb">{amount > 0 ? `฿${format.format(amount / rate)}` : '—'}</td>
-            <td><span className={`sd-target-badge ${edited && amount == null ? 'sd-target-invalid' : edited ? 'sd-target-pending' : !saved ? 'sd-target-unset' : ''}`}>{edited ? amount == null ? 'Không hợp lệ' : amount === 0 ? 'Bỏ mục tiêu (chưa lưu)' : 'Chưa lưu' : !targets ? 'Chưa tải' : saved > 0 ? 'Đã lưu CSDL' : 'Chưa đặt'}</span></td>
+            <td data-label="Mục tiêu tháng (VND)"><input aria-label={`Mục tiêu ${person.name} tháng ${month}`} aria-invalid={edited && amount == null} disabled={!editable} placeholder="Chưa đặt" inputMode="numeric" value={value} onChange={(event) => { setDrafts((previous) => ({ ...previous, [key]: event.target.value })); setNotice(null); }}/></td>
+            <td data-label="Quy đổi THB (780)" className="sd-target-thb">{amount > 0 ? `฿${format.format(amount / rate)}` : '—'}</td>
+            <td data-label="Trạng thái"><span className={`sd-target-badge ${edited && amount == null ? 'sd-target-invalid' : edited ? 'sd-target-pending' : !saved ? 'sd-target-unset' : ''}`}>{edited ? amount == null ? 'Không hợp lệ' : amount === 0 ? 'Bỏ mục tiêu (chưa lưu)' : 'Chưa lưu' : !targets ? 'Chưa tải' : saved > 0 ? 'Đã lưu CSDL' : 'Chưa đặt'}</span></td>
           </tr>;
         })}{!visible.length && <tr><td colSpan={4} className="sd-target-empty">{employees.length ? 'Không tìm thấy nhân viên.' : 'Chưa tải được danh sách nhân viên.'}</td></tr>}</tbody>
       </table></div>
