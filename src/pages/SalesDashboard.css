@@ -170,17 +170,19 @@
 .sd-ranking-table-wrap { max-height:420px; overflow:auto; border:1px solid var(--sd-line); border-radius:10px; scrollbar-width:thin; }
 .sd-ranking-table-wrap:focus-visible { outline:2px solid #90b9ff; outline-offset:2px; }
 .sd-ranking-table { width:100%; min-width:650px; border-collapse:collapse; font-size:14px; font-variant-numeric:tabular-nums; }
-.sd-ranking-table.sd-ranking-with-completion { min-width:790px; }
+.sd-ranking-table.sd-ranking-with-completion { min-width:960px; }
 .sd-ranking-table th,.sd-ranking-table td { padding:13px 16px; text-align:right; border-bottom:1px solid var(--sd-line); }
 .sd-ranking-table thead th { position:sticky; top:0; z-index:2; background:#eef3fa; color:#52627a; font-size:12px; font-weight:750; white-space:nowrap; }
 .sd-ranking-table th:first-child,.sd-ranking-table td:first-child { text-align:left; }
 .sd-ranking-table tbody tr:nth-child(even) { background:#f8fafc; }
 .sd-ranking-table tbody tr:hover { background:#edf4ff; }
-.sd-ranking-with-completion td:last-child:not(.sd-ranking-empty) { width:20%; }
+.sd-ranking-with-completion td:last-child:not(.sd-ranking-empty) { width:18%; }
 .sd-ranking-position { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; margin-right:10px; font-size:12px; background:#eaf0f7; color:#65758d; font-weight:700; border-radius:8px; }
 .sd-rank-1 { background:#fff0bb; color:#9a6200; }.sd-rank-2 { background:#e2e8f0; color:#475569; }.sd-rank-3 { background:#f8dfd0; color:#92512d; }
 .sd-ranking-revenue { color:#1462c8; font-weight:800; font-size:15px; }
 .sd-ranking-revenue-vnd { color:#087b54; font-weight:800; font-size:15px; }
+.sd-ranking-target { color:#7650ba; font-weight:750; font-size:14px; }
+.sd-ranking-target-count { display:block; color:var(--sd-muted); font-size:11px; font-weight:500; margin-top:2px; }
 .sd-ranking-money { white-space:nowrap; }
 .sd-ranking-progress { position:relative; overflow:hidden; background:#e9eef5; border-radius:7px; height:30px; display:flex; align-items:center; justify-content:center; min-width:108px; }
 .sd-ranking-progress span { position:absolute; inset:0 auto 0 0; transition:width .3s; }

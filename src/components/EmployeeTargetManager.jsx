@@ -1,15 +1,17 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import EmployeeSearch from './EmployeeSearch';
 import { DEFAULT_EMPLOYEE_ID, employeeTargetKey, getEmployeeTarget, normalizeEmployeeSearch, parseTargetDraft } from '../pages/salesDashboardModel';
+import { SALES_FILTER_KEYS, readTargetFilter, saveSalesFilters } from '../pages/salesFilterStorage';
 
 const format = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 });
 
 export default function EmployeeTargetManager({ employees, month, onMonthChange, warehouseId, warehouseOptions, onWarehouseChange, targets, legacyTargets, error, canEdit, onSave, rate }) {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(() => readTargetFilter());
   const [drafts, setDrafts] = useState({});
   const [notice, setNotice] = useState(null);
   const [saving, setSaving] = useState(false);
+  useEffect(() => { saveSalesFilters(SALES_FILTER_KEYS.targets, { query }); }, [query]);
   const normalized = normalizeEmployeeSearch(query);
   const visible = employees.filter((person) => normalizeEmployeeSearch(person.name).includes(normalized));
   const pending = employees.flatMap((person) => {

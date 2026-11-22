@@ -8,6 +8,7 @@ import {
   buildRows, calculateSummary, groupWeeklyRows, formatChartRevenue, getEmployeeTarget,
 } from './salesDashboardModel';
 import { fetchSalesEmployees, fetchSalesWarehouses, fetchDailySales, fetchExchangeRate, fetchEmployeeTargets, saveEmployeeTargets, salesErrorMessage } from '../services/salesService';
+import { SALES_FILTER_KEYS, readPersonalFilters, saveSalesFilters, resolveWarehouseChoice } from './salesFilterStorage';
 import './SalesDashboard.css';
 
 const vi = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 });
@@ -55,9 +56,10 @@ function StatsRow({ title, left, right, tone = '' }) {
 
 export default function SalesDashboard() {
   const today = todayInBangkok();
-  const [month, setMonth] = useState(today.slice(0, 7));
-  const [chosenEmployee, setEmployee] = useState('');
-  const [warehouseId, setWarehouseId] = useState(null);
+  const [initialFilters] = useState(() => readPersonalFilters(today));
+  const [month, setMonth] = useState(initialFilters.month);
+  const [chosenEmployee, setEmployee] = useState(initialFilters.chosenEmployee);
+  const [warehouseChoice, setWarehouseChoice] = useState(initialFilters.warehouseChoice);
   const [warehouseState, setWarehouseState] = useState({ items: [], error: '', loaded: false });
   const [legacySettings] = useState(readSettings);
   const [targetState, setTargetState] = useState({ month: '', targets: null, canEdit: false, error: '' });
@@ -66,11 +68,12 @@ export default function SalesDashboard() {
   const [employeeState, setEmployeeState] = useState({ scope: '', items: [], error: '', version: -1 });
   const [salesState, setSalesState] = useState({ key: '', requestKey: '', rows: [], error: '', updatedAt: null });
   const [exchange, setExchange] = useState(null);
+  const warehouseOptions = [{ id: '', name: 'Tất cả các kho' }, ...warehouseState.items];
+  const warehouseId = resolveWarehouseChoice(warehouseChoice, warehouseOptions);
   const lookupMonth = month > today.slice(0, 7) ? today.slice(0, 7) : month;
   const scope = warehouseId === null ? '' : warehouseId ? `${warehouseId}:${lookupMonth}` : 'all';
   const employees = employeeState.scope === scope ? employeeState.items : [];
-  const employee = employees.some((u) => u.id === chosenEmployee) ? chosenEmployee : '';
-  const warehouseOptions = [{ id: '', name: 'Tất cả các kho' }, ...warehouseState.items];
+  const employee = (warehouseChoice === null || warehouseChoice === warehouseId) && employees.some((u) => u.id === chosenEmployee) ? chosenEmployee : '';
   const listReady = warehouseId !== null && employeeState.scope === scope && employeeState.version === refresh;
   const noEmployees = listReady && !employeeState.error && !employees.length;
   const key = `${employee}:${month}`;
@@ -89,6 +92,10 @@ export default function SalesDashboard() {
   const loading = !error && !noEmployees && (warehouseId === null ? !warehouseState.loaded && !warehouseState.error : !listReady || (!!employee && !ready));
 
   useEffect(() => {
+    saveSalesFilters(SALES_FILTER_KEYS.personal, { month, warehouseChoice, chosenEmployee });
+  }, [month, warehouseChoice, chosenEmployee]);
+
+  useEffect(() => {
     const timer = setInterval(() => setRefresh((n) => n + 1), 60 * 1000);
     return () => clearInterval(timer);
   }, []);
@@ -98,7 +105,6 @@ export default function SalesDashboard() {
     fetchSalesWarehouses(controller.signal).then((items) => {
       if (controller.signal.aborted) return;
       setWarehouseState({ items, error: '', loaded: true });
-      setWarehouseId((previous) => previous !== null ? previous : (items.find((w) => w.name.trim().toUpperCase() === 'VALLEY')?.id ?? null));
     }).catch((e) => {
       if (!controller.signal.aborted) setWarehouseState((previous) => ({ ...previous, error: salesErrorMessage(e) }));
     });
@@ -149,8 +155,13 @@ export default function SalesDashboard() {
   }, [month, employee, key, requestKey]);
 
   function changeWarehouse(value) {
-    if (value !== warehouseId) setEmployee('');
-    setWarehouseId(value);
+    if (value !== warehouseId || (warehouseChoice !== null && warehouseChoice !== warehouseId)) setEmployee('');
+    setWarehouseChoice(value);
+  }
+
+  function changeEmployee(value) {
+    setWarehouseChoice(warehouseId);
+    setEmployee(value);
   }
 
   async function saveTargets(targetMonth, changes) {
@@ -181,17 +192,17 @@ export default function SalesDashboard() {
 
   return <main className="sd-root">
     <header className="sd-topbar">
-      <div className="sd-brand"><span className="sd-brand-mark"><Icon type="chart" size={22}/></span><div><strong>Dashboard</strong></div></div>
+      <div className="sd-brand"><span className="sd-brand-mark"><Icon type="chart" size={22}/></span><div><strong>Sales Dashboard</strong><small>PIXELALBUM · MARKETING</small></div></div>
       <Link className="sd-back" to="/admin"><Icon type="arrow" size={17}/> Quản trị</Link>
     </header>
     <div className="sd-shell">
       <div className="sd-heading">
-        <div><div className="sd-overline">BÁO CÁO DOANH SỐ</div><h1>Tổng quan tháng {Number(monthNumber)}/{year}</h1></div>
+        <div><div className="sd-overline">BÁO CÁO DOANH SỐ</div><h1>Tổng quan tháng {Number(monthNumber)}/{year}</h1><p>Theo dõi kết quả bán hàng và mục tiêu từng nhân viên.</p></div>
         <button type="button" className="sd-primary" disabled={loading} onClick={() => setRefresh((n) => n + 1)}><Icon type="refresh"/> {loading ? 'Đang tải...' : 'Đồng bộ ngay'}</button>
       </div>
       <div className="sd-filterbar">
         <EmployeeSearch employees={warehouseOptions} value={warehouseId} onChange={changeWarehouse} label="KHO HÀNG" noun="kho" emptyLabel="VALLEY" disabled={!warehouseState.loaded && !warehouseState.error}/>
-        <EmployeeSearch employees={employees} value={employee} onChange={setEmployee} emptyLabel={listReady ? 'Chọn nhân viên' : 'Chưa tải nhân viên'}/>
+        <EmployeeSearch employees={employees} value={employee} onChange={changeEmployee} emptyLabel={listReady ? 'Chọn nhân viên' : 'Chưa tải nhân viên'}/>
         <label className="sd-field"><span>THÁNG BÁO CÁO</span><div className="sd-month"><button aria-label="Tháng trước" type="button" onClick={() => setMonth(shiftMonth(month, -1))}><Icon type="left"/></button><input aria-label="Tháng báo cáo" type="month" value={month} onChange={(e) => e.target.value && setMonth(e.target.value)}/><button aria-label="Tháng sau" type="button" onClick={() => setMonth(shiftMonth(month, 1))}><Icon type="right"/></button></div></label>
         <div className="sd-field"><span>MỤC TIÊU (VND)</span><a className="sd-target-link" href="#sd-employee-targets"><span>{goalLabel}</span><small>Chỉnh sửa ↓</small></a></div>
         <div className={`sd-status ${error ? 'sd-status-error' : ready ? 'sd-status-ok' : ''}`} role="status"><span className="sd-dot"/> {error ? 'Lỗi kết nối' : loading ? 'Đang đồng bộ' : 'Pancake POS'}<small>{hasCurrentData && !error && salesState.updatedAt ? new Date(salesState.updatedAt).toLocaleString('vi-VN', {timeZone:'Asia/Bangkok'}) : 'Tự tải mỗi 1 phút'}</small></div>
@@ -199,7 +210,7 @@ export default function SalesDashboard() {
       {error && <div className="sd-alert" role="alert">{error} <button type="button" onClick={() => setRefresh((n) => n + 1)}>Thử lại</button></div>}
       {warehouseState.error && <div className="sd-alert" role="alert">Không tải được danh sách kho: {warehouseState.error}</div>}
       {warehouseState.loaded && warehouseId === null && <div className="sd-alert" role="alert">Không tìm thấy kho VALLEY. Hãy chọn một kho trong danh sách.</div>}
-      
+      {noEmployees && <div className="sd-alert sd-alert-neutral">Kho chưa có nhân viên phát sinh trong kỳ {lookupMonth}. Chọn tháng khác hoặc Tất cả các kho.</div>}
       {listReady && employees.length > 0 && !employee && <div className="sd-alert sd-alert-neutral">Hãy chọn nhân viên để xem báo cáo cá nhân.</div>}
       {warehouseId && <p className="sd-filter-note">Kho chỉ lọc nhân viên có phát sinh trong báo cáo tháng {lookupMonth}. Doanh số và mục tiêu vẫn tính theo nhân viên trên tất cả các kho.</p>}
       {targetError && <div className="sd-alert" role="alert">{targetError}{monthTargets ? ' · Mục tiêu đang hiển thị là dữ liệu đã tải trước đó.' : ''} <button type="button" onClick={() => setRefresh((n) => n + 1)}>Thử lại</button></div>}
