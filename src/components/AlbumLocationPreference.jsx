@@ -19,7 +19,9 @@ export default function AlbumLocationPreference() {
   }
 
   return (
-    <section className="mb-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600" aria-label="Quyền riêng tư album">
+    <details className="mx-auto mb-3 w-full max-w-7xl px-4 text-sm text-slate-600 sm:px-6">
+      <summary className="cursor-pointer py-2 text-center text-xs font-medium text-slate-600 underline underline-offset-2">Quyền riêng tư và vị trí</summary>
+      <section className="rounded-2xl border border-slate-200 bg-white px-4 py-3" aria-label="Quyền riêng tư album">
       <label className="flex cursor-pointer items-start gap-3">
         <input type="checkbox" className="mt-1 h-4 w-4 shrink-0 accent-blue-600" checked={allowed} onChange={onChange} aria-describedby="album-location-explanation" />
         <span className="font-semibold text-slate-800">Cho phép chia sẻ vị trí gần đúng khi xem album (không bắt buộc)</span>
@@ -28,6 +30,7 @@ export default function AlbumLocationPreference() {
         Khi mở album, nếu trình duyệt đã cấp quyền vị trí, tỉnh/thành và tọa độ làm tròn khoảng 1 km sẽ được lưu trong lịch sử cho quản trị viên xem thay cho IP, kể cả xem trên Google Maps. Tọa độ đã làm tròn được gửi tới dịch vụ tra tên địa điểm và tới Google Maps khi quản trị viên mở bản đồ. Nếu không bật hoặc không lấy được vị trí, hệ thống dùng IP như trước. Lựa chọn được ghi nhớ trên trình duyệt này; bạn có thể tắt tại đây bất cứ lúc nào. Không ảnh hưởng đến việc mở album.
       </p>
       {error && <p role="alert" className="mt-1 pl-7 text-xs text-red-600">{error}</p>}
-    </section>
+      </section>
+    </details>
   );
 }

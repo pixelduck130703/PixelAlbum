@@ -587,7 +587,6 @@ function Home() {
 
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-8 pt-2 sm:px-6 sm:pb-10 sm:pt-4">
         <WeatherCard />
-        <AlbumLocationPreference />
 
         {/* THỐNG KÊ */}
         <ScrollReveal direction="up">
@@ -678,6 +677,7 @@ function Home() {
         </ScrollReveal>
       </main>
 
+      <AlbumLocationPreference />
       <Footer />
     </div>
   );

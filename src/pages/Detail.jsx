@@ -4,6 +4,7 @@ import api from "../services/api";
 import { Solar, Lunar } from "lunar-javascript";
 import confetti from "canvas-confetti";
 import { getSharedAlbumLocation, hasAlbumLocationConsent } from "../services/albumLocation";
+import { recordAndOpenAlbum } from "../services/albumNavigation";
 
 async function getClientHints() {
   if (!navigator.userAgentData) {
@@ -366,20 +367,19 @@ function Detail() {
     return `https://${normalizedUrl}`;
   };
 
-  const recordAlbumView = async () => {
-    try {
-      const [clientHints, sharedLocation] = await Promise.all([
-        getClientHints(),
-        getSharedAlbumLocation(hasAlbumLocationConsent()),
-      ]);
-      await api.post(`/people/public/${publicId}/album-view`, {
-        clientHints,
-        ...(sharedLocation && hasAlbumLocationConsent() ? { sharedLocation } : {}),
-      });
-    } catch (error) {
-      console.error("Lỗi tăng lượt xem album:", error);
-    }
-  };
+  const openRecordedAlbum = (url) => recordAndOpenAlbum({
+    url,
+    getHints: getClientHints,
+    getLocation: () => getSharedAlbumLocation(hasAlbumLocationConsent()),
+    hasConsent: hasAlbumLocationConsent,
+    postView: (body) => fetch(api.getUri({ url: `/people/public/${publicId}/album-view` }), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      keepalive: true,
+    }),
+    navigate: (albumUrl) => window.location.assign(albumUrl),
+  });
 
   const redirectToAlbum = async (albumUrl) => {
     const normalizedUrl = normalizeAlbumUrl(albumUrl);
@@ -390,19 +390,10 @@ function Detail() {
 
     setOpeningAlbum(true);
 
-    const newWindow = window.open("about:blank", "_blank");
-
     try {
-      await recordAlbumView();
-
-      if (newWindow) {
-        newWindow.location.href = normalizedUrl;
-      } else {
-        window.location.assign(normalizedUrl);
-      }
+      await openRecordedAlbum(normalizedUrl);
     } catch (err) {
       console.error(err);
-      if (newWindow) newWindow.close();
     } finally {
       setOpeningAlbum(false);
     }
@@ -441,15 +432,14 @@ function Detail() {
       return;
     }
 
-    const newWindow = window.open("about:blank", "_blank");
-
     try {
       setVerifying(true);
       setVerifyError("");
 
       const response = await api.post(
         `/people/public/${publicId}/verify-album`,
-        { answer }
+        { answer },
+        { timeout: 15000 }
       );
 
       const albumUrl = normalizeAlbumUrl(
@@ -457,7 +447,6 @@ function Detail() {
       );
 
       if (!albumUrl) {
-        if (newWindow) newWindow.close();
         setVerifyError("Không tìm thấy liên kết album.");
         return;
       }
@@ -466,15 +455,8 @@ function Detail() {
       setVerifyAnswer("");
       setOpeningAlbum(true);
 
-      await recordAlbumView();
-
-      if (newWindow) {
-        newWindow.location.href = albumUrl;
-      } else {
-        window.location.assign(albumUrl);
-      }
+      await openRecordedAlbum(albumUrl);
     } catch (error) {
-      if (newWindow) newWindow.close();
       setVerifyError(
         error.response?.data?.message ||
           "Không thể xác thực câu trả lời."
