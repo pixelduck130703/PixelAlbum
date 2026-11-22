@@ -47,6 +47,7 @@ pool.on("error", (error) => {
 });
 
 async function initializeDatabase() {
+  await require('../services/salesTargets').initializeSalesTargets(pool);
   /*
    * ==========================
    * BẢNG PEOPLE

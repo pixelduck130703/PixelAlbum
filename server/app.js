@@ -28,6 +28,7 @@ app.use(require("./routes/exports"));
 app.use(require("./routes/events"));
 app.use(require("./routes/rsvp"));
 app.use(require("./routes/announcements"));
+app.use(require("./routes/sales"));
 
 app.use(corsError);
 

@@ -16,6 +16,7 @@ import HomeMusicPlayer from "./components/HomeMusicPlayer";
 import VideoCreator from "./pages/VideoCreator";
 import ImageDescriber from "./pages/ImageDescriber";
 import NewYear2027 from "./pages/NewYear2027";
+import SalesDashboard from "./pages/SalesDashboard";
 
 function App() {
   const location = useLocation();
@@ -78,6 +79,13 @@ function App() {
         <Route
           path="/new-year-2027"
           element={<NewYear2027 />}
+        />
+
+        <Route
+          path="/sales-dashboard"
+          element={
+              <SalesDashboard />
+          }
         />
       </Routes>
     </>
