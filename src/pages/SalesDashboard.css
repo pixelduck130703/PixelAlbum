@@ -353,8 +353,8 @@
 .sd-ranking-expand-btn > span { font-size:17px; line-height:1; }
 
 @media (min-width:768px) {
-  /* ~14 nhân viên / 1 khung trước khi cuộn, thay vì ~6 trước đây. */
-  .sd-ranking-panel:not(.sd-ranking-expanded) .sd-ranking-table-wrap { max-height:795px; }
+  /* Khoảng 10 nhân viên / khung desktop trước khi cuộn. */
+  .sd-ranking-panel:not(.sd-ranking-expanded) .sd-ranking-table-wrap { max-height:580px; }
   .sd-ranking-panel .sd-ranking-table th,
   .sd-ranking-panel .sd-ranking-table td { padding:10px 12px; }
 
