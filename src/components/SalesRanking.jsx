@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import EmployeeSearch from './EmployeeSearch';
 import { normalizeEmployeeSearch, progressColor, todayInBangkok } from '../pages/salesDashboardModel';
 import { PERIODS, rankingRange, rankingRangeError, filterRanking, rankingShowsCompletion } from '../pages/salesRankingModel';
@@ -41,6 +41,9 @@ export default function SalesRanking({ warehouseOptions, refresh, rate = 780 }) 
   const [customStart, setCustomStart] = useState(initialFilters.customStart);
   const [customEnd, setCustomEnd] = useState(initialFilters.customEnd);
   const [retry, setRetry] = useState(0);
+  const [expanded, setExpanded] = useState(false);
+  const panelRef = useRef(null);
+  const expandButtonRef = useRef(null);
   const [employeeState, setEmployeeState] = useState({ scope: null, items: [], error: '' });
   const [report, setReport] = useState({ key: '', data: null, error: '', version: '' });
   const [start, end] = rankingRange(period, today, customStart, customEnd);
@@ -59,6 +62,48 @@ export default function SalesRanking({ warehouseOptions, refresh, rate = 780 }) 
   const error = !invalid && report.key === key ? report.error : '';
   const rows = useMemo(() => filterRanking(data?.rows || [], employees, selected), [data, employees, selected]);
   const loading = !invalid && (!employeeReady || report.version !== version);
+
+  // Chỉ mở toàn màn hình trên desktop; Esc hoặc nút Thu gọn để thoát.
+  // Không lưu chế độ mở rộng vào localStorage để tránh chiếm màn hình lần sau.
+  useEffect(() => {
+    if (!expanded) return undefined;
+    const oldOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    expandButtonRef.current?.focus();
+
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setExpanded(false);
+        return;
+      }
+      if (event.key !== 'Tab' || !panelRef.current) return;
+      const focusable = Array.from(panelRef.current.querySelectorAll(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), summary, [tabindex]:not([tabindex="-1"])'
+      )).filter((item) => item.getClientRects().length > 0);
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    const onResize = () => {
+      if (window.innerWidth < 768) setExpanded(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('resize', onResize);
+    return () => {
+      document.body.style.overflow = oldOverflow;
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('resize', onResize);
+      expandButtonRef.current?.focus();
+    };
+  }, [expanded]);
 
   useEffect(() => {
     saveSalesFilters(SALES_FILTER_KEYS.ranking, { warehouseChoice, selected: savedSelection, period, customStart, customEnd });
@@ -92,8 +137,27 @@ export default function SalesRanking({ warehouseOptions, refresh, rate = 780 }) 
   const totalRevenue = rows.reduce((sum, row) => sum + row.revenueThb, 0);
   const assignedTargets = rows.filter((row) => row.targetVnd > 0);
   const totalTarget = assignedTargets.reduce((sum, row) => sum + row.targetVnd, 0);
-  return <section className="sd-panel sd-ranking-panel" id="sd-ranking" aria-label="Bảng xếp hạng nhân viên">
-    <div className="sd-section-heading"><div><h2>Bảng xếp hạng nhân viên</h2><p>Doanh số giảm dần · Bộ lọc độc lập với báo cáo phía trên</p></div><button type="button" className="sd-secondary" onClick={() => setRetry((n) => n + 1)}>↻ Làm mới</button></div>
+  return <section
+    ref={panelRef}
+    className={`sd-panel sd-ranking-panel${expanded ? ' sd-ranking-expanded' : ''}`}
+    role={expanded ? 'dialog' : 'region'}
+    aria-modal={expanded ? 'true' : undefined}
+    aria-label="Bảng xếp hạng nhân viên"
+  >
+    <div className="sd-section-heading">
+      <div><h2>Bảng xếp hạng nhân viên</h2><p>Doanh số giảm dần · Bộ lọc độc lập với báo cáo phía trên</p></div>
+      <div className="sd-ranking-heading-actions">
+        <button type="button" className="sd-secondary sd-ranking-expand-btn"
+          ref={expandButtonRef}
+          onClick={() => setExpanded((prev) => !prev)}
+          aria-expanded={expanded} aria-controls="sd-ranking-scroll-container"
+          title={expanded ? 'Thu nhỏ bảng về giao diện bình thường (Esc)' : 'Mở bảng xếp hạng toàn màn hình'}>
+          <span aria-hidden="true">{expanded ? '⊟' : '⛶'}</span>
+          {expanded ? 'Thu gọn' : 'Mở rộng'}
+        </button>
+        <button type="button" className="sd-secondary" onClick={() => setRetry((n) => n + 1)}>↻ Làm mới</button>
+      </div>
+    </div>
     <div className="sd-ranking-filters">
       <EmployeeSearch employees={warehouseOptions} value={warehouseId} onChange={changeWarehouse} label="KHO HÀNG" noun="kho" emptyLabel="VALLEY" />
       <MultiEmployees key={warehouseId} employees={employees} selected={selected} onChange={changeSelected} disabled={!employeeReady || !employees.length}/>
@@ -106,21 +170,21 @@ export default function SalesRanking({ warehouseOptions, refresh, rate = 780 }) 
     {showCompletion && data?.targetError && <p className="sd-alert" role="alert">Không tải được mục tiêu từ cơ sở dữ liệu. Doanh số vẫn hiển thị.</p>}
     {warehouseId === null && <p className="sd-filter-note">Đang tìm kho VALLEY. Anh có thể chọn kho khác nếu không tìm thấy.</p>}
     {employeeReady && !employees.length && <p className="sd-alert sd-alert-neutral">Kho chưa có nhân viên phát sinh trong kỳ lọc. Chọn kỳ khác hoặc Tất cả các kho.</p>}
-    <div className="sd-ranking-table-wrap" tabIndex={0} role="region" aria-label="Cuộn bảng xếp hạng">
+    <div id="sd-ranking-scroll-container" className="sd-ranking-table-wrap" tabIndex={0} role="region" aria-label="Cuộn bảng xếp hạng">
       <table className={`sd-ranking-table${showCompletion ? ' sd-ranking-with-completion' : ''}`}>
         <thead><tr><th>Nhân viên</th><th>Đơn hàng</th><th aria-sort="descending">Doanh số (THB) ↓</th><th>Doanh số (VND)</th>{showCompletion && <><th>Mục tiêu (VND)</th><th>Hoàn thành</th></>}</tr></thead>
         <tbody>
           {rows.map((row, index) => <tr key={row.employeeId}>
             <td><span className={`sd-ranking-position sd-rank-${index + 1}`}>{String(index + 1).padStart(2, '0')}</span><strong>{row.name}</strong></td>
-            <td data-label="Đơn hàng">{format.format(row.orders)}</td>
-            <td data-label="Doanh số THB" className="sd-ranking-money"><strong className="sd-ranking-revenue">฿{format.format(row.revenueThb)}</strong></td>
-            <td data-label="Doanh số VND" className="sd-ranking-money"><strong className="sd-ranking-revenue-vnd">{money.format(row.revenueThb * rate)} ₫</strong></td>
-            {showCompletion && <td data-label="Mục tiêu VND" className="sd-ranking-money">{row.targetVnd > 0 ? <strong className="sd-ranking-target">{money.format(row.targetVnd)} ₫</strong> : <span className="sd-ranking-unset">{data.targetError ? 'Không tải được' : 'Chưa đặt'}</span>}</td>}
-            {showCompletion && <td data-label="Hoàn thành">{row.completion === null ? <span className="sd-ranking-unset">{data.targetError ? 'Không tải được' : 'Chưa đặt'}</span> : <div className="sd-ranking-progress" title={`Mục tiêu: ${money.format(row.targetVnd)} ₫`}><span style={{ width: `${Math.max(0, Math.min(100, row.completion * 100))}%`, background: progressColor(row.completion) }}/><strong>{format.format(row.completion * 100)}%</strong></div>}</td>}
+            <td>{format.format(row.orders)}</td>
+            <td className="sd-ranking-money"><strong className="sd-ranking-revenue">฿{format.format(row.revenueThb)}</strong></td>
+            <td className="sd-ranking-money"><strong className="sd-ranking-revenue-vnd">{money.format(row.revenueThb * rate)} ₫</strong></td>
+            {showCompletion && <td className="sd-ranking-money">{row.targetVnd > 0 ? <strong className="sd-ranking-target">{money.format(row.targetVnd)} ₫</strong> : <span className="sd-ranking-unset">{data.targetError ? 'Không tải được' : 'Chưa đặt'}</span>}</td>}
+            {showCompletion && <td>{row.completion === null ? <span className="sd-ranking-unset">{data.targetError ? 'Không tải được' : 'Chưa đặt'}</span> : <div className="sd-ranking-progress" title={`Mục tiêu: ${money.format(row.targetVnd)} ₫`}><span style={{ width: `${Math.max(0, Math.min(100, row.completion * 100))}%`, background: progressColor(row.completion) }}/><strong>{format.format(row.completion * 100)}%</strong></div>}</td>}
           </tr>)}
           {!rows.length && <tr><td colSpan={showCompletion ? 6 : 4} className="sd-ranking-empty">{invalid || error || employeeError ? 'Chưa có dữ liệu hiển thị.' : loading ? 'Đang tải dữ liệu...' : 'Chưa chọn nhân viên hoặc không có nhân viên phù hợp.'}</td></tr>}
         </tbody>
-        {rows.length > 0 && <tfoot><tr><td>TỔNG ({rows.length})</td><td data-label="Đơn hàng">{format.format(totalOrders)}</td><td data-label="Doanh số THB" className="sd-ranking-money">฿{format.format(totalRevenue)}</td><td data-label="Doanh số VND" className="sd-ranking-money">{money.format(totalRevenue * rate)} ₫</td>{showCompletion && <><td data-label="Mục tiêu VND" className="sd-ranking-money">{data.targetError ? 'Không tải được' : assignedTargets.length ? <>{money.format(totalTarget)} ₫{assignedTargets.length < rows.length && <small className="sd-ranking-target-count">{assignedTargets.length}/{rows.length} đã đặt</small>}</> : 'Chưa đặt'}</td><td data-label="Hoàn thành">—</td></>}</tr></tfoot>}
+        {rows.length > 0 && <tfoot><tr><td>TỔNG ({rows.length})</td><td>{format.format(totalOrders)}</td><td className="sd-ranking-money">฿{format.format(totalRevenue)}</td><td className="sd-ranking-money">{money.format(totalRevenue * rate)} ₫</td>{showCompletion && <><td className="sd-ranking-money">{data.targetError ? 'Không tải được' : assignedTargets.length ? <>{money.format(totalTarget)} ₫{assignedTargets.length < rows.length && <small className="sd-ranking-target-count">{assignedTargets.length}/{rows.length} đã đặt</small>}</> : 'Chưa đặt'}</td><td>—</td></>}</tr></tfoot>}
       </table>
     </div>
     <p className="sd-ranking-note">Tỷ giá quy đổi: 1 THB = {rate} VND. {showCompletion && `Hoàn thành = doanh số tháng × ${rate} ÷ mục tiêu tháng. Không có mục tiêu dương thì hiển thị “Chưa đặt”. `}Kho lọc nhân viên có phát sinh {lookupMonth ? `trong tháng ${lookupMonth}` : 'trong khoảng ngày đã chọn'}, doanh số tính trên tất cả các kho.</p>
