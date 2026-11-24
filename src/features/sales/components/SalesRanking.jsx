@@ -4,6 +4,7 @@ import { normalizeEmployeeSearch, progressColor, todayInBangkok } from '../model
 import { PERIODS, rankingRange, rankingRangeError, filterRanking, rankingShowsCompletion } from '../models/salesRankingModel';
 import { fetchSalesEmployees, fetchSalesRanking, salesErrorMessage } from '../../../services/salesService';
 import { SALES_FILTER_KEYS, readRankingFilters, saveSalesFilters, resolveWarehouseChoice } from '../utils/salesFilterStorage';
+import { fetchSaleMarketingEmployees, fetchSaleMarketingRanking } from '../../sale/saleMarketingAdapter';
 
 const format = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 2 });
 const money = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 });
@@ -30,9 +31,11 @@ function MultiEmployees({ employees, selected, onChange, disabled }) {
   </div>;
 }
 
-export default function SalesRanking({ warehouseOptions, refresh, rate = 780 }) {
+export default function SalesRanking({ warehouseOptions, refresh, rate = 780, team = 'marketing' }) {
+  const isSale = team === 'sale';
+  const savedRankingKey = isSale ? 'pixelalbum-sale-ranking-filters-v1' : SALES_FILTER_KEYS.ranking;
   const today = todayInBangkok();
-  const [initialFilters] = useState(() => readRankingFilters(today));
+  const [initialFilters] = useState(() => readRankingFilters(today, isSale ? {getItem: () => localStorage.getItem('pixelalbum-sale-ranking-filters-v1')} : undefined));
   const [warehouseChoice, setWarehouse] = useState(initialFilters.warehouseChoice);
   const warehouseId = resolveWarehouseChoice(warehouseChoice, warehouseOptions);
   const [savedSelection, setSelected] = useState(initialFilters.selected);
@@ -119,47 +122,49 @@ export default function SalesRanking({ warehouseOptions, refresh, rate = 780 }) 
   }, [expanded]);
 
   useEffect(() => {
-    saveSalesFilters(SALES_FILTER_KEYS.ranking, { warehouseChoice, selected: savedSelection, period, customStart, customEnd });
-  }, [warehouseChoice, savedSelection, period, customStart, customEnd]);
+    saveSalesFilters(savedRankingKey, { warehouseChoice, selected: savedSelection, period, customStart, customEnd });
+  }, [warehouseChoice, savedSelection, period, customStart, customEnd, savedRankingKey]);
 
   useEffect(() => {
     if (scope === null) return;
     const controller = new AbortController();
-    fetchSalesEmployees(warehouseId, lookupMonth, controller.signal, lookupStart, lookupEnd).then((items) => {
+    (isSale ? fetchSaleMarketingEmployees : fetchSalesEmployees)(warehouseId, lookupMonth, controller.signal, lookupStart, lookupEnd).then((items) => {
       if (!controller.signal.aborted) setEmployeeState({ scope, items, error: '' });
     }).catch((e) => {
       if (!controller.signal.aborted) setEmployeeState({ scope, items: [], error: salesErrorMessage(e) });
     });
     return () => controller.abort();
-  }, [warehouseId, scope, lookupMonth, lookupStart, lookupEnd, refresh, retry]);
+  }, [warehouseId, scope, lookupMonth, lookupStart, lookupEnd, refresh, retry, isSale]);
 
   useEffect(() => {
     if (invalid) return;
     const controller = new AbortController();
-    fetchSalesRanking(start, end, controller.signal).then((result) => {
+    (isSale ? fetchSaleMarketingRanking : fetchSalesRanking)(start, end, controller.signal).then((result) => {
       if (!controller.signal.aborted) setReport({ key, data: result, error: '', version });
     }).catch((e) => {
       if (!controller.signal.aborted) setReport({ key, data: null, error: salesErrorMessage(e), version });
     });
     return () => controller.abort();
-  }, [start, end, invalid, key, version]);
+  }, [start, end, invalid, key, version, isSale]);
 
   function changeWarehouse(value) { setWarehouse(value); setSelected(null); }
   function changeSelected(value) { setWarehouse(warehouseId); setSelected(value); }
   const maxChartRevenue = Math.max(0, ...rows.map((row) => Number(row.revenueThb) || 0));
+  const measureLabel = isSale ? (data?.measureLabel || 'Doanh số') : 'Doanh số';
   const totalOrders = rows.reduce((sum, row) => sum + row.orders, 0);
   const totalRevenue = rows.reduce((sum, row) => sum + row.revenueThb, 0);
   const assignedTargets = rows.filter((row) => row.targetVnd > 0);
   const totalTarget = assignedTargets.reduce((sum, row) => sum + row.targetVnd, 0);
   return <section
     ref={panelRef}
+    id="sd-ranking"
     className={`sd-panel sd-ranking-panel${expanded ? ' sd-ranking-expanded' : ''}`}
     role={expanded ? 'dialog' : 'region'}
     aria-modal={expanded ? 'true' : undefined}
     aria-label="Bảng xếp hạng nhân viên"
   >
     <div className="sd-section-heading">
-      <div><h2>Bảng xếp hạng nhân viên</h2></div>
+      <div><h2>Bảng xếp hạng nhân viên{isSale ? ' Sale' : ''}</h2></div>
       <div className="sd-ranking-heading-actions">
         <div className="sd-ranking-view-toggle" role="group" aria-label="Chế độ xem xếp hạng">
           <button type="button" className={`sd-secondary${viewMode === 'list' ? ' is-active' : ''}`}
@@ -195,7 +200,7 @@ export default function SalesRanking({ warehouseOptions, refresh, rate = 780 }) 
     <div id="sd-ranking-visualization" className="sd-ranking-visualization">
       {viewMode === 'list' ? <div className="sd-ranking-table-wrap" tabIndex={0} role="region" aria-label="Cuộn bảng xếp hạng">
       <table className={`sd-ranking-table${showCompletion ? ' sd-ranking-with-completion' : ''}`}>
-        <thead><tr><th>Nhân viên</th><th>Đơn hàng</th><th aria-sort="descending">Doanh số (THB) ↓</th><th>Doanh số (VND)</th>{showCompletion && <><th>Mục tiêu (VND)</th><th>Hoàn thành</th></>}</tr></thead>
+        <thead><tr><th>Nhân viên</th><th>Đơn hàng</th><th aria-sort="descending">{measureLabel} (THB) ↓</th><th>{measureLabel} (VND)</th>{showCompletion && <><th>Mục tiêu (VND)</th><th>Hoàn thành</th></>}</tr></thead>
         <tbody>
           {rows.map((row, index) => {
         // Kết quả API có thể dùng tỷ giá mặc định khác; tính lại theo lựa chọn hiện tại.
@@ -216,7 +221,7 @@ export default function SalesRanking({ warehouseOptions, refresh, rate = 780 }) 
         {!rows.length ? <div className="sd-ranking-chart-empty">
           {invalid || error || employeeError ? 'Chưa có dữ liệu hiển thị.' : loading ? 'Đang tải dữ liệu...' : 'Không có nhân viên phù hợp.'}
         </div> : <>
-          <div className="sd-ranking-chart-summary"><span>DOANH SỐ THEO NHÂN VIÊN · THB</span><strong>Tổng ฿{format.format(totalRevenue)}</strong></div>
+          <div className="sd-ranking-chart-summary"><span>{measureLabel.toUpperCase()} THEO NHÂN VIÊN · THB</span><strong>Tổng ฿{format.format(totalRevenue)}</strong></div>
           <div className="sd-ranking-chart-list">
             {rows.map((row, index) => <div className="sd-ranking-chart-row" key={row.employeeId}>
               <div className="sd-ranking-chart-name" title={row.name}>

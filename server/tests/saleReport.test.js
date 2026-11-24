@@ -83,3 +83,24 @@ test('unknown shipping is not treated as zero sales',()=>{
   assert.equal(x.daily[0].salesThb,null);
   assert.equal(x.daily[1].salesThb,205);
 });
+test('V19.9: employeeDaily is separated per employee and is consistent with monthly totals',()=>{
+  const r=normalizeSaleReport([
+    {'User.id':'u1','Time.day':'2026-11-01',success:{order_count:2,price:10000,shipping_fee:500}},
+    {'User.id':'u2','Time.day':'2026-11-01',success:{order_count:1,price:8000,shipping_fee:0}},
+    {'User.id':'u1','Time.day':'2026-11-02',success:{order_count:3,price:40000,shipping_fee:200}},
+  ],people,p);
+  const only1=r.employeeDaily.filter(x=>x.employeeId==='u1');
+  assert.equal(only1.length,2);
+  assert.equal(only1.reduce((sum,x)=>sum+x.orders,0),5);
+  assert.equal(only1.reduce((sum,x)=>sum+x.salesThb,0),507);
+  assert.equal(r.employeeDaily.reduce((sum,x)=>sum+x.revenueThb,0),r.totals.revenueThb);
+  assert.equal(r.employeeDaily.reduce((sum,x)=>sum+x.salesThb,0),r.totals.salesThb);
+});
+test('V19.9: missing shipping fee only marks affected employee-day as incomplete',()=>{
+  const r=normalizeSaleReport([
+    {'User.id':'u1','Time.day':'2026-11-01',success:{order_count:1,price:10000}},
+    {'User.id':'u2','Time.day':'2026-11-01',success:{order_count:1,price:20000,shipping_fee:0}}
+  ],people,p);
+  assert.equal(r.employeeDaily.find(x=>x.employeeId==='u1').salesThb,null);
+  assert.equal(r.employeeDaily.find(x=>x.employeeId==='u2').salesThb,200);
+});

@@ -88,3 +88,105 @@
  .sa-section-head{padding:17px 14px 10px}.sa-section-head h2{font-size:16px}.sa-ranking-bars{padding:8px 13px 18px}.sa-bar-row{grid-template-columns:minmax(0,1fr) 113px;gap:6px 10px}.sa-bar-name{grid-column:1/-1}.sa-bar-track{grid-column:1}.sa-bar-value{grid-column:2}
  .sa-daily-body{padding:4px 12px 17px}
 }
+/* V19.9 — Chi tiết tháng Sale, dùng chung phong cách Marketing, không ảnh hưởng bảng gốc */
+.sa-monthly-panel{padding-bottom:17px}
+.sa-monthly-head{align-items:center;flex-wrap:wrap}
+.sa-monthly-head>div{display:grid;gap:3px}.sa-monthly-head small{font-size:12px;color:#8091a6}
+.sa-monthly-filters{display:grid;grid-template-columns:minmax(130px,.9fr) minmax(220px,1.6fr) auto auto;align-items:end;gap:12px;padding:8px 23px 19px}
+.sa-monthly-filters label{display:grid;gap:5px;min-width:0}.sa-monthly-filters label>span{font-size:11px;font-weight:800;color:#68809a;text-transform:uppercase}
+.sa-monthly-filters input,.sa-monthly-filters select{width:100%;height:42px;min-width:0;box-sizing:border-box;border:1px solid #dbe4ef;border-radius:10px;padding:8px 12px;background:#f9fbfe;color:#243c59;font:inherit;font-size:13px;font-weight:650}
+.sa-monthly-filters .sa-btn{height:42px}
+.sa-monthly-empty{color:#7e8ea4;padding:23px;margin:0 23px 18px;text-align:center;background:#f7faff;border-radius:10px}
+.sa-monthly-stat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;padding:0 23px 14px}
+.sa-monthly-stat-grid>div{background:#f3f7fb;border:1px solid #e0e8f1;border-radius:11px;padding:15px;display:grid;gap:7px;min-width:0}
+.sa-monthly-stat-grid>div:nth-child(2){background:#eaf6f0;border-color:#cde8dd}.sa-monthly-stat-grid>div:nth-child(4){background:#eff5ff;border-color:#d9e5f7}
+.sa-monthly-stat-grid span{font-size:11px;font-weight:800;color:#637892}.sa-monthly-stat-grid strong{font-size:clamp(17px,1.55vw,24px);color:#224664;white-space:normal;overflow-wrap:anywhere;line-height:1.28;font-variant-numeric:tabular-nums}.sa-monthly-stat-grid small{font-size:11px;color:#637892}
+.sa-monthly-progress{height:8px;background:#e8edf5;margin:0 23px 16px;border-radius:9px;overflow:hidden}.sa-monthly-progress>span{display:block;height:100%;background:linear-gradient(90deg,#38a69f,#6bd17d);border-radius:9px}
+.sa-monthly-section-title{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:18px 23px 12px}.sa-monthly-section-title>strong{color:#27415e;font-size:17px}.sa-monthly-section-title small{color:#7a91a9}
+.sa-monthly-action-buttons{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}.sa-monthly-action-buttons .sa-btn{min-height:34px;font-size:12px}.sa-btn-primary{color:#fff;background:#2466d2;border-color:#2466d2}.sa-btn-primary:hover:not(:disabled){background:#1457c4;color:#fff}
+.sa-adjusted-label{border-radius:7px;background:#fff0d0;color:#90602f;font-size:11px;font-weight:800;padding:7px}
+.sa-adjusted-notice{margin:0 23px 10px;background:#eef6ff;border:1px solid #cfddf1;border-radius:9px;color:#426382;padding:10px 13px;font-size:12px}
+.sa-monthly-table-wrap{margin:0 23px;overflow:auto;max-height:650px;border:1px solid #dde5ee;border-radius:11px;scrollbar-width:thin}
+.sa-monthly-table{border-collapse:separate;border-spacing:0;width:100%;min-width:660px;font-variant-numeric:tabular-nums;font-size:13px}
+.sa-monthly-table th,.sa-monthly-table td{padding:11px 13px;border-bottom:1px solid #e6edf4;text-align:right;color:#35516c}
+.sa-monthly-table thead th{position:sticky;top:0;z-index:2;background:#eaf1f7;color:#45637f;font-size:12px}
+.sa-monthly-table th:first-child,.sa-monthly-table td:first-child{text-align:left;min-width:130px}.sa-monthly-table td:first-child strong{display:inline-block;min-width:27px;padding:5px 8px;background:#eaf0f7;border-radius:8px;text-align:center;color:#2b5181}.sa-monthly-table td:first-child span{margin-left:8px;font-size:11px;color:#788ba0}
+.sa-monthly-table tbody tr:nth-child(even){background:#f8fafd}.sa-monthly-table tbody tr.sa-overridden-day{background:#fff6df}
+.sa-monthly-table .sa-monthly-week-total{background:#e9f3fa;color:#1f5b83;font-weight:850;text-align:center;border-left:1px solid #d7e4ee;min-width:145px}
+.sa-monthly-table input{box-sizing:border-box;width:110px;max-width:100%;border-radius:8px;border:1px solid #b2c9e6;padding:7px;color:#17497a;text-align:right;font-weight:700}.sa-monthly-table input[aria-invalid="true"]{border-color:#db5b5b}
+.sa-monthly-table tfoot th,.sa-monthly-table tfoot td{position:sticky;bottom:0;z-index:2;background:#294965;color:#fff;font-weight:850;border:0}.sa-monthly-table tfoot td{color:#fff}
+.sa-monthly-chart-scroll{margin:0 23px;overflow-x:auto;scrollbar-width:thin}.sa-monthly-chart{display:flex;min-width:660px;align-items:flex-end;gap:6px;height:230px;border-bottom:1px solid #dbe5ee}.sa-monthly-column{flex:1;min-width:22px;max-width:75px;align-self:stretch;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;font-size:11px;color:#56718e;font-weight:750}
+.sa-monthly-chart-track{display:flex;align-items:flex-end;justify-content:center;width:100%;height:170px}.sa-monthly-column-bar{position:relative;width:90%;border-radius:5px 5px 0 0;min-height:0;transition:height .15s}.sa-monthly-column-bar span{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);white-space:nowrap;color:#426480;font-size:9px}.sa-monthly-column small{font-size:10px;color:#91a1b4;margin-bottom:5px}
+.sa-monthly-caution{padding:12px 23px 0;margin:0;color:#7c8da3;font-size:11px}
+.sa-goal-admin-tools{display:flex;align-items:center;flex-wrap:wrap;gap:14px;background:#f6f9fd;border:1px solid #dfe8f3;padding:13px 17px;border-radius:12px;margin-bottom:10px;color:#54708d;font-size:12px}.sa-goal-admin-tools strong{color:#213f5d;font-size:14px}.sa-goal-admin-tools label{display:flex;gap:6px;align-items:center;font-weight:700}.sa-goal-admin .sd-target-manager{margin-top:0}
+.sd-goal-center-top{display:flex;justify-content:space-between;gap:15px;align-items:center;flex-wrap:wrap;margin-bottom:13px}.sd-goal-center-top>strong{font-size:18px;color:#254562}.sd-goal-team-tabs{display:flex;align-items:center;gap:3px;background:#e9eff8;border:1px solid #dae3ef;border-radius:11px;padding:4px}.sd-goal-team-tabs button{background:transparent;border:0;border-radius:8px;padding:10px 18px;color:#58718c;font-weight:800;cursor:pointer}.sd-goal-team-tabs button.is-active{background:#fff;color:#2265cf;box-shadow:0 1px 5px #1b4e901e}
+@media(max-width:950px){.sa-monthly-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.sa-monthly-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.sa-monthly-filters{padding:4px 13px 15px;gap:9px}.sa-monthly-filters .sa-btn{font-size:12px}.sa-monthly-stat-grid{padding:0 13px 12px;gap:7px}.sa-monthly-stat-grid>div{padding:12px 10px}.sa-monthly-stat-grid strong{font-size:17px}.sa-monthly-section-title{padding:15px 13px 10px}.sa-monthly-table-wrap,.sa-monthly-chart-scroll{margin:0 13px}.sa-monthly-caution{padding:10px 13px 0}.sa-adjusted-notice{margin:0 13px 9px}.sd-goal-center-top>strong{font-size:16px}}
+
+.sa-monthly-target-detail{margin:0 23px 14px;display:flex;gap:12px 24px;flex-wrap:wrap;font-size:12px;color:#6a819a}.sa-monthly-target-detail strong{font-weight:850;color:#284d70;font-variant-numeric:tabular-nums}
+@media(max-width:600px){.sa-monthly-target-detail{margin:0 13px 12px;gap:7px 17px}}
+
+/* V19.10 — Sale tự quản lý mục tiêu, thống kê tháng là giao diện chính giống Marketing */
+.sa-page-heading{margin:6px 0 16px}.sa-quick-links{display:flex;gap:8px;flex-wrap:wrap;margin:-3px 0 15px}
+.sa-quick-links a{display:inline-flex;padding:8px 12px;border-radius:9px;border:1px solid #d9e6f4;background:#fff;color:#355e87;font-size:12px;font-weight:750;text-decoration:none}
+.sa-quick-links a:hover{background:#eaf3ff;border-color:#b4cff4}
+.sa-monthly-panel{border-radius:16px;overflow:visible}
+.sa-monthly-stat-grid>div{min-height:93px}.sa-monthly-progress-card{margin:0 23px 16px;padding:15px 18px;background:#f4f9fd;border:1px solid #deebf5;border-radius:11px}
+.sa-progress-title,.sa-progress-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#42607c}
+.sa-progress-title{font-weight:800;font-size:13px}.sa-progress-title strong{font-size:22px;color:#1a5e9d}
+.sa-progress-foot{font-size:12px;flex-wrap:wrap}.sa-progress-foot strong{color:#1d577c}
+.sa-monthly-progress-card .sa-monthly-progress{margin:11px 0 10px}
+.sa-target-stats{margin:0 23px 10px;padding:17px;border:1px solid #dce7f2;background:#fff;border-radius:12px}
+.sa-target-stats-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+.sa-target-stats-head h3{margin:0;color:#253e59;font-size:16px}.sa-target-stats-head small{color:#67819b;font-size:11px}
+.sa-target-columns,.sa-target-row{display:grid;grid-template-columns:minmax(112px,1.3fr) minmax(115px,1fr) minmax(145px,1.3fr);align-items:center;gap:9px;padding:12px 14px}
+.sa-target-columns{border-radius:9px;background:#eaf1f7;color:#50708f;font-size:11px;text-transform:uppercase}
+.sa-target-columns>:not(:first-child){text-align:right}
+.sa-target-row{min-height:44px;border-bottom:1px solid #eaf0f5;font-size:12px;font-variant-numeric:tabular-nums}
+.sa-target-row span{color:#59738c;font-weight:700}.sa-target-row strong{text-align:right;color:#2f5877;font-size:clamp(12px,1.07vw,16px);overflow-wrap:anywhere}
+.sa-target-row:nth-of-type(4){background:#f0f8f5}
+.sa-target-conversions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:15px}
+.sa-target-conversions>div{padding:14px;border-radius:10px;background:#eaf4fb;display:grid;gap:6px}
+.sa-target-conversions>div+div{background:#e6f6ee}.sa-target-conversions span{font-size:11px;font-weight:700;color:#5a7894}
+.sa-target-conversions strong{font-size:clamp(16px,1.5vw,23px);font-variant-numeric:tabular-nums;color:#1f688e;overflow-wrap:anywhere}
+.sa-target-conversions>div+div strong{color:#16816c}.sa-target-warning{display:block;margin-top:10px;color:#9a7131;font-size:11px}
+.sa-goal-center{scroll-margin-top:18px;margin:20px 0}.sa-goal-center>h2{font-size:20px;color:#244260;margin:0 0 14px}.sa-goal-center>.sa-goal-admin{background:#fff;border:1px solid #dae4ef;padding:15px;border-radius:15px}
+.sa-ranking-header{align-items:center;gap:12px}.sa-ranking-actions{display:flex;align-items:center;flex-wrap:wrap;gap:9px}.sa-ranking-view{display:flex;gap:4px;background:#eef3f9;border-radius:10px;padding:3px}
+.sa-ranking-view .sa-btn{background:transparent;border-color:transparent;min-height:35px}.sa-ranking-view .sa-btn.active{background:#fff;color:#1e62c4;box-shadow:0 1px 4px #a0b8ce55}
+.sa-rank-table-wrap{max-height:615px;overflow:auto;margin:0 19px 19px;border:1px solid #dfe8f2;border-radius:10px}
+.sa-rank-table{width:100%;min-width:620px;border-collapse:separate;border-spacing:0;font-size:13px;font-variant-numeric:tabular-nums}
+.sa-rank-table th{position:sticky;top:0;z-index:1;background:#eaf1f8;color:#446280;font-size:12px;text-align:right;padding:13px}
+.sa-rank-table th:first-child{text-align:left}.sa-rank-table td{padding:12px 13px;border-bottom:1px solid #eaf0f6;text-align:right;font-weight:750;color:#2b5070}
+.sa-rank-table td:first-child{text-align:left;font-weight:800}.sa-rank-table tr:nth-child(even){background:#f8fafc}
+.sa-rank-no{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:8px;background:#eaf0f7;color:#496d8d;margin-right:10px;font-style:normal;font-size:11px}
+.sa-ranking-expanded{position:fixed!important;inset:16px;z-index:1200;display:flex;flex-direction:column;margin:0!important;overflow:hidden;box-shadow:0 30px 90px #132c4a55}
+.sa-ranking-expanded .sa-rank-table-wrap,.sa-ranking-expanded .sa-ranking-bars{flex:1;max-height:unset;overflow-y:auto}
+.sa-ranking-expanded .sa-ranking-bars{padding-bottom:30px}.sa-monthly-panel,.sa-employee-chart,.sa-goal-center{scroll-margin-top:16px}
+@media(max-width:767px){.sa-expand-ranking{display:none}.sa-quick-links{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.sa-quick-links a{flex-shrink:0}}
+@media(max-width:600px){.sa-monthly-progress-card,.sa-target-stats{margin:0 13px 13px;padding:12px}.sa-target-columns,.sa-target-row{grid-template-columns:minmax(78px,.9fr) minmax(74px,.85fr) minmax(95px,1.15fr);gap:5px;padding:9px 6px}
+.sa-target-row strong{font-size:12px}.sa-target-stats-head{align-items:flex-start;flex-direction:column}.sa-target-conversions{gap:6px}.sa-target-conversions>div{padding:10px}
+.sa-target-conversions strong{font-size:14px}.sa-goal-center>.sa-goal-admin{padding:9px}.sa-ranking-header{align-items:flex-start;flex-direction:column}.sa-ranking-actions{width:100%}}
+
+/* Bộ lọc đầu trang Sale theo thứ tự Kho, Nhân viên, Tháng, Mục tiêu, Tỉ giá */
+.sa-marketing-filters{grid-template-columns:minmax(140px,1.0fr) minmax(190px,1.55fr) minmax(140px,1fr) minmax(165px,1.14fr) minmax(105px,.8fr) auto;gap:9px;align-items:end}
+.sa-marketing-filters>label{min-width:0}.sa-marketing-filters select,.sa-marketing-filters input{height:44px}
+.sa-filter-target{min-width:0;display:flex;flex-direction:column;gap:5px}
+.sa-filter-target>span{font-size:11px;font-weight:800;text-transform:uppercase;color:#68809a}
+.sa-filter-target a{display:flex;align-items:center;justify-content:space-between;gap:5px;border:1px solid #dbe4ef;background:#f9fbfe;border-radius:10px;height:44px;box-sizing:border-box;padding:7px 10px;color:#244b72;font-size:13px;font-weight:800;text-decoration:none;min-width:0;white-space:nowrap}
+.sa-filter-target a small{color:#286ad1;font-size:11px;white-space:nowrap;font-weight:750}
+.sa-month-arrows{display:flex;align-items:center;gap:5px}.sa-month-arrows .sa-btn{height:44px;min-height:44px;padding:8px 12px;font-size:20px}
+.sa-filter-report-row{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:1250px){.sa-marketing-filters{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:767px){.sa-marketing-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.sa-month-arrows .sa-btn{flex:1}.sa-month-arrows{justify-content:stretch}}
+@media(max-width:480px){.sa-marketing-filters{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.sa-marketing-filters>label:nth-child(2){grid-column:span 2}}
+
+/* Thống kê tháng: cùng bố cục với Marketing (bảng ngày trái / mục tiêu phải). */
+.sa-monthly-dual{display:grid;grid-template-columns:minmax(0,1.48fr) minmax(310px,1fr);gap:15px;align-items:start;padding:0 23px 14px}
+.sa-monthly-dual-left,.sa-monthly-dual-right{min-width:0}
+.sa-monthly-dual .sa-monthly-section-title{padding:11px 4px 12px}
+.sa-monthly-dual .sa-monthly-table-wrap{margin:0}
+.sa-monthly-dual .sa-target-stats{margin:0;padding:14px}
+.sa-monthly-dual .sa-target-conversions{grid-template-columns:1fr}
+.sa-monthly-dual .sa-target-conversions strong{font-size:19px}
+@media(max-width:1190px){.sa-monthly-dual{grid-template-columns:minmax(0,1fr)}.sa-monthly-dual .sa-target-conversions{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.sa-monthly-dual{padding:0 13px 10px;gap:13px}.sa-monthly-dual .sa-target-stats{padding:12px}.sa-monthly-dual .sa-monthly-section-title{padding:10px 0}.sa-monthly-dual .sa-target-conversions strong{font-size:14px}}

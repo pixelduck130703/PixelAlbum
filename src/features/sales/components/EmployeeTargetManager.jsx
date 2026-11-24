@@ -7,12 +7,13 @@ import { SALES_FILTER_KEYS, readTargetFilter, saveSalesFilters } from '../utils/
 const format = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 });
 const rateFormat = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 2 });
 
-export default function EmployeeTargetManager({ employees, month, onMonthChange, warehouseId, warehouseOptions, onWarehouseChange, targets, legacyTargets, error, canEdit, onSave, rate }) {
-  const [query, setQuery] = useState(() => readTargetFilter());
+export default function EmployeeTargetManager({ employees, month, onMonthChange, warehouseId, warehouseOptions, onWarehouseChange, targets, legacyTargets, error, canEdit, onSave, rate, team = 'marketing' }) {
+  const targetFiltersKey = team === 'sale' ? 'pixelalbum-sale-target-filters-v1' : SALES_FILTER_KEYS.targets;
+  const [query, setQuery] = useState(() => readTargetFilter(team === 'sale' ? {getItem: () => localStorage.getItem('pixelalbum-sale-target-filters-v1')} : undefined));
   const [drafts, setDrafts] = useState({});
   const [notice, setNotice] = useState(null);
   const [saving, setSaving] = useState(false);
-  useEffect(() => { saveSalesFilters(SALES_FILTER_KEYS.targets, { query }); }, [query]);
+  useEffect(() => { saveSalesFilters(targetFiltersKey, { query }); }, [query, targetFiltersKey]);
   const normalized = normalizeEmployeeSearch(query);
   const visible = employees.filter((person) => normalizeEmployeeSearch(person.name).includes(normalized));
   const pending = employees.flatMap((person) => {

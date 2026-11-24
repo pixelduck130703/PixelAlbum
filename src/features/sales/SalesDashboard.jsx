@@ -13,7 +13,9 @@ import {
   applyTemporaryRevenue, parseTemporaryThb, temporaryRevenueStorageKey,
 } from './utils/salesTemporaryRevenue';
 import './SalesDashboard.css';
+import './V19_10_GOAL_MARKETING.css';
 import DashboardHeader from '../dashboard-shared/DashboardHeader';
+import { fetchSaleMarketingEmployees, fetchSaleMarketingRanking, fetchSaleMarketingDaily, fetchSaleMarketingTargets, saveSaleMarketingTargets } from '../sale/saleMarketingAdapter';
 
 const vi = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 });
 const rateFormat = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 2 });
@@ -71,10 +73,15 @@ function StatsRow({ title, left, right, tone = '' }) {
   </div>;
 }
 
-export default function SalesDashboard() {
+export default function SalesDashboard({ team = 'marketing' }) {
+  const isSale = team === 'sale';
+  const personFiltersKey = isSale ? 'pixelalbum-sale-personal-filters-v1' : SALES_FILTER_KEYS.personal;
   const today = todayInBangkok();
-  const [initialFilters] = useState(() => readPersonalFilters(today));
-  const [month, setMonth] = useState(initialFilters.month);
+  const [initialFilters] = useState(() => readPersonalFilters(today, isSale ? {getItem: () => localStorage.getItem('pixelalbum-sale-personal-filters-v1')} : undefined));
+  const [month, setMonth] = useState(() => {
+    try { const value=new URLSearchParams(window.location.search).get('goalMonth'); return value&&/^20\d{2}-(0[1-9]|1[0-2])$/.test(value)?value:initialFilters.month; }
+    catch { return initialFilters.month; }
+  });
   const [chosenEmployee, setEmployee] = useState(initialFilters.chosenEmployee);
   const [warehouseChoice, setWarehouseChoice] = useState(initialFilters.warehouseChoice);
   const [warehouseState, setWarehouseState] = useState({ items: [], error: '', loaded: false });
@@ -84,7 +91,7 @@ export default function SalesDashboard() {
   const [refresh, setRefresh] = useState(0);
   const [employeeState, setEmployeeState] = useState({ scope: '', items: [], error: '', version: -1 });
   const [activeSalesState, setActiveSalesState] = useState({ month: '', ids: null, error: '', version: -1 });
-  const [salesState, setSalesState] = useState({ key: '', requestKey: '', rows: [], error: '', updatedAt: null });
+  const [salesState, setSalesState] = useState({ key: '', requestKey: '', rows: [], error: '', updatedAt: null, measureLabel: 'Doanh số' });
   const [exchange, setExchange] = useState(null);
   const [selectedRateMode, setSelectedRateMode] = useState(storedRateMode);
   const [temporaryRevenue, setTemporaryRevenue] = useState({ scope: '', entries: {} });
@@ -109,7 +116,7 @@ export default function SalesDashboard() {
   const employee = (warehouseChoice === null || warehouseChoice === warehouseId) && selectableEmployees.some((u) => u.id === chosenEmployee) ? chosenEmployee : '';
   const listReady = warehouseId !== null && employeeState.scope === scope && employeeState.version === refresh;
   const noEmployees = listReady && activeReady && !employeeState.error && !activeError && !selectableEmployees.length;
-  const key = `${employee}:${month}`;
+  const key = `${isSale ? 'sale:' : ''}${employee}:${month}`;
   const monthTargets = targetState.month === month ? targetState.targets : null;
   const targetError = targetState.month === month ? targetState.error : '';
   const targetVnd = monthTargets && employee ? getEmployeeTarget(monthTargets, employee, month) : null;
@@ -131,8 +138,8 @@ export default function SalesDashboard() {
   const loading = !error && !noEmployees && (warehouseId === null ? !warehouseState.loaded && !warehouseState.error : !listReady || !activeReady || (!!employee && !ready));
 
   useEffect(() => {
-    saveSalesFilters(SALES_FILTER_KEYS.personal, { month, warehouseChoice, chosenEmployee });
-  }, [month, warehouseChoice, chosenEmployee]);
+    saveSalesFilters(personFiltersKey, { month, warehouseChoice, chosenEmployee });
+  }, [month, warehouseChoice, chosenEmployee, personFiltersKey]);
 
   useEffect(() => {
     try { localStorage.setItem(RATE_MODE_KEY, selectedRateMode); } catch { /* private browsing */ }
@@ -142,14 +149,15 @@ export default function SalesDashboard() {
   // Đọc lại khi thay nhân viên hoặc tháng; không ghi vào API/backend.
   useEffect(() => {
     const [employeeId, selectedMonth] = [employee, month];
-    const load = () => setTemporaryRevenue({ scope: key, entries: readTemporaryRevenue(employeeId, selectedMonth) });
+    const localEmployeeId = isSale ? `sale-assign-${employeeId}` : employeeId;
+    const load = () => setTemporaryRevenue({ scope: key, entries: readTemporaryRevenue(localEmployeeId, selectedMonth) });
     load();
     const onStorage = (event) => {
-      if (event.key === temporaryRevenueStorageKey(employeeId, selectedMonth)) load();
+      if (event.key === temporaryRevenueStorageKey(localEmployeeId, selectedMonth)) load();
     };
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);
-  }, [key, employee, month]);
+  }, [key, employee, month, isSale]);
 
   useEffect(() => {
     const timer = setInterval(() => setRefresh((n) => n + 1), 60 * 1000);
@@ -170,13 +178,13 @@ export default function SalesDashboard() {
   useEffect(() => {
     if (warehouseId === null) return;
     const controller = new AbortController();
-    fetchSalesEmployees(warehouseId, lookupMonth, controller.signal).then((items) => {
+    (isSale ? fetchSaleMarketingEmployees : fetchSalesEmployees)(warehouseId, lookupMonth, controller.signal).then((items) => {
       if (!controller.signal.aborted) setEmployeeState({ scope, items, error: '', version: refresh });
     }).catch((e) => {
       if (!controller.signal.aborted) setEmployeeState({ scope, items: [], error: salesErrorMessage(e), version: refresh });
     });
     return () => controller.abort();
-  }, [warehouseId, lookupMonth, scope, refresh]);
+  }, [warehouseId, lookupMonth, scope, refresh, isSale]);
 
   // Một truy vấn thống kê theo tháng, không kiểm tra từng nhân viên riêng lẻ.
   // /sales/ranking đã có sẵn từ V12 và trả revenueThb theo nhân viên trên tất cả các kho.
@@ -189,7 +197,7 @@ export default function SalesDashboard() {
     const start = `${month}-01`;
     const last = `${month}-${String(daysInMonth(month)).padStart(2, '0')}`;
     const end = last < today ? last : today;
-    fetchSalesRanking(start, end, controller.signal).then(({ rows }) => {
+    (isSale ? fetchSaleMarketingRanking : fetchSalesRanking)(start, end, controller.signal).then(({ rows }) => {
       if (!controller.signal.aborted) {
         setActiveSalesState({ month, ids: rows.filter((row) => row.revenueThb > 0).map((row) => row.employeeId), error: '', version: refresh });
       }
@@ -203,18 +211,18 @@ export default function SalesDashboard() {
       }
     });
     return () => controller.abort();
-  }, [month, today, refresh]);
+  }, [month, today, refresh, isSale]);
 
   useEffect(() => {
     const controller = new AbortController();
     targetRequest.current = controller;
-    fetchEmployeeTargets(month, controller.signal).then((result) => {
+    (isSale ? fetchSaleMarketingTargets : fetchEmployeeTargets)(month, controller.signal).then((result) => {
       if (!controller.signal.aborted) setTargetState({ month, ...result, error: '' });
     }).catch((error) => {
       if (!controller.signal.aborted) setTargetState((previous) => ({ month, targets: previous.month === month ? previous.targets : null, canEdit: false, error: error?.response?.data?.message || 'Không tải được mục tiêu từ cơ sở dữ liệu.' }));
     });
     return () => { controller.abort(); if (targetRequest.current === controller) targetRequest.current = null; };
-  }, [month, refresh]);
+  }, [month, refresh, isSale]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -229,13 +237,13 @@ export default function SalesDashboard() {
   useEffect(() => {
     if (!employee) return;
     const controller = new AbortController();
-    fetchDailySales(month, employee, controller.signal).then((result) => {
-      if (!controller.signal.aborted) setSalesState({ key, requestKey, rows: result.rows, error: '', updatedAt: result.updatedAt });
+    (isSale ? fetchSaleMarketingDaily : fetchDailySales)(month, employee, controller.signal).then((result) => {
+      if (!controller.signal.aborted) setSalesState({ key, requestKey, rows: result.rows, error: '', updatedAt: result.updatedAt, measureLabel: result.measureLabel || 'Doanh số' });
     }).catch((e) => {
       if (!controller.signal.aborted) setSalesState({ key, requestKey, rows: [], error: salesErrorMessage(e), updatedAt: null });
     });
     return () => controller.abort();
-  }, [month, employee, key, requestKey]);
+  }, [month, employee, key, requestKey, isSale]);
 
   function changeWarehouse(value) {
     if (value !== warehouseId || (warehouseChoice !== null && warehouseChoice !== warehouseId)) setEmployee('');
@@ -248,7 +256,7 @@ export default function SalesDashboard() {
   }
 
   async function saveTargets(targetMonth, changes) {
-    const result = await saveEmployeeTargets(targetMonth, changes);
+    const result = await (isSale ? saveSaleMarketingTargets : saveEmployeeTargets)(targetMonth, changes);
     targetRequest.current?.abort();
     setTargetState((previous) => previous.month === targetMonth ? { ...previous, targets: { ...previous.targets, ...result.targets } } : previous);
     setRefresh((previous) => previous + 1);
@@ -283,7 +291,7 @@ export default function SalesDashboard() {
   function saveTemporaryEdits() {
     if (!isEditingRevenue || normalizedDrafts.invalidDates.length) return;
     try {
-      writeTemporaryRevenue(employee, month, normalizedDrafts.entries);
+      writeTemporaryRevenue(isSale ? `sale-assign-${employee}` : employee, month, normalizedDrafts.entries);
       setTemporaryRevenue({ scope: key, entries: normalizedDrafts.entries });
       setEditingRevenueScope('');
       setTemporaryNotice({ scope: key, error: false, message: Object.keys(normalizedDrafts.entries).length
@@ -303,7 +311,7 @@ export default function SalesDashboard() {
     if (!canEditTemporaryRevenue || (!adjustedDates && !hasAdjustedRevenue)) return;
     if (!window.confirm(`Khôi phục doanh thu Pancake gốc cho nhân viên đang chọn, tháng ${month}? Điều chỉnh tạm của tháng này sẽ bị xóa.`)) return;
     try {
-      writeTemporaryRevenue(employee, month, {});
+      writeTemporaryRevenue(isSale ? `sale-assign-${employee}` : employee, month, {});
       setTemporaryRevenue({ scope: key, entries: {} });
       setRevenueDrafts({ scope: key, values: {} });
       setEditingRevenueScope('');
@@ -330,7 +338,8 @@ export default function SalesDashboard() {
   }
 
   function exportCsv() {
-    const headers = ['Ngày', 'Số đơn', 'Doanh số THB', 'Doanh số VND', 'Tổng tuần VND'];
+    const metric = isSale && salesState.measureLabel === 'Tiền hàng' ? 'Tiền hàng' : 'Doanh số';
+    const headers = ['Ngày', 'Số đơn', `${metric} THB`, `${metric} VND`, 'Tổng tuần VND'];
     if (hasAdjustedRevenue) headers.push('Doanh số THB gốc (Pancake)', 'Nguồn doanh số');
     const originalByDate = new Map(originalRows.map((row) => [row.date, row]));
     const lines = [headers, ...rows.map((r) => {
@@ -341,26 +350,26 @@ export default function SalesDashboard() {
     const blob = new Blob(['\uFEFF', lines.map((line) => line.join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
-    anchor.href = url; anchor.download = `doanh-so-${hasAdjustedRevenue ? 'dieu-chinh-' : ''}${month}-${employee}.csv`;
+    anchor.href = url; anchor.download = `${isSale ? 'sale-' : ''}doanh-so-${hasAdjustedRevenue ? 'dieu-chinh-' : ''}${month}-${employee}.csv`;
     anchor.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
   return <main className="sd-root">
-    <DashboardHeader active="marketing"/>
+    <DashboardHeader active={team}/>
     <div className="sd-shell">
       <div className="sd-heading">
-        <div><div className="sd-overline">BÁO CÁO DOANH SỐ</div><h1>Tổng quan tháng {Number(monthNumber)}/{year}</h1></div>
+        <div><div className="sd-overline">{isSale ? 'DOANH SỐ SALE' : 'BÁO CÁO DOANH SỐ'}</div><h1>Tổng quan tháng {Number(monthNumber)}/{year}</h1></div>
         <button type="button" className="sd-primary" disabled={loading} onClick={() => setRefresh((n) => n + 1)}><Icon type="refresh"/> {loading ? 'Đang tải...' : 'Đồng bộ ngay'}</button>
       </div>
       <nav className="sd-mobile-only sd-mobile-nav" aria-label="Đi nhanh đến báo cáo">
-        <a href="#sd-summary">Thống kê</a><a href="#sd-daily">Theo ngày</a><a href="#sd-chart">Biểu đồ</a><a href="#sd-ranking">Xếp hạng</a><a href="#sd-employee-targets">Mục tiêu</a>
+        <a href="#sd-summary">Thống kê</a><a href="#sd-daily">Theo ngày</a><a href="#sd-chart">Biểu đồ</a><a href="#sd-ranking">Xếp hạng</a><a href="#sd-goal-center">Mục tiêu</a>
       </nav>
       <div className="sd-filterbar">
         <EmployeeSearch employees={warehouseOptions} value={warehouseId} onChange={changeWarehouse} label="KHO HÀNG" noun="kho" emptyLabel="VALLEY" disabled={!warehouseState.loaded && !warehouseState.error}/>
         <EmployeeSearch employees={selectableEmployees} value={employee} onChange={changeEmployee} emptyLabel={activeError ? 'Lỗi lọc nhân viên' : noEmployees ? 'Không có doanh thu tháng này' : listReady && activeReady ? 'Chọn nhân viên' : 'Đang lọc nhân viên...'}/>
         <label className="sd-field"><span>THÁNG BÁO CÁO</span><div className="sd-month"><button aria-label="Tháng trước" type="button" onClick={() => setMonth(shiftMonth(month, -1))}><Icon type="left"/></button><input aria-label="Tháng báo cáo" type="month" value={month} onChange={(e) => e.target.value && setMonth(e.target.value)}/><button aria-label="Tháng sau" type="button" onClick={() => setMonth(shiftMonth(month, 1))}><Icon type="right"/></button></div></label>
-        <div className="sd-field"><span>MỤC TIÊU (VND)</span><a className="sd-target-link" href="#sd-employee-targets"><span>{goalLabel}</span><small>Chỉnh sửa ↓</small></a></div>
+        <div className="sd-field"><span>MỤC TIÊU (VND)</span><a className="sd-target-link" href="#sd-goal-center"><span>{goalLabel}</span><small>Chỉnh sửa ↓</small></a></div>
         <label className="sd-field sd-rate-group"><span>TỈ GIÁ (VND/THB)</span><select aria-label="Chọn tỉ giá quy đổi" value={selectedRateMode} onChange={(event) => setSelectedRateMode(event.target.value)}><option value="750">750</option><option value="online">Trực tuyến</option><option value="780">780</option></select></label>
         <div className={`sd-status ${error ? 'sd-status-error' : ready ? 'sd-status-ok' : ''}`} role="status"><span className="sd-dot"/> {error ? 'Lỗi kết nối' : loading ? 'Đang đồng bộ' : 'Pancake POS'}<small>{hasCurrentData && !error && salesState.updatedAt ? new Date(salesState.updatedAt).toLocaleString('vi-VN', {timeZone:'Asia/Bangkok'}) : 'Tự tải mỗi 1 phút'}</small></div>
       </div>
@@ -374,8 +383,10 @@ export default function SalesDashboard() {
       {ready && !error && !salesState.rows.length && <div className="sd-alert sd-alert-neutral">Pancake chưa trả bản ghi cho nhân viên và tháng này. Các ngày chưa có dữ liệu được giữ trống.</div>}
       {hasAdjustedRevenue && <div className="sd-temp-banner" role="status"><strong>Doanh thu đang được điều chỉnh tạm</strong><span>{isEditingRevenue ? 'Đang xem trước số liệu nhập.' : 'Đang dùng số đã lưu trên trình duyệt này.'} Dữ liệu Pancake và bảng xếp hạng nhân viên không thay đổi.</span></div>}
 
+      {isSale && salesState.measureLabel === 'Tiền hàng' && hasCurrentData && <div className="sd-alert sd-alert-neutral" role="status">Pancake chưa trả đủ phí vận chuyển thu khách. Các chỉ số Sale ở đây đang là <strong>Tiền hàng</strong>, chưa phải Doanh số đầy đủ.</div>}
+
       <section className="sd-metrics" aria-label="Chỉ số tổng quan">
-        <Metric label="Tổng doanh số" value={vnd(summary.revenueVnd)} note={thb(summary.revenueThb)} icon="chart" tone="sd-blue"/>
+        <Metric label={isSale && salesState.measureLabel === 'Tiền hàng' ? 'Tổng tiền hàng' : 'Tổng doanh số'} value={vnd(summary.revenueVnd)} note={thb(summary.revenueThb)} icon="chart" tone="sd-blue"/>
         <Metric label="Mục tiêu tháng" value={goalLabel} note={noGoal ? 'Chưa đặt mục tiêu' : hasGoal ? thb(summary.targetThb) : ''} icon="target" tone="sd-purple"/>
         <Metric label="Tổng số đơn" value={number(summary.orders)} note={null} icon="bag" tone="sd-green"/>
         <Metric label="Số ngày còn lại" value={summary.daysLeft === 0 ? 'HẾT THÁNG' : `${summary.daysLeft} ngày`} note={null} icon="calendar" tone="sd-orange"/>
@@ -392,7 +403,7 @@ export default function SalesDashboard() {
 
       <div className="sd-main-grid">
         <section className="sd-panel sd-table-panel" id="sd-daily">
-          <div className="sd-section-heading sd-revenue-header"><div><h2>Doanh số từng ngày</h2>{(isEditingRevenue || adjustedDates > 0) && <small className="sd-temporary-subtitle">{isEditingRevenue ? 'Đang nhập thử · chưa lưu' : `${adjustedDates} ngày đã chỉnh tạm`}</small>}</div>
+          <div className="sd-section-heading sd-revenue-header"><div><h2>{isSale && salesState.measureLabel === 'Tiền hàng' ? 'Tiền hàng từng ngày' : 'Doanh số từng ngày'}</h2>{(isEditingRevenue || adjustedDates > 0) && <small className="sd-temporary-subtitle">{isEditingRevenue ? 'Đang nhập thử · chưa lưu' : `${adjustedDates} ngày đã chỉnh tạm`}</small>}</div>
             <div className="sd-revenue-actions">
               {canEditTemporaryRevenue && (isEditingRevenue ? <>
                 <button type="button" className="sd-primary sd-revenue-save" disabled={normalizedDrafts.invalidDates.length > 0} onClick={saveTemporaryEdits}><Icon type="check" size={16}/> Lưu tạm</button>
@@ -444,7 +455,7 @@ export default function SalesDashboard() {
               <div className="sd-stats-header"><span>Chỉ số</span><span>THB</span><span>VND</span></div>
               <StatsRow title="Tỷ giá" left="฿1" right={`${rateFormat.format(rate)} ₫`} tone="rate"/>
               <StatsRow title="Mục tiêu" left={thb(summary.targetThb)} right={goalLabel} tone="target"/>
-              <StatsRow title="Tổng doanh số" left={thb(summary.revenueThb)} right={vnd(summary.revenueVnd)} tone="revenue"/>
+              <StatsRow title={isSale && salesState.measureLabel === 'Tiền hàng' ? 'Tổng tiền hàng' : 'Tổng doanh số'} left={thb(summary.revenueThb)} right={vnd(summary.revenueVnd)} tone="revenue"/>
               <StatsRow title="Cần thêm" left={thb(summary.remainingThb)} right={vnd(summary.remainingVnd)} tone={summary.remainingVnd === 0 ? 'revenue' : 'remaining'}/>
               <StatsRow title="Mỗi ngày cần" left={summary.daysLeft ? thb(summary.needThbPerDay) : '—'} right={summary.daysLeft ? vnd(summary.needPerDay) : '—'} tone="daily"/>
             </div>
@@ -456,7 +467,7 @@ export default function SalesDashboard() {
             <div className="sd-rate-source">Nguồn tỉ giá trực tuyến: <a href="https://www.exchangerate-api.com" target="_blank" rel="noreferrer">ExchangeRate API</a></div>
           </section>
       </div>
-      <section className="sd-panel sd-chart-panel" id="sd-chart"><div className="sd-section-heading"><div><h2>Biểu đồ doanh số</h2></div><span className="sd-chart-unit">฿</span></div>
+      <section className="sd-panel sd-chart-panel" id="sd-chart"><div className="sd-section-heading"><div><h2>{isSale && salesState.measureLabel === 'Tiền hàng' ? 'Biểu đồ tiền hàng' : 'Biểu đồ doanh số'}</h2></div><span className="sd-chart-unit">฿</span></div>
         <p className="sd-mobile-only sd-mobile-chart-hint">Vuốt ngang để xem đủ các ngày trong tháng →</p>
         <div className="sd-chart" aria-label="Biểu đồ doanh số theo ngày; mỗi tuần một màu">
           {weekGroups.flatMap((week, weekIndex) => week.rows.map((r, dayIndex) => (
@@ -475,8 +486,15 @@ export default function SalesDashboard() {
           )))}
         </div>
       </section>
-      <SalesRanking warehouseOptions={warehouseOptions} refresh={refresh} rate={rate}/>
-      <EmployeeTargetManager employees={employees} month={month} onMonthChange={setMonth} warehouseId={warehouseId} warehouseOptions={warehouseOptions} onWarehouseChange={changeWarehouse} targets={monthTargets} legacyTargets={legacySettings.targets} error={targetError} canEdit={targetState.month === month && targetState.canEdit && !targetError} onSave={saveTargets} rate={rate}/>
+      <SalesRanking key={team} team={team} warehouseOptions={warehouseOptions} refresh={refresh} rate={rate}/>
+      <div className="sd-goal-center" id="sd-goal-center">
+        <div className="sd-goal-center-top"><strong>Quản lý mục tiêu {isSale ? 'Sale' : 'Marketing'}</strong></div>
+        <EmployeeTargetManager key={team} team={team} employees={isSale ? employees.filter((person) => person.id !== '__unassigned__') : employees} month={month} onMonthChange={setMonth}
+          warehouseId={warehouseId} warehouseOptions={warehouseOptions} onWarehouseChange={changeWarehouse}
+          targets={monthTargets} legacyTargets={isSale ? {} : legacySettings.targets} error={targetError}
+          canEdit={targetState.month === month && targetState.canEdit && !targetError}
+          onSave={saveTargets} rate={rate}/>
+      </div>
     </div>
   </main>;
 }

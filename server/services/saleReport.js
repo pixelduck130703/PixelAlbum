@@ -62,6 +62,7 @@ function normalizeSaleReport(raw, employees, { start, end, warehouseId = '' }) {
   if (!Array.isArray(raw) || !Array.isArray(employees)) reportError('Báo cáo Sale không hợp lệ.');
   const people = new Map(employees.map(({ id, name }) => [String(id), makeEmployee(String(id), name)]));
   const days = new Map();
+  const employeeDays = new Map();
   let unassigned = false;
   for (const item of raw) {
     if (!item || !has(item, 'User.id') || !has(item, 'Time.day')) reportError('Pancake không trả nhóm nhân viên và ngày.');
@@ -92,6 +93,17 @@ function normalizeSaleReport(raw, employees, { start, end, warehouseId = '' }) {
     if (isValidMetric(success.shipping_fee, 100)) daily.shippingCents += success.shipping_fee;
     else daily.shippingComplete = false;
     days.set(day, daily);
+    // Báo cáo chi tiết Sale theo người/ngày. Không lấy tổng ngày toàn shop
+    // gán cho một nhân viên (sẽ làm sai tiến độ và mục tiêu).
+    const employeeDayKey = `${id}:${day}`;
+    const staffDay = employeeDays.get(employeeDayKey) ?? { employeeId:id, date:day, orders:0, priceCents:0, shippingCents:0, shippingComplete:true };
+    staffDay.orders += success.order_count;
+    staffDay.priceCents += success.price;
+    if (isValidMetric(success.shipping_fee,100)) staffDay.shippingCents += success.shipping_fee;
+    else staffDay.shippingComplete = false;
+    employeeDays.set(employeeDayKey,staffDay);
+    if (!Number.isSafeInteger(staffDay.orders) || !Number.isFinite(staffDay.priceCents) || Math.abs(staffDay.priceCents)>1e14)
+      reportError('Doanh số theo nhân viên/ngày vượt phạm vi an toàn.');
     if (!Number.isSafeInteger(person.orders) || !Number.isSafeInteger(daily.orders) ||
       !Number.isFinite(person.priceCents) || Math.abs(person.priceCents) > 1e14 ||
       !Number.isFinite(daily.priceCents) || Math.abs(daily.priceCents) > 1e14) reportError('Doanh số Sale vượt phạm vi xử lý an toàn.');
@@ -103,6 +115,10 @@ function normalizeSaleReport(raw, employees, { start, end, warehouseId = '' }) {
     salesThb: shippingComplete ? (priceCents + shippingCents) / 100 : null,
   }))
     .sort((a, b) => a.date.localeCompare(b.date));
+  const employeeDaily = [...employeeDays.values()].map(({priceCents,shippingCents,shippingComplete,...rest}) => ({
+    ...rest, revenueThb:priceCents/100,
+    salesThb:shippingComplete ? (priceCents+shippingCents)/100 : null,
+  })).sort((a,b)=>a.date.localeCompare(b.date)||a.employeeId.localeCompare(b.employeeId));
   const totals = {
     employees: rows.filter(person => person.employeeId !== '__unassigned__').length,
     orders: rows.reduce((sum, person) => sum + person.orders, 0),
@@ -110,6 +126,6 @@ function normalizeSaleReport(raw, employees, { start, end, warehouseId = '' }) {
     unassigned,
     salesThb: rows.every(row => row.salesThb !== null) ? rows.reduce((sum, row) => sum + row.salesThb, 0) : null,
   };
-  return { rows, daily, totals };
+  return { rows, daily, employeeDaily, totals };
 }
 module.exports = { normalizeSaleReport, groupId };

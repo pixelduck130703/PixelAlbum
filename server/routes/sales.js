@@ -1,3 +1,4 @@
+const { createSaleTargetsRouter } = require('./saleTargets');
 const { registerSaleReportRoute } = require('./saleReport');
 const { registerWarehouseReportRoute } = require('./warehouseReport');
 const router = require('express').Router();
@@ -66,4 +67,5 @@ router.get('/api/sales/exchange-rate', salesReadAccess, async (_req, res) => {
 registerWarehouseReportRoute(router, salesReadAccess, handleError);
 registerSaleReportRoute(router, salesReadAccess, handleError);
 router.use(createSalesTargetsRouter(salesReadAccess));
+router.use(createSaleTargetsRouter(salesReadAccess));
 module.exports = router;
