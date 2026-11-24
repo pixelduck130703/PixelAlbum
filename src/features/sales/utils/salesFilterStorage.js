@@ -1,4 +1,4 @@
-import { PERIODS, rankingRangeError } from './salesRankingModel.js';
+import { PERIODS, rankingRangeError } from '../models/salesRankingModel.js';
 
 // Tách khỏi mục tiêu V5 và token quản trị. Chỉ lưu tùy chọn giao diện.
 export const SALES_FILTER_KEYS = {

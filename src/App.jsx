@@ -17,7 +17,9 @@ import HomeMusicPlayer from "./components/HomeMusicPlayer";
 import VideoCreator from "./pages/VideoCreator";
 import ImageDescriber from "./pages/ImageDescriber";
 import NewYear2027 from "./pages/NewYear2027";
-import SalesDashboard from "./pages/SalesDashboard";
+import SalesDashboard from "./features/sales/SalesDashboard";
+import SaleDashboard from './features/sale/SaleDashboard';
+import WarehouseDashboard from './features/warehouse/WarehouseDashboard';
 import VisitorLocationDialog from "./components/VisitorLocationDialog";
 import { getVisitorLocationPreference, saveVisitorLocationPreference, clearVisitorLocation, getVisitorLocation, VISITOR_LOCATION_KEY } from "./services/visitorLocation";
 
@@ -59,6 +61,8 @@ function App() {
 
       <Routes>
         <Route path="/sales-dashboard" element={<SalesDashboard />} />
+        <Route path="/sale-dashboard" element={<SaleDashboard />} />
+        <Route path="/warehouse-dashboard" element={<WarehouseDashboard />} />
         <Route path="/" element={<Home locationChoice={locationChoice} onReviewLocation={openLocationSettings} />} />
 
         <Route

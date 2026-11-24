@@ -1,0 +1,21 @@
+{
+  "version": "V19.1",
+  "root": "C:\\Users\\nguye\\Downloads\\PIC\\birthday-search",
+  "files": [
+    "src/App.jsx",
+    "src/pages/SalesDashboard.jsx",
+    "src/pages/SalesDashboard.css",
+    "src/pages/WarehouseDashboard.jsx",
+    "src/pages/salesDashboardModel.js",
+    "src/pages/salesFilterStorage.js",
+    "src/pages/salesRankingModel.js",
+    "src/pages/salesTemporaryRevenue.js",
+    "src/components/EmployeeSearch.jsx",
+    "src/components/EmployeeTargetManager.jsx",
+    "src/components/SalesRanking.jsx",
+    "src/pages/salesDashboardModel.test.js",
+    "src/pages/salesFilterStorage.test.js",
+    "src/pages/salesRankingModel.test.js"
+  ],
+  "timestamp": "2026-11-24T05-15-44-066Z"
+}

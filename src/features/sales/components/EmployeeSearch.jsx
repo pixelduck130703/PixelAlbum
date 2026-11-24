@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { normalizeEmployeeSearch } from '../pages/salesDashboardModel';
+import { normalizeEmployeeSearch } from '../models/salesDashboardModel';
 
 export default function EmployeeSearch({ employees, value, onChange, label = 'NHÂN VIÊN', noun = 'nhân viên', emptyLabel = 'Chưa tải nhân viên', disabled = false }) {
   const [open, setOpen] = useState(false);

@@ -1,19 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
-import EmployeeSearch from '../components/EmployeeSearch';
-import EmployeeTargetManager from '../components/EmployeeTargetManager';
-import SalesRanking from '../components/SalesRanking';
+import EmployeeSearch from './components/EmployeeSearch';
+import EmployeeTargetManager from './components/EmployeeTargetManager';
+import SalesRanking from './components/SalesRanking';
 import {
   PROGRESS_COLORS, todayInBangkok, shiftMonth, daysInMonth, progressColor,
   buildRows, calculateSummary, groupWeeklyRows, formatChartRevenue, getEmployeeTarget,
-} from './salesDashboardModel';
-import { fetchSalesEmployees, fetchSalesWarehouses, fetchSalesRanking, fetchDailySales, fetchExchangeRate, fetchEmployeeTargets, saveEmployeeTargets, salesErrorMessage } from '../services/salesService';
-import { SALES_FILTER_KEYS, readPersonalFilters, saveSalesFilters, resolveWarehouseChoice } from './salesFilterStorage';
+} from './models/salesDashboardModel';
+import { fetchSalesEmployees, fetchSalesWarehouses, fetchSalesRanking, fetchDailySales, fetchExchangeRate, fetchEmployeeTargets, saveEmployeeTargets, salesErrorMessage } from '../../services/salesService';
+import { SALES_FILTER_KEYS, readPersonalFilters, saveSalesFilters, resolveWarehouseChoice } from './utils/salesFilterStorage';
 import {
   readTemporaryRevenue, writeTemporaryRevenue, normalizeTemporaryRevenue,
   applyTemporaryRevenue, parseTemporaryThb, temporaryRevenueStorageKey,
-} from './salesTemporaryRevenue';
+} from './utils/salesTemporaryRevenue';
 import './SalesDashboard.css';
+import DashboardHeader from '../dashboard-shared/DashboardHeader';
 
 const vi = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 });
 const rateFormat = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 2 });
@@ -347,10 +347,7 @@ export default function SalesDashboard() {
   }
 
   return <main className="sd-root">
-    <header className="sd-topbar">
-      <div className="sd-brand"><span className="sd-brand-mark"><Icon type="chart" size={22}/></span><div><strong>Sales Dashboard</strong><small>PIXELALBUM · MARKETING</small></div></div>
-      <Link className="sd-back" to="/admin"><Icon type="arrow" size={17}/> Quản trị</Link>
-    </header>
+    <DashboardHeader active="marketing"/>
     <div className="sd-shell">
       <div className="sd-heading">
         <div><div className="sd-overline">BÁO CÁO DOANH SỐ</div><h1>Tổng quan tháng {Number(monthNumber)}/{year}</h1></div>

@@ -1,0 +1,2 @@
+/* V19: tương thích nếu trang khác còn import CSS đường dẫn cũ. */
+@import url('../features/sales/SalesDashboard.css');

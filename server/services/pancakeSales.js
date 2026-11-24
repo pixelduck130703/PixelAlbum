@@ -1,3 +1,5 @@
+const { normalizeSaleReport } = require('./saleReport');
+const { normalizeWarehouseReport } = require('./warehouseReport');
 // Pancake POS sales. Chỉ sử dụng phía server; không trả API key ra frontend.
 const BASE = 'https://pos.pages.fm/api/v1/shops';
 const TZ = 'Asia/Bangkok';
@@ -248,4 +250,40 @@ async function getRanking(start, end, now = new Date()) {
   return normalizeRanking(raw, employees);
 }
 
-module.exports = { PancakeError, monthRange, normalizeEmployees, normalizeEmployeeRecords, normalizeDailySales, normalizeWarehouses, getEmployees, getWarehouses, validateWarehouseId, assertWarehouse, getDailySales, getWarehouseEmployees, getWarehouseEmployeesForRange, selectWarehouseEmployees, validateRankingRange, normalizeRanking, getRanking };
+
+// V19: thống kê theo kho thực trên đơn hàng, không dùng nhân viên để suy ra kho.
+async function getWarehouseReport(start, end, now = new Date()) {
+  validateRankingRange(start,end,now);
+  const [warehouses, raw] = await Promise.all([getWarehouses(), requestPancake('analytics/sale', [
+    ['since', new Date(`${start}T00:00:00+07:00`).toISOString()],
+    ['until', new Date(Math.min(now.getTime(), new Date(`${end}T23:59:59+07:00`).getTime())).toISOString()],
+    ['split_by[]','Order.warehouse_id'], ['select_fields[]','price'], ['select_fields[]','discount'],
+    ['select_fields[]','shipping_fee'], ['select_fields[]','order_count'],
+    ['success_status','1'], ['success_record','inserted_at'], ['returned_record','inserted_at'],
+  ])]);
+  return normalizeWarehouseReport(raw,warehouses);
+}
+
+
+// V19.6: doanh số Sale theo vai trò trên đơn, tách riêng Marketing.
+async function getSaleReport(start, end, role = 'assign', warehouseId = '', successStatus = '1', successRecord = 'inserted_at', now = new Date()) {
+  validateRankingRange(start, end, now);
+  if (!['assign','update','create'].includes(role)) throw new PancakeError('Cách tính Sale không hợp lệ.', 400);
+  if (!['1','send_to_partner'].includes(successStatus)) throw new PancakeError('Trạng thái chốt không hợp lệ.', 400);
+  if (!['inserted_at','updated_at'].includes(successRecord)) throw new PancakeError('Ngày ghi nhận không hợp lệ.', 400);
+  validateWarehouseId(warehouseId);
+  if (warehouseId) await assertWarehouse(warehouseId);
+  const params = [
+    ['since', new Date(`${start}T00:00:00+07:00`).toISOString()],
+    ['until', new Date(Math.min(now.getTime(), new Date(`${end}T23:59:59+07:00`).getTime())).toISOString()],
+    ['split_by[]','Time.day'], ['split_by[]','User.id'],
+    ...(warehouseId ? [['split_by[]','Order.warehouse_id'], ['filter[Order.warehouse_id][]',warehouseId]] : []),
+    ['select_fields[]','price'], ['select_fields[]','order_count'],
+    ['select_fields[]','product_count'], ['select_fields[]','discount'], ['select_fields[]','shipping_fee'], ['select_fields[]','avg_price'],
+    ['user_type',role], ['success_status',successStatus], ['success_record',successRecord]
+  ];
+  const [employees,raw] = await Promise.all([getEmployees(),requestPancake('analytics/sale',params)]);
+  return normalizeSaleReport(raw,employees,{start,end,warehouseId});
+}
+
+module.exports = { PancakeError, monthRange, normalizeEmployees, normalizeEmployeeRecords, normalizeDailySales, normalizeWarehouses, getEmployees, getWarehouses, validateWarehouseId, assertWarehouse, getDailySales, getWarehouseEmployees, getWarehouseEmployeesForRange, selectWarehouseEmployees, validateRankingRange, normalizeRanking, getRanking, getWarehouseReport, getSaleReport };

@@ -1,3 +1,5 @@
+const { registerSaleReportRoute } = require('./saleReport');
+const { registerWarehouseReportRoute } = require('./warehouseReport');
 const router = require('express').Router();
 const verifyAdminToken = require('../middleware/auth');
 const { PancakeError, getEmployees, getWarehouses, getDailySales, getWarehouseEmployees, getWarehouseEmployeesForRange, validateWarehouseId } = require('../services/pancakeSales');
@@ -61,5 +63,7 @@ router.get('/api/sales/exchange-rate', salesReadAccess, async (_req, res) => {
   catch { res.status(503).json({ success: false, message: 'Không lấy được tỷ giá trực tuyến.' }); }
 });
 
+registerWarehouseReportRoute(router, salesReadAccess, handleError);
+registerSaleReportRoute(router, salesReadAccess, handleError);
 router.use(createSalesTargetsRouter(salesReadAccess));
 module.exports = router;

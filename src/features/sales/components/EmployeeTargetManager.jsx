@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import EmployeeSearch from './EmployeeSearch';
-import { DEFAULT_EMPLOYEE_ID, employeeTargetKey, getEmployeeTarget, normalizeEmployeeSearch, parseTargetDraft } from '../pages/salesDashboardModel';
-import { SALES_FILTER_KEYS, readTargetFilter, saveSalesFilters } from '../pages/salesFilterStorage';
+import { DEFAULT_EMPLOYEE_ID, employeeTargetKey, getEmployeeTarget, normalizeEmployeeSearch, parseTargetDraft } from '../models/salesDashboardModel';
+import { SALES_FILTER_KEYS, readTargetFilter, saveSalesFilters } from '../utils/salesFilterStorage';
 
 const format = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 });
 const rateFormat = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 2 });

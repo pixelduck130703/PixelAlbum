@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import EmployeeSearch from './EmployeeSearch';
-import { normalizeEmployeeSearch, progressColor, todayInBangkok } from '../pages/salesDashboardModel';
-import { PERIODS, rankingRange, rankingRangeError, filterRanking, rankingShowsCompletion } from '../pages/salesRankingModel';
-import { fetchSalesEmployees, fetchSalesRanking, salesErrorMessage } from '../services/salesService';
-import { SALES_FILTER_KEYS, readRankingFilters, saveSalesFilters, resolveWarehouseChoice } from '../pages/salesFilterStorage';
+import { normalizeEmployeeSearch, progressColor, todayInBangkok } from '../models/salesDashboardModel';
+import { PERIODS, rankingRange, rankingRangeError, filterRanking, rankingShowsCompletion } from '../models/salesRankingModel';
+import { fetchSalesEmployees, fetchSalesRanking, salesErrorMessage } from '../../../services/salesService';
+import { SALES_FILTER_KEYS, readRankingFilters, saveSalesFilters, resolveWarehouseChoice } from '../utils/salesFilterStorage';
 
 const format = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 2 });
 const money = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 });
@@ -41,6 +41,8 @@ export default function SalesRanking({ warehouseOptions, refresh, rate = 780 }) 
   const [customStart, setCustomStart] = useState(initialFilters.customStart);
   const [customEnd, setCustomEnd] = useState(initialFilters.customEnd);
   const [retry, setRetry] = useState(0);
+  // Mặc định là danh sách; chuyển chế độ không làm thay đổi bộ lọc hay dữ liệu API.
+  const [viewMode, setViewMode] = useState('list');
   const [expanded, setExpanded] = useState(false);
   const panelRef = useRef(null);
   const expandButtonRef = useRef(null);
@@ -144,6 +146,7 @@ export default function SalesRanking({ warehouseOptions, refresh, rate = 780 }) 
 
   function changeWarehouse(value) { setWarehouse(value); setSelected(null); }
   function changeSelected(value) { setWarehouse(warehouseId); setSelected(value); }
+  const maxChartRevenue = Math.max(0, ...rows.map((row) => Number(row.revenueThb) || 0));
   const totalOrders = rows.reduce((sum, row) => sum + row.orders, 0);
   const totalRevenue = rows.reduce((sum, row) => sum + row.revenueThb, 0);
   const assignedTargets = rows.filter((row) => row.targetVnd > 0);
@@ -158,10 +161,18 @@ export default function SalesRanking({ warehouseOptions, refresh, rate = 780 }) 
     <div className="sd-section-heading">
       <div><h2>Bảng xếp hạng nhân viên</h2></div>
       <div className="sd-ranking-heading-actions">
+        <div className="sd-ranking-view-toggle" role="group" aria-label="Chế độ xem xếp hạng">
+          <button type="button" className={`sd-secondary${viewMode === 'list' ? ' is-active' : ''}`}
+            aria-pressed={viewMode === 'list'} aria-controls="sd-ranking-visualization"
+            onClick={() => setViewMode('list')}>☷ Danh sách</button>
+          <button type="button" className={`sd-secondary${viewMode === 'chart' ? ' is-active' : ''}`}
+            aria-pressed={viewMode === 'chart'} aria-controls="sd-ranking-visualization"
+            onClick={() => setViewMode('chart')}>▥ Biểu đồ</button>
+        </div>
         <button type="button" className="sd-secondary sd-ranking-expand-btn"
           ref={expandButtonRef}
           onClick={() => setExpanded((prev) => !prev)}
-          aria-expanded={expanded} aria-controls="sd-ranking-scroll-container"
+          aria-expanded={expanded} aria-controls="sd-ranking-visualization"
           title={expanded ? 'Thu nhỏ bảng về giao diện bình thường (Esc)' : 'Mở bảng xếp hạng toàn màn hình'}>
           <span aria-hidden="true">{expanded ? '⊟' : '⛶'}</span>
           {expanded ? 'Thu gọn' : 'Mở rộng'}
@@ -181,7 +192,8 @@ export default function SalesRanking({ warehouseOptions, refresh, rate = 780 }) 
     {showCompletion && data?.targetError && <p className="sd-alert" role="alert">Không tải được mục tiêu từ cơ sở dữ liệu. Doanh số vẫn hiển thị.</p>}
     {warehouseId === null && <p className="sd-filter-note">Đang tìm kho VALLEY. Anh có thể chọn kho khác nếu không tìm thấy.</p>}
     {employeeReady && data && !activeEmployees.length && <p className="sd-alert sd-alert-neutral">Không có nhân viên có doanh thu dương trong khoảng ngày đã chọn tại kho này. Anh có thể chọn kỳ khác hoặc Tất cả các kho.</p>}
-    <div id="sd-ranking-scroll-container" className="sd-ranking-table-wrap" tabIndex={0} role="region" aria-label="Cuộn bảng xếp hạng">
+    <div id="sd-ranking-visualization" className="sd-ranking-visualization">
+      {viewMode === 'list' ? <div className="sd-ranking-table-wrap" tabIndex={0} role="region" aria-label="Cuộn bảng xếp hạng">
       <table className={`sd-ranking-table${showCompletion ? ' sd-ranking-with-completion' : ''}`}>
         <thead><tr><th>Nhân viên</th><th>Đơn hàng</th><th aria-sort="descending">Doanh số (THB) ↓</th><th>Doanh số (VND)</th>{showCompletion && <><th>Mục tiêu (VND)</th><th>Hoàn thành</th></>}</tr></thead>
         <tbody>
@@ -200,7 +212,25 @@ export default function SalesRanking({ warehouseOptions, refresh, rate = 780 }) 
         </tbody>
         {rows.length > 0 && <tfoot><tr><td>TỔNG ({rows.length})</td><td>{format.format(totalOrders)}</td><td className="sd-ranking-money">฿{format.format(totalRevenue)}</td><td className="sd-ranking-money">{money.format(totalRevenue * rate)} ₫</td>{showCompletion && <><td className="sd-ranking-money">{data.targetError ? 'Không tải được' : assignedTargets.length ? <>{money.format(totalTarget)} ₫{assignedTargets.length < rows.length && <small className="sd-ranking-target-count">{assignedTargets.length}/{rows.length} đã đặt</small>}</> : 'Chưa đặt'}</td><td>—</td></>}</tr></tfoot>}
       </table>
+      </div> : <div className="sd-ranking-chart-wrap" role="region" aria-label="Biểu đồ doanh số THB theo nhân viên" tabIndex={0}>
+        {!rows.length ? <div className="sd-ranking-chart-empty">
+          {invalid || error || employeeError ? 'Chưa có dữ liệu hiển thị.' : loading ? 'Đang tải dữ liệu...' : 'Không có nhân viên phù hợp.'}
+        </div> : <>
+          <div className="sd-ranking-chart-summary"><span>DOANH SỐ THEO NHÂN VIÊN · THB</span><strong>Tổng ฿{format.format(totalRevenue)}</strong></div>
+          <div className="sd-ranking-chart-list">
+            {rows.map((row, index) => <div className="sd-ranking-chart-row" key={row.employeeId}>
+              <div className="sd-ranking-chart-name" title={row.name}>
+                <span className={`sd-ranking-position sd-rank-${index + 1}`}>{String(index + 1).padStart(2, '0')}</span>
+                <strong>{row.name}</strong>
+              </div>
+              <div className="sd-ranking-chart-track" role="img" aria-label={`${row.name}: ${format.format(row.revenueThb)} baht`}>
+                <span className="sd-ranking-chart-fill" style={{ width: `${maxChartRevenue > 0 ? Math.max(1, (row.revenueThb / maxChartRevenue) * 100) : 0}%` }} />
+              </div>
+              <strong className="sd-ranking-chart-value">฿{format.format(row.revenueThb)}</strong>
+            </div>)}
+          </div>
+        </>}
+      </div>}
     </div>
-    <p className="sd-ranking-note">Chỉ xếp hạng nhân viên có doanh thu trong kỳ; bộ lọc kho không giới hạn doanh số.</p>
   </section>;
 }

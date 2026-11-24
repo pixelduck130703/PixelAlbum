@@ -1,0 +1,10 @@
+/* Shared layout: Marketing và Kho hàng dùng cùng header. */
+.sd-dashboard-topbar { min-height:76px; height:auto; gap:20px; flex-wrap:wrap; padding-top:12px!important; padding-bottom:12px!important; }
+.sd-dashboard-brand { flex-shrink:0; }
+.sd-dashboard-tabs { display:flex; padding:4px; border:1px solid #dce5f1; border-radius:13px; background:#f2f5fb; gap:4px; margin-left:auto; }
+.sd-dashboard-tab { display:inline-flex; justify-content:center; align-items:center; gap:8px; padding:9px 17px; border-radius:9px; color:#546780; font-weight:750; text-decoration:none; white-space:nowrap; transition:background-color .15s,color .15s; }
+.sd-dashboard-tab:hover { background:#e3ecfb; color:#235dda; }
+.sd-dashboard-tab.is-active,.sd-dashboard-tab[aria-current='page'] { color:#fff; background:#2563eb; box-shadow:0 3px 10px #2363eb27; }
+.sd-tab-icon { font-size:15px; font-weight:800; line-height:1; }
+.sd-dashboard-back { flex-shrink:0; }
+@media (max-width:740px) { .sd-dashboard-topbar { column-gap:10px; row-gap:10px; } .sd-dashboard-brand { flex:1; } .sd-dashboard-back { font-size:12px; } .sd-dashboard-tabs { order:3; width:100%; margin-left:0; } .sd-dashboard-tab { flex:1; padding:11px 8px; font-size:13px; } }
