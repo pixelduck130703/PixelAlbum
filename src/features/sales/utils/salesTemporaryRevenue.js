@@ -1,4 +1,6 @@
-// V18.8: doanh số điều chỉnh chỉ là lớp hiển thị tại trình duyệt.
+// V19.12: có thể nhập tạm cho mọi ngày trong tháng (kể cả ngày tương lai).
+// Doanh số tương lai được đánh dấu dự kiến và không ghi sang Pancake POS.
+// Doanh số điều chỉnh chỉ là lớp hiển thị tại trình duyệt.
 // Không ghi Pancake POS, backend, database hay bảng xếp hạng nhân viên.
 const KEY_PREFIX = 'pixelalbum-sales-dashboard-temporary-revenue-v1:';
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -37,12 +39,12 @@ export function writeTemporaryRevenue(employeeId, month, entries, storage = type
 }
 
 // Chuẩn hóa bản nhập thử; không lưu số bằng dữ liệu gốc để tránh nhãn điều chỉnh giả.
-export function normalizeTemporaryRevenue(drafts, originalRows, today) {
+export function normalizeTemporaryRevenue(drafts, originalRows) {
   const byDate = new Map(originalRows.map((row) => [row.date, row]));
   const entries = {};
   const invalidDates = [];
   for (const [date, raw] of Object.entries(drafts || {})) {
-    if (!DATE_PATTERN.test(date) || !byDate.has(date) || date > today) continue;
+    if (!DATE_PATTERN.test(date) || !byDate.has(date)) continue;
     if (String(raw).trim() === '') continue;
     const value = parseTemporaryThb(raw);
     if (value === null) { invalidDates.push(date); continue; }
@@ -55,7 +57,7 @@ export function normalizeTemporaryRevenue(drafts, originalRows, today) {
 
 export function applyTemporaryRevenue(originalRows, entries, today) {
   return originalRows.map((row) => {
-    if (row.date > today || !Object.hasOwn(entries, row.date)) return { ...row, temporaryAdjusted: false };
-    return { ...row, revenueThb: entries[row.date], recorded: true, temporaryAdjusted: true };
+    if (!Object.hasOwn(entries, row.date)) return { ...row, temporaryAdjusted: false, temporaryForecast: false };
+    return { ...row, revenueThb: entries[row.date], recorded: true, temporaryAdjusted: true, temporaryForecast: row.date > today };
   });
 }

@@ -1,3 +1,4 @@
+const { registerDayOrderDetailsRoute } = require('./dayOrderDetails');
 const { createSaleTargetsRouter } = require('./saleTargets');
 const { registerSaleReportRoute } = require('./saleReport');
 const { registerWarehouseReportRoute } = require('./warehouseReport');
@@ -5,6 +6,7 @@ const router = require('express').Router();
 const verifyAdminToken = require('../middleware/auth');
 const { PancakeError, getEmployees, getWarehouses, getDailySales, getWarehouseEmployees, getWarehouseEmployeesForRange, validateWarehouseId } = require('../services/pancakeSales');
 const { getExchangeRate } = require('../services/exchangeRate');
+const { getExchangeRateReliable } = require('../services/exchangeRateReliable');
 const { createSalesTargetsRouter } = require('./salesTargets');
 const { getLeaderboard } = require('../services/salesRanking');
 
@@ -60,12 +62,13 @@ router.get('/api/sales/ranking', salesReadAccess, async (req, res) => {
 });
 
 router.get('/api/sales/exchange-rate', salesReadAccess, async (_req, res) => {
-  try { res.json({ success: true, ...(await getExchangeRate()) }); }
+  try { res.json({ success: true, ...(await getExchangeRateReliable(getExchangeRate)) }); }
   catch { res.status(503).json({ success: false, message: 'Không lấy được tỷ giá trực tuyến.' }); }
 });
 
 registerWarehouseReportRoute(router, salesReadAccess, handleError);
 registerSaleReportRoute(router, salesReadAccess, handleError);
+registerDayOrderDetailsRoute(router, verifyAdminToken);
 router.use(createSalesTargetsRouter(salesReadAccess));
 router.use(createSaleTargetsRouter(salesReadAccess));
 module.exports = router;

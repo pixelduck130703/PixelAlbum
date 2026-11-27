@@ -36,7 +36,7 @@ export async function fetchExchangeRate(signal) {
   if (data?.success !== true || !Number.isFinite(data.rate) || data.rate <= 0 || !Number.isFinite(Date.parse(data.updatedAt))) {
     throw new Error('Tỷ giá trực tuyến không hợp lệ.');
   }
-  return { rate: data.rate, updatedAt: data.updatedAt, stale: data.stale === true };
+  return { rate: data.rate, updatedAt: data.updatedAt, stale: data.stale === true, source: typeof data.source === 'string' ? data.source : 'ExchangeRate API' };
 }
 
 function parseTargets(data, month) {

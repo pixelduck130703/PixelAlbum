@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import EmployeeSearch from './components/EmployeeSearch';
 import EmployeeTargetManager from './components/EmployeeTargetManager';
 import SalesRanking from './components/SalesRanking';
+import DayOrdersDrawer from './components/DayOrdersDrawer';
 import {
   PROGRESS_COLORS, todayInBangkok, shiftMonth, daysInMonth, progressColor,
   buildRows, calculateSummary, groupWeeklyRows, formatChartRevenue, getEmployeeTarget,
@@ -12,6 +13,7 @@ import {
   readTemporaryRevenue, writeTemporaryRevenue, normalizeTemporaryRevenue,
   applyTemporaryRevenue, parseTemporaryThb, temporaryRevenueStorageKey,
 } from './utils/salesTemporaryRevenue';
+import { calculateSalesChartGuides } from './models/salesChartGuides';
 import './SalesDashboard.css';
 import './V19_10_GOAL_MARKETING.css';
 import DashboardHeader from '../dashboard-shared/DashboardHeader';
@@ -93,6 +95,8 @@ export default function SalesDashboard({ team = 'marketing' }) {
   const [activeSalesState, setActiveSalesState] = useState({ month: '', ids: null, error: '', version: -1 });
   const [salesState, setSalesState] = useState({ key: '', requestKey: '', rows: [], error: '', updatedAt: null, measureLabel: 'Doanh số' });
   const [exchange, setExchange] = useState(null);
+  const [fxRetry, setFxRetry] = useState(0);
+  const [selectedDay, setSelectedDay] = useState('');
   const [selectedRateMode, setSelectedRateMode] = useState(storedRateMode);
   const [temporaryRevenue, setTemporaryRevenue] = useState({ scope: '', entries: {} });
   const [revenueDrafts, setRevenueDrafts] = useState({ scope: '', values: {} });
@@ -126,6 +130,7 @@ export default function SalesDashboard({ team = 'marketing' }) {
   const liveRate = Number(exchange?.rate);
   const hasLiveRate = Number.isFinite(liveRate) && liveRate > 0;
   const rate = selectedRateMode === '780' ? 780 : selectedRateMode === 'online' && hasLiveRate ? liveRate : 750;
+  const onlineRateOffline = selectedRateMode === 'online' && !hasLiveRate;
   const requestKey = `${key}:${refresh}`;
   const ready = Boolean(employee) && salesState.requestKey === requestKey && !salesState.error;
   const hasCurrentData = Boolean(employee) && salesState.key === key && !salesState.error;
@@ -232,7 +237,7 @@ export default function SalesDashboard({ team = 'marketing' }) {
       if (!controller.signal.aborted) setExchange((previous) => previous ? { ...previous, stale: true } : { unavailable: true });
     });
     return () => controller.abort();
-  }, [refresh]);
+  }, [refresh, fxRetry]);
 
   useEffect(() => {
     if (!employee) return;
@@ -263,17 +268,33 @@ export default function SalesDashboard({ team = 'marketing' }) {
   }
 
   const originalRows = useMemo(() => buildRows(month, hasCurrentData && !error ? salesState.rows : []), [month, hasCurrentData, error, salesState.rows]);
-  const normalizedDrafts = useMemo(() => normalizeTemporaryRevenue(currentDrafts, originalRows, today), [currentDrafts, originalRows, today]);
+  const normalizedDrafts = useMemo(() => normalizeTemporaryRevenue(currentDrafts, originalRows), [currentDrafts, originalRows]);
   const activeOverrides = isEditingRevenue ? normalizedDrafts.entries : storedOverrides;
   const rows = useMemo(() => applyTemporaryRevenue(originalRows, canEditTemporaryRevenue ? activeOverrides : {}, today), [originalRows, activeOverrides, canEditTemporaryRevenue, today]);
   const hasAdjustedRevenue = rows.some((row) => row.temporaryAdjusted);
+  const futureForecastDays = rows.filter((row) => row.temporaryForecast).length;
   const summary = useMemo(() => calculateSummary(rows, targetVnd, rate, today), [rows, targetVnd, rate, today]);
   const weekGroups = useMemo(() => groupWeeklyRows(rows, rate), [rows, rate]);
   const weeks = useMemo(() => new Map(weekGroups.map((week) => [week.endDate, week.totalVnd])), [weekGroups]);
-  const maxRevenue = Math.max(1, ...rows.map((row) => row.revenueThb ?? 0));
+  const chartGuides = useMemo(
+    () => calculateSalesChartGuides(rows, today, targetVnd, rate),
+    [rows, today, targetVnd, rate],
+  );
+  const chartScale = Math.max(
+    1,
+    ...rows.map((row) => row.revenueThb ?? 0),
+    chartGuides.averageThb ?? 0,
+    chartGuides.neededThb ?? 0,
+  ) * 1.12;
+  const chartHeight = (value) => Math.max(0, Math.min(100, ((value ?? 0) / chartScale) * 100));
   const fillWidth = Math.max(0, Math.min(100, (summary.ratio ?? 0) * 100));
   const color = summary.ratio == null ? '#e9eef4' : progressColor(summary.ratio);
   const [year, monthNumber] = month.split('-');
+  const detailRow = rows.find(row => row.date === selectedDay) || null;
+  const detailEmployee = selectableEmployees.find(person => person.id === employee);
+  const closeDayOrders = useCallback(() => setSelectedDay(''), []);
+  const openDayOrders = useCallback((date) => { if (employee && hasCurrentData) setSelectedDay(date); }, [employee, hasCurrentData]);
+  useEffect(() => { setSelectedDay(''); }, [key]);
 
   function beginTemporaryEdit() {
     if (!canEditTemporaryRevenue) return;
@@ -283,7 +304,7 @@ export default function SalesDashboard({ team = 'marketing' }) {
   }
 
   function updateTemporaryDraft(date, value) {
-    if (!isEditingRevenue || date > today) return;
+    if (!isEditingRevenue) return;
     setRevenueDrafts((previous) => ({ scope: key, values: { ...(previous.scope === key ? previous.values : {}), [date]: value } }));
     setTemporaryNotice(null);
   }
@@ -323,7 +344,7 @@ export default function SalesDashboard({ team = 'marketing' }) {
 
   function renderRevenueCell(row, mobile = false) {
     const amount = thb(row.revenueThb);
-    if (!isEditingRevenue || row.date > today) {
+    if (!isEditingRevenue) {
       return <span className={row.temporaryAdjusted ? 'sd-temp-value' : ''}>{amount}{row.temporaryAdjusted && <small className="sd-temp-asterisk" title="Doanh số đã chỉnh tạm"> •</small>}</span>;
     }
     const entered = Object.hasOwn(currentDrafts, row.date) ? currentDrafts[row.date] : originalRows.find((original) => original.date === row.date)?.revenueThb ?? '';
@@ -344,7 +365,7 @@ export default function SalesDashboard({ team = 'marketing' }) {
     const originalByDate = new Map(originalRows.map((row) => [row.date, row]));
     const lines = [headers, ...rows.map((r) => {
       const cells = [r.date, r.orders ?? '', r.revenueThb ?? '', r.recorded ? Math.round(r.revenueThb * rate) : '', weeks.get(r.date) == null ? '' : Math.round(weeks.get(r.date))];
-      if (hasAdjustedRevenue) cells.push(originalByDate.get(r.date)?.revenueThb ?? '', r.temporaryAdjusted ? 'Điều chỉnh tạm' : 'Pancake POS');
+      if (hasAdjustedRevenue) cells.push(originalByDate.get(r.date)?.revenueThb ?? '', r.temporaryAdjusted ? (r.temporaryForecast ? 'Dự kiến - điều chỉnh tạm' : 'Điều chỉnh tạm') : 'Pancake POS');
       return cells;
     })];
     const blob = new Blob(['\uFEFF', lines.map((line) => line.join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8;' });
@@ -370,9 +391,10 @@ export default function SalesDashboard({ team = 'marketing' }) {
         <EmployeeSearch employees={selectableEmployees} value={employee} onChange={changeEmployee} emptyLabel={activeError ? 'Lỗi lọc nhân viên' : noEmployees ? 'Không có doanh thu tháng này' : listReady && activeReady ? 'Chọn nhân viên' : 'Đang lọc nhân viên...'}/>
         <label className="sd-field"><span>THÁNG BÁO CÁO</span><div className="sd-month"><button aria-label="Tháng trước" type="button" onClick={() => setMonth(shiftMonth(month, -1))}><Icon type="left"/></button><input aria-label="Tháng báo cáo" type="month" value={month} onChange={(e) => e.target.value && setMonth(e.target.value)}/><button aria-label="Tháng sau" type="button" onClick={() => setMonth(shiftMonth(month, 1))}><Icon type="right"/></button></div></label>
         <div className="sd-field"><span>MỤC TIÊU (VND)</span><a className="sd-target-link" href="#sd-goal-center"><span>{goalLabel}</span><small>Chỉnh sửa ↓</small></a></div>
-        <label className="sd-field sd-rate-group"><span>TỈ GIÁ (VND/THB)</span><select aria-label="Chọn tỉ giá quy đổi" value={selectedRateMode} onChange={(event) => setSelectedRateMode(event.target.value)}><option value="750">750</option><option value="online">Trực tuyến</option><option value="780">780</option></select></label>
+        <label className="sd-field sd-rate-group"><span>TỈ GIÁ (VND/THB)</span><select aria-label="Chọn tỉ giá quy đổi" value={selectedRateMode} onChange={(event) => setSelectedRateMode(event.target.value)}><option value="750">750</option><option value="online">Trực tuyến</option><option value="780">780</option></select>{onlineRateOffline && <small className="sd-fx-inline-status" role="status">{exchange?.unavailable ? 'Mất kết nối tỉ giá · đang tạm tính 750' : 'Đang tải tỉ giá · tạm tính 750'}</small>}{selectedRateMode === 'online' && hasLiveRate && exchange?.stale && <small className="sd-fx-inline-status" role="status">Đang dùng tỉ giá cũ đã lưu</small>}</label>
         <div className={`sd-status ${error ? 'sd-status-error' : ready ? 'sd-status-ok' : ''}`} role="status"><span className="sd-dot"/> {error ? 'Lỗi kết nối' : loading ? 'Đang đồng bộ' : 'Pancake POS'}<small>{hasCurrentData && !error && salesState.updatedAt ? new Date(salesState.updatedAt).toLocaleString('vi-VN', {timeZone:'Asia/Bangkok'}) : 'Tự tải mỗi 1 phút'}</small></div>
       </div>
+      {onlineRateOffline && exchange?.unavailable && <div className="sd-alert" role="alert">Không kết nối được nguồn tỉ giá THB/VND. Lúc này lựa chọn “Trực tuyến” đang tạm quy đổi bằng 750, KHÔNG phải tỉ giá thị trường. <button type="button" onClick={() => { setExchange(null); setFxRetry((n) => n + 1); }}>Thử lại tỉ giá</button></div>}
       {error && <div className="sd-alert" role="alert">{error} <button type="button" onClick={() => setRefresh((n) => n + 1)}>Thử lại</button></div>}
       {warehouseState.error && <div className="sd-alert" role="alert">Không tải được danh sách kho: {warehouseState.error}</div>}
       {warehouseState.loaded && warehouseId === null && <div className="sd-alert" role="alert">Không tìm thấy kho VALLEY. Hãy chọn một kho trong danh sách.</div>}
@@ -381,12 +403,12 @@ export default function SalesDashboard({ team = 'marketing' }) {
       {warehouseId && <p className="sd-filter-note">Kho chỉ lọc danh sách nhân viên; doanh số và mục tiêu vẫn tính trên tất cả các kho.</p>}
       {targetError && <div className="sd-alert" role="alert">{targetError}{monthTargets ? ' · Mục tiêu đang hiển thị là dữ liệu đã tải trước đó.' : ''} <button type="button" onClick={() => setRefresh((n) => n + 1)}>Thử lại</button></div>}
       {ready && !error && !salesState.rows.length && <div className="sd-alert sd-alert-neutral">Pancake chưa trả bản ghi cho nhân viên và tháng này. Các ngày chưa có dữ liệu được giữ trống.</div>}
-      {hasAdjustedRevenue && <div className="sd-temp-banner" role="status"><strong>Doanh thu đang được điều chỉnh tạm</strong><span>{isEditingRevenue ? 'Đang xem trước số liệu nhập.' : 'Đang dùng số đã lưu trên trình duyệt này.'} Dữ liệu Pancake và bảng xếp hạng nhân viên không thay đổi.</span></div>}
+      {hasAdjustedRevenue && <div className="sd-temp-banner" role="status"><strong>Doanh thu đang được điều chỉnh tạm</strong><span>{isEditingRevenue ? 'Đang xem trước số liệu nhập.' : 'Đang dùng số đã lưu trên trình duyệt này.'} {futureForecastDays > 0 ? `${futureForecastDays} ngày tương lai là doanh số DỰ KIẾN, đã được cộng vào các tổng hiển thị.` : ''} Dữ liệu Pancake và bảng xếp hạng nhân viên không thay đổi.</span></div>}
 
       {isSale && salesState.measureLabel === 'Tiền hàng' && hasCurrentData && <div className="sd-alert sd-alert-neutral" role="status">Pancake chưa trả đủ phí vận chuyển thu khách. Các chỉ số Sale ở đây đang là <strong>Tiền hàng</strong>, chưa phải Doanh số đầy đủ.</div>}
 
       <section className="sd-metrics" aria-label="Chỉ số tổng quan">
-        <Metric label={isSale && salesState.measureLabel === 'Tiền hàng' ? 'Tổng tiền hàng' : 'Tổng doanh số'} value={vnd(summary.revenueVnd)} note={thb(summary.revenueThb)} icon="chart" tone="sd-blue"/>
+        <Metric label={`${isSale && salesState.measureLabel === 'Tiền hàng' ? 'Tổng tiền hàng' : 'Tổng doanh số'}${futureForecastDays ? ' (có dự kiến)' : ''}`} value={vnd(summary.revenueVnd)} note={thb(summary.revenueThb)} icon="chart" tone="sd-blue"/>
         <Metric label="Mục tiêu tháng" value={goalLabel} note={noGoal ? 'Chưa đặt mục tiêu' : hasGoal ? thb(summary.targetThb) : ''} icon="target" tone="sd-purple"/>
         <Metric label="Tổng số đơn" value={number(summary.orders)} note={null} icon="bag" tone="sd-green"/>
         <Metric label="Số ngày còn lại" value={summary.daysLeft === 0 ? 'HẾT THÁNG' : `${summary.daysLeft} ngày`} note={null} icon="calendar" tone="sd-orange"/>
@@ -413,7 +435,7 @@ export default function SalesDashboard({ team = 'marketing' }) {
               <button type="button" className="sd-secondary" disabled={!ready || !!error || !summary.recordedDays || (isEditingRevenue && normalizedDrafts.invalidDates.length > 0)} onClick={exportCsv}><Icon type="download"/> Xuất CSV</button>
             </div>
           </div>
-          {isEditingRevenue && <p className="sd-revenue-edit-note">Chỉ sửa doanh số THB đến hôm nay; các ngày còn lại giữ nguyên dữ liệu Pancake. Nhập 0 nếu cần đưa doanh số về 0. Bấm Lưu tạm để giữ số đã nhập.</p>}
+          {isEditingRevenue && <p className="sd-revenue-edit-note">Có thể nhập THB cho <strong>mọi ngày trong tháng</strong>, kể cả ngày chưa tới. Ngày tương lai là <strong>dự kiến</strong> và được cộng vào các thống kê tạm; không sửa dữ liệu Pancake. Để trống để bỏ điều chỉnh, nhập 0 để đặt doanh số bằng 0.</p>}
           {isEditingRevenue && normalizedDrafts.invalidDates.length > 0 && <p className="sd-revenue-validation" role="alert">{normalizedDrafts.invalidDates.length} ô THB chưa hợp lệ. Chỉ nhập số nguyên không âm (ví dụ: 10.240).</p>}
           {temporaryNotice?.scope === key && <p className={`sd-revenue-feedback ${temporaryNotice.error ? 'sd-revenue-validation' : ''}`} role="status">{temporaryNotice.message}</p>}
           <div className="sd-table-wrap"><table className="sd-table sd-table-desktop">
@@ -426,8 +448,8 @@ export default function SalesDashboard({ team = 'marketing' }) {
             </colgroup>
             <thead><tr><th>Ngày</th><th>Số đơn</th><th>Doanh số THB</th><th>Doanh số VND</th><th>Tổng tuần VND</th></tr></thead>
             {weekGroups.map((week, weekIndex) => <tbody key={week.startDate} className={`sd-week-group ${weekIndex % 2 ? 'sd-week-alt' : ''}`}>
-              {week.rows.map((r, index) => <tr key={r.date} className={`${r.date === today ? 'sd-today' : ''} ${!r.recorded ? 'sd-future' : ''} ${r.temporaryAdjusted ? 'sd-temp-row' : ''}`}>
-                <td><div className="sd-date"><b>{String(r.day).padStart(2, '0')}</b><span>{dayNames[r.weekday]}{r.date === today && <small>Hôm nay</small>}</span></div></td>
+              {week.rows.map((r, index) => <tr key={r.date} className={`${r.date === today ? 'sd-today' : ''} ${!r.recorded ? 'sd-future' : ''} ${r.temporaryAdjusted ? 'sd-temp-row' : ''} {r.temporaryForecast ? 'sd-forecast-row' : ''}`}>
+                <td><div className="sd-date"><b><button type="button" className="sd-day-details-btn" disabled={!employee || !hasCurrentData} onClick={() => openDayOrders(r.date)} title={`Xem đơn hàng ngày ${r.date}`} aria-label={`Xem chi tiết đơn hàng ngày ${r.date}`}>{String(r.day).padStart(2, '0')}</button></b><span>{dayNames[r.weekday]}{r.date === today && <small>Hôm nay</small>}</span></div></td>
                 <td className={r.recorded ? 'sd-daily-orders' : ''}>{number(r.orders)}</td>
                 <td className={r.temporaryAdjusted ? 'sd-temp-thb-cell' : ''}>{renderRevenueCell(r)}</td><td className={r.recorded ? 'sd-daily-vnd' : ''}>{vnd(r.recorded ? r.revenueThb * rate : null)}</td>
                 {index === 0 && <td rowSpan={week.rows.length} className={`sd-week-total ${week.totalVnd == null ? 'sd-week-empty' : ''}`}>
@@ -435,18 +457,18 @@ export default function SalesDashboard({ team = 'marketing' }) {
                 </td>}
               </tr>)}
             </tbody>)}
-          <tfoot><tr><td>TỔNG THÁNG{hasAdjustedRevenue && <small className="sd-total-temporary-label">Đã chỉnh tạm</small>}</td><td>{number(summary.orders)}</td><td>{thb(summary.revenueThb)}</td><td className="sd-month-total">{vnd(summary.revenueVnd)}</td><td>{vnd(summary.revenueVnd)}</td></tr></tfoot></table>
+          <tfoot><tr><td>TỔNG THÁNG{hasAdjustedRevenue && <small className="sd-total-temporary-label">{futureForecastDays ? 'Có số dự kiến' : 'Đã chỉnh tạm'}</small>}</td><td>{number(summary.orders)}</td><td>{thb(summary.revenueThb)}</td><td className="sd-month-total">{vnd(summary.revenueVnd)}</td><td>{vnd(summary.revenueVnd)}</td></tr></tfoot></table>
           <table className="sd-table sd-table-mobile sd-mobile-only" aria-label="Doanh số từng ngày trên điện thoại">
             <colgroup><col className="sd-mobile-col-day"/><col className="sd-mobile-col-thb"/><col className="sd-mobile-col-week"/></colgroup>
             <thead><tr><th scope="col">Ngày</th><th scope="col">Doanh số THB</th><th scope="col">Tổng tuần VND</th></tr></thead>
             {weekGroups.map((week, weekIndex) => <tbody key={week.startDate} className={`sd-week-group ${weekIndex % 2 ? 'sd-week-alt' : ''}`}>
-              {week.rows.map((r, index) => <tr key={r.date} className={`${r.date === today ? 'sd-today' : ''} ${!r.recorded ? 'sd-future' : ''} ${r.temporaryAdjusted ? 'sd-temp-row' : ''}`}>
-                <td><div className="sd-date"><b aria-label={r.date === today ? `Ngày ${r.day}, hôm nay` : `Ngày ${r.day}`}>{String(r.day).padStart(2, '0')}</b></div></td>
+              {week.rows.map((r, index) => <tr key={r.date} className={`${r.date === today ? 'sd-today' : ''} ${!r.recorded ? 'sd-future' : ''} ${r.temporaryAdjusted ? 'sd-temp-row' : ''} {r.temporaryForecast ? 'sd-forecast-row' : ''}`}>
+                <td><div className="sd-date"><b><button type="button" className="sd-day-details-btn" disabled={!employee || !hasCurrentData} onClick={() => openDayOrders(r.date)} aria-label={`Xem chi tiết đơn hàng ngày ${r.date}`}>{String(r.day).padStart(2, '0')}</button></b></div></td>
                 <td className="sd-mobile-daily-thb">{renderRevenueCell(r, true)}</td>
                 {index === 0 && <td rowSpan={week.rows.length} className={`sd-week-total ${week.totalVnd == null ? 'sd-week-empty' : ''}`}><div className="sd-week-content"><small>{shortDate(week.startDate)}{week.startDate !== week.endDate ? ` – ${shortDate(week.endDate)}` : ''}</small><strong>{vnd(week.totalVnd)}</strong></div></td>}
               </tr>)}
             </tbody>)}
-            <tfoot><tr><td>TỔNG THÁNG{hasAdjustedRevenue && <small className="sd-total-temporary-label">Đã chỉnh</small>}</td><td>{thb(summary.revenueThb)}</td><td>{vnd(summary.revenueVnd)}</td></tr></tfoot>
+            <tfoot><tr><td>TỔNG THÁNG{hasAdjustedRevenue && <small className="sd-total-temporary-label">{futureForecastDays ? 'Có dự kiến' : 'Đã chỉnh'}</small>}</td><td>{thb(summary.revenueThb)}</td><td>{vnd(summary.revenueVnd)}</td></tr></tfoot>
           </table></div>
         </section>
 
@@ -455,7 +477,7 @@ export default function SalesDashboard({ team = 'marketing' }) {
               <div className="sd-stats-header"><span>Chỉ số</span><span>THB</span><span>VND</span></div>
               <StatsRow title="Tỷ giá" left="฿1" right={`${rateFormat.format(rate)} ₫`} tone="rate"/>
               <StatsRow title="Mục tiêu" left={thb(summary.targetThb)} right={goalLabel} tone="target"/>
-              <StatsRow title={isSale && salesState.measureLabel === 'Tiền hàng' ? 'Tổng tiền hàng' : 'Tổng doanh số'} left={thb(summary.revenueThb)} right={vnd(summary.revenueVnd)} tone="revenue"/>
+              <StatsRow title={`${isSale && salesState.measureLabel === 'Tiền hàng' ? 'Tổng tiền hàng' : 'Tổng doanh số'}${futureForecastDays ? ' (có dự kiến)' : ''}`} left={thb(summary.revenueThb)} right={vnd(summary.revenueVnd)} tone="revenue"/>
               <StatsRow title="Cần thêm" left={thb(summary.remainingThb)} right={vnd(summary.remainingVnd)} tone={summary.remainingVnd === 0 ? 'revenue' : 'remaining'}/>
               <StatsRow title="Mỗi ngày cần" left={summary.daysLeft ? thb(summary.needThbPerDay) : '—'} right={summary.daysLeft ? vnd(summary.needPerDay) : '—'} tone="daily"/>
             </div>
@@ -464,26 +486,39 @@ export default function SalesDashboard({ team = 'marketing' }) {
               <div><span>Doanh số (780)</span><strong>{vnd(summary.revenue780)}</strong><small>1 THB = 780 VND</small></div>
               <div><span>Doanh số (trực tuyến)</span><strong>{vnd(summary.revenueThb != null && exchange?.rate ? summary.revenueThb * exchange.rate : null)}</strong><small>{exchange?.rate ? `1 THB = ${rateFormat.format(exchange.rate)} VND` : exchange?.unavailable ? 'Không lấy được tỷ giá' : 'Đang tải tỷ giá...'}</small>{exchange?.rate && <small>{exchange.stale ? 'Dữ liệu cũ · ' : 'Cập nhật · '}{new Date(exchange.updatedAt).toLocaleString('vi-VN', { timeZone: 'Asia/Bangkok' })}</small>}</div>
             </div>
-            <div className="sd-rate-source">Nguồn tỉ giá trực tuyến: <a href="https://www.exchangerate-api.com" target="_blank" rel="noreferrer">ExchangeRate API</a></div>
+            <div className="sd-rate-source">Nguồn tỉ giá trực tuyến: {exchange?.source === 'Frankfurter' ? <a href="https://frankfurter.dev/" target="_blank" rel="noreferrer">Frankfurter</a> : exchange?.source === 'Currency API' ? <a href="https://github.com/fawazahmed0/exchange-api" target="_blank" rel="noreferrer">Currency API</a> : <a href="https://www.exchangerate-api.com" target="_blank" rel="noreferrer">ExchangeRate API</a>}{exchange?.stale ? ' · Dữ liệu cũ' : ''}</div>
           </section>
       </div>
-      <section className="sd-panel sd-chart-panel" id="sd-chart"><div className="sd-section-heading"><div><h2>{isSale && salesState.measureLabel === 'Tiền hàng' ? 'Biểu đồ tiền hàng' : 'Biểu đồ doanh số'}</h2></div><span className="sd-chart-unit">฿</span></div>
+      <section className="sd-panel sd-chart-panel" id="sd-chart">
+        <div className="sd-section-heading"><div><h2>{isSale && salesState.measureLabel === 'Tiền hàng' ? 'Biểu đồ tiền hàng' : 'Biểu đồ doanh số'}</h2></div><span className="sd-chart-unit">฿</span></div>
+        <div className="sd-chart-guides" aria-label="Đường tham chiếu biểu đồ (THB)">
+          {chartGuides.averageThb !== null && <span className="sd-chart-guide-key"><i className="sd-chart-guide-swatch sd-chart-guide-average"/><span>Trung bình doanh số/ngày</span><strong>{thb(Math.round(chartGuides.averageThb))}</strong></span>}
+          {chartGuides.neededThb !== null && <span className="sd-chart-guide-key"><i className="sd-chart-guide-swatch sd-chart-guide-needed"/><span>Mỗi ngày cần</span><strong>{thb(Math.round(chartGuides.neededThb))}</strong></span>}
+          {futureForecastDays > 0 && <span className="sd-chart-guide-key sd-chart-guide-planned">Cột có sọc: dự kiến</span>}
+        </div>
         <p className="sd-mobile-only sd-mobile-chart-hint">Vuốt ngang để xem đủ các ngày trong tháng →</p>
-        <div className="sd-chart" aria-label="Biểu đồ doanh số theo ngày; mỗi tuần một màu">
-          {weekGroups.flatMap((week, weekIndex) => week.rows.map((r, dayIndex) => (
-            <div key={r.date}
-              className={`sd-bar-col ${dayIndex === 0 && weekIndex > 0 ? 'sd-bar-col-week-start' : ''}`}
-              style={{ '--sd-chart-week-color': WEEK_CHART_COLORS[weekIndex % WEEK_CHART_COLORS.length] }}
-              title={`Tuần ${weekIndex + 1} · ${r.date} (${shortWeekdays[r.weekday]}): ${thb(r.revenueThb)}`}>
-              <div className="sd-bar-space">
-                <div className={`sd-bar ${r.date === today ? 'sd-bar-current' : ''}`}
-                  style={{ height: `${r.recorded && r.revenueThb > 0 ? Math.max(2, r.revenueThb / maxRevenue * 100) : 0}%` }}>
-                  {r.recorded && <span className="sd-bar-label">{formatChartRevenue(r.revenueThb)}</span>}
+        <div className="sd-chart-scroller" tabIndex={0} role="region" aria-label="Cuộn biểu đồ doanh số theo ngày">
+          <div className="sd-chart" aria-label="Biểu đồ doanh số theo ngày, mỗi tuần một màu, có đường trung bình và mục tiêu mỗi ngày">
+            {weekGroups.flatMap((week, weekIndex) => week.rows.map((r, dayIndex) => (
+              <button type="button" key={r.date} onClick={() => openDayOrders(r.date)} disabled={!employee || !hasCurrentData}
+                aria-label={`Xem đơn hàng ngày ${r.date}, ${thb(r.revenueThb)}${r.temporaryForecast ? ', dự kiến' : ''}`}
+                className={`sd-bar-col ${dayIndex === 0 && weekIndex > 0 ? 'sd-bar-col-week-start' : ''}`}
+                style={{ '--sd-chart-week-color': WEEK_CHART_COLORS[weekIndex % WEEK_CHART_COLORS.length] }}
+                title={`Tuần ${weekIndex + 1} · ${r.date} (${shortWeekdays[r.weekday]}): ${thb(r.revenueThb)}${r.temporaryForecast ? ' · Dự kiến' : ''}`}>
+                <div className="sd-bar-space">
+                  <div className={`sd-bar ${r.date === today ? 'sd-bar-current' : ''} ${r.temporaryForecast ? 'sd-bar-forecast' : ''}`}
+                    style={{ height: `${r.recorded && r.revenueThb > 0 ? Math.max(2, chartHeight(r.revenueThb)) : 0}%` }}>
+                    {r.recorded && <span className="sd-bar-label">{formatChartRevenue(r.revenueThb)}</span>}
+                  </div>
                 </div>
-              </div>
-              <small className="sd-chart-day"><span className="sd-chart-day-number">{r.day}</span><span className="sd-chart-weekday">{shortWeekdays[r.weekday]}</span></small>
+                <small className="sd-chart-day"><span className="sd-chart-day-number">{r.day}</span><span className="sd-chart-weekday">{shortWeekdays[r.weekday]}</span></small>
+              </button>
+            )))}
+            <div className="sd-chart-reference-overlay" aria-hidden="true">
+              {chartGuides.averageThb !== null && <div className="sd-chart-reference-line sd-chart-reference-average" style={{ bottom: `${chartHeight(chartGuides.averageThb)}%` }} />}
+              {chartGuides.neededThb !== null && <div className="sd-chart-reference-line sd-chart-reference-needed" style={{ bottom: `${chartHeight(chartGuides.neededThb)}%` }} />}
             </div>
-          )))}
+          </div>
         </div>
       </section>
       <SalesRanking key={team} team={team} warehouseOptions={warehouseOptions} refresh={refresh} rate={rate}/>
@@ -496,5 +531,7 @@ export default function SalesDashboard({ team = 'marketing' }) {
           onSave={saveTargets} rate={rate}/>
       </div>
     </div>
+    <DayOrdersDrawer date={selectedDay} onClose={closeDayOrders} employeeId={employee} employeeName={detailEmployee?.name || ''}
+      team={team} today={today} warehouseOptions={warehouseOptions} daySummary={detailRow}/>
   </main>;
 }
